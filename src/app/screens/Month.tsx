@@ -22,34 +22,34 @@ export default function Month() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 relative">
+    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--lime)' }} />
       <div className="relative z-10">
-        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>April 2026 Plan</h1>
-        <p style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Your mission this month</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>April 2026 Plan</h1>
+        <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Your mission this month</p>
       </div>
 
-      <div className="p-8 rounded-2xl relative overflow-hidden z-10" style={{ backgroundColor: 'var(--lime)', color: '#050F1C' }}>
+      <div className="p-4 md:p-8 rounded-2xl relative overflow-hidden z-10" style={{ backgroundColor: 'var(--lime)', color: '#050F1C' }}>
         <div className="relative z-10">
-          <div className="text-sm font-medium mb-2 opacity-80" style={{ fontFamily: 'var(--font-body)' }}>MISSION</div>
-          <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="text-xs md:text-sm font-medium mb-2 opacity-80" style={{ fontFamily: 'var(--font-body)' }}>MISSION</div>
+          <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             Save ₹25,000 & reduce debt by ₹5,000
           </h2>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <div>
-              <div className="text-sm opacity-80 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Target Savings</div>
-              <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹25,000</div>
+              <div className="text-xs md:text-sm opacity-80 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Target Savings</div>
+              <div className="text-xl md:text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹25,000</div>
             </div>
             <div>
-              <div className="text-sm opacity-80 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Debt Reduction</div>
-              <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹5,000</div>
+              <div className="text-xs md:text-sm opacity-80 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Debt Reduction</div>
+              <div className="text-xl md:text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹5,000</div>
             </div>
           </div>
         </div>
         <div className="absolute right-0 top-0 bottom-0 w-64 opacity-10" style={{ background: 'radial-gradient(circle, #000 0%, transparent 70%)' }} />
       </div>
 
-      <div className="grid grid-cols-2 gap-6 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
         <div className="glass-card p-6 rounded-2xl">
           <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Action Checklist</h3>
           <div className="space-y-2">

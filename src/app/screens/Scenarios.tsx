@@ -22,14 +22,14 @@ export default function Scenarios() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 relative">
+    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--violet)' }} />
       <div className="relative z-10">
-        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Scenario Explorer</h1>
-        <p style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>See how life changes affect your financial path</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Scenario Explorer</h1>
+        <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>See how life changes affect your financial path</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 relative z-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 relative z-10">
         {scenarios.map((s) => {
           const Icon = s.icon;
           const active = scenario === s.id;
@@ -56,7 +56,7 @@ export default function Scenarios() {
         })}
       </div>
 
-      <div className="p-8 rounded-2xl glass-card relative z-10">
+      <div className="p-4 md:p-8 rounded-2xl glass-card relative z-10">
         <h3 className="font-bold mb-6" style={{ fontFamily: 'var(--font-display)' }}>Adjust Parameters</h3>
         <div className="max-w-2xl">
           <div className="flex items-center justify-between mb-4">
@@ -89,7 +89,7 @@ export default function Scenarios() {
 
       <div className="relative z-10">
         <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Impact Analysis</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {impacts.map((impact, i) => (
             <div key={i} className="p-6 rounded-xl glass-card">
               <div className="text-sm mb-4 font-medium" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>{impact.label}</div>

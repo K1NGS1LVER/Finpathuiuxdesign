@@ -1,15 +1,21 @@
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Menu } from 'lucide-react';
 
 interface HeaderProps {
   isDark: boolean;
   setIsDark: (dark: boolean) => void;
+  onMenuClick: () => void;
 }
 
-export default function Header({ isDark, setIsDark }: HeaderProps) {
+export default function Header({ isDark, setIsDark, onMenuClick }: HeaderProps) {
   return (
-    <header className="h-14 flex items-center justify-between px-6 glass-card" style={{ borderBottom: '1px solid var(--border)', borderRadius: 0 }}>
-      <div />
-      <div className="flex items-center gap-4">
+    <header className="h-14 flex items-center justify-between md:justify-end px-4 md:px-6 glass-card" style={{ borderBottom: '1px solid var(--border)', borderRadius: 0 }}>
+      <button
+        onClick={onMenuClick}
+        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:scale-110 glass-card md:hidden"
+      >
+        <Menu size={20} />
+      </button>
+      <div className="flex items-center gap-3 md:gap-4">
         <button
           onClick={() => setIsDark(!isDark)}
           className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:scale-110 glass-card"

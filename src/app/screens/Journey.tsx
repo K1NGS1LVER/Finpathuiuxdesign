@@ -26,28 +26,57 @@ export default function Journey() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent, node: Node) => {
+  const getPointerPosition = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerDown = (e: React.MouseEvent | React.TouchEvent, node: Node) => {
     if ((e.target as HTMLElement).closest('button')) return;
+    e.preventDefault();
     setDragging(node.id);
     const rect = canvasRef.current?.getBoundingClientRect();
+    const pos = getPointerPosition(e);
     if (rect) {
-      setOffset({ x: e.clientX - rect.left - node.x, y: e.clientY - rect.top - node.y });
+      setOffset({ x: pos.x - rect.left - node.x, y: pos.y - rect.top - node.y });
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const pos = getPointerPosition(e);
     if (dragging && canvasRef.current) {
+      e.preventDefault();
       const rect = canvasRef.current.getBoundingClientRect();
-      const newX = e.clientX - rect.left - offset.x;
-      const newY = e.clientY - rect.top - offset.y;
+      const newX = pos.x - rect.left - offset.x - panOffset.x;
+      const newY = pos.y - rect.top - offset.y - panOffset.y;
       setNodes(nodes.map(n => n.id === dragging ? { ...n, x: newX, y: newY } : n));
+    } else if (isPanning) {
+      e.preventDefault();
+      const dx = pos.x - panStart.x;
+      const dy = pos.y - panStart.y;
+      setPanOffset({ x: panOffset.x + dx, y: panOffset.y + dy });
+      setPanStart({ x: pos.x, y: pos.y });
     }
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     setDragging(null);
+    setIsPanning(false);
+  };
+
+  const handleCanvasPointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if ((e.target as HTMLElement) === canvasRef.current || (e.target as HTMLElement).closest('svg')) {
+      const pos = getPointerPosition(e);
+      setIsPanning(true);
+      setPanStart({ x: pos.x, y: pos.y });
+    }
   };
 
   const getStatusColor = (status: Node['status']) => {
@@ -74,16 +103,21 @@ export default function Journey() {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] flex gap-4">
+    <div className="h-[calc(100vh-120px)] md:h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4">
       <div
         ref={canvasRef}
         className="flex-1 rounded-2xl relative overflow-hidden"
         style={{
           backgroundColor: document.documentElement.classList.contains('dark') ? '#0a0a18' : '#f0f4ff',
+          cursor: isPanning ? 'grabbing' : 'grab',
         }}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseDown={handleCanvasPointerDown}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
+        onTouchStart={handleCanvasPointerDown}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
           <defs>
@@ -101,10 +135,10 @@ export default function Journey() {
               return (
                 <line
                   key={`${node.id}-${connId}`}
-                  x1={node.x + 80}
-                  y1={node.y + 60}
-                  x2={target.x + 80}
-                  y2={target.y + 60}
+                  x1={node.x + 80 + panOffset.x}
+                  y1={node.y + 80 + panOffset.y}
+                  x2={target.x + 80 + panOffset.x}
+                  y2={target.y + 80 + panOffset.y}
                   stroke={locked ? 'var(--secondary)' : 'var(--lime)'}
                   strokeWidth="3"
                   strokeDasharray={locked ? '8,4' : '0'}
@@ -118,25 +152,31 @@ export default function Journey() {
         {nodes.map((node) => (
           <div
             key={node.id}
-            className="absolute cursor-pointer transition-all hover:scale-105"
+            className="absolute cursor-pointer hover:scale-105"
             style={{
-              left: node.x,
-              top: node.y,
+              left: node.x + panOffset.x,
+              top: node.y + panOffset.y,
               width: 160,
-              animation: `float ${3 + Math.random()}s ease-in-out infinite`,
+              animation: dragging === node.id ? 'none' : `float ${3 + Math.random()}s ease-in-out infinite`,
               animationDelay: `${Math.random() * 2}s`,
+              transition: dragging === node.id ? 'none' : 'transform 0.2s ease',
             }}
-            onMouseDown={(e) => handleMouseDown(e, node)}
+            onMouseDown={(e) => handlePointerDown(e, node)}
+            onTouchStart={(e) => handlePointerDown(e, node)}
             onClick={() => handleNodeClick(node)}
           >
             <div
               className="p-4 rounded-2xl glass-card"
               style={{
-                backgroundColor: getStatusColor(node.status) + '20',
+                backgroundColor: document.documentElement.classList.contains('dark') 
+                  ? 'rgba(5, 15, 28, 0.7)' 
+                  : 'rgba(248, 250, 252, 0.8)',
+                backdropFilter: 'blur(80px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(80px) saturate(200%)',
                 border: `2px solid ${getStatusColor(node.status)}`,
-                boxShadow: document.documentElement.classList.contains('dark') && node.status !== 'not-started'
-                  ? `0 0 20px ${getStatusColor(node.status)}60`
-                  : `0 4px 12px ${getStatusColor(node.status)}30`,
+                boxShadow: document.documentElement.classList.contains('dark')
+                  ? `0 0 20px ${getStatusColor(node.status)}15, 0 4px 12px rgba(0, 0, 0, 0.3)`
+                  : `0 0 20px ${getStatusColor(node.status)}10, 0 4px 12px ${getStatusColor(node.status)}20`,
               }}
             >
               <div className="text-3xl mb-2">{node.emoji}</div>
@@ -156,16 +196,20 @@ export default function Journey() {
         ))}
 
         <button
-          className="absolute top-4 right-4 w-12 h-12 rounded-xl flex items-center justify-center transition-transform hover:scale-110"
+          className="absolute top-2 right-2 md:top-4 md:right-4 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform hover:scale-110 shadow-lg"
           style={{ backgroundColor: 'var(--lime)', color: '#050F1C' }}
         >
-          <Plus size={20} />
+          <Plus size={18} className="md:w-5 md:h-5" />
         </button>
       </div>
 
       {selectedNode && (
         <div
-          className="w-80 rounded-2xl p-6 space-y-4 glass-card"
+          className="w-full md:w-80 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-4 glass-card fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-30"
+          style={{
+            maxHeight: '50vh',
+            overflowY: 'auto'
+          }}
         >
           <div className="flex items-center justify-between">
             <h3 className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Goal Details</h3>

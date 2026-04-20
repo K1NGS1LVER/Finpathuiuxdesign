@@ -18,6 +18,7 @@ function AppContent() {
     return stored === 'light' ? false : true;
   });
   const [pennyOpen, setPennyOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -31,10 +32,18 @@ function AppContent() {
     <div className="h-screen w-screen overflow-hidden" style={{ fontFamily: 'var(--font-body)' }}>
       {showLayout ? (
         <div className="flex h-full">
-          <Sidebar onPennyClick={() => setPennyOpen(true)} />
+          <Sidebar 
+            onPennyClick={() => setPennyOpen(true)} 
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+          />
           <div className="flex-1 flex flex-col overflow-hidden">
-            <Header isDark={isDark} setIsDark={setIsDark} />
-            <main className="flex-1 overflow-y-auto px-6 py-8">
+            <Header 
+              isDark={isDark} 
+              setIsDark={setIsDark}
+              onMenuClick={() => setMobileMenuOpen(true)}
+            />
+            <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-6 py-4 md:py-8">
               <Routes>
                 <Route path="/dashboard" element={<Dashboard onPennyClick={() => setPennyOpen(true)} />} />
                 <Route path="/journey" element={<Journey />} />
