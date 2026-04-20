@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+@font-face {
+  font-family: 'PP Formula';
+  src: url('https://assets.codepen.io/605876/PPFormula-VariableVF.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lufga';
+  src: url('https://fonts.cdnfonts.com/s/86481/Lufga-Regular.woff') format('woff');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lufga';
+  src: url('https://fonts.cdnfonts.com/s/86481/Lufga-Medium.woff') format('woff');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lufga';
+  src: url('https://fonts.cdnfonts.com/s/86481/Lufga-Bold.woff') format('woff');
+  font-weight: 700;
+  font-display: swap;
+}

@@ -1,0 +1,71 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  --font-display: 'PP Formula', 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Lufga', 'Montserrat', system-ui, sans-serif;
+
+  --background: #F8FAFC;
+  --foreground: #0f172a;
+  --card: rgba(255, 255, 255, 0.75);
+  --card-foreground: #0f172a;
+  --border: rgba(226, 232, 240, 0.8);
+  --secondary: #475569;
+
+  --lime: #B0FF09;
+  --violet: #AC49FF;
+  --blue: #495BFF;
+  --amber: #F59E0B;
+  --red: #EF4444;
+
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  --blur: 20px;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark {
+  --background: #050F1C;
+  --foreground: #f1f5f9;
+  --card: rgba(15, 15, 30, 0.7);
+  --card-foreground: #f1f5f9;
+  --border: rgba(30, 30, 58, 0.6);
+  --secondary: #94a3b8;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--background);
+    color: var(--foreground);
+    transition: background-color 300ms ease, color 300ms ease;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+.glass {
+  backdrop-filter: blur(var(--blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+}
+
+.glass-card {
+  background-color: var(--card);
+  backdrop-filter: blur(var(--blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
