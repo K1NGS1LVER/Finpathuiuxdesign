@@ -50,7 +50,7 @@ export default function Month() {
       </div>
 
       <div className="grid grid-cols-2 gap-6 relative z-10">
-        <div className="p-6 rounded-2xl" className="glass-card">
+        <div className="glass-card p-6 rounded-2xl">
           <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Action Checklist</h3>
           <div className="space-y-2">
             {tasks.map((task) => (
@@ -69,16 +69,16 @@ export default function Month() {
                 >
                   {task.done ? <Check size={14} /> : <Circle size={14} />}
                 </div>
-                <span className={task.done ? 'line-through opacity-50' : ''} style={{ fontFamily: 'var(--font-body)' }}>{task.text}</span>
+                <span className={`text-left flex-1 ${task.done ? 'line-through opacity-50' : ''}`} style={{ fontFamily: 'var(--font-body)' }}>{task.text}</span>
               </button>
             ))}
           </div>
-          <div className="mt-4 p-3 rounded-xl text-sm text-center glass" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>
+          <div className="mt-6 p-3 rounded-xl text-sm text-center glass" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>
             {tasks.filter(t => t.done).length} of {tasks.length} completed
           </div>
         </div>
 
-        <div className="p-6 rounded-2xl" className="glass-card">
+        <div className="glass-card p-6 rounded-2xl">
           <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Budget Tracker</h3>
           <div className="space-y-4">
             {budget.map((item) => {
@@ -108,7 +108,7 @@ export default function Month() {
       </div>
 
       <div className="grid grid-cols-3 gap-4 relative z-10">
-        <div className="p-5 rounded-xl" className="glass-card">
+        <div className="glass-card p-5 rounded-xl">
           <div className="text-sm mb-2" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Days Remaining</div>
           <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>10</div>
         </div>
