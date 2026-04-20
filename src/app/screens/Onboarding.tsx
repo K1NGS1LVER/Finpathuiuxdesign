@@ -8,6 +8,7 @@ export default function Onboarding() {
   const [income, setIncome] = useState('');
   const [expenses, setExpenses] = useState('');
   const [debt, setDebt] = useState('');
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
 
   const steps = [
     {
@@ -48,6 +49,14 @@ export default function Onboarding() {
     } else {
       navigate('/loading');
     }
+  };
+
+  const toggleGoal = (goalName: string) => {
+    setSelectedGoals(prev =>
+      prev.includes(goalName)
+        ? prev.filter(g => g !== goalName)
+        : prev.length < 3 ? [...prev, goalName] : prev
+    );
   };
 
   return (
@@ -96,19 +105,24 @@ export default function Onboarding() {
                 { name: 'Emergency Fund', icon: '🛡️' },
                 { name: 'Wedding', icon: '💍' },
                 { name: 'Investment', icon: '📈' }
-              ].map((goal) => (
-                <button
-                  key={goal.name}
-                  className="goal-option p-4 rounded-xl font-medium transition-all hover:scale-105 glass-card flex flex-col items-center gap-2"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  <span className="text-2xl">{goal.icon}</span>
-                  <span>{goal.name}</span>
-                </button>
-              ))}
+              ].map((goal) => {
+                const isSelected = selectedGoals.includes(goal.name);
+                return (
+                  <button
+                    key={goal.name}
+                    onClick={() => toggleGoal(goal.name)}
+                    className={`goal-option p-4 rounded-xl font-medium transition-all hover:scale-105 glass-card flex flex-col items-center gap-2 ${isSelected ? 'selected' : ''}`}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    <span className="text-2xl">{goal.icon}</span>
+                    <span>{goal.name}</span>
+                  </button>
+                );
+              })}
             </div>
             <button
-              className="goal-option w-full p-4 rounded-xl font-medium transition-all hover:scale-105 glass-card flex items-center justify-center gap-3"
+              onClick={() => toggleGoal('Custom')}
+              className={`goal-option w-full p-4 rounded-xl font-medium transition-all hover:scale-105 glass-card flex items-center justify-center gap-3 ${selectedGoals.includes('Custom') ? 'selected' : ''}`}
               style={{ fontFamily: 'var(--font-body)' }}
             >
               <span className="text-2xl">💰</span>
@@ -121,6 +135,11 @@ export default function Onboarding() {
               .goal-option:hover {
                 box-shadow: 0 0 30px rgba(176, 255, 9, 0.5), 0 8px 32px rgba(0, 0, 0, 0.2);
                 border-color: var(--lime);
+              }
+              .goal-option.selected {
+                box-shadow: 0 0 30px rgba(176, 255, 9, 0.6), 0 8px 32px rgba(0, 0, 0, 0.2);
+                border-color: var(--lime);
+                background-color: rgba(176, 255, 9, 0.1);
               }
             `}</style>
           </div>
