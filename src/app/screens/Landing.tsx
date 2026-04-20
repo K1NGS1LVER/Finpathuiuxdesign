@@ -39,16 +39,44 @@ export default function Landing() {
             return (
               <div
                 key={i}
-                className="p-6 rounded-2xl transition-transform hover:scale-105 cursor-pointer glass-card"
+                className="p-8 rounded-2xl glass-card flex flex-col items-center text-center"
+                style={{
+                  animation: `fadeInUp 0.6s ease-out ${i * 0.1}s backwards, float ${3 + (i % 3)}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.1}s, ${i * 0.2}s`,
+                }}
               >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: goal.color + '20', color: goal.color }}>
-                  <Icon size={24} />
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300"
+                  style={{
+                    backgroundColor: goal.color + '20',
+                    color: goal.color,
+                    boxShadow: `0 4px 20px ${goal.color}30`,
+                  }}
+                >
+                  <Icon size={28} />
                 </div>
-                <h3 className="font-bold">{goal.title}</h3>
+                <h3 className="font-bold text-lg" style={{ fontFamily: 'var(--font-body)' }}>{goal.title}</h3>
               </div>
             );
           })}
         </div>
+
+        <style>{`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+        `}</style>
 
         <button
           onClick={() => navigate('/onboarding')}

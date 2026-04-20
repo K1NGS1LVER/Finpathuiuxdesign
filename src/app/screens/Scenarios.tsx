@@ -91,24 +91,25 @@ export default function Scenarios() {
         <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Impact Analysis</h3>
         <div className="grid grid-cols-2 gap-4">
           {impacts.map((impact, i) => (
-            <div key={i} className="p-5 rounded-xl" className="glass-card">
-              <div className="text-sm mb-3" style={{ color: 'var(--secondary)' }}>{impact.label}</div>
-              <div className="flex items-end justify-between mb-3">
-                <div>
-                  <div className="text-xs mb-1" style={{ color: 'var(--secondary)' }}>Current</div>
+            <div key={i} className="p-6 rounded-xl glass-card">
+              <div className="text-sm mb-4 font-medium" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>{impact.label}</div>
+              <div className="flex items-end justify-between mb-4 gap-4">
+                <div className="flex-1">
+                  <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Current</div>
                   <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>{impact.current}</div>
                 </div>
-                <div className="text-4xl opacity-20">→</div>
-                <div className="text-right">
-                  <div className="text-xs mb-1" style={{ color: 'var(--secondary)' }}>After</div>
+                <div className="text-3xl opacity-20 px-2">→</div>
+                <div className="text-right flex-1">
+                  <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>After</div>
                   <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: current?.color }}>{impact.future}</div>
                 </div>
               </div>
               <div
-                className="text-sm font-bold text-center py-1.5 rounded-lg"
+                className="text-sm font-bold text-center py-2 rounded-lg"
                 style={{
                   backgroundColor: impact.positive ? 'var(--lime)' : 'var(--red)',
                   color: impact.positive ? '#050F1C' : '#fff',
+                  fontFamily: 'var(--font-body)',
                 }}
               >
                 {impact.change}
