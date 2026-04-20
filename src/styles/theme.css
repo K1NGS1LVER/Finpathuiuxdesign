@@ -39,13 +39,17 @@
 @layer base {
   * {
     box-sizing: border-box;
+    transition: background-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 600ms cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 600ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   body {
     font-family: var(--font-body);
     background-color: var(--background);
     color: var(--foreground);
-    transition: background-color 300ms ease, color 300ms ease;
   }
 
   html {
@@ -68,4 +72,7 @@
   -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
+  transition: background-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }

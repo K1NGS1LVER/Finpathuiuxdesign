@@ -57,8 +57,8 @@ function AppContent() {
         </div>
       ) : (
         <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/" element={<Landing isDark={isDark} setIsDark={setIsDark} />} />
+          <Route path="/onboarding" element={<Onboarding isDark={isDark} setIsDark={setIsDark} />} />
           <Route path="/loading" element={<Loading />} />
         </Routes>
       )}

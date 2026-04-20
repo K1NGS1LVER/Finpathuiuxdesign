@@ -75,16 +75,16 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             finpath
           </span>
         </button>
-        <button 
+        <button
           onClick={() => setMobileMenuOpen(false)}
-          className="absolute top-4 right-2 w-6 h-6 rounded-md flex items-center justify-center hover:bg-[--border] transition-all duration-300 hover:scale-110 md:hidden"
+          className="absolute top-1/2 -translate-y-1/2 right-2 w-6 h-6 rounded-md flex items-center justify-center hover:bg-[--border] transition-all duration-300 hover:scale-110 md:hidden"
           style={{ color: 'var(--secondary)' }}
         >
           <X size={16} />
         </button>
-        <button 
+        <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-4 right-2 w-6 h-6 rounded-md hidden md:flex items-center justify-center hover:bg-[--border] transition-all duration-300 hover:scale-110"
+          className="absolute top-1/2 -translate-y-1/2 right-2 w-6 h-6 rounded-md hidden md:flex items-center justify-center hover:bg-[--border] transition-all duration-300 hover:scale-110"
           style={{ color: 'var(--secondary)' }}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -99,12 +99,13 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             <button
               key={item.path}
               onClick={() => handleNavigation(item.path)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 relative overflow-hidden group"
+              className="w-full flex items-center px-3 py-2.5 rounded-lg mb-1 relative overflow-hidden group"
               style={{
                 backgroundColor: active ? 'rgba(176, 255, 9, 0.1)' : 'transparent',
                 color: active ? 'var(--foreground)' : 'var(--secondary)',
                 fontFamily: 'var(--font-body)',
                 justifyContent: collapsed ? 'center' : 'flex-start',
+                gap: collapsed ? '0' : '12px',
                 transition: 'all 400ms cubic-bezier(0.4, 0, 0.2, 1)',
                 paddingLeft: collapsed ? '0' : '12px',
               }}
@@ -130,12 +131,13 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
       </nav>
 
       <button
-        className="m-3 flex items-center justify-center gap-2 py-3 rounded-lg font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+        className="m-3 flex items-center justify-center py-3 rounded-lg font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
         style={{ 
           backgroundColor: 'var(--blue)', 
           color: '#fff', 
           fontFamily: 'var(--font-body)',
           boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
+          gap: collapsed ? '0' : '8px',
         }}
         title={collapsed ? 'Ask Penny' : undefined}
         onClick={() => { onPennyClick(); setMobileMenuOpen(false); }}
