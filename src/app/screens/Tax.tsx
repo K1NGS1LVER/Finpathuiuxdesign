@@ -16,15 +16,15 @@ export default function Tax() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 relative">
+    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute -top-20 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--blue)' }} />
       <div className="relative z-10">
-        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Tax Calculator</h1>
-        <p style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Compare Old vs New regime and optimize your savings</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Tax Calculator</h1>
+        <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Compare Old vs New regime and optimize your savings</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 relative z-10">
-        <div className="p-6 rounded-2xl space-y-4" className="glass-card">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
+        <div className="p-6 rounded-2xl space-y-4 glass-card">
           <h3 className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Your Income</h3>
           <div>
             <label className="text-sm mb-2 block" style={{ color: 'var(--secondary)' }}>Annual Income</label>
@@ -84,31 +84,31 @@ export default function Tax() {
 
         <div className="p-6 rounded-2xl glass-card">
           <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Comparison</h3>
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl glass">
-              <div className="text-sm mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Old Regime Tax</div>
-              <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--red)' }}>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 md:p-4 rounded-xl glass">
+              <div className="text-xs md:text-sm mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Old Regime Tax</div>
+              <div className="text-xl md:text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--red)' }}>
                 ₹{oldTax.toFixed(0)}
               </div>
             </div>
-            <div className="p-4 rounded-xl glass">
-              <div className="text-sm mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>New Regime Tax</div>
-              <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--blue)' }}>
+            <div className="p-3 md:p-4 rounded-xl glass">
+              <div className="text-xs md:text-sm mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>New Regime Tax</div>
+              <div className="text-xl md:text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--blue)' }}>
                 ₹{newTax.toFixed(0)}
               </div>
             </div>
-            <div className="p-4 rounded-xl" style={{ backgroundColor: newTax < oldTax ? 'var(--lime)' : 'var(--red)', color: newTax < oldTax ? '#050F1C' : '#fff' }}>
-              <div className="text-sm mb-1 opacity-80">You Save</div>
-              <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+            <div className="p-3 md:p-4 rounded-xl col-span-2" style={{ backgroundColor: newTax < oldTax ? 'var(--lime)' : 'var(--red)', color: newTax < oldTax ? '#050F1C' : '#fff' }}>
+              <div className="text-xs md:text-sm mb-1 opacity-80">You Save</div>
+              <div className="text-2xl md:text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                 ₹{Math.abs(oldTax - newTax).toFixed(0)}
               </div>
-              <div className="text-sm opacity-80 mt-1">{newTax < oldTax ? 'Choose New Regime' : 'Choose Old Regime'}</div>
+              <div className="text-xs md:text-sm opacity-80 mt-1">{newTax < oldTax ? 'Choose New Regime' : 'Choose Old Regime'}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-6 rounded-2xl" className="glass-card">
+      <div className="p-6 rounded-2xl glass-card">
         <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Tax Slabs</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -132,11 +132,11 @@ export default function Tax() {
         </div>
       </div>
 
-      <div className="p-6 rounded-2xl flex items-start gap-4 relative z-10" style={{ backgroundColor: 'var(--blue)', color: '#fff' }}>
-        <Info size={20} className="flex-shrink-0 mt-0.5" />
+      <div className="p-4 md:p-6 rounded-2xl flex items-start gap-3 md:gap-4 relative z-10" style={{ backgroundColor: 'var(--blue)', color: '#fff' }}>
+        <Info size={18} className="md:w-5 md:h-5 flex-shrink-0 mt-0.5" />
         <div>
-          <div className="font-bold mb-1" style={{ fontFamily: 'var(--font-display)' }}>Upload Documents</div>
-          <div className="text-sm opacity-90 mb-3" style={{ fontFamily: 'var(--font-body)' }}>Upload your Form 16 or salary slips for precise calculations</div>
+          <div className="font-bold mb-1 text-sm md:text-base" style={{ fontFamily: 'var(--font-display)' }}>Upload Documents</div>
+          <div className="text-xs md:text-sm opacity-90 mb-3" style={{ fontFamily: 'var(--font-body)' }}>Upload your Form 16 or salary slips for precise calculations</div>
           <button className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 bg-white/20 hover:bg-white/30" style={{ fontFamily: 'var(--font-body)' }}>
             <FileUp size={16} />
             Upload Files

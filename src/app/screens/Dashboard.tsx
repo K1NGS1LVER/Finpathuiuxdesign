@@ -26,17 +26,17 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 relative">
+    <div className="max-w-6xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--lime)' }} />
       <div className="absolute top-1/2 -left-40 w-96 h-96 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--violet)' }} />
       <div className="flex items-center justify-between relative z-10">
         <div>
-          <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Welcome back!</h1>
-          <p style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Here's your financial snapshot</p>
+          <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>Welcome back!</h1>
+          <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Here's your financial snapshot</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 relative z-10">
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -54,7 +54,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
         })}
       </div>
 
-      <div className="grid grid-cols-2 gap-6 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
         <div className="p-6 rounded-2xl glass-card">
           <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Health Score</h3>
           <div className="flex items-center justify-center">

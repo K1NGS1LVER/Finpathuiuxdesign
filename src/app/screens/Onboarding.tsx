@@ -60,12 +60,12 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="h-full w-full flex items-center justify-center p-8 relative" style={{ backgroundColor: 'var(--background)' }}>
+    <div className="h-full w-full flex items-center justify-center p-4 md:p-8 relative overflow-y-auto" style={{ backgroundColor: 'var(--background)' }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: 'var(--lime)' }} />
         <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: 'var(--blue)' }} />
       </div>
-      <div className="max-w-md w-full space-y-8 relative z-10">
+      <div className="max-w-md w-full space-y-6 md:space-y-8 relative z-10 py-8">
         <div className="flex gap-2">
           {steps.map((_, i) => (
             <div
@@ -76,8 +76,8 @@ export default function Onboarding() {
           ))}
         </div>
 
-        <div className="space-y-4 text-center">
-          <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>{current.title}</h2>
+        <div className="space-y-3 md:space-y-4 text-center">
+          <h2 className="text-2xl md:text-4xl font-bold px-2" style={{ fontFamily: 'var(--font-display)' }}>{current.title}</h2>
           <p style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>{current.subtitle}</p>
         </div>
 
