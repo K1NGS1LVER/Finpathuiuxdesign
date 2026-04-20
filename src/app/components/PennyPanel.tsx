@@ -20,14 +20,19 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
 
   return (
     <div
-      className="fixed top-0 right-0 h-full w-[320px] flex flex-col transition-transform duration-300 glass-card"
+      className="fixed top-0 right-0 h-full w-[320px] flex flex-col transition-transform duration-300 z-50"
       style={{
         borderLeft: '1px solid var(--border)',
         transform: open ? 'translateX(0)' : 'translateX(100%)',
         borderRadius: 0,
+        backgroundColor: 'rgba(248, 250, 252, 0.3)',
+        backdropFilter: 'blur(80px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(80px) saturate(200%)',
+        border: '1px solid var(--border)',
+        boxShadow: 'var(--shadow)',
       }}
     >
-      <div className="h-14 flex items-center justify-between px-4" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="h-14 flex items-center justify-between px-4 glass" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--blue)', color: '#fff' }}>
             P
@@ -56,7 +61,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         ))}
       </div>
 
-      <div className="p-4" style={{ borderTop: '1px solid var(--border)' }}>
+      <div className="p-4 glass" style={{ borderTop: '1px solid var(--border)' }}>
         <div className="flex gap-2">
           <input
             value={input}

@@ -31,7 +31,7 @@ function AppContent() {
     <div className="h-screen w-screen overflow-hidden" style={{ fontFamily: 'var(--font-body)' }}>
       {showLayout ? (
         <div className="flex h-full">
-          <Sidebar />
+          <Sidebar onPennyClick={() => setPennyOpen(true)} />
           <div className="flex-1 flex flex-col overflow-hidden">
             <Header isDark={isDark} setIsDark={setIsDark} />
             <main className="flex-1 overflow-y-auto px-6 py-8">
