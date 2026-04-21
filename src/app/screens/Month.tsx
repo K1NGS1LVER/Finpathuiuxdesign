@@ -29,20 +29,20 @@ export default function Month() {
         <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Your mission this month</p>
       </div>
 
-      <div className="p-4 md:p-8 rounded-2xl relative overflow-hidden z-10" style={{ backgroundColor: 'var(--lime)', color: '#050F1C' }}>
+      <div className="p-6 md:p-8 rounded-[var(--radius-xl)] relative overflow-hidden z-10 bento-card" style={{ backgroundColor: 'var(--lime)', color: '#050F1C', borderColor: 'transparent' }}>
         <div className="relative z-10">
           <div className="text-xs md:text-sm font-medium mb-2 opacity-80" style={{ fontFamily: 'var(--font-body)' }}>MISSION</div>
-          <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4 slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>
             Save ₹25,000 & reduce debt by ₹5,000
           </h2>
           <div className="flex items-center gap-4 md:gap-6">
             <div>
               <div className="text-xs md:text-sm opacity-80 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Target Savings</div>
-              <div className="text-xl md:text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹25,000</div>
+              <div className="text-xl md:text-2xl font-bold slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>₹25,000</div>
             </div>
             <div>
               <div className="text-xs md:text-sm opacity-80 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Debt Reduction</div>
-              <div className="text-xl md:text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹5,000</div>
+              <div className="text-xl md:text-2xl font-bold slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>₹5,000</div>
             </div>
           </div>
         </div>
@@ -50,8 +50,8 @@ export default function Month() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
-        <div className="glass-card p-6 rounded-2xl">
-          <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Action Checklist</h3>
+        <div className="bento-card">
+          <h3 className="text-title mb-4 slashed-zero text-[var(--foreground)]">Action Checklist</h3>
           <div className="space-y-2">
             {tasks.map((task) => (
               <button
@@ -78,8 +78,8 @@ export default function Month() {
           </div>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl">
-          <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Budget Tracker</h3>
+        <div className="bento-card">
+          <h3 className="text-title mb-4 slashed-zero text-[var(--foreground)]">Budget Tracker</h3>
           <div className="space-y-4">
             {budget.map((item) => {
               const overBudget = item.actual > item.planned;
@@ -107,18 +107,18 @@ export default function Month() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 relative z-10">
-        <div className="glass-card p-5 rounded-xl">
-          <div className="text-sm mb-2" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Days Remaining</div>
-          <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>10</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
+        <div className="bento-card flex flex-col justify-center">
+          <div className="text-sm font-medium mb-2 text-[var(--secondary)]">Days Remaining</div>
+          <div className="text-3xl font-bold slashed-zero text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>10</div>
         </div>
-        <div className="p-5 rounded-xl glass-card">
-          <div className="text-sm mb-2" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Savings This Month</div>
-          <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--lime)' }}>₹18K</div>
+        <div className="bento-card flex flex-col justify-center">
+          <div className="text-sm font-medium mb-2 text-[var(--secondary)]">Savings This Month</div>
+          <div className="text-3xl font-bold slashed-zero text-[var(--lime)]" style={{ fontFamily: 'var(--font-display)' }}>₹18K</div>
         </div>
-        <div className="p-5 rounded-xl glass-card">
-          <div className="text-sm mb-2" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>On Track</div>
-          <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--lime)' }}>72%</div>
+        <div className="bento-card flex flex-col justify-center">
+          <div className="text-sm font-medium mb-2 text-[var(--secondary)]">On Track</div>
+          <div className="text-3xl font-bold slashed-zero text-[var(--lime)]" style={{ fontFamily: 'var(--font-display)' }}>72%</div>
         </div>
       </div>
     </div>

@@ -29,26 +29,22 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       )}
 
       <div
-        className="fixed top-0 right-0 h-full w-full md:w-[320px] flex flex-col transition-transform duration-300 z-50"
+        className="fixed top-0 right-0 h-full w-full md:w-[320px] flex flex-col transition-transform duration-300 z-50 bg-[var(--card)] text-[var(--foreground)]"
         style={{
           borderLeft: '1px solid var(--border)',
           transform: open ? 'translateX(0)' : 'translateX(100%)',
           borderRadius: 0,
-          backgroundColor: 'rgba(248, 250, 252, 0.3)',
-          backdropFilter: 'blur(80px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(80px) saturate(200%)',
-          border: '1px solid var(--border)',
-          boxShadow: 'var(--shadow)',
+          boxShadow: 'var(--shadow-lg)',
         }}
       >
-      <div className="h-14 flex items-center justify-between px-4 glass" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="h-14 flex items-center justify-between px-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--blue)', color: '#fff' }}>
             P
           </div>
-          <span className="font-bold">Penny</span>
+          <span className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Penny</span>
         </div>
-        <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[--border]">
+        <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)]">
           <X size={18} />
         </button>
       </div>
@@ -57,7 +53,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[80%] px-3 py-2 rounded-lg ${msg.role === 'penny' ? 'glass-card' : ''}`}
+              className={`max-w-[80%] px-3 py-2 rounded-lg ${msg.role === 'penny' ? 'bg-[var(--background-solid)] border border-[var(--border)]' : ''}`}
               style={{
                 backgroundColor: msg.role === 'user' ? 'var(--lime)' : undefined,
                 color: msg.role === 'user' ? '#050F1C' : 'var(--foreground)',
@@ -70,19 +66,19 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         ))}
       </div>
 
-      <div className="p-4 glass" style={{ borderTop: '1px solid var(--border)' }}>
+      <div className="p-4" style={{ borderTop: '1px solid var(--border)' }}>
         <div className="flex gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask anything..."
-            className="flex-1 px-3 py-2 rounded-lg outline-none glass-card"
+            className="flex-1 px-3 py-2 rounded-lg outline-none bg-[var(--background-solid)] border border-[var(--border)] focus:border-[var(--lime)]"
             style={{ fontFamily: 'var(--font-body)' }}
           />
           <button
             onClick={handleSend}
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
             style={{ backgroundColor: 'var(--blue)', color: '#fff' }}
           >
             <Send size={18} />

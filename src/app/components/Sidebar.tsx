@@ -12,11 +12,12 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 768);
+      if (window.innerWidth < 768) {
+        setCollapsed(false);
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -45,18 +46,20 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
 
   return (
     <>
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      
       <aside
-        className="h-full flex flex-col overflow-hidden z-50 md:z-auto md:relative"
-        style={{
-          width: collapsed ? '80px' : '240px',
-          position: isDesktop ? 'relative' : 'fixed',
-          left: isDesktop ? '0' : (mobileMenuOpen ? '0' : '-240px'),
-          background: 'var(--card)',
-          borderRight: '1px solid var(--border)',
-          borderRadius: 0,
-          boxShadow: isDesktop ? 'none' : 'var(--shadow-lg)',
-          transition: 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
+        className={`h-full flex flex-col overflow-hidden z-50 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] bg-[var(--card)] border-r border-[var(--border)]
+          fixed md:relative
+          ${mobileMenuOpen ? 'left-0 shadow-[var(--shadow-lg)]' : '-left-[240px] md:left-0 shadow-none'}
+          w-[240px] ${collapsed ? 'md:w-[80px]' : 'md:w-[240px]'}
+        `}
       >
         {/* Header */}
         <div className="relative p-6">
@@ -72,33 +75,31 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
               }}
             />
             <span
-              className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero"
+              className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero text-[var(--foreground)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
               style={{
                 fontFamily: 'var(--font-display)',
-                color: 'var(--foreground)',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '200px',
-                transition: 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               finpath
             </span>
           </button>
 
-          {/* Mobile Close / Desktop Collapse */}
+          {/* Desktop Collapse */}
           <button
-            onClick={() => isDesktop ? setCollapsed(!collapsed) : setMobileMenuOpen(false)}
-            className="absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
-            style={{
-              background: 'rgba(5, 15, 28, 0.04)',
-              color: 'var(--foreground)',
-            }}
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full items-center justify-center transition-all duration-300 hover:scale-110 bg-[rgba(5,15,28,0.04)] text-[var(--foreground)]"
           >
-            {isDesktop ? (
-              collapsed ? <ChevronRight size={16} className="icon-wireframe" /> : <ChevronLeft size={16} className="icon-wireframe" />
-            ) : (
-              <X size={16} className="icon-wireframe" />
-            )}
+            {collapsed ? <ChevronRight size={16} className="icon-wireframe" /> : <ChevronLeft size={16} className="icon-wireframe" />}
+          </button>
+
+          {/* Mobile Close */}
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 bg-[rgba(5,15,28,0.04)] text-[var(--foreground)]"
+          >
+            <X size={16} className="icon-wireframe" />
           </button>
         </div>
 
@@ -111,12 +112,11 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
               <button
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
-                className="w-full flex items-center px-4 py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300"
+                className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 ${collapsed ? 'px-0 justify-center md:px-0' : 'px-4 justify-start'}`}
                 style={{
                   backgroundColor: active ? 'rgba(176, 255, 9, 0.1)' : 'transparent',
                   color: active ? 'var(--foreground)' : 'var(--secondary)',
                   fontFamily: 'var(--font-body)',
-                  justifyContent: collapsed ? 'center' : 'flex-start',
                   gap: collapsed ? '0' : '12px',
                   fontWeight: active ? 600 : 400,
                 }}

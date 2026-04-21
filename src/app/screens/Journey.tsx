@@ -108,7 +108,7 @@ export default function Journey() {
         ref={canvasRef}
         className="flex-1 rounded-2xl relative overflow-hidden"
         style={{
-          backgroundColor: document.documentElement.classList.contains('dark') ? '#0a0a18' : '#f0f4ff',
+          backgroundColor: 'var(--background-solid)',
           cursor: isPanning ? 'grabbing' : 'grab',
         }}
         onMouseDown={handleCanvasPointerDown}
@@ -157,8 +157,6 @@ export default function Journey() {
               left: node.x + panOffset.x,
               top: node.y + panOffset.y,
               width: 160,
-              animation: dragging === node.id ? 'none' : `float ${3 + Math.random()}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
               transition: dragging === node.id ? 'none' : 'transform 0.2s ease',
             }}
             onMouseDown={(e) => handlePointerDown(e, node)}
@@ -166,17 +164,10 @@ export default function Journey() {
             onClick={() => handleNodeClick(node)}
           >
             <div
-              className="p-4 rounded-2xl glass-card"
+              className="p-4 rounded-2xl bento-card"
               style={{
-                backgroundColor: document.documentElement.classList.contains('dark') 
-                  ? 'rgba(5, 15, 28, 0.7)' 
-                  : 'rgba(248, 250, 252, 0.8)',
-                backdropFilter: 'blur(80px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(80px) saturate(200%)',
                 border: `2px solid ${getStatusColor(node.status)}`,
-                boxShadow: document.documentElement.classList.contains('dark')
-                  ? `0 0 20px ${getStatusColor(node.status)}15, 0 4px 12px rgba(0, 0, 0, 0.3)`
-                  : `0 0 20px ${getStatusColor(node.status)}10, 0 4px 12px ${getStatusColor(node.status)}20`,
+                boxShadow: `0 0 20px ${getStatusColor(node.status)}15, var(--shadow-md)`,
               }}
             >
               <div className="text-3xl mb-2">{node.emoji}</div>
@@ -205,7 +196,7 @@ export default function Journey() {
 
       {selectedNode && (
         <div
-          className="w-full md:w-80 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-4 glass-card fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-30"
+          className="w-full md:w-80 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-4 bento-card fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-30"
           style={{
             maxHeight: '50vh',
             overflowY: 'auto'
@@ -239,12 +230,12 @@ export default function Journey() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-xl glass">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-2 rounded-xl bg-[var(--border)]">
               <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Saved</div>
               <div className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹{(selectedNode.amount * selectedNode.progress / 100).toFixed(0)}</div>
             </div>
-            <div className="p-3 rounded-xl glass">
+            <div className="p-2 rounded-xl bg-[var(--border)]">
               <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Remaining</div>
               <div className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹{(selectedNode.amount * (100 - selectedNode.progress) / 100).toFixed(0)}</div>
             </div>
@@ -262,12 +253,6 @@ export default function Journey() {
         </div>
       )}
 
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-      `}</style>
     </div>
   );
 }
