@@ -37,7 +37,7 @@ export default function Scenarios() {
             <button
               key={s.id}
               onClick={() => setScenario(s.id)}
-              className={`p-5 rounded-xl text-left transition-all hover:scale-105 ${!active ? 'bento-card' : ''}`}
+              className={`p-3 md:p-5 rounded-xl text-left transition-all hover:scale-105 ${!active ? 'bento-card' : ''}`}
               style={{
                 backgroundColor: active ? s.color + '20' : undefined,
                 border: `2px solid ${active ? s.color : 'var(--border)'}`,
@@ -50,7 +50,7 @@ export default function Scenarios() {
               >
                 <Icon size={24} />
               </div>
-              <div className="font-bold" style={{ fontFamily: 'var(--font-body)' }}>{s.label}</div>
+              <div className="font-bold text-xs md:text-base" style={{ fontFamily: 'var(--font-body)' }}>{s.label}</div>
             </button>
           );
         })}

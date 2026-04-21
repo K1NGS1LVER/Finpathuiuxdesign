@@ -63,7 +63,7 @@ export default function Tax() {
                   type="text"
                   value={income}
                   onChange={(e) => setIncome(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full pl-10 pr-4 py-4 text-2xl font-bold rounded-2xl outline-none slashed-zero bg-[var(--background-solid)] border border-[var(--border)] focus:border-[var(--lime)]"
+                  className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero bg-[var(--background-solid)] border border-[var(--border)] focus:border-[var(--lime)]"
                   placeholder="1200000"
                 />
               </div>
@@ -77,7 +77,7 @@ export default function Tax() {
                   type="text"
                   value={deductions}
                   onChange={(e) => setDeductions(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full pl-10 pr-4 py-4 text-2xl font-bold rounded-2xl outline-none slashed-zero bg-[var(--background-solid)] border border-[var(--border)] focus:border-[var(--lime)]"
+                  className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero bg-[var(--background-solid)] border border-[var(--border)] focus:border-[var(--lime)]"
                   placeholder="150000"
                 />
               </div>
@@ -117,7 +117,7 @@ export default function Tax() {
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-[var(--red)] opacity-10 blur-2xl pointer-events-none" />
               <div className="relative text-center py-6">
-                <div className="text-5xl lg:text-6xl font-bold mb-2 slashed-zero text-[var(--foreground)]">
+                <div className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 slashed-zero text-[var(--foreground)]">
                   ₹{oldTax.toLocaleString('en-IN')}
                 </div>
                 <div className="text-sm font-medium text-[var(--secondary)]">Tax Liability</div>
@@ -153,7 +153,7 @@ export default function Tax() {
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-[var(--lime)] opacity-10 blur-2xl pointer-events-none" />
               <div className="relative text-center py-6">
-                <div className="text-5xl lg:text-6xl font-bold mb-2 slashed-zero text-[var(--foreground)]">
+                <div className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 slashed-zero text-[var(--foreground)]">
                   ₹{newTax.toLocaleString('en-IN')}
                 </div>
                 <div className="text-sm font-medium text-[var(--secondary)]">Tax Liability</div>
@@ -179,12 +179,12 @@ export default function Tax() {
         </div>
 
         {/* Savings Card */}
-        <div className="lg:col-span-3 bento-card p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="lg:col-span-3 bento-card p-4 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-2xl font-bold mb-2 slashed-zero">
+            <h3 className="text-xl md:text-2xl font-bold mb-2 slashed-zero">
               {savings > 0 ? 'You Save' : savings < 0 ? 'You Pay More' : 'No Difference'}
             </h3>
-            <p className="text-base text-[var(--secondary)]">
+            <p className="text-sm md:text-base text-[var(--secondary)]">
               {savings > 0
                 ? `Choosing the new regime saves you ₹${Math.abs(savings).toLocaleString('en-IN')}`
                 : savings < 0
@@ -193,17 +193,17 @@ export default function Tax() {
             </p>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <div className="text-center">
-              <div className={`text-4xl md:text-5xl font-bold mb-1 slashed-zero ${savings > 0 ? 'text-[var(--lime)]' : savings < 0 ? 'text-[var(--red)]' : 'text-[var(--foreground)]'}`}>
+              <div className={`text-3xl md:text-5xl font-bold mb-1 slashed-zero ${savings > 0 ? 'text-[var(--lime-text)]' : savings < 0 ? 'text-[var(--red-text)]' : 'text-[var(--foreground)]'}`}>
                 ₹{Math.abs(savings).toLocaleString('en-IN')}
               </div>
-              <div className="text-sm font-medium text-[var(--secondary)]">
+              <div className="text-xs md:text-sm font-medium text-[var(--secondary)]">
                 {savingsPercentage}% {savings > 0 ? 'saved' : 'extra'}
               </div>
             </div>
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-[var(--background-solid)] ${savings > 0 ? 'text-[var(--lime)]' : 'text-[var(--red)]'}`}>
-              {savings > 0 ? <TrendingDown size={28} /> : <Calculator size={28} />}
+            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center bg-[var(--background-solid)] ${savings > 0 ? 'text-[var(--lime-text)]' : 'text-[var(--red-text)]'}`}>
+              {savings > 0 ? <TrendingDown size={24} className="md:w-7 md:h-7" /> : <Calculator size={24} className="md:w-7 md:h-7" />}
             </div>
           </div>
         </div>

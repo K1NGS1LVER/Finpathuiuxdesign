@@ -28,11 +28,17 @@
 
   /* Brand Colors */
   --lime: #B0FF09;
+  --lime-text: #598500;
   --violet: #AC49FF;
+  --violet-text: #7312CC;
   --blue: #495BFF;
+  --blue-text: #2836CC;
   --amber: #F59E0B;
+  --amber-text: #A66A00;
   --red: #EF4444;
+  --red-text: #CC1F1F;
   --green: #22C55E;
+  --green-text: #16853D;
 
   /* Typography Scale */
   --text-xs: 11px;
@@ -86,6 +92,13 @@
   --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
   --shadow-xl: 0 40px 100px rgba(0, 0, 0, 0.7);
+
+  --lime-text: #B0FF09;
+  --violet-text: #AC49FF;
+  --blue-text: #495BFF;
+  --amber-text: #F59E0B;
+  --red-text: #EF4444;
+  --green-text: #22C55E;
 }
 
 @layer base {
@@ -128,7 +141,7 @@
 .bento-card {
   background: var(--card);
   border-radius: var(--radius-xl);
-  padding: var(--space-3);
+  padding: var(--space-2);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
   position: relative;
@@ -153,7 +166,7 @@
 }
 
 .bento-card-lg {
-  padding: var(--space-4);
+  padding: var(--space-3);
 }
 
 @media (min-width: 768px) {
@@ -221,7 +234,7 @@
 /* Typography Utilities */
 .text-hero {
   font-family: var(--font-display);
-  font-size: var(--text-5xl);
+  font-size: var(--text-4xl);
   font-weight: var(--font-weight-bold);
   line-height: 1.1;
   letter-spacing: -0.03em;
@@ -233,7 +246,7 @@
 
 .text-display {
   font-family: var(--font-display);
-  font-size: var(--text-4xl);
+  font-size: var(--text-3xl);
   font-weight: var(--font-weight-bold);
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -245,7 +258,7 @@
 
 .text-title {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   font-weight: var(--font-weight-bold);
   line-height: 1.2;
   letter-spacing: -0.02em;

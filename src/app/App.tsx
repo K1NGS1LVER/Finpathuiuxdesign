@@ -43,7 +43,7 @@ function AppContent() {
               setIsDark={setIsDark}
               onMenuClick={() => setMobileMenuOpen(true)}
             />
-            <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-6 py-4 md:py-8">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden px-2 md:px-6 py-2 md:py-8">
               <Routes>
                 <Route path="/dashboard" element={<Dashboard onPennyClick={() => setPennyOpen(true)} />} />
                 <Route path="/journey" element={<Journey />} />
