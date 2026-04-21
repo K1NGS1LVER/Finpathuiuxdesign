@@ -94,28 +94,30 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
         ))}
 
         {/* Secondary Metrics Grid (8 columns) */}
-        <div className="col-span-12 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {secondaryMetrics.map((metric, i) => {
             const Icon = metric.icon;
             return (
-              <div key={i} className="bento-card bento-card-sm flex flex-col justify-between">
-                <div className="flex items-start justify-between mb-4">
-                  <span className="text-label text-[var(--secondary)] leading-tight">{metric.label}</span>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--card-foreground)] flex-shrink-0" style={{ background: 'var(--surface-hover)' }}>
-                    <Icon size={14} className="icon-wireframe" />
+              <div key={i} className="bento-card p-4 md:p-5 flex flex-row items-center justify-between min-h-[80px]">
+                {/* Left side: Icon and Label */}
+                <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-[var(--card-foreground)] flex-shrink-0" style={{ background: 'var(--surface-hover)' }}>
+                    <Icon size={18} className="icon-wireframe" />
                   </div>
+                  <span className="text-sm md:text-base font-medium text-[var(--secondary)] leading-tight truncate">{metric.label}</span>
                 </div>
 
-                <div>
+                {/* Right side: Values */}
+                <div className="flex flex-col items-end flex-shrink-0 pl-2">
                   <div className="flex items-baseline gap-1 mb-1">
                     {metric.label !== 'Active Goals' && (
-                      <span className="text-xs text-[var(--secondary)]">₹</span>
+                      <span className="text-xs font-medium text-[var(--secondary)]">₹</span>
                     )}
-                    <h3 className="text-xl lg:text-2xl font-bold slashed-zero text-[var(--card-foreground)] truncate" style={{ fontFamily: 'var(--font-display)' }}>
+                    <h3 className="text-lg md:text-xl lg:text-xl font-bold slashed-zero text-[var(--card-foreground)] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
                       {metric.value}
                     </h3>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center justify-end gap-1">
                     {metric.change.startsWith('+') ? (
                       <ArrowUpRight size={12} style={{ color: 'var(--lime-text)' }} />
                     ) : metric.change.startsWith('-') ? (
