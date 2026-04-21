@@ -29,12 +29,15 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       )}
 
       <div
-        className="fixed top-0 right-0 h-full w-full md:w-[320px] flex flex-col transition-transform duration-300 z-50 bg-[var(--card)] text-[var(--foreground)]"
+        className="fixed top-0 right-0 h-full w-full md:w-[320px] flex flex-col transition-transform duration-300 z-50 text-[var(--card-foreground)]"
         style={{
+          background: 'var(--surface-tint)',
           borderLeft: '1px solid var(--border)',
           transform: open ? 'translateX(0)' : 'translateX(100%)',
           borderRadius: 0,
           boxShadow: 'var(--shadow-lg)',
+          backdropFilter: 'blur(48px)',
+          WebkitBackdropFilter: 'blur(48px)',
         }}
       >
       <div className="h-14 flex items-center justify-between px-4" style={{ borderBottom: '1px solid var(--border)' }}>
@@ -44,7 +47,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           </div>
           <span className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Penny</span>
         </div>
-        <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)]">
+        <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]">
           <X size={18} />
         </button>
       </div>
@@ -53,11 +56,12 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[80%] px-3 py-2 rounded-lg ${msg.role === 'penny' ? 'bg-[var(--background-solid)] border border-[var(--border)]' : ''}`}
+              className="max-w-[80%] px-3 py-2 rounded-lg"
               style={{
-                backgroundColor: msg.role === 'user' ? 'var(--lime)' : undefined,
-                color: msg.role === 'user' ? '#050F1C' : 'var(--foreground)',
+                backgroundColor: msg.role === 'user' ? 'var(--lime)' : 'var(--surface-hover)',
+                color: msg.role === 'user' ? '#050F1C' : 'var(--card-foreground)',
                 fontFamily: 'var(--font-body)',
+                border: msg.role === 'penny' ? '1px solid var(--border)' : 'none',
               }}
             >
               {msg.text}
@@ -73,8 +77,8 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask anything..."
-            className="flex-1 px-3 py-2 rounded-lg outline-none bg-[var(--background-solid)] border border-[var(--border)] focus:border-[var(--lime)]"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 px-3 py-2 rounded-lg outline-none border border-[var(--border)] focus:border-[var(--lime)]"
+            style={{ fontFamily: 'var(--font-body)', background: 'var(--surface-tint)', color: 'var(--card-foreground)' }}
           />
           <button
             onClick={handleSend}

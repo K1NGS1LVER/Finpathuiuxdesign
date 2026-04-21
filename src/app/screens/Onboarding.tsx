@@ -119,7 +119,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         }
         select option {
           background-color: var(--card);
-          color: var(--foreground);
+          color: var(--card-foreground);
         }
         .goal-option {
           transition: all 0.3s ease;
@@ -138,7 +138,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       {/* Theme Toggle */}
       <button
         onClick={() => setIsDark(!isDark)}
-        className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 z-20"
+        className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 z-20 text-[var(--card-foreground)]"
         style={{
           background: 'var(--card)',
           boxShadow: 'var(--shadow-sm)',
@@ -162,7 +162,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               key={i}
               className="h-1.5 md:h-2 flex-1 rounded-full transition-all duration-500"
               style={{
-                background: i <= step ? 'var(--lime)' : 'rgba(5, 15, 28, 0.1)',
+                background: i <= step ? 'var(--lime)' : 'var(--progress-inactive)',
                 boxShadow: i <= step ? '0 0 20px var(--lime)' : 'none',
               }}
             />
@@ -172,7 +172,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         {/* Main Card */}
         <div className="bento-card mb-4 flex-1 flex flex-col justify-center overflow-y-auto min-h-0 !p-4 md:!p-6">
           <div className="space-y-2 md:space-y-4 text-center mb-4 md:mb-6">
-            <h2 className="text-2xl md:text-4xl font-bold slashed-zero leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+            <h2 className="text-2xl md:text-4xl font-bold slashed-zero leading-tight text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
               {current.title}
             </h2>
             <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>
@@ -187,11 +187,10 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   type="text"
                   value={income}
                   onChange={(e) => setIncome(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="flex-1 px-4 py-4 md:px-6 md:py-6 text-3xl md:text-5xl font-bold text-center rounded-2xl md:rounded-3xl outline-none slashed-zero"
+                  className="flex-1 px-4 py-4 md:px-6 md:py-6 text-3xl md:text-5xl font-bold text-center rounded-2xl md:rounded-3xl outline-none slashed-zero text-[var(--card-foreground)]"
                   style={{
                     fontFamily: 'var(--font-display)',
-                    color: 'var(--foreground)',
-                    background: 'rgba(5, 15, 28, 0.02)',
+                    background: 'var(--surface-tint)',
                     border: '1px solid var(--border)',
                   }}
                   placeholder="0"
@@ -202,8 +201,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   className="pill-button px-3 md:px-5 py-3 md:py-4 text-xs md:text-sm font-bold outline-none cursor-pointer rounded-2xl md:rounded-3xl"
                   style={{
                     fontFamily: 'var(--font-body)',
-                    color: 'var(--foreground)',
-                    background: 'rgba(5, 15, 28, 0.04)',
+                    color: 'var(--card-foreground)',
+                    background: 'var(--surface-hover)',
                   }}
                 >
                   {currencies.map(curr => (
@@ -239,7 +238,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   className="flex gap-2 md:gap-3 items-center px-4 py-4 md:px-6 md:py-6 rounded-2xl md:rounded-3xl cursor-pointer transition-all hover:shadow-lg"
                   onClick={() => setShowExpenseBreakdown(!showExpenseBreakdown)}
                   style={{
-                    background: 'rgba(5, 15, 28, 0.02)',
+                    background: 'var(--surface-tint)',
                     border: '1px solid var(--border)',
                   }}
                 >
@@ -249,8 +248,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                     onChange={(e) => setManualTotalExpenses(e.target.value.replace(/[^0-9]/g, ''))}
                     onClick={(e) => e.stopPropagation()}
                     placeholder="0"
-                    className="flex-1 w-full bg-transparent text-2xl md:text-4xl font-bold text-center outline-none slashed-zero"
-                    style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}
+                    className="flex-1 w-full bg-transparent text-2xl md:text-4xl font-bold text-center outline-none slashed-zero text-[var(--card-foreground)]"
+                    style={{ fontFamily: 'var(--font-display)' }}
                   />
                   <button className="pill-button text-[10px] md:text-xs font-medium" style={{ color: 'var(--lime-text)' }}>
                     {showExpenseBreakdown ? 'Hide' : 'Breakdown'}
@@ -263,7 +262,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                 )}
 
                 {showExpenseBreakdown && (
-                  <div className="space-y-2 p-3 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'rgba(5, 15, 28, 0.02)', border: '1px solid var(--border)' }}>
+                  <div className="space-y-2 p-3 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)' }}>
                     {[
                       { key: 'rent', label: '🏠 Rent', placeholder: 'Monthly rent' },
                       { key: 'food', label: '🍽️ Food & Groceries', placeholder: 'Food expenses' },
@@ -284,7 +283,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                           className="w-full px-3 py-2 md:px-4 md:py-3 text-base md:text-lg font-bold rounded-lg md:rounded-xl outline-none slashed-zero"
                           style={{
                             fontFamily: 'var(--font-display)',
-                            color: 'var(--foreground)',
+                            color: 'var(--card-foreground)',
                             background: 'var(--card)',
                             border: '1px solid var(--border)',
                           }}
@@ -316,7 +315,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   className="flex gap-2 md:gap-3 items-center px-4 py-4 md:px-6 md:py-6 rounded-2xl md:rounded-3xl cursor-pointer transition-all hover:shadow-lg"
                   onClick={() => setShowDebtBreakdown(!showDebtBreakdown)}
                   style={{
-                    background: 'rgba(5, 15, 28, 0.02)',
+                    background: 'var(--surface-tint)',
                     border: '1px solid var(--border)',
                   }}
                 >
@@ -326,8 +325,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                     onChange={(e) => setManualTotalDebt(e.target.value.replace(/[^0-9]/g, ''))}
                     onClick={(e) => e.stopPropagation()}
                     placeholder="0"
-                    className="flex-1 w-full bg-transparent text-2xl md:text-4xl font-bold text-center outline-none slashed-zero"
-                    style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}
+                    className="flex-1 w-full bg-transparent text-2xl md:text-4xl font-bold text-center outline-none slashed-zero text-[var(--card-foreground)]"
+                    style={{ fontFamily: 'var(--font-display)' }}
                   />
                   <button className="pill-button text-[10px] md:text-xs font-medium" style={{ color: 'var(--lime-text)' }}>
                     {showDebtBreakdown ? 'Hide' : 'Breakdown'}
@@ -340,7 +339,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                 )}
 
                 {showDebtBreakdown && (
-                  <div className="space-y-2 p-3 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'rgba(5, 15, 28, 0.02)', border: '1px solid var(--border)' }}>
+                  <div className="space-y-2 p-3 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)' }}>
                     {[
                       { key: 'homeLoan', label: '🏡 Home Loan EMI', placeholder: 'Monthly EMI' },
                       { key: 'carLoan', label: '🚙 Car Loan EMI', placeholder: 'Monthly EMI' },
@@ -361,7 +360,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                           className="w-full px-3 py-2 md:px-4 md:py-3 text-base md:text-lg font-bold rounded-lg md:rounded-xl outline-none slashed-zero"
                           style={{
                             fontFamily: 'var(--font-display)',
-                            color: 'var(--foreground)',
+                            color: 'var(--card-foreground)',
                             background: 'var(--card)',
                             border: '1px solid var(--border)',
                           }}
@@ -390,7 +389,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                     <button
                       key={goal.name}
                       onClick={() => toggleGoal(goal.name)}
-                      className={`goal-option p-3 md:p-4 rounded-xl md:rounded-2xl font-medium transition-all flex flex-col items-center gap-2 md:gap-3 ${isSelected ? 'selected' : ''}`}
+                      className={`goal-option p-3 md:p-4 rounded-xl md:rounded-2xl font-medium transition-all flex flex-col items-center gap-2 md:gap-3 text-[var(--card-foreground)] ${isSelected ? 'selected' : ''}`}
                       style={{
                         fontFamily: 'var(--font-body)',
                         background: 'var(--card)',
@@ -413,7 +412,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               </div>
               <button
                 onClick={() => toggleGoal('Custom')}
-                className={`goal-option w-full p-3 md:p-4 rounded-xl md:rounded-2xl font-medium transition-all flex items-center justify-center gap-2 md:gap-3 ${selectedGoals.includes('Custom') ? 'selected' : ''}`}
+                className={`goal-option w-full p-3 md:p-4 rounded-xl md:rounded-2xl font-medium transition-all flex items-center justify-center gap-2 md:gap-3 text-[var(--card-foreground)] ${selectedGoals.includes('Custom') ? 'selected' : ''}`}
                 style={{
                   fontFamily: 'var(--font-body)',
                   background: 'var(--card)',
@@ -423,7 +422,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                 <div
                   className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
                   style={{
-                    backgroundColor: 'var(--lime)15',
+                    backgroundColor: 'rgba(176, 255, 9, 0.08)',
                     color: 'var(--lime-text)',
                   }}
                 >
@@ -440,13 +439,12 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           {step > 0 && (
             <button
               onClick={() => setStep(step - 1)}
-              className="px-4 py-3 md:px-6 md:py-4 rounded-full font-medium flex items-center gap-2 transition-all hover:scale-105"
+              className="px-4 py-3 md:px-6 md:py-4 rounded-full font-medium flex items-center gap-2 transition-all hover:scale-105 text-[var(--card-foreground)]"
               style={{
                 fontFamily: 'var(--font-body)',
                 background: 'var(--card)',
-                boxShadow: 'var(--shadow)',
+                boxShadow: 'var(--shadow-sm)',
                 border: '1px solid var(--border)',
-                color: 'var(--foreground)',
               }}
             >
               <ArrowLeft size={16} className="icon-wireframe md:w-[18px] md:h-[18px]" />

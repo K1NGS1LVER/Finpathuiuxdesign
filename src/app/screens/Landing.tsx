@@ -19,11 +19,11 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
   ];
 
   return (
-    <div className="h-full w-full flex flex-col p-4 md:p-8 relative overflow-x-hidden overflow-y-auto bg-[var(--background)] text-[var(--foreground)]">
+    <div className="h-full w-full flex flex-col p-4 md:p-8 relative overflow-x-hidden overflow-y-auto" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       {/* Theme Toggle */}
       <button
         onClick={() => setIsDark(!isDark)}
-        className="absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 z-20 bg-[var(--card)] shadow-[var(--shadow-md)] border border-[var(--border)]"
+        className="absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 z-20 bg-[var(--card)] shadow-[var(--shadow-md)] border border-[var(--border)] text-[var(--card-foreground)]"
       >
         {isDark ? <Sun size={20} className="icon-wireframe" /> : <Moon size={20} className="icon-wireframe" />}
       </button>
@@ -47,7 +47,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
 
           <h1 className="text-hero slashed-zero !text-4xl md:!text-6xl lg:!text-7xl">
             Every rupee has a <br />
-            <span className="text-[#4d7c0f] dark:text-[var(--lime)]">destination</span><span className="text-[#4d7c0f] dark:text-[var(--lime)]">.</span>
+            <span style={{ color: 'var(--lime-text)' }}>destination</span><span style={{ color: 'var(--lime-text)' }}>.</span>
           </h1>
 
           <p className="text-base md:text-xl text-[var(--secondary)]">

@@ -25,8 +25,8 @@ export default function Scenarios() {
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--violet)' }} />
       <div className="relative z-10">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>Scenario Explorer</h1>
-        <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>See how life changes affect your financial path</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Scenario Explorer</h1>
+        <p className="text-sm md:text-base text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>See how life changes affect your financial path</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
@@ -42,6 +42,7 @@ export default function Scenarios() {
                 backgroundColor: active ? s.color + '20' : undefined,
                 border: `2px solid ${active ? s.color : 'var(--border)'}`,
                 backdropFilter: active ? 'none' : undefined,
+                color: active ? 'var(--foreground)' : 'var(--card-foreground)',
               }}
             >
               <div
@@ -57,10 +58,10 @@ export default function Scenarios() {
       </div>
 
       <div className="bento-card p-4 md:p-8 relative z-10">
-        <h3 className="font-bold mb-6 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Adjust Parameters</h3>
+        <h3 className="font-bold mb-6 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Adjust Parameters</h3>
         <div className="max-w-2xl">
           <div className="flex items-center justify-between mb-4">
-            <span className="font-medium text-[var(--foreground)]">
+            <span className="font-medium text-[var(--card-foreground)]">
               {scenario === 'salary' && 'Salary Increase'}
               {scenario === 'property' && 'Property Value'}
               {scenario === 'education' && 'Course Fee'}
@@ -81,7 +82,7 @@ export default function Scenarios() {
             onChange={(e) => setValue(Number(e.target.value))}
             className="w-full h-2 rounded-full appearance-none"
             style={{
-              background: `linear-gradient(to right, ${current?.color} 0%, ${current?.color} ${(value - 5) / 45 * 100}%, var(--border) ${(value - 5) / 45 * 100}%, var(--border) 100%)`,
+              background: `linear-gradient(to right, ${current?.color} 0%, ${current?.color} ${(value - 5) / 45 * 100}%, var(--progress-inactive) ${(value - 5) / 45 * 100}%, var(--progress-inactive) 100%)`,
             }}
           />
         </div>
@@ -92,15 +93,15 @@ export default function Scenarios() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {impacts.map((impact, i) => (
             <div key={i} className="p-6 bento-card">
-              <div className="text-sm mb-4 font-medium" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>{impact.label}</div>
+              <div className="text-sm mb-4 font-medium text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>{impact.label}</div>
               <div className="flex items-end justify-between mb-4 gap-4">
                 <div className="flex-1">
-                  <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Current</div>
-                  <div className="text-xl font-bold slashed-zero text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{impact.current}</div>
+                  <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Current</div>
+                  <div className="text-xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{impact.current}</div>
                 </div>
-                <div className="text-3xl opacity-20 px-2 text-[var(--foreground)]">→</div>
+                <div className="text-3xl opacity-20 px-2 text-[var(--card-foreground)]">→</div>
                 <div className="text-right flex-1">
-                  <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>After</div>
+                  <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>After</div>
                   <div className="text-xl font-bold slashed-zero" style={{ fontFamily: 'var(--font-display)', color: current?.color }}>{impact.future}</div>
                 </div>
               </div>
@@ -108,7 +109,7 @@ export default function Scenarios() {
                 className="text-sm font-bold text-center py-2 rounded-lg slashed-zero"
                 style={{
                   backgroundColor: impact.positive ? 'var(--lime)' : 'var(--red)',
-                  color: impact.positive ? '#050F1C' : '#fff',
+                  color: '#050F1C',
                   fontFamily: 'var(--font-body)',
                 }}
               >

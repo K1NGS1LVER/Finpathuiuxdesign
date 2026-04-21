@@ -33,10 +33,10 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
 
   const items = [
     { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
-    { icon: Map, label: 'Journey', path: '/journey' },
+    { icon: GitBranch, label: 'Journey', path: '/journey' },
     { icon: Calculator, label: 'Tax', path: '/tax' },
     { icon: Calendar, label: 'Month', path: '/month' },
-    { icon: GitBranch, label: 'Scenarios', path: '/scenarios' },
+    { icon: Map, label: 'Scenarios', path: '/scenarios' },
   ];
 
   const handleNavigation = (path: string) => {
@@ -75,7 +75,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
               }}
             />
             <span
-              className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero text-[var(--foreground)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero text-[var(--card-foreground)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
               style={{
                 fontFamily: 'var(--font-display)',
                 opacity: collapsed ? 0 : 1,
@@ -89,7 +89,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           {/* Desktop Collapse */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full items-center justify-center transition-all duration-300 hover:scale-110 bg-[rgba(5,15,28,0.04)] text-[var(--foreground)]"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full items-center justify-center transition-all duration-300 hover:scale-110 text-[var(--card-foreground)]"
+            style={{ background: 'var(--surface-hover)' }}
           >
             {collapsed ? <ChevronRight size={16} className="icon-wireframe" /> : <ChevronLeft size={16} className="icon-wireframe" />}
           </button>
@@ -97,7 +98,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           {/* Mobile Close */}
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="md:hidden absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 bg-[rgba(5,15,28,0.04)] text-[var(--foreground)]"
+            className="md:hidden absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 text-[var(--card-foreground)]"
+            style={{ background: 'var(--surface-hover)' }}
           >
             <X size={16} className="icon-wireframe" />
           </button>
@@ -115,7 +117,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                 className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 ${collapsed ? 'px-0 justify-center md:px-0' : 'px-4 justify-start'}`}
                 style={{
                   backgroundColor: active ? 'rgba(176, 255, 9, 0.1)' : 'transparent',
-                  color: active ? 'var(--foreground)' : 'var(--secondary)',
+                  color: active ? 'var(--card-foreground)' : 'var(--secondary)',
                   fontFamily: 'var(--font-body)',
                   gap: collapsed ? '0' : '12px',
                   fontWeight: active ? 600 : 400,

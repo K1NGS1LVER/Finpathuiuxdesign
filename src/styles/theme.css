@@ -20,11 +20,16 @@
   --background: linear-gradient(135deg, #E8E0FF 0%, #D4E0FF 100%);
   --background-solid: #EEE8FF;
   --foreground: #050F1C;
-  --card: #FFFFFF;
+  --card: rgba(255, 255, 255, 0.85);
   --card-foreground: #050F1C;
   --border: rgba(5, 15, 28, 0.08);
   --secondary: #1E293B; /* AAA contrast for smaller text */
   --tertiary: #475569; /* AA+ contrast for meta text */
+
+  /* Surface tints - for subtle backgrounds on cards/inputs */
+  --surface-tint: rgba(5, 15, 28, 0.02);
+  --surface-hover: rgba(5, 15, 28, 0.04);
+  --surface-active: rgba(5, 15, 28, 0.06);
 
   /* Brand Colors */
   --lime: #B0FF09;
@@ -39,6 +44,9 @@
   --red-text: #CC1F1F;
   --green: #22C55E;
   --green-text: #16853D;
+
+  /* Static color for buttons on lime/accent backgrounds */
+  --on-accent: #050F1C;
 
   /* Typography Scale */
   --text-xs: 11px;
@@ -75,30 +83,43 @@
   --blur-sm: 24px;
   --blur-md: 48px;
   --blur-lg: 80px;
+
+  /* Progress bar inactive color */
+  --progress-inactive: rgba(5, 15, 28, 0.1);
 }
 
 .dark {
-  /* Dark Mode - Deep background, but keep pure white cards and navy text for contrast */
+  /* Dark Mode - True dark surface system for WCAG compliance */
   --background: linear-gradient(135deg, #050F1C 0%, #030811 100%);
-  --background-solid: #050F1C;
-  --foreground: #F8FAFC;
-  --card: #FFFFFF;
-  --card-foreground: #050F1C;
-  --border: rgba(5, 15, 28, 0.08);
-  --secondary: #1E293B;
-  --tertiary: #475569;
+  --background-solid: #0B1221;
+  --foreground: #F1F5F9;
+  --card: rgba(17, 24, 39, 0.6);
+  --card-foreground: #F1F5F9;
+  --border: rgba(255, 255, 255, 0.10);
+  --secondary: #94A3B8; /* Light enough for AA contrast on dark */
+  --tertiary: #64748B; /* AA contrast for meta text on dark */
 
-  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 40px 100px rgba(0, 0, 0, 0.7);
+  /* Surface tints - light overlays for dark cards */
+  --surface-tint: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(255, 255, 255, 0.10);
 
+  /* Shadows - deeper for dark mode */
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 40px 100px rgba(0, 0, 0, 0.6);
+
+  /* Brand text colors - brighter for dark mode readability */
   --lime-text: #B0FF09;
-  --violet-text: #AC49FF;
-  --blue-text: #495BFF;
-  --amber-text: #F59E0B;
-  --red-text: #EF4444;
-  --green-text: #22C55E;
+  --violet-text: #C77DFF;
+  --blue-text: #7B8CFF;
+  --amber-text: #FBBF24;
+  --red-text: #F87171;
+  --green-text: #4ADE80;
+
+  /* Progress bar inactive color */
+  --progress-inactive: rgba(255, 255, 255, 0.12);
 }
 
 @layer base {
@@ -140,6 +161,8 @@
 /* Bento Card System */
 .bento-card {
   background: var(--card);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
   border-radius: var(--radius-xl);
   padding: var(--space-2);
   box-shadow: var(--shadow-md);
@@ -179,19 +202,19 @@
 .pill-button {
   border-radius: var(--radius-full);
   padding: var(--space-1) var(--space-3);
-  background: rgba(100, 116, 139, 0.1);
+  background: var(--surface-hover);
   border: 1px solid transparent;
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--foreground);
+  color: var(--card-foreground);
   cursor: pointer;
   transition: all 200ms ease;
   white-space: nowrap;
 }
 
 .pill-button:hover {
-  background: rgba(100, 116, 139, 0.15);
+  background: var(--surface-active);
 }
 
 .pill-button.active {
@@ -295,7 +318,7 @@ input, textarea, select {
   font-size: inherit;
   line-height: inherit;
   background: transparent;
-  color: var(--foreground);
+  color: var(--card-foreground);
 }
 
 input::placeholder,

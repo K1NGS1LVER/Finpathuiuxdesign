@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Wallet, Target, Zap, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, Wallet, Target, Zap, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface DashboardProps {
@@ -67,7 +67,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             {/* Small Label */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-label text-[var(--secondary)]">{metric.label}</span>
-              <span className="pill-button text-xs font-semibold" style={{ background: metric.positive ? 'var(--lime)' : 'var(--red)', color: metric.positive ? '#050F1C' : '#FFFFFF' }}>
+              <span className="pill-button text-xs font-semibold" style={{ background: metric.positive ? 'var(--lime)' : 'var(--red)', color: '#050F1C' }}>
                 {metric.change}
               </span>
             </div>
@@ -76,7 +76,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             <div className="mt-auto">
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-sm font-medium text-[var(--secondary)]">₹</span>
-                <h2 className="text-display slashed-zero text-[var(--foreground)]">
+                <h2 className="text-display slashed-zero text-[var(--card-foreground)]">
                   {metric.value}
                 </h2>
               </div>
@@ -101,7 +101,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
               <div key={i} className="bento-card bento-card-sm flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-4">
                   <span className="text-label text-[var(--secondary)] leading-tight">{metric.label}</span>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--border)] text-[var(--foreground)] flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--card-foreground)] flex-shrink-0" style={{ background: 'var(--surface-hover)' }}>
                     <Icon size={14} className="icon-wireframe" />
                   </div>
                 </div>
@@ -111,7 +111,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                     {metric.label !== 'Active Goals' && (
                       <span className="text-xs text-[var(--secondary)]">₹</span>
                     )}
-                    <h3 className="text-title slashed-zero text-[var(--foreground)]">
+                    <h3 className="text-xl lg:text-2xl font-bold slashed-zero text-[var(--card-foreground)] truncate" style={{ fontFamily: 'var(--font-display)' }}>
                       {metric.value}
                     </h3>
                   </div>
@@ -121,7 +121,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                     ) : metric.change.startsWith('-') ? (
                       <ArrowDownRight size={12} style={{ color: 'var(--red-text)' }} />
                     ) : null}
-                    <span className="text-xs font-semibold slashed-zero" style={{ color: 'var(--card-foreground)' }}>
+                    <span className="text-xs font-semibold slashed-zero text-[var(--card-foreground)]">
                       {metric.change}
                     </span>
                   </div>
@@ -163,7 +163,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-3xl font-bold slashed-zero text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
+              <div className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
                 {health}
               </div>
               <div className="text-[10px] uppercase tracking-wider text-[var(--tertiary)] font-semibold mt-1">Score</div>
@@ -177,7 +177,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
         {/* Goals Progress (Full Width) */}
         <div className="col-span-12 bento-card">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-heading slashed-zero text-[var(--foreground)]">
+            <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">
               Active Goals
             </h3>
             <button className="pill-button text-xs font-semibold px-4 py-2">View All</button>
@@ -192,17 +192,17 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                       className="w-2 h-2 rounded-full shadow-sm"
                       style={{ backgroundColor: i === 0 ? 'var(--lime)' : i === 1 ? 'var(--violet)' : 'var(--blue)' }}
                     />
-                    <span className="text-sm font-semibold text-[var(--foreground)]">
+                    <span className="text-sm font-semibold text-[var(--card-foreground)]">
                       {goal.name}
                     </span>
                   </div>
-                  <span className="text-sm font-bold slashed-zero text-[var(--foreground)]">
+                  <span className="text-sm font-bold slashed-zero text-[var(--card-foreground)]">
                     {goal.progress}%
                   </span>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="h-4 rounded-full bg-[var(--border)] overflow-hidden relative">
+                <div className="h-4 rounded-full overflow-hidden relative" style={{ background: 'var(--progress-inactive)' }}>
                   <div
                     className="absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-out"
                     style={{
@@ -228,7 +228,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
 
         {/* Quick Actions */}
         <div className="col-span-12 md:col-span-6 bento-card">
-          <h3 className="text-heading mb-4 slashed-zero text-[var(--foreground)]">
+          <h3 className="text-heading mb-4 slashed-zero text-[var(--card-foreground)]">
             Quick Actions
           </h3>
           <div className="grid grid-cols-2 gap-4">
@@ -253,7 +253,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
 
         {/* Recent Activity */}
         <div className="col-span-12 md:col-span-6 bento-card">
-          <h3 className="text-heading mb-4 slashed-zero text-[var(--foreground)]">
+          <h3 className="text-heading mb-4 slashed-zero text-[var(--card-foreground)]">
             Recent Activity
           </h3>
           <div className="space-y-1">
@@ -262,9 +262,9 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
               { label: 'Netflix subscription', amount: '-799', time: '1d ago', positive: false },
               { label: 'Bike EMI paid', amount: '-8,500', time: '3d ago', positive: false },
             ].map((activity, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--border)] transition-colors cursor-default">
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg transition-colors cursor-default hover:bg-[var(--surface-hover)]">
                 <div>
-                  <p className="text-sm font-semibold text-[var(--foreground)]">
+                  <p className="text-sm font-semibold text-[var(--card-foreground)]">
                     {activity.label}
                   </p>
                   <p className="text-xs text-[var(--tertiary)] font-medium mt-1">

@@ -171,12 +171,12 @@ export default function Journey() {
               }}
             >
               <div className="text-3xl mb-2">{node.emoji}</div>
-              <div className="font-bold mb-1" style={{ fontFamily: 'var(--font-body)' }}>{node.label}</div>
-              <div className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+              <div className="font-bold mb-1 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-body)' }}>{node.label}</div>
+              <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
                 ₹{(node.amount / 1000).toFixed(0)}K
               </div>
-              <div className="text-xs mb-2" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>{node.progress}% complete</div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
+              <div className="text-xs mb-2 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>{node.progress}% complete</div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
                 <div
                   className="h-full rounded-full"
                   style={{ width: `${node.progress}%`, backgroundColor: getStatusColor(node.status) }}
@@ -203,15 +203,15 @@ export default function Journey() {
           }}
         >
           <div className="flex items-center justify-between">
-            <h3 className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Goal Details</h3>
-            <button onClick={() => setSelectedNode(null)} className="w-8 h-8 rounded-lg hover:bg-[--border] flex items-center justify-center">
+            <h3 className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Goal Details</h3>
+            <button onClick={() => setSelectedNode(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--card-foreground)] hover:bg-[var(--surface-hover)] transition-colors">
               <X size={18} />
             </button>
           </div>
 
           <div className="text-center py-6">
             <div className="text-6xl mb-3">{selectedNode.emoji}</div>
-            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>{selectedNode.label}</h2>
+            <h2 className="text-2xl font-bold mb-2 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{selectedNode.label}</h2>
             <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: getStatusColor(selectedNode.status) }}>
               ₹{selectedNode.amount.toLocaleString('en-IN')}
             </div>
@@ -219,10 +219,10 @@ export default function Journey() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm">Progress</span>
-              <span className="font-bold">{selectedNode.progress}%</span>
+              <span className="text-sm text-[var(--card-foreground)]">Progress</span>
+              <span className="font-bold text-[var(--card-foreground)]">{selectedNode.progress}%</span>
             </div>
-            <div className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
+            <div className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
               <div
                 className="h-full rounded-full"
                 style={{ width: `${selectedNode.progress}%`, backgroundColor: getStatusColor(selectedNode.status) }}
@@ -231,13 +231,13 @@ export default function Journey() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-2 rounded-xl bg-[var(--border)]">
-              <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Saved</div>
-              <div className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹{(selectedNode.amount * selectedNode.progress / 100).toFixed(0)}</div>
+            <div className="p-2 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
+              <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Saved</div>
+              <div className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹{(selectedNode.amount * selectedNode.progress / 100).toFixed(0)}</div>
             </div>
-            <div className="p-2 rounded-xl bg-[var(--border)]">
-              <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Remaining</div>
-              <div className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>₹{(selectedNode.amount * (100 - selectedNode.progress) / 100).toFixed(0)}</div>
+            <div className="p-2 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
+              <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Remaining</div>
+              <div className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹{(selectedNode.amount * (100 - selectedNode.progress) / 100).toFixed(0)}</div>
             </div>
           </div>
 
