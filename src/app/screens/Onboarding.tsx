@@ -101,7 +101,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
   };
 
   return (
-    <div className="h-full w-full flex items-center justify-center p-4 md:p-8 relative overflow-y-auto" style={{ background: 'var(--background)' }}>
+    <div className="h-full w-full flex flex-col p-4 md:p-8 relative overflow-y-auto overflow-x-hidden" style={{ background: 'var(--background)' }}>
       <style>{`
         @keyframes rotate360 {
           from { transform: rotate(0deg); }
@@ -139,7 +139,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           border: '1px solid var(--border)',
         }}
       >
-        {isDark ? <Sun size={20} className="icon-wireframe" style={{ animation: 'rotate360 0.6s ease-out' }} /> : <Moon size={20} className="icon-wireframe" style={{ animation: 'rotate360 0.6s ease-out' }} />}
+        {isDark ? <Sun size={20} className="icon-wireframe" /> : <Moon size={20} className="icon-wireframe" />}
       </button>
 
       {/* Decorative Blurred Blobs */}
@@ -148,7 +148,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         <div className="data-blob absolute bottom-0 left-0 w-96 h-96 rounded-full" style={{ backgroundColor: 'var(--blue)' }} />
       </div>
 
-      <div className="max-w-lg w-full relative z-10 py-8">
+      <div className="max-w-lg w-full m-auto relative z-10 py-8">
         {/* Progress Bar */}
         <div className="flex gap-3 mb-8">
           {steps.map((_, i) => (

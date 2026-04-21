@@ -29,7 +29,7 @@ export default function Scenarios() {
         <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>See how life changes affect your financial path</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 relative z-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
         {scenarios.map((s) => {
           const Icon = s.icon;
           const active = scenario === s.id;
@@ -37,7 +37,7 @@ export default function Scenarios() {
             <button
               key={s.id}
               onClick={() => setScenario(s.id)}
-              className={`p-5 rounded-xl text-left transition-all hover:scale-105 ${!active ? 'glass-card' : ''}`}
+              className={`p-5 rounded-xl text-left transition-all hover:scale-105 ${!active ? 'bento-card' : ''}`}
               style={{
                 backgroundColor: active ? s.color + '20' : undefined,
                 border: `2px solid ${active ? s.color : 'var(--border)'}`,
@@ -56,17 +56,17 @@ export default function Scenarios() {
         })}
       </div>
 
-      <div className="p-4 md:p-8 rounded-2xl glass-card relative z-10">
-        <h3 className="font-bold mb-6" style={{ fontFamily: 'var(--font-display)' }}>Adjust Parameters</h3>
+      <div className="bento-card p-4 md:p-8 relative z-10">
+        <h3 className="font-bold mb-6 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Adjust Parameters</h3>
         <div className="max-w-2xl">
           <div className="flex items-center justify-between mb-4">
-            <span className="font-medium">
+            <span className="font-medium text-[var(--foreground)]">
               {scenario === 'salary' && 'Salary Increase'}
               {scenario === 'property' && 'Property Value'}
               {scenario === 'education' && 'Course Fee'}
               {scenario === 'family' && 'Monthly Child Expenses'}
             </span>
-            <span className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: current?.color }}>
+            <span className="text-2xl font-bold slashed-zero" style={{ fontFamily: 'var(--font-display)', color: current?.color }}>
               {scenario === 'salary' && `+${value}%`}
               {scenario === 'property' && `₹${value * 10}L`}
               {scenario === 'education' && `₹${value * 2}L`}
@@ -88,24 +88,24 @@ export default function Scenarios() {
       </div>
 
       <div className="relative z-10">
-        <h3 className="font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Impact Analysis</h3>
+        <h3 className="font-bold mb-4 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Impact Analysis</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {impacts.map((impact, i) => (
-            <div key={i} className="p-6 rounded-xl glass-card">
+            <div key={i} className="p-6 bento-card">
               <div className="text-sm mb-4 font-medium" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>{impact.label}</div>
               <div className="flex items-end justify-between mb-4 gap-4">
                 <div className="flex-1">
                   <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Current</div>
-                  <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>{impact.current}</div>
+                  <div className="text-xl font-bold slashed-zero text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{impact.current}</div>
                 </div>
-                <div className="text-3xl opacity-20 px-2">→</div>
+                <div className="text-3xl opacity-20 px-2 text-[var(--foreground)]">→</div>
                 <div className="text-right flex-1">
                   <div className="text-xs mb-1" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>After</div>
-                  <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: current?.color }}>{impact.future}</div>
+                  <div className="text-xl font-bold slashed-zero" style={{ fontFamily: 'var(--font-display)', color: current?.color }}>{impact.future}</div>
                 </div>
               </div>
               <div
-                className="text-sm font-bold text-center py-2 rounded-lg"
+                className="text-sm font-bold text-center py-2 rounded-lg slashed-zero"
                 style={{
                   backgroundColor: impact.positive ? 'var(--lime)' : 'var(--red)',
                   color: impact.positive ? '#050F1C' : '#fff',

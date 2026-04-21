@@ -8,61 +8,31 @@ interface HeaderProps {
 
 export default function Header({ isDark, setIsDark, onMenuClick }: HeaderProps) {
   return (
-    <>
-      <style>{`
-        @keyframes rotate360 {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-      <header
-        className="h-16 md:h-20 flex items-center justify-between md:justify-end px-4 md:px-8"
-        style={{
-          background: 'var(--card)',
-          borderBottom: '1px solid var(--border)',
-          borderRadius: 0,
-        }}
+    <header className="h-16 md:h-20 flex items-center justify-between md:justify-end px-4 md:px-8 bg-[var(--card)] border-b border-[var(--border)] z-20 relative">
+      <button
+        onClick={onMenuClick}
+        className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 md:hidden bg-[var(--border)] text-[var(--foreground)]"
       >
+        <Menu size={20} className="icon-wireframe" />
+      </button>
+
+      <div className="flex items-center gap-3 md:gap-4">
         <button
-          onClick={onMenuClick}
-          className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 md:hidden"
-          style={{
-            background: 'rgba(5, 15, 28, 0.04)',
-            color: 'var(--foreground)',
-          }}
+          onClick={() => setIsDark(!isDark)}
+          className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 bg-[var(--border)] text-[var(--foreground)]"
+          aria-label="Toggle Theme"
         >
-          <Menu size={20} className="icon-wireframe" />
+          {isDark ? (
+            <Sun size={18} className="icon-wireframe" />
+          ) : (
+            <Moon size={18} className="icon-wireframe" />
+          )}
         </button>
 
-        <div className="flex items-center gap-3 md:gap-4">
-          <button
-            onClick={() => setIsDark(!isDark)}
-            className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95"
-            style={{
-              background: 'rgba(5, 15, 28, 0.04)',
-              color: 'var(--foreground)',
-            }}
-          >
-            {isDark ? (
-              <Sun size={18} className="icon-wireframe" style={{ animation: 'rotate360 0.6s ease-out' }} />
-            ) : (
-              <Moon size={18} className="icon-wireframe" style={{ animation: 'rotate360 0.6s ease-out' }} />
-            )}
-          </button>
-
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center font-bold slashed-zero"
-            style={{
-              backgroundColor: 'var(--lime)',
-              color: '#050F1C',
-              fontFamily: 'var(--font-display)',
-              boxShadow: '0 4px 16px rgba(176, 255, 9, 0.4)',
-            }}
-          >
-            A
-          </div>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg slashed-zero bg-[var(--lime)] text-[#050F1C] shadow-[0_4px_16px_rgba(176,255,9,0.3)]">
+          A
         </div>
-      </header>
-    </>
+      </div>
+    </header>
   );
 }
