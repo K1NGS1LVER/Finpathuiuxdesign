@@ -29,7 +29,7 @@ export default function Month() {
         <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Your mission this month</p>
       </div>
 
-      <div className="p-6 md:p-8 rounded-[var(--radius-xl)] relative overflow-hidden z-10 bento-card" style={{ backgroundColor: 'var(--lime)', color: '#050F1C', borderColor: 'transparent' }}>
+      <div className="p-4 md:p-8 rounded-[var(--radius-xl)] relative overflow-hidden z-10 bento-card" style={{ backgroundColor: 'var(--lime)', color: '#050F1C', borderColor: 'transparent' }}>
         <div className="relative z-10">
           <div className="text-xs md:text-sm font-medium mb-2 opacity-80" style={{ fontFamily: 'var(--font-body)' }}>MISSION</div>
           <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4 slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>
@@ -87,7 +87,7 @@ export default function Month() {
                 <div key={item.category}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">{item.category}</span>
-                    <span className="text-sm" style={{ color: overBudget ? 'var(--red)' : 'var(--lime)' }}>
+                    <span className="text-sm text-[var(--foreground)]">
                       ₹{item.actual.toLocaleString()} / ₹{item.planned.toLocaleString()}
                     </span>
                   </div>
@@ -114,11 +114,11 @@ export default function Month() {
         </div>
         <div className="bento-card flex flex-col justify-center">
           <div className="text-sm font-medium mb-2 text-[var(--secondary)]">Savings This Month</div>
-          <div className="text-3xl font-bold slashed-zero text-[var(--lime)]" style={{ fontFamily: 'var(--font-display)' }}>₹18K</div>
+          <div className="text-3xl font-bold slashed-zero text-[var(--lime-text)]" style={{ fontFamily: 'var(--font-display)' }}>₹18K</div>
         </div>
         <div className="bento-card flex flex-col justify-center">
           <div className="text-sm font-medium mb-2 text-[var(--secondary)]">On Track</div>
-          <div className="text-3xl font-bold slashed-zero text-[var(--lime)]" style={{ fontFamily: 'var(--font-display)' }}>72%</div>
+          <div className="text-3xl font-bold slashed-zero text-[var(--lime-text)]" style={{ fontFamily: 'var(--font-display)' }}>72%</div>
         </div>
       </div>
     </div>

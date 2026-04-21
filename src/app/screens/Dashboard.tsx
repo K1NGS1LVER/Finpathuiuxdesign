@@ -117,9 +117,9 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                   </div>
                   <div className="flex items-center gap-1">
                     {metric.change.startsWith('+') ? (
-                      <ArrowUpRight size={12} style={{ color: 'var(--lime)' }} />
+                      <ArrowUpRight size={12} style={{ color: 'var(--lime-text)' }} />
                     ) : metric.change.startsWith('-') ? (
-                      <ArrowDownRight size={12} style={{ color: 'var(--red)' }} />
+                      <ArrowDownRight size={12} style={{ color: 'var(--red-text)' }} />
                     ) : null}
                     <span className="text-xs font-semibold slashed-zero" style={{ color: 'var(--card-foreground)' }}>
                       {metric.change}
