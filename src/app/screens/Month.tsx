@@ -25,14 +25,14 @@ export default function Month() {
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--lime)' }} />
       <div className="relative z-10">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>April 2026 Plan</h1>
-        <p className="text-sm md:text-base" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Your mission this month</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>April 2026 Plan</h1>
+        <p className="text-sm md:text-base text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Your mission this month</p>
       </div>
 
       <div className="p-4 md:p-8 rounded-[var(--radius-xl)] relative overflow-hidden z-10 bento-card" style={{ backgroundColor: 'var(--lime)', color: '#050F1C', borderColor: 'transparent' }}>
         <div className="relative z-10">
           <div className="text-xs md:text-sm font-medium mb-2 opacity-80" style={{ fontFamily: 'var(--font-body)' }}>MISSION</div>
-          <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4 slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4 slashed-zero" style={{ fontFamily: 'var(--font-display)', color: '#050F1C' }}>
             Save ₹25,000 & reduce debt by ₹5,000
           </h2>
           <div className="flex items-center gap-4 md:gap-6">
@@ -51,13 +51,13 @@ export default function Month() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
         <div className="bento-card">
-          <h3 className="text-title mb-4 slashed-zero text-[var(--foreground)]">Action Checklist</h3>
+          <h3 className="text-title mb-4 slashed-zero text-[var(--card-foreground)]">Action Checklist</h3>
           <div className="space-y-2">
             {tasks.map((task) => (
               <button
                 key={task.id}
                 onClick={() => toggleTask(task.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[--background]"
+                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[var(--surface-hover)]"
               >
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
@@ -69,29 +69,29 @@ export default function Month() {
                 >
                   {task.done ? <Check size={14} /> : <Circle size={14} />}
                 </div>
-                <span className={`text-left flex-1 ${task.done ? 'line-through opacity-50' : ''}`} style={{ fontFamily: 'var(--font-body)' }}>{task.text}</span>
+                <span className={`text-left flex-1 text-[var(--card-foreground)] ${task.done ? 'line-through opacity-50' : ''}`} style={{ fontFamily: 'var(--font-body)' }}>{task.text}</span>
               </button>
             ))}
           </div>
-          <div className="mt-6 p-3 rounded-xl text-sm text-center glass" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>
+          <div className="mt-6 p-3 rounded-xl text-sm text-center" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)', background: 'var(--surface-tint)' }}>
             {tasks.filter(t => t.done).length} of {tasks.length} completed
           </div>
         </div>
 
         <div className="bento-card">
-          <h3 className="text-title mb-4 slashed-zero text-[var(--foreground)]">Budget Tracker</h3>
+          <h3 className="text-title mb-4 slashed-zero text-[var(--card-foreground)]">Budget Tracker</h3>
           <div className="space-y-4">
             {budget.map((item) => {
               const overBudget = item.actual > item.planned;
               return (
                 <div key={item.category}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">{item.category}</span>
-                    <span className="text-sm text-[var(--foreground)]">
+                    <span className="font-medium text-[var(--card-foreground)]">{item.category}</span>
+                    <span className="text-sm text-[var(--card-foreground)]">
                       ₹{item.actual.toLocaleString()} / ₹{item.planned.toLocaleString()}
                     </span>
                   </div>
-                  <div className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
+                  <div className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -110,7 +110,7 @@ export default function Month() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
         <div className="bento-card flex flex-col justify-center">
           <div className="text-sm font-medium mb-2 text-[var(--secondary)]">Days Remaining</div>
-          <div className="text-3xl font-bold slashed-zero text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>10</div>
+          <div className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>10</div>
         </div>
         <div className="bento-card flex flex-col justify-center">
           <div className="text-sm font-medium mb-2 text-[var(--secondary)]">Savings This Month</div>

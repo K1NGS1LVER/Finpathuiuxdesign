@@ -8,10 +8,19 @@ interface HeaderProps {
 
 export default function Header({ isDark, setIsDark, onMenuClick }: HeaderProps) {
   return (
-    <header className="h-16 md:h-20 flex items-center justify-between md:justify-end px-4 md:px-8 bg-[var(--card)] border-b border-[var(--border)] z-20 relative">
+    <header 
+      className="h-12 md:h-14 flex items-center justify-between md:justify-end px-4 md:px-8 z-20 relative"
+      style={{
+        background: 'var(--card)',
+        backdropFilter: 'blur(32px)',
+        WebkitBackdropFilter: 'blur(32px)',
+        borderBottom: '1px solid var(--border)',
+      }}
+    >
       <button
         onClick={onMenuClick}
-        className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 md:hidden bg-[var(--border)] text-[var(--foreground)]"
+        className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 md:hidden text-[var(--foreground)]"
+        style={{ background: 'var(--surface-hover)' }}
       >
         <Menu size={20} className="icon-wireframe" />
       </button>
@@ -19,7 +28,8 @@ export default function Header({ isDark, setIsDark, onMenuClick }: HeaderProps) 
       <div className="flex items-center gap-3 md:gap-4">
         <button
           onClick={() => setIsDark(!isDark)}
-          className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 bg-[var(--border)] text-[var(--foreground)]"
+          className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-[var(--foreground)]"
+          style={{ background: 'var(--surface-hover)' }}
           aria-label="Toggle Theme"
         >
           {isDark ? (

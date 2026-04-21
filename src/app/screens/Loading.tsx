@@ -27,7 +27,7 @@ export default function Loading() {
   }, []);
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-4 md:p-8 relative" style={{ backgroundColor: 'var(--background)' }}>
+    <div className="h-full w-full flex flex-col items-center justify-center p-4 md:p-8 relative" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-15 blur-3xl animate-pulse" style={{ backgroundColor: 'var(--blue)' }} />
       </div>
@@ -43,9 +43,10 @@ export default function Loading() {
           {steps.map((step, i) => (
             <div
               key={i}
-              className={`flex items-center gap-3 p-4 rounded-xl transition-all ${completed.includes(i) ? 'glass-card' : ''}`}
+              className={`flex items-center gap-3 p-4 rounded-xl transition-all`}
               style={{
                 opacity: completed.includes(i) ? 1 : 0.4,
+                background: completed.includes(i) ? 'var(--surface-tint)' : 'transparent',
               }}
             >
               <div
@@ -62,7 +63,7 @@ export default function Loading() {
           ))}
         </div>
 
-        <div className="p-4 rounded-xl text-center italic glass-card" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>
+        <div className="p-4 rounded-xl text-center italic" style={{ color: 'var(--secondary)', fontFamily: 'var(--font-body)', background: 'var(--surface-tint)' }}>
           "Small steps today, big wins tomorrow!" — Penny
         </div>
       </div>
