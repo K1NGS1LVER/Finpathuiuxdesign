@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Wallet, Bike, Plane, CreditCard, Home, Heart } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface Node {
   id: string;
   x: number;
   y: number;
-  emoji: string;
+  icon: any;
   label: string;
   amount: number;
   progress: number;
@@ -16,12 +16,12 @@ interface Node {
 
 export default function Journey() {
   const [nodes, setNodes] = useState<Node[]>([
-    { id: '1', x: 200, y: 150, emoji: '💼', label: 'Income', amount: 85000, progress: 100, status: 'complete', connections: ['2', '3'] },
-    { id: '2', x: 450, y: 100, emoji: '🏍️', label: 'Dream Bike', amount: 120000, progress: 65, status: 'in-progress', connections: ['5'] },
-    { id: '3', x: 450, y: 250, emoji: '🏖️', label: 'Goa Trip', amount: 50000, progress: 85, status: 'in-progress', connections: ['6'] },
-    { id: '4', x: 200, y: 400, emoji: '💳', label: 'Clear Debt', amount: 45000, progress: 30, status: 'in-progress', connections: [] },
-    { id: '5', x: 700, y: 100, emoji: '🏡', label: 'House Fund', amount: 500000, progress: 0, status: 'not-started', connections: [] },
-    { id: '6', x: 700, y: 250, emoji: '💍', label: 'Wedding', amount: 300000, progress: 0, status: 'not-started', connections: [] },
+    { id: '1', x: 200, y: 150, icon: Wallet, label: 'Income', amount: 85000, progress: 100, status: 'complete', connections: ['2', '3'] },
+    { id: '2', x: 450, y: 100, icon: Bike, label: 'Dream Bike', amount: 120000, progress: 65, status: 'in-progress', connections: ['5'] },
+    { id: '3', x: 450, y: 250, icon: Plane, label: 'Goa Trip', amount: 50000, progress: 85, status: 'in-progress', connections: ['6'] },
+    { id: '4', x: 200, y: 400, icon: CreditCard, label: 'Clear Debt', amount: 45000, progress: 30, status: 'in-progress', connections: [] },
+    { id: '5', x: 700, y: 100, icon: Home, label: 'House Fund', amount: 500000, progress: 0, status: 'not-started', connections: [] },
+    { id: '6', x: 700, y: 250, icon: Heart, label: 'Wedding', amount: 300000, progress: 0, status: 'not-started', connections: [] },
   ]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -170,7 +170,12 @@ export default function Journey() {
                 boxShadow: `0 0 20px ${getStatusColor(node.status)}15, var(--shadow-md)`,
               }}
             >
-              <div className="text-3xl mb-2">{node.emoji}</div>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: 'color-mix(in srgb, var(--surface-hover) 80%, transparent)', color: getStatusColor(node.status) }}>
+                {(() => {
+                  const Icon = node.icon;
+                  return <Icon size={24} className="icon-wireframe" />;
+                })()}
+              </div>
               <div className="font-bold mb-1 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-body)' }}>{node.label}</div>
               <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
                 ₹{(node.amount / 1000).toFixed(0)}K
@@ -209,8 +214,13 @@ export default function Journey() {
             </button>
           </div>
 
-          <div className="text-center py-6">
-            <div className="text-6xl mb-3">{selectedNode.emoji}</div>
+          <div className="text-center py-6 flex flex-col items-center">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-[var(--shadow-md)]" style={{ background: 'var(--surface-hover)', color: getStatusColor(selectedNode.status) }}>
+              {(() => {
+                const Icon = selectedNode.icon;
+                return <Icon size={40} className="icon-wireframe" />;
+              })()}
+            </div>
             <h2 className="text-2xl font-bold mb-2 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{selectedNode.label}</h2>
             <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: getStatusColor(selectedNode.status) }}>
               ₹{selectedNode.amount.toLocaleString('en-IN')}

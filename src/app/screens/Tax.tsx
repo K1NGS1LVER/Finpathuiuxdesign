@@ -66,6 +66,7 @@ export default function Tax() {
                   className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero border border-[var(--border)] focus:border-[var(--lime)] text-[var(--card-foreground)]"
                   style={{ background: 'var(--surface-tint)' }}
                   placeholder="1200000"
+                  maxLength={10}
                 />
               </div>
             </div>
@@ -81,6 +82,7 @@ export default function Tax() {
                   className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero border border-[var(--border)] focus:border-[var(--lime)] text-[var(--card-foreground)]"
                   style={{ background: 'var(--surface-tint)' }}
                   placeholder="150000"
+                  maxLength={10}
                 />
               </div>
             </div>
@@ -117,9 +119,9 @@ export default function Tax() {
             </div>
 
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-[var(--red)] opacity-10 blur-2xl pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-[var(--red)] opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
               <div className="relative text-center py-6">
-                <div className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 slashed-zero text-[var(--card-foreground)]">
+                <div className="text-3xl md:text-4xl font-bold mb-2 slashed-zero text-[var(--card-foreground)] truncate px-2" style={{ fontFamily: 'var(--font-display)' }}>
                   ₹{oldTax.toLocaleString('en-IN')}
                 </div>
                 <div className="text-sm font-medium text-[var(--secondary)]">Tax Liability</div>
@@ -153,9 +155,9 @@ export default function Tax() {
             </div>
 
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-[var(--lime)] opacity-10 blur-2xl pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-[var(--lime)] opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
               <div className="relative text-center py-6">
-                <div className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 slashed-zero text-[var(--card-foreground)]">
+                <div className="text-3xl md:text-4xl font-bold mb-2 slashed-zero text-[var(--card-foreground)] truncate px-2" style={{ fontFamily: 'var(--font-display)' }}>
                   ₹{newTax.toLocaleString('en-IN')}
                 </div>
                 <div className="text-sm font-medium text-[var(--secondary)]">Tax Liability</div>
