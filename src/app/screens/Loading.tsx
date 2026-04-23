@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
+import { useFinPathStore } from '../../lib/store';
 
 export default function Loading() {
   const navigate = useNavigate();
   const [completed, setCompleted] = useState<number[]>([]);
+  const computeHealthScore = useFinPathStore(s => s.computeHealthScore);
+  const generatePlan = useFinPathStore(s => s.generatePlan);
+  const onboarded = useFinPathStore(s => s.onboarded);
 
   const steps = [
     'Analyzing your income patterns',
@@ -15,9 +19,20 @@ export default function Loading() {
   ];
 
   useEffect(() => {
+    // If not onboarded, redirect back
+    if (!onboarded) {
+      navigate('/');
+      return;
+    }
+
+    // Run actual computations during animation
     steps.forEach((_, i) => {
       setTimeout(() => {
         setCompleted((prev) => [...prev, i]);
+
+        // Run engines at specific steps
+        if (i === 2) computeHealthScore();
+        if (i === 4) generatePlan();
       }, (i + 1) * 800);
     });
 

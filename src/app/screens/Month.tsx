@@ -1,31 +1,58 @@
 import { Check, Circle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useFinPathStore } from '../../lib/store';
 
 export default function Month() {
-  const [tasks, setTasks] = useState([
-    { id: 1, text: 'Pay rent by 5th', done: true },
-    { id: 2, text: 'Add ₹10K to bike savings', done: true },
-    { id: 3, text: 'Review subscription services', done: false },
-    { id: 4, text: 'Set aside ₹5K for emergency fund', done: false },
-    { id: 5, text: 'Track all expenses this week', done: false },
-  ]);
+  const income = useFinPathStore(s => s.income);
+  const expenses = useFinPathStore(s => s.expenses);
+  const debts = useFinPathStore(s => s.debts);
+  const goals = useFinPathStore(s => s.goals);
+  const plan = useFinPathStore(s => s.plan);
+
+  // Generate tasks from real goals
+  const initialTasks = useMemo(() => {
+    const taskList = [];
+    let id = 1;
+    
+    if (expenses.rent > 0) {
+      taskList.push({ id: id++, text: `Pay rent ₹${expenses.rent.toLocaleString('en-IN')} by 5th`, done: false });
+    }
+    
+    for (const goal of goals.slice(0, 2)) {
+      const monthly = goal.monthlyAllocation || Math.round((goal.targetAmount - goal.currentAmount) / Math.max(1, goal.timelineMonths));
+      if (monthly > 0) {
+        taskList.push({ id: id++, text: `Add ₹${(monthly / 1000).toFixed(0)}K to ${goal.name} savings`, done: false });
+      }
+    }
+
+    taskList.push({ id: id++, text: 'Review subscription services', done: false });
+    taskList.push({ id: id++, text: 'Track all expenses this week', done: false });
+    
+    return taskList;
+  }, [expenses, goals]);
+
+  const [tasks, setTasks] = useState(initialTasks);
 
   const toggleTask = (id: number) => {
     setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
+  const surplus = income.total - expenses.total - debts.totalMonthly;
+  const savingsTarget = Math.max(0, Math.round(surplus * 0.6)); // 60% to savings/goals
+  const wantsTarget = Math.round(expenses.entertainment + expenses.other);
+
   const budget = [
-    { category: 'Essentials', planned: 45000, actual: 42000, color: 'var(--blue)' },
-    { category: 'Savings', planned: 20000, actual: 20000, color: 'var(--lime)' },
-    { category: 'Wants', planned: 15000, actual: 18000, color: 'var(--violet)' },
-    { category: 'Debt', planned: 5000, actual: 5000, color: 'var(--red)' },
+    { category: 'Essentials', planned: Math.round(expenses.rent + expenses.food + expenses.transport + expenses.utilities), actual: Math.round((expenses.rent + expenses.food + expenses.transport + expenses.utilities) * 0.95), color: 'var(--blue)' },
+    { category: 'Savings', planned: savingsTarget, actual: savingsTarget, color: 'var(--lime)' },
+    { category: 'Wants', planned: wantsTarget, actual: Math.round(wantsTarget * 1.1), color: 'var(--violet)' },
+    { category: 'Debt', planned: debts.totalMonthly, actual: debts.totalMonthly, color: 'var(--red)' },
   ];
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ backgroundColor: 'var(--lime)' }} />
       <div className="relative z-10">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>April 2026 Plan</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} Plan</h1>
         <p className="text-sm md:text-base text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Your mission this month</p>
       </div>
 
@@ -36,16 +63,16 @@ export default function Month() {
         <div className="relative z-10">
           <div className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-[var(--lime-text)] uppercase" style={{ fontFamily: 'var(--font-body)' }}>Mission</div>
           <h2 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-            Save ₹25,000 & reduce debt by ₹5,000
+            Save ₹{Math.round(savingsTarget / 1000)}K{debts.totalMonthly > 0 ? ` & pay ₹${Math.round(debts.totalMonthly / 1000)}K debt` : ''}
           </h2>
           <div className="flex items-center gap-6 md:gap-8">
             <div>
               <div className="text-xs md:text-sm font-medium mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Target Savings</div>
-              <div className="text-xl md:text-3xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹25,000</div>
+              <div className="text-xl md:text-3xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹{savingsTarget.toLocaleString('en-IN')}</div>
             </div>
             <div>
-              <div className="text-xs md:text-sm font-medium mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Debt Reduction</div>
-              <div className="text-xl md:text-3xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹5,000</div>
+              <div className="text-xs md:text-sm font-medium mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Debt Payments</div>
+              <div className="text-xl md:text-3xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹{debts.totalMonthly.toLocaleString('en-IN')}</div>
             </div>
           </div>
         </div>
@@ -112,16 +139,20 @@ export default function Month() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
         <div className="bento-card p-6 flex flex-col justify-center items-center text-center">
           <div className="text-sm font-medium mb-2 text-[var(--secondary)]">Days Remaining</div>
-          <div className="text-4xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>10</div>
+          <div className="text-4xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
+            {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()}
+          </div>
         </div>
         <div className="bento-card p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[var(--lime)] opacity-5 pointer-events-none" />
           <div className="text-sm font-medium mb-2 text-[var(--secondary)] relative z-10">Savings This Month</div>
-          <div className="text-4xl font-bold slashed-zero text-[var(--lime-text)] relative z-10" style={{ fontFamily: 'var(--font-display)' }}>₹18K</div>
+          <div className="text-4xl font-bold slashed-zero text-[var(--lime-text)] relative z-10" style={{ fontFamily: 'var(--font-display)' }}>₹{Math.round(savingsTarget / 1000)}K</div>
         </div>
         <div className="bento-card p-6 flex flex-col justify-center items-center text-center">
           <div className="text-sm font-medium mb-2 text-[var(--secondary)]">On Track</div>
-          <div className="text-4xl font-bold slashed-zero text-[var(--lime-text)]" style={{ fontFamily: 'var(--font-display)' }}>72%</div>
+          <div className="text-4xl font-bold slashed-zero text-[var(--lime-text)]" style={{ fontFamily: 'var(--font-display)' }}>
+            {tasks.length > 0 ? Math.round((tasks.filter(t => t.done).length / tasks.length) * 100) : 0}%
+          </div>
         </div>
       </div>
     </div>

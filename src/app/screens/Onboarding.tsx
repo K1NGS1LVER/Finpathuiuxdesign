@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowRight, ArrowLeft, Sun, Moon, Target, TrendingUp, Shield, Sparkles, Calendar, Lightbulb } from 'lucide-react';
+import { useFinPathStore } from '../../lib/store';
 
 interface OnboardingProps {
   isDark: boolean;
@@ -90,10 +91,41 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
   const current = steps[step];
   const currencies = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SGD', 'AUD', 'CAD'];
 
+  const completeOnboarding = useFinPathStore(s => s.completeOnboarding);
+
   const handleNext = () => {
+    // Validation per step
+    if (step === 0 && (!income || parseFloat(income) <= 0)) return;
+    if (step === 1 && (!totalExpenses || parseFloat(totalExpenses) <= 0)) return;
+    if (step === 2 && selectedGoals.length === 0) return;
+
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
+      // Convert onboarding data and save to store
+      const incomeINR = parseFloat(convertToINR(income, incomeCurrency) || income) || 0;
+      const expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency) || totalExpenses) || 0;
+      const debtINR = parseFloat(convertToINR(totalDebt, debtCurrency) || totalDebt || '0') || 0;
+
+      const expBreakdown: Record<string, number> = {};
+      for (const [k, v] of Object.entries(expenseBreakdown)) {
+        expBreakdown[k] = parseFloat(v) || 0;
+      }
+
+      const dbtBreakdown: Record<string, number> = {};
+      for (const [k, v] of Object.entries(debtBreakdown)) {
+        dbtBreakdown[k] = parseFloat(v) || 0;
+      }
+
+      completeOnboarding({
+        income: incomeINR,
+        expenses: expenseINR,
+        debts: debtINR,
+        goals: selectedGoals,
+        expenseBreakdown: expBreakdown,
+        debtBreakdown: dbtBreakdown,
+      });
+
       navigate('/loading');
     }
   };

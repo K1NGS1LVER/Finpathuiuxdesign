@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { pennyApiPlugin } from './src/server/penny-api'
 
 
 function figmaAssetResolver() {
@@ -16,21 +17,25 @@ function figmaAssetResolver() {
   }
 }
 
-export default defineConfig({
-  plugins: [
-    figmaAssetResolver(),
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react(),
-    tailwindcss(),
-  ],
-  resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+export default defineConfig(({ mode }) => {
+  // Load env file so GROQ_API_KEY is available to server plugins
+  const env = loadEnv(mode, process.cwd(), '')
+  process.env.GROQ_API_KEY = env.GROQ_API_KEY
 
-  // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
-  assetsInclude: ['**/*.svg', '**/*.csv'],
+  return {
+    plugins: [
+      figmaAssetResolver(),
+      react(),
+      tailwindcss(),
+      pennyApiPlugin(),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+
+    // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
+    assetsInclude: ['**/*.svg', '**/*.csv'],
+  }
 })
