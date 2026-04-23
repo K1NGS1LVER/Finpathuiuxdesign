@@ -1,36 +1,54 @@
 import { TrendingUp, Wallet, Target, Zap, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useFinPathStore } from '../../lib/store';
 
 interface DashboardProps {
   onPennyClick: () => void;
 }
 
 export default function Dashboard({ onPennyClick }: DashboardProps) {
+  const navigate = useNavigate();
   const [health, setHealth] = useState(0);
 
+  const income = useFinPathStore(s => s.income);
+  const expenses = useFinPathStore(s => s.expenses);
+  const debts = useFinPathStore(s => s.debts);
+  const storeGoals = useFinPathStore(s => s.goals);
+  const savings = useFinPathStore(s => s.savings);
+  const healthScore = useFinPathStore(s => s.healthScore);
+
   useEffect(() => {
-    // Only animate once on mount
-    const timer = setTimeout(() => setHealth(73), 300);
+    // Animate to real health score
+    const score = healthScore?.overall ?? 0;
+    const timer = setTimeout(() => setHealth(score), 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [healthScore]);
+
+  const surplus = income.total - expenses.total - debts.totalMonthly;
+  const fmt = (n: number) => n.toLocaleString('en-IN');
 
   const primaryMetrics = [
-    { label: 'Bank Balance', value: '87,121', sublabel: 'Current month', change: '+12%', positive: true },
-    { label: 'Invoices', value: '7,540', sublabel: 'Unpaid this week', change: '+8%', positive: true },
+    { label: 'Monthly Income', value: fmt(income.total), sublabel: 'All sources', change: '+0%', positive: true },
+    { label: 'Monthly Surplus', value: fmt(Math.max(0, surplus)), sublabel: 'After expenses & debt', change: surplus >= 0 ? '+' + Math.round((surplus / (income.total || 1)) * 100) + '%' : Math.round((surplus / (income.total || 1)) * 100) + '%', positive: surplus >= 0 },
   ];
+
+  const activeGoals = storeGoals.filter(g => g.status !== 'complete');
+  const doneGoals = storeGoals.filter(g => g.status === 'complete');
 
   const secondaryMetrics = [
-    { label: 'Monthly Income', value: '85,000', change: '+12%', icon: TrendingUp },
-    { label: 'Total Savings', value: '2,42,000', change: '+8%', icon: Wallet },
-    { label: 'Active Goals', value: '4', change: '1 done', icon: Target },
-    { label: 'This Month', value: '45,000', change: '-15%', icon: Calendar },
+    { label: 'Monthly Income', value: fmt(income.total), change: '+0%', icon: TrendingUp },
+    { label: 'Total Savings', value: fmt(savings), change: '+0%', icon: Wallet },
+    { label: 'Active Goals', value: String(activeGoals.length), change: doneGoals.length > 0 ? `${doneGoals.length} done` : 'none done', icon: Target },
+    { label: 'Expenses', value: fmt(expenses.total), change: '-0%', icon: Calendar },
   ];
 
-  const goals = [
-    { name: 'Dream Bike', current: 78000, target: 120000, progress: 65 },
-    { name: 'Emergency Fund', current: 120000, target: 300000, progress: 40 },
-    { name: 'Goa Trip', current: 42500, target: 50000, progress: 85 },
-  ];
+  const goals = storeGoals.slice(0, 3).map(g => ({
+    name: g.name,
+    current: g.currentAmount,
+    target: g.targetAmount,
+    progress: g.targetAmount > 0 ? Math.round((g.currentAmount / g.targetAmount) * 100) : 0,
+  }));
 
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
@@ -182,7 +200,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">
               Active Goals
             </h3>
-            <button className="pill-button text-xs font-semibold px-4 py-2">View All</button>
+            <button onClick={() => navigate('/journey')} className="pill-button text-xs font-semibold px-4 py-2">View All</button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -234,11 +252,11 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             Quick Actions
           </h3>
           <div className="grid grid-cols-2 gap-4">
-            <button className="pill-button py-4 text-sm font-semibold">
+            <button onClick={() => navigate('/journey')} className="pill-button py-4 text-sm font-semibold">
               + Add Goal
             </button>
-            <button className="pill-button py-4 text-sm font-semibold">
-              Track Expense
+            <button onClick={() => navigate('/month')} className="pill-button py-4 text-sm font-semibold">
+              Monthly Plan
             </button>
             <button
               onClick={onPennyClick}
@@ -247,8 +265,8 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
               <Zap size={14} className="inline mr-2" />
               Ask Penny
             </button>
-            <button className="pill-button py-4 text-sm font-semibold">
-              View Reports
+            <button onClick={() => navigate('/progress')} className="pill-button py-4 text-sm font-semibold">
+              View Progress
             </button>
           </div>
         </div>
@@ -259,25 +277,29 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             Recent Activity
           </h3>
           <div className="space-y-1">
-            {[
-              { label: 'Goa Trip savings', amount: '+5,000', time: '2h ago', positive: true },
-              { label: 'Netflix subscription', amount: '-799', time: '1d ago', positive: false },
-              { label: 'Bike EMI paid', amount: '-8,500', time: '3d ago', positive: false },
-            ].map((activity, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-lg transition-colors cursor-default hover:bg-[var(--surface-hover)]">
-                <div>
-                  <p className="text-sm font-semibold text-[var(--card-foreground)]">
-                    {activity.label}
-                  </p>
-                  <p className="text-xs text-[var(--tertiary)] font-medium mt-1">
-                    {activity.time}
-                  </p>
+            {storeGoals.slice(0, 3).map((goal, i) => {
+              const monthly = goal.monthlyAllocation || Math.round((goal.targetAmount - goal.currentAmount) / Math.max(1, goal.timelineMonths));
+              return (
+                <div key={goal.id} className="flex items-center justify-between p-3 rounded-lg transition-colors cursor-default hover:bg-[var(--surface-hover)]">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--card-foreground)]">
+                      {goal.name} allocation
+                    </p>
+                    <p className="text-xs text-[var(--tertiary)] font-medium mt-1">
+                      {goal.status === 'complete' ? 'Completed' : `${goal.timelineMonths} months left`}
+                    </p>
+                  </div>
+                  <span className="text-lg font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
+                    ₹{monthly.toLocaleString('en-IN')}/mo
+                  </span>
                 </div>
-                <span className="text-lg font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-                  {activity.positive ? '+' : ''}₹{activity.amount.replace('+', '').replace('-', '')}
-                </span>
+              );
+            })}
+            {storeGoals.length === 0 && (
+              <div className="p-4 text-center text-sm text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>
+                No goals set yet. Add one from Journey!
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

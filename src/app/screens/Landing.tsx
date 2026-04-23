@@ -103,7 +103,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
           {/* CTA & Scroll Indicator */}
           <div className="flex items-center gap-6 mt-2">
             <button
-              onClick={() => navigate('/onboarding')}
+              onClick={() => navigate('/auth')}
               className="px-6 md:px-8 py-3 md:py-3.5 rounded-full font-bold text-sm md:text-base flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 bg-[var(--lime)] text-[#050F1C] shadow-[0_8px_32px_rgba(176,255,9,0.3)]"
             >
               Start My Journey

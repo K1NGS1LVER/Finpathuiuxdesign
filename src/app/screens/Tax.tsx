@@ -1,38 +1,25 @@
 import { useState } from 'react';
 import { Calculator, TrendingDown, ArrowRight } from 'lucide-react';
+import { compareTaxRegimes } from '../../lib/tax-engine';
+import { useFinPathStore } from '../../lib/store';
 
 export default function Tax() {
-  const [income, setIncome] = useState('1200000');
+  const storeIncome = useFinPathStore(s => s.income);
+  const annualIncome = storeIncome.total * 12;
+
+  const [income, setIncome] = useState(annualIncome > 0 ? String(annualIncome) : '1200000');
   const [regime, setRegime] = useState<'old' | 'new'>('new');
   const [deductions, setDeductions] = useState('150000');
 
-  const calculateTax = (inc: number, ded: number, reg: 'old' | 'new') => {
-    const taxable = inc - (reg === 'old' ? ded : 0);
-    let tax = 0;
-
-    if (reg === 'new') {
-      if (taxable <= 300000) tax = 0;
-      else if (taxable <= 600000) tax = (taxable - 300000) * 0.05;
-      else if (taxable <= 900000) tax = 15000 + (taxable - 600000) * 0.10;
-      else if (taxable <= 1200000) tax = 45000 + (taxable - 900000) * 0.15;
-      else if (taxable <= 1500000) tax = 90000 + (taxable - 1200000) * 0.20;
-      else tax = 150000 + (taxable - 1500000) * 0.30;
-    } else {
-      if (taxable <= 250000) tax = 0;
-      else if (taxable <= 500000) tax = (taxable - 250000) * 0.05;
-      else if (taxable <= 1000000) tax = 12500 + (taxable - 500000) * 0.20;
-      else tax = 112500 + (taxable - 1000000) * 0.30;
-    }
-
-    return Math.round(tax);
-  };
-
   const incomeNum = parseInt(income) || 0;
   const deductionsNum = parseInt(deductions) || 0;
-  const oldTax = calculateTax(incomeNum, deductionsNum, 'old');
-  const newTax = calculateTax(incomeNum, deductionsNum, 'new');
-  const savings = oldTax - newTax;
-  const savingsPercentage = oldTax > 0 ? Math.round((savings / oldTax) * 100) : 0;
+
+  // Use the real tax engine
+  const taxComparison = compareTaxRegimes(incomeNum, deductionsNum);
+  const oldTax = taxComparison.old.totalTax;
+  const newTax = taxComparison.new.totalTax;
+  const savings = Math.abs(oldTax - newTax);
+  const savingsPercentage = Math.max(oldTax, newTax) > 0 ? Math.round((savings / Math.max(oldTax, newTax)) * 100) : 0;
 
   return (
     <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
@@ -121,7 +108,7 @@ export default function Tax() {
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-[var(--red)] opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
               <div className="relative text-center py-6">
-                <div className="text-3xl md:text-4xl font-bold mb-2 slashed-zero text-[var(--card-foreground)] truncate px-2" style={{ fontFamily: 'var(--font-display)' }}>
+                <div className="text-2xl md:text-3xl font-bold mb-2 slashed-zero text-[var(--card-foreground)] truncate px-2" style={{ fontFamily: 'var(--font-display)' }}>
                   ₹{oldTax.toLocaleString('en-IN')}
                 </div>
                 <div className="text-sm font-medium text-[var(--secondary)]">Tax Liability</div>
@@ -157,7 +144,7 @@ export default function Tax() {
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-[var(--lime)] opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
               <div className="relative text-center py-6">
-                <div className="text-3xl md:text-4xl font-bold mb-2 slashed-zero text-[var(--card-foreground)] truncate px-2" style={{ fontFamily: 'var(--font-display)' }}>
+                <div className="text-2xl md:text-3xl font-bold mb-2 slashed-zero text-[var(--card-foreground)] truncate px-2" style={{ fontFamily: 'var(--font-display)' }}>
                   ₹{newTax.toLocaleString('en-IN')}
                 </div>
                 <div className="text-sm font-medium text-[var(--secondary)]">Tax Liability</div>

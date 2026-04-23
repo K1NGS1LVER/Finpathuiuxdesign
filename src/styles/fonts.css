@@ -1,29 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @font-face {
-  font-family: 'PP Formula';
-  src: url('https://assets.codepen.io/605876/PPFormula-VariableVF.ttf') format('truetype');
-  font-weight: 100 900;
+  font-family: 'Lufga';
+  src: url('./fonts/fonnts.com-LufgaLight.ttf') format('truetype');
+  font-weight: 300;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Lufga';
-  src: url('https://fonts.cdnfonts.com/s/86481/Lufga-Regular.woff') format('woff');
+  src: url('./fonts/fonnts.com-LufgaRegular.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Lufga';
-  src: url('https://fonts.cdnfonts.com/s/86481/Lufga-Medium.woff') format('woff');
+  src: url('./fonts/fonnts.com-LufgaMedium.ttf') format('truetype');
   font-weight: 500;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Lufga';
-  src: url('https://fonts.cdnfonts.com/s/86481/Lufga-Bold.woff') format('woff');
+  src: url('./fonts/fonnts.com-LufgaSemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lufga';
+  src: url('./fonts/fonnts.com-LufgaBold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }

@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { TrendingUp, Home, GraduationCap, Baby } from 'lucide-react';
+import { useFinPathStore } from '../../lib/store';
 
 export default function Scenarios() {
+  const income = useFinPathStore(s => s.income);
+  const expenses = useFinPathStore(s => s.expenses);
+  const debts = useFinPathStore(s => s.debts);
+  const goals = useFinPathStore(s => s.goals);
+
   const [scenario, setScenario] = useState('salary');
   
   // Independent values for each scenario allowing accurate ranges and negative values
@@ -35,12 +41,36 @@ export default function Scenarios() {
   const { min, max, step } = getSliderConfig();
   const progressPercent = ((currentVal - min) / (max - min)) * 100;
 
-  const impacts = [
-    { label: 'Monthly Savings', current: '₹20,000', future: scenario === 'salary' && currentVal < 0 ? '₹12,000' : '₹32,000', change: scenario === 'salary' && currentVal < 0 ? '-40%' : '+60%', positive: !(scenario === 'salary' && currentVal < 0) },
-    { label: 'Goal Timeline', current: '18 months', future: scenario === 'salary' && currentVal < 0 ? '26 months' : '11 months', change: scenario === 'salary' && currentVal < 0 ? '+44%' : '-39%', positive: !(scenario === 'salary' && currentVal < 0) },
-    { label: 'Emergency Buffer', current: '3 months', future: scenario === 'salary' && currentVal < 0 ? '2 months' : '5 months', change: scenario === 'salary' && currentVal < 0 ? '-33%' : '+67%', positive: !(scenario === 'salary' && currentVal < 0) },
-    { label: 'Tax Liability', current: '₹45,000', future: scenario === 'salary' && currentVal < 0 ? '₹32,000' : '₹58,000', change: scenario === 'salary' && currentVal < 0 ? '-28%' : '+29%', positive: scenario === 'salary' && currentVal < 0 },
-  ];
+  // Dynamic impact calculation from real store data
+  const currentSurplus = income.total - expenses.total - debts.totalMonthly;
+  const fmt = (n: number) => `₹${Math.abs(Math.round(n)).toLocaleString('en-IN')}`;
+
+  const impacts = useMemo(() => {
+    let newSurplus = currentSurplus;
+    let additionalExpense = 0;
+
+    if (scenario === 'salary') {
+      newSurplus = (income.total * (1 + currentVal / 100)) - expenses.total - debts.totalMonthly;
+    } else if (scenario === 'property') {
+      additionalExpense = (currentVal * 100000 * 0.08) / 12; // ~8% home loan EMI approx
+      newSurplus = currentSurplus - additionalExpense;
+    } else if (scenario === 'education') {
+      additionalExpense = (currentVal * 100000 * 0.09) / 12; // ~9% education loan EMI
+      newSurplus = currentSurplus - additionalExpense;
+    } else if (scenario === 'family') {
+      newSurplus = currentSurplus - currentVal;
+    }
+
+    const savingsChange = currentSurplus > 0 ? Math.round(((newSurplus - currentSurplus) / currentSurplus) * 100) : 0;
+    const timelineChange = newSurplus > 0 && currentSurplus > 0 ? Math.round(((currentSurplus / newSurplus) - 1) * 100) : 0;
+
+    return [
+      { label: 'Monthly Savings', current: fmt(Math.max(0, currentSurplus)), future: fmt(Math.max(0, newSurplus)), change: `${savingsChange >= 0 ? '+' : ''}${savingsChange}%`, positive: newSurplus >= currentSurplus },
+      { label: 'Goal Timeline', current: 'Current', future: timelineChange > 0 ? `+${timelineChange}% longer` : `${timelineChange}% faster`, change: `${timelineChange >= 0 ? '+' : ''}${timelineChange}%`, positive: timelineChange <= 0 },
+      { label: 'Emergency Buffer', current: '3 months', future: newSurplus >= currentSurplus ? '5 months' : '2 months', change: newSurplus >= currentSurplus ? '+67%' : '-33%', positive: newSurplus >= currentSurplus },
+      { label: 'Tax Liability', current: fmt(income.total * 12 * 0.05), future: fmt((scenario === 'salary' ? income.total * (1 + currentVal/100) : income.total) * 12 * 0.05), change: scenario === 'salary' ? `${currentVal >= 0 ? '+' : ''}${currentVal}%` : '+0%', positive: scenario === 'salary' && currentVal < 0 },
+    ];
+  }, [scenario, currentVal, income, expenses, debts, currentSurplus]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">

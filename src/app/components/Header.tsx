@@ -1,4 +1,8 @@
-import { Sun, Moon, Menu } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Sun, Moon, Menu, LogOut, User } from 'lucide-react';
+import { useAuthStore } from '../../lib/auth-store';
+import { useFinPathStore } from '../../lib/store';
+import { useNavigate } from 'react-router';
 
 interface HeaderProps {
   isDark: boolean;
@@ -7,8 +11,38 @@ interface HeaderProps {
 }
 
 export default function Header({ isDark, setIsDark, onMenuClick }: HeaderProps) {
+  const user = useAuthStore(s => s.user);
+  const signOut = useAuthStore(s => s.signOut);
+  const resetStore = useFinPathStore(s => s.reset);
+  const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    setDropdownOpen(false);
+    await signOut();
+    // Clear financial data on logout
+    if (resetStore) resetStore();
+    navigate('/');
+  };
+
+  // Get user initial
+  const userName = user?.user_metadata?.full_name || user?.email || '';
+  const initial = userName ? userName.charAt(0).toUpperCase() : 'A';
+
   return (
-    <header 
+    <header
       className="h-12 md:h-14 flex items-center justify-between md:justify-end px-4 md:px-8 z-20 relative"
       style={{
         background: 'var(--card)',
@@ -39,8 +73,64 @@ export default function Header({ isDark, setIsDark, onMenuClick }: HeaderProps) 
           )}
         </button>
 
-        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg slashed-zero bg-[var(--lime)] text-[#050F1C] shadow-[0_4px_16px_rgba(176,255,9,0.3)]">
-          A
+        {/* User Avatar + Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg slashed-zero bg-[var(--lime)] text-[#050F1C] shadow-[0_4px_16px_rgba(176,255,9,0.3)] transition-transform hover:scale-105 active:scale-95"
+            title={userName || 'Account'}
+          >
+            {initial}
+          </button>
+
+          {/* Dropdown Menu */}
+          {dropdownOpen && (
+            <div
+              className="absolute right-0 top-14 w-64 rounded-2xl overflow-hidden z-50"
+              style={{
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+                boxShadow: 'var(--shadow-lg)',
+                backdropFilter: 'blur(24px)',
+              }}
+            >
+              {/* User Info */}
+              <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm slashed-zero bg-[var(--lime)] text-[#050F1C]">
+                    {initial}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {user?.user_metadata?.full_name && (
+                      <div className="text-sm font-semibold text-[var(--card-foreground)] truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                        {user.user_metadata.full_name}
+                      </div>
+                    )}
+                    <div className="text-xs text-[var(--secondary)] truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                      {user?.email || 'Anonymous'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="p-2">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                  style={{
+                    color: '#EF4444',
+                    fontFamily: 'var(--font-body)',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <LogOut size={18} />
+                  <span className="text-sm font-medium">Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

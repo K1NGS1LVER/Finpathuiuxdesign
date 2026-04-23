@@ -3,7 +3,7 @@
 :root {
   /* Typography */
   --font-size: 16px;
-  --font-display: 'PP Formula', 'Montserrat', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Montserrat', system-ui, sans-serif;
   --font-body: 'Lufga', 'Montserrat', system-ui, sans-serif;
 
   /* 8px Spacing Scale */
@@ -126,6 +126,25 @@
   * {
     box-sizing: border-box;
     /* Removed aggressive transitions on everything, keeping it only for specific elements */
+  }
+
+  /* Minimal Scrollbar Styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: var(--radius-full);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--tertiary);
   }
 
   body {
