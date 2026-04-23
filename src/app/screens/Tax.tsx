@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calculator, TrendingDown, ArrowRight } from 'lucide-react';
 import { compareTaxRegimes } from '../../lib/tax-engine';
 import { useFinPathStore } from '../../lib/store';
@@ -10,6 +10,13 @@ export default function Tax() {
   const [income, setIncome] = useState(annualIncome > 0 ? String(annualIncome) : '1200000');
   const [regime, setRegime] = useState<'old' | 'new'>('new');
   const [deductions, setDeductions] = useState('150000');
+
+  // Sync income from store if it changes and we haven't touched it much
+  useEffect(() => {
+    if (annualIncome > 0 && income === '1200000') {
+      setIncome(String(annualIncome));
+    }
+  }, [annualIncome]);
 
   const incomeNum = parseInt(income) || 0;
   const deductionsNum = parseInt(deductions) || 0;
@@ -32,7 +39,7 @@ export default function Tax() {
       {/* Header */}
       <div className="mb-6 md:mb-8 relative z-10">
         <h1 className="text-display mb-2 slashed-zero">Tax Calculator</h1>
-        <p className="text-lg text-[var(--secondary)]">Compare old vs new tax regime</p>
+        <p className="text-lg text-[var(--secondary)]">Compare FY 2024-25 Old vs New tax regimes</p>
       </div>
 
       {/* Bento Grid */}
@@ -98,8 +105,11 @@ export default function Tax() {
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Old Regime Card */}
           <div className={`bento-card flex flex-col ${regime === 'old' ? 'border-[var(--lime)] border-2 shadow-[0_0_24px_rgba(176,255,9,0.1)]' : ''}`}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Old Regime</h3>
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Old Regime</h3>
+                <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[200px]">Allows deductions (80C, 80D, HRA). Best if you have high investments.</p>
+              </div>
               {regime === 'old' && (
                 <div className="pill-button text-xs bg-[var(--lime)] text-[#050F1C] font-semibold">Selected</div>
               )}
@@ -134,8 +144,11 @@ export default function Tax() {
 
           {/* New Regime Card */}
           <div className={`bento-card flex flex-col ${regime === 'new' ? 'border-[var(--lime)] border-2 shadow-[0_0_24px_rgba(176,255,9,0.1)]' : ''}`}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-title slashed-zero text-[var(--card-foreground)]">New Regime</h3>
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <h3 className="text-title slashed-zero text-[var(--card-foreground)]">New Regime</h3>
+                <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[200px]">Default for FY 24-25. Lower tax slabs, but no investment deductions allowed.</p>
+              </div>
               {regime === 'new' && (
                 <div className="pill-button text-xs bg-[var(--lime)] text-[#050F1C] font-semibold">Selected</div>
               )}
@@ -209,12 +222,38 @@ export default function Tax() {
               <h3 className="text-lg font-bold mb-1 slashed-zero text-[var(--card-foreground)]">Recommendation</h3>
               <p className="text-sm text-[var(--secondary)]">
                 {savings > 0
-                  ? `We recommend choosing the new tax regime to maximize your savings.`
-                  : `Consider sticking with the old regime and maximizing your deductions.`}
+                  ? `We recommend choosing the New Regime. The lower tax slabs save you more money than your current deductions would in the Old Regime.`
+                  : `Consider sticking with the Old Regime. Your deductions (₹${deductionsNum.toLocaleString('en-IN')}) reduce your taxable income enough to beat the New Regime's lower rates.`}
               </p>
             </div>
           </div>
         )}
+
+        {/* Deductions Insights */}
+        <div className="lg:col-span-3 bento-card p-6 md:p-8 mt-2">
+          <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)] flex items-center gap-2">
+            <span className="text-xl">💡</span> Penny's Deduction Guide
+          </h3>
+          <p className="text-sm text-[var(--secondary)] mb-6">
+            If you opt for the <strong>Old Regime</strong>, here are the top deductions you should claim to lower your tax burden:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { code: 'Section 80C', max: '₹1.5 Lakh', desc: 'ELSS Mutual Funds, PPF, EPF, Life Insurance premiums, and Home Loan Principal.' },
+              { code: 'Section 80D', max: '₹25,000+', desc: 'Health Insurance premiums for yourself and parents.' },
+              { code: 'Section 24(b)', max: '₹2 Lakh', desc: 'Interest paid on your Home Loan.' },
+              { code: 'HRA', max: 'Varies', desc: 'House Rent Allowance if you live in a rented house and receive HRA.' }
+            ].map(deduction => (
+              <div key={deduction.code} className="p-4 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-[var(--lime-text)] text-sm">{deduction.code}</span>
+                  <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)' }}>Max {deduction.max}</span>
+                </div>
+                <p className="text-xs text-[var(--secondary)]">{deduction.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

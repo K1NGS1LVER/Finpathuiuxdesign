@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, X, Wallet, Bike, Plane, CreditCard, Home, Heart, Target, TrendingUp, Shield, GraduationCap } from 'lucide-react';
+import { Plus, X, Wallet, Bike, Plane, CreditCard, Home, Heart, Target, TrendingUp, Shield, GraduationCap, Calendar, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useFinPathStore } from '../../lib/store';
 import { useNavigate } from 'react-router';
@@ -12,6 +12,13 @@ interface VisualNode {
 
 const ICON_MAP: Record<string, any> = {
   Wallet, Bike, Plane, CreditCard, Home, Heart, Target, TrendingUp, Shield, GraduationCap,
+};
+
+const formatCurrency = (amount: number) => {
+  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)}Cr`;
+  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
+  if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
+  return `₹${amount}`;
 };
 
 const GOAL_PRESETS = [
@@ -236,7 +243,7 @@ export default function Journey() {
             </div>
             <div className="font-bold mb-1 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-body)' }}>Income</div>
             <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-              ₹{(income.total / 1000).toFixed(0)}K
+              {formatCurrency(income.total)}
             </div>
             <div className="text-xs mb-2 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>100% — Source</div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
@@ -272,7 +279,7 @@ export default function Journey() {
                 </div>
                 <div className="font-bold mb-1 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-body)' }}>{goal.name}</div>
                 <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-                  ₹{(goal.targetAmount / 1000).toFixed(0)}K
+                  {formatCurrency(goal.targetAmount)}
                 </div>
                 <div className="text-xs mb-2 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>{progress}% complete</div>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
@@ -379,95 +386,130 @@ export default function Journey() {
         </div>
       )}
 
-      {/* ── Goal Detail Panel ── */}
-      {selectedGoal && (
-        <div
-          className="w-full md:w-80 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-4 bento-card fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-30"
-          style={{ maxHeight: '50vh', overflowY: 'auto' }}
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Goal Details</h3>
-            <button onClick={() => setSelectedGoalId(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--card-foreground)] hover:bg-[var(--surface-hover)] transition-colors">
-              <X size={18} />
-            </button>
-          </div>
+        {/* ── Goal Detail Floating Sidebar ── */}
+        {selectedGoal && (
+          <div
+            className="absolute top-0 right-0 h-full w-full md:w-[360px] p-4 md:p-6 space-y-5 shadow-2xl z-30 overflow-y-auto transform transition-transform duration-300"
+            style={{ 
+              background: 'var(--surface-tint)', 
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              borderLeft: '1px solid var(--border)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
+              <h3 className="text-xl font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>Goal Details</h3>
+              <button 
+                onClick={() => setSelectedGoalId(null)} 
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--card-foreground)] transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-          <div className="text-center py-6 flex flex-col items-center">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-[var(--shadow-md)]" style={{ background: 'var(--surface-hover)', color: getStatusColor(selectedGoal.status) }}>
-              {(() => {
-                const Icon = ICON_MAP[selectedGoal.icon] || Target;
-                return <Icon size={40} className="icon-wireframe" />;
-              })()}
-            </div>
-            <h2 className="text-2xl font-bold mb-2 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{selectedGoal.name}</h2>
-            <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)', color: getStatusColor(selectedGoal.status) }}>
-              ₹{selectedGoal.targetAmount.toLocaleString('en-IN')}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-[var(--card-foreground)]">Progress</span>
-              <span className="font-bold text-[var(--card-foreground)]">
-                {selectedGoal.targetAmount > 0 ? Math.round((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100) : 0}%
-              </span>
-            </div>
-            <div className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${selectedGoal.targetAmount > 0 ? Math.round((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100) : 0}%`,
-                  backgroundColor: getStatusColor(selectedGoal.status),
+            {/* Main Info */}
+            <div className="flex flex-col items-center text-center py-4">
+              <div 
+                className="w-24 h-24 rounded-full flex items-center justify-center mb-5" 
+                style={{ 
+                  background: `color-mix(in srgb, ${getStatusColor(selectedGoal.status || 'not-started')} 15%, transparent)`, 
+                  color: getStatusColor(selectedGoal.status || 'not-started'),
+                  boxShadow: `0 0 30px color-mix(in srgb, ${getStatusColor(selectedGoal.status || 'not-started')} 30%, transparent)`
                 }}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-2 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
-              <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Saved</div>
-              <div className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹{selectedGoal.currentAmount.toLocaleString('en-IN')}</div>
-            </div>
-            <div className="p-2 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
-              <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Remaining</div>
-              <div className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>₹{(selectedGoal.targetAmount - selectedGoal.currentAmount).toLocaleString('en-IN')}</div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-2 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
-              <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Timeline</div>
-              <div className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{selectedGoal.timelineMonths} months</div>
-            </div>
-            <div className="p-2 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
-              <div className="text-xs mb-1 text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Monthly</div>
-              <div className="font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-                ₹{Math.round((selectedGoal.targetAmount - selectedGoal.currentAmount) / Math.max(1, selectedGoal.timelineMonths)).toLocaleString('en-IN')}
+              >
+                {(() => {
+                  const Icon = ICON_MAP[selectedGoal.icon] || Target;
+                  return <Icon size={40} className="icon-wireframe" strokeWidth={1.5} />;
+                })()}
+              </div>
+              <h2 className="text-2xl font-bold mb-1 text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{selectedGoal.name || 'Goal'}</h2>
+              <div className="text-[13px] font-medium uppercase tracking-wider text-[var(--secondary)] mb-4">{(selectedGoal.status || 'not-started').replace('-', ' ')}</div>
+              
+              <div className="text-4xl font-extrabold slashed-zero tracking-tight" style={{ fontFamily: 'var(--font-display)', color: getStatusColor(selectedGoal.status || 'not-started') }}>
+                ₹{(selectedGoal.targetAmount || 0).toLocaleString('en-IN')}
               </div>
             </div>
-          </div>
 
-          {/* Action buttons */}
-          <div className="space-y-2 pt-2">
-            {selectedGoal.status !== 'complete' && (
+            {/* Progress Bar Area */}
+            <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-[var(--secondary)]">Overall Progress</span>
+                <span className="text-sm font-bold text-[var(--card-foreground)]">
+                  {(selectedGoal.targetAmount || 0) > 0 ? Math.round(((selectedGoal.currentAmount || 0) / (selectedGoal.targetAmount || 1)) * 100) : 0}%
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{
+                    width: `${(selectedGoal.targetAmount || 0) > 0 ? Math.round(((selectedGoal.currentAmount || 0) / (selectedGoal.targetAmount || 1)) * 100) : 0}%`,
+                    backgroundColor: getStatusColor(selectedGoal.status || 'not-started'),
+                    boxShadow: `0 0 10px ${getStatusColor(selectedGoal.status || 'not-started')}`
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--surface-hover)', color: 'var(--lime)' }}>
+                  <Shield size={16} />
+                </div>
+                <div className="text-xs font-medium mb-1 text-[var(--secondary)]">Saved So Far</div>
+                <div className="text-lg font-bold text-[var(--card-foreground)] slashed-zero">₹{(selectedGoal.currentAmount || 0).toLocaleString('en-IN')}</div>
+              </div>
+              <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--surface-hover)', color: 'var(--blue)' }}>
+                  <TrendingUp size={16} />
+                </div>
+                <div className="text-xs font-medium mb-1 text-[var(--secondary)]">Remaining</div>
+                <div className="text-lg font-bold text-[var(--card-foreground)] slashed-zero">₹{Math.max(0, (selectedGoal.targetAmount || 0) - (selectedGoal.currentAmount || 0)).toLocaleString('en-IN')}</div>
+              </div>
+              <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--surface-hover)', color: 'var(--amber)' }}>
+                  <Calendar size={16} />
+                </div>
+                <div className="text-xs font-medium mb-1 text-[var(--secondary)]">Timeline</div>
+                <div className="text-lg font-bold text-[var(--card-foreground)]">{selectedGoal.timelineMonths || 12} months</div>
+              </div>
+              <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--surface-hover)', color: 'var(--violet)' }}>
+                  <Target size={16} />
+                </div>
+                <div className="text-xs font-medium mb-1 text-[var(--secondary)]">Monthly Req.</div>
+                <div className="text-lg font-bold text-[var(--card-foreground)] slashed-zero">
+                  ₹{Math.round(Math.max(0, (selectedGoal.targetAmount || 0) - (selectedGoal.currentAmount || 0)) / Math.max(1, selectedGoal.timelineMonths || 12)).toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="space-y-3 pt-4 mt-auto">
+              {selectedGoal.status !== 'complete' && (
+                <button
+                  onClick={() => handleComplete(selectedGoal.id)}
+                  className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_rgba(176,255,9,0.2)]"
+                  style={{ backgroundColor: 'var(--lime)', color: '#050F1C', fontFamily: 'var(--font-body)' }}
+                >
+                  <Sparkles size={18} />
+                  Mark Complete
+                </button>
+              )}
               <button
-                onClick={() => handleComplete(selectedGoal.id)}
-                className="w-full py-3 rounded-lg font-bold transition-transform hover:scale-105"
-                style={{ backgroundColor: 'var(--lime)', color: '#050F1C', fontFamily: 'var(--font-body)' }}
+                onClick={() => handleDelete(selectedGoal.id)}
+                className="w-full py-3 rounded-xl font-semibold transition-colors hover:bg-[var(--surface-hover)] text-sm"
+                style={{ color: 'var(--red)', fontFamily: 'var(--font-body)' }}
               >
-                Mark Complete 🎉
+                Delete Goal
               </button>
-            )}
-            <button
-              onClick={() => handleDelete(selectedGoal.id)}
-              className="w-full py-3 rounded-lg font-bold transition-transform hover:scale-105 text-sm"
-              style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', fontFamily: 'var(--font-body)' }}
-            >
-              Remove Goal
-            </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

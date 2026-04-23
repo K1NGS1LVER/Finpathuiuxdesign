@@ -1,5 +1,5 @@
 import { Check, Circle } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useFinPathStore } from '../../lib/store';
 
 export default function Month() {
@@ -8,6 +8,7 @@ export default function Month() {
   const debts = useFinPathStore(s => s.debts);
   const goals = useFinPathStore(s => s.goals);
   const plan = useFinPathStore(s => s.plan);
+  const updateGoal = useFinPathStore(s => s.updateGoal);
 
   // Generate tasks from real goals
   const initialTasks = useMemo(() => {
@@ -15,25 +16,60 @@ export default function Month() {
     let id = 1;
     
     if (expenses.rent > 0) {
-      taskList.push({ id: id++, text: `Pay rent ₹${expenses.rent.toLocaleString('en-IN')} by 5th`, done: false });
+      taskList.push({ id: `rent`, text: `Pay rent ₹${expenses.rent.toLocaleString('en-IN')} by 5th`, done: false, isGoal: false });
     }
     
     for (const goal of goals.slice(0, 2)) {
+      if (goal.status === 'complete') continue;
       const monthly = goal.monthlyAllocation || Math.round((goal.targetAmount - goal.currentAmount) / Math.max(1, goal.timelineMonths));
       if (monthly > 0) {
-        taskList.push({ id: id++, text: `Add ₹${(monthly / 1000).toFixed(0)}K to ${goal.name} savings`, done: false });
+        taskList.push({ 
+          id: goal.id, 
+          text: `Add ₹${(monthly / 1000).toFixed(0)}K to ${goal.name} savings`, 
+          done: !!goal.checkedThisMonth, 
+          isGoal: true, 
+          goalId: goal.id, 
+          amount: monthly 
+        });
       }
     }
 
-    taskList.push({ id: id++, text: 'Review subscription services', done: false });
-    taskList.push({ id: id++, text: 'Track all expenses this week', done: false });
+    taskList.push({ id: 'review', text: 'Review subscription services', done: false, isGoal: false });
+    taskList.push({ id: 'track', text: 'Track all expenses this week', done: false, isGoal: false });
     
     return taskList;
   }, [expenses, goals]);
 
   const [tasks, setTasks] = useState(initialTasks);
 
-  const toggleTask = (id: number) => {
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
+
+  const toggleTask = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    if (task.isGoal && task.goalId && task.amount) {
+      const goal = goals.find(g => g.id === task.goalId);
+      if (goal) {
+        const newDoneState = !task.done;
+        let newAmount = goal.currentAmount;
+        
+        if (newDoneState) {
+          newAmount = Math.min(goal.targetAmount, goal.currentAmount + task.amount);
+        } else {
+          newAmount = Math.max(0, goal.currentAmount - task.amount);
+        }
+        
+        updateGoal(goal.id, { 
+          currentAmount: newAmount,
+          checkedThisMonth: newDoneState,
+          status: newAmount >= goal.targetAmount ? 'complete' : 'in-progress'
+        });
+      }
+    }
+
     setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 

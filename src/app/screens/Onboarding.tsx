@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowRight, ArrowLeft, Sun, Moon, Target, TrendingUp, Shield, Sparkles, Calendar, Lightbulb } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Sun, Moon, Target, TrendingUp, Shield, Sparkles, Calendar, Lightbulb, FileText, Loader2 } from 'lucide-react';
 import { useFinPathStore } from '../../lib/store';
+import { extractFromDocument } from '../../lib/document-extractor';
 
 interface OnboardingProps {
   isDark: boolean;
@@ -12,10 +13,12 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [income, setIncome] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionPopup, setExtractionPopup] = useState<{show: boolean, type: 'success' | 'error', message: string}>({ show: false, type: 'success', message: '' });
   const [incomeCurrency, setIncomeCurrency] = useState('INR');
   const [expensesCurrency, setExpensesCurrency] = useState('INR');
   const [debtCurrency, setDebtCurrency] = useState('INR');
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [selectedGoals, setSelectedGoals] = useState<Record<string, { targetAmount: string }>>({});
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
 
   const [expenseBreakdown, setExpenseBreakdown] = useState({
@@ -97,7 +100,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
     // Validation per step
     if (step === 0 && (!income || parseFloat(income) <= 0)) return;
     if (step === 1 && (!totalExpenses || parseFloat(totalExpenses) <= 0)) return;
-    if (step === 2 && selectedGoals.length === 0) return;
+    if (step === 2 && Object.keys(selectedGoals).length === 0) return;
 
     if (step < steps.length - 1) {
       setStep(step + 1);
@@ -117,11 +120,16 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         dbtBreakdown[k] = parseFloat(v) || 0;
       }
 
+      const formattedGoals = Object.entries(selectedGoals).map(([name, data]) => ({
+        name,
+        targetAmount: parseFloat(data.targetAmount) || 0,
+      }));
+
       completeOnboarding({
         income: incomeINR,
         expenses: expenseINR,
         debts: debtINR,
-        goals: selectedGoals,
+        goals: formattedGoals,
         expenseBreakdown: expBreakdown,
         debtBreakdown: dbtBreakdown,
       });
@@ -131,11 +139,83 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
   };
 
   const toggleGoal = (goalName: string) => {
-    setSelectedGoals(prev =>
-      prev.includes(goalName)
-        ? prev.filter(g => g !== goalName)
-        : prev.length < 3 ? [...prev, goalName] : prev
-    );
+    setSelectedGoals(prev => {
+      const newGoals = { ...prev };
+      if (newGoals[goalName]) {
+        delete newGoals[goalName];
+      } else if (Object.keys(newGoals).length < 3) {
+        newGoals[goalName] = { targetAmount: '' };
+      }
+      return newGoals;
+    });
+  };
+
+  const updateGoalAmount = (goalName: string, amount: string) => {
+    setSelectedGoals(prev => ({
+      ...prev,
+      [goalName]: { targetAmount: amount.replace(/[^0-9]/g, '') }
+    }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input so same file can be selected again
+    e.target.value = '';
+
+    setIsExtracting(true);
+    setExtractionPopup({ show: false, type: 'success', message: '' });
+
+    try {
+      // Determine extraction context based on current step
+      const context = step === 0 ? 'income' : 'debt';
+      const result = await extractFromDocument(file, context as 'income' | 'debt');
+
+      setIsExtracting(false);
+
+      if (result.success) {
+        // Apply extracted data to the form
+        if (result.type === 'salary' && result.data.income) {
+          setIncome(String(result.data.income));
+          setIncomeCurrency('INR');
+        } else if (result.type === 'debt') {
+          if (result.data.emi) {
+            setManualTotalDebt(String(result.data.emi));
+            setDebtCurrency('INR');
+          } else if (result.data.loanAmount) {
+            // If we only got principal, estimate monthly EMI (rough: principal / 120 for 10yr loan)
+            const estimatedEMI = Math.round(result.data.loanAmount / 120);
+            setManualTotalDebt(String(estimatedEMI));
+            setDebtCurrency('INR');
+          }
+        }
+
+        setExtractionPopup({
+          show: true,
+          type: 'success',
+          message: result.summary,
+        });
+      } else {
+        setExtractionPopup({
+          show: true,
+          type: 'error',
+          message: result.summary,
+        });
+      }
+    } catch (error: any) {
+      setIsExtracting(false);
+      setExtractionPopup({
+        show: true,
+        type: 'error',
+        message: `Error processing document: ${error.message || 'Unknown error'}. Please enter details manually.`,
+      });
+    }
+
+    // Auto-hide popup after 6 seconds
+    setTimeout(() => {
+      setExtractionPopup(prev => ({ ...prev, show: false }));
+    }, 6000);
   };
 
   return (
@@ -165,7 +245,40 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           border-color: var(--lime);
           background: linear-gradient(135deg, var(--card) 0%, rgba(176, 255, 9, 0.05) 100%);
         }
+        @keyframes slideUpFade {
+          from { opacity: 0; transform: translate(-50%, 20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
+
+      {/* Extraction Popup */}
+      {extractionPopup.show && (
+        <div 
+          className="fixed bottom-24 left-1/2 z-50 p-4 rounded-2xl flex items-center gap-3 shadow-2xl max-w-[90vw] md:max-w-md w-full"
+          style={{ 
+            animation: 'slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            background: 'var(--surface-tint)',
+            backdropFilter: 'blur(20px)',
+            border: `1px solid ${extractionPopup.type === 'success' ? 'var(--lime)' : 'var(--red)'}`,
+            color: 'var(--card-foreground)',
+            fontFamily: 'var(--font-body)'
+          }}
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: extractionPopup.type === 'success' ? 'rgba(176, 255, 9, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
+            {extractionPopup.type === 'success' ? <Sparkles size={20} className="text-[var(--lime)]" /> : <Shield size={20} className="text-[var(--red)]" />}
+          </div>
+          <p className="text-sm font-medium">{extractionPopup.message}</p>
+        </div>
+      )}
+
+      {/* Hidden File Input */}
+      <input 
+        type="file" 
+        id="document-upload" 
+        className="hidden" 
+        accept=".pdf,.png,.jpg,.jpeg"
+        onChange={handleFileUpload} 
+      />
 
       {/* Theme Toggle */}
       <button
@@ -247,6 +360,16 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   ≈ ₹{convertToINR(income, incomeCurrency)} INR
                 </p>
               )}
+              
+              <div className="pt-4 flex justify-center">
+                <label 
+                  htmlFor="document-upload"
+                  className={`pill-button px-6 py-3 text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all ${isExtracting ? 'opacity-70 pointer-events-none' : 'hover:scale-105'}`}
+                >
+                  {isExtracting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+                  {isExtracting ? "Penny is reading your document..." : "Upload Salary Slip (PDF/Image)"}
+                </label>
+              </div>
             </div>
           ) : current.type === 'combined' ? (
             <div className="space-y-4 md:space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -403,6 +526,16 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   </div>
                 )}
               </div>
+              
+              <div className="pt-2 flex justify-center">
+                <label 
+                  htmlFor="document-upload"
+                  className={`pill-button px-6 py-3 text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all ${isExtracting ? 'opacity-70 pointer-events-none' : 'hover:scale-105'}`}
+                >
+                  {isExtracting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+                  {isExtracting ? "Penny is reading your document..." : "Upload Loan/Debt PDF (PDF/Image)"}
+                </label>
+              </div>
             </div>
           ) : (
             <div className="space-y-3 md:space-y-4">
@@ -415,53 +548,93 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   { name: 'Vacation', icon: Calendar, color: 'var(--lime)', colorText: 'var(--lime-text)' },
                   { name: 'Upskill Course', icon: Lightbulb, color: 'var(--violet)', colorText: 'var(--violet-text)' }
                 ].map((goal) => {
-                  const isSelected = selectedGoals.includes(goal.name);
+                  const isSelected = !!selectedGoals[goal.name];
                   const Icon = goal.icon;
                   return (
-                    <button
+                    <div
                       key={goal.name}
-                      onClick={() => toggleGoal(goal.name)}
-                      className={`goal-option p-3 md:p-4 rounded-xl md:rounded-2xl font-medium transition-all flex flex-col items-center gap-2 md:gap-3 text-[var(--card-foreground)] ${isSelected ? 'selected' : ''}`}
+                      className={`goal-option flex flex-col overflow-hidden rounded-xl md:rounded-2xl transition-all ${isSelected ? 'selected' : ''}`}
                       style={{
-                        fontFamily: 'var(--font-body)',
                         background: 'var(--card)',
                         border: '1px solid var(--border)',
                       }}
                     >
-                      <div
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
-                        style={{
-                          backgroundColor: goal.color + '15',
-                          color: goal.colorText,
-                        }}
+                      <button
+                        onClick={() => toggleGoal(goal.name)}
+                        className="p-3 md:p-4 font-medium flex flex-col items-center gap-2 md:gap-3 text-[var(--card-foreground)] w-full h-full"
+                        style={{ fontFamily: 'var(--font-body)' }}
                       >
-                        <Icon size={18} className="icon-wireframe md:w-5 md:h-5" />
-                      </div>
-                      <span className="text-[10px] md:text-sm slashed-zero">{goal.name}</span>
-                    </button>
+                        <div
+                          className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
+                          style={{
+                            backgroundColor: goal.color + '15',
+                            color: goal.colorText,
+                          }}
+                        >
+                          <Icon size={18} className="icon-wireframe md:w-5 md:h-5" />
+                        </div>
+                        <span className="text-[10px] md:text-sm slashed-zero">{goal.name}</span>
+                      </button>
+                      
+                      {isSelected && (
+                        <div className="px-3 pb-3 md:px-4 md:pb-4 w-full">
+                          <input
+                            type="text"
+                            value={selectedGoals[goal.name].targetAmount}
+                            onChange={(e) => updateGoalAmount(goal.name, e.target.value)}
+                            placeholder="Target ₹"
+                            className="w-full px-3 py-2 text-xs md:text-sm font-bold text-center rounded-lg outline-none slashed-zero"
+                            style={{
+                              fontFamily: 'var(--font-display)',
+                              background: 'var(--surface-tint)',
+                              border: '1px solid var(--border)',
+                              color: 'var(--card-foreground)'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
-              <button
-                onClick={() => toggleGoal('Custom')}
-                className={`goal-option w-full p-3 md:p-4 rounded-xl md:rounded-2xl font-medium transition-all flex items-center justify-center gap-2 md:gap-3 text-[var(--card-foreground)] ${selectedGoals.includes('Custom') ? 'selected' : ''}`}
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  background: 'var(--card)',
-                  border: '1px solid var(--border)',
-                }}
+              <div className={`goal-option w-full rounded-xl md:rounded-2xl overflow-hidden transition-all flex flex-col ${!!selectedGoals['Custom'] ? 'selected' : ''}`}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
               >
-                <div
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
-                  style={{
-                    backgroundColor: 'rgba(176, 255, 9, 0.08)',
-                    color: 'var(--lime-text)',
-                  }}
+                <button
+                  onClick={() => toggleGoal('Custom')}
+                  className="w-full p-3 md:p-4 font-medium flex items-center justify-center gap-2 md:gap-3 text-[var(--card-foreground)]"
+                  style={{ fontFamily: 'var(--font-body)' }}
                 >
-                  <Target size={18} className="icon-wireframe md:w-5 md:h-5" />
-                </div>
-                <span className="text-xs md:text-sm slashed-zero">Custom</span>
-              </button>
+                  <div
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
+                    style={{
+                      backgroundColor: 'rgba(176, 255, 9, 0.08)',
+                      color: 'var(--lime-text)',
+                    }}
+                  >
+                    <Target size={18} className="icon-wireframe md:w-5 md:h-5" />
+                  </div>
+                  <span className="text-xs md:text-sm slashed-zero">Custom</span>
+                </button>
+                {!!selectedGoals['Custom'] && (
+                  <div className="px-3 pb-3 md:px-4 md:pb-4 w-full flex gap-2">
+                    <input
+                      type="text"
+                      value={selectedGoals['Custom'].targetAmount}
+                      onChange={(e) => updateGoalAmount('Custom', e.target.value)}
+                      placeholder="Target Amount ₹"
+                      className="flex-1 px-3 py-2 text-xs md:text-sm font-bold text-center rounded-lg outline-none slashed-zero"
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        background: 'var(--surface-tint)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--card-foreground)'
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

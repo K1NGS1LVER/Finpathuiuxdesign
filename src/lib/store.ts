@@ -64,7 +64,7 @@ interface FinPathStore extends FinancialProfile {
     income: number;
     expenses: number;
     debts: number;
-    goals: string[];
+    goals: { name: string; targetAmount?: number }[];
     expenseBreakdown?: Record<string, number>;
     debtBreakdown?: Record<string, number>;
   }) => void;
@@ -208,7 +208,13 @@ export const useFinPathStore = create<FinPathStore>()(
           totalMonthly: data.debts,
         };
 
-        const goals = data.goals.map((name, i) => goalNameToGoal(name, i));
+        const goals = data.goals.map((g, i) => {
+          const goal = goalNameToGoal(g.name, i);
+          if (g.targetAmount && g.targetAmount > 0) {
+            goal.targetAmount = g.targetAmount;
+          }
+          return goal;
+        });
 
         // Set all financial data
         set({

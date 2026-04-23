@@ -1,9 +1,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Typography */
+  /* Typography - Using Lufga for absolutely everything as requested */
   --font-size: 16px;
-  --font-display: 'Space Grotesk', 'Montserrat', system-ui, sans-serif;
+  --font-display: 'Lufga', 'Space Grotesk', 'Montserrat', system-ui, sans-serif;
   --font-body: 'Lufga', 'Montserrat', system-ui, sans-serif;
 
   /* 8px Spacing Scale */
