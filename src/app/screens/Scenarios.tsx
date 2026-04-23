@@ -172,11 +172,14 @@ export default function Scenarios() {
         </div>
       </div>
 
-      <div className="p-6 rounded-xl flex items-start gap-4 relative z-10" style={{ backgroundColor: 'var(--violet)', color: '#fff' }}>
-        <div className="text-3xl">💡</div>
-        <div>
-          <div className="font-bold mb-1" style={{ fontFamily: 'var(--font-display)' }}>Penny's Insight</div>
-          <div className="opacity-90" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="p-6 md:p-8 rounded-2xl flex items-start gap-4 relative overflow-hidden z-10 bento-card border border-[var(--violet)]" style={{ background: 'var(--surface-tint)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
+        {/* Centered Prominent Violet Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-[var(--violet)] opacity-30 mix-blend-screen blur-[80px] rounded-full pointer-events-none" />
+        
+        <div className="text-3xl relative z-10">💡</div>
+        <div className="relative z-10 text-[var(--card-foreground)]">
+          <div className="text-sm font-semibold tracking-wider mb-1 text-[var(--violet-text)] uppercase" style={{ fontFamily: 'var(--font-body)' }}>Penny's Insight</div>
+          <div className="text-lg md:text-xl font-medium" style={{ fontFamily: 'var(--font-body)' }}>
             {scenario === 'salary' && currentVal < 0 && `A ${Math.abs(currentVal)}% pay cut means you will need to extend your goal timelines. I'll help you optimize your essentials!`}
             {scenario === 'salary' && currentVal >= 0 && `A ${currentVal}% raise lets you hit your bike goal 7 months earlier! Consider increasing your SIP allocation.`}
             {scenario === 'property' && 'With this property investment, prioritize building a 6-month emergency fund first.'}
