@@ -1,36 +1,50 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router';
-import Landing from './screens/Landing';
-import Onboarding from './screens/Onboarding';
-import Loading from './screens/Loading';
-import Dashboard from './screens/Dashboard';
-import Journey from './screens/Journey';
-import Tax from './screens/Tax';
-import Month from './screens/Month';
-import Scenarios from './screens/Scenarios';
-import Progress from './screens/Progress';
-import Celebrate from './screens/Celebrate';
-import Auth from './screens/Auth';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import PennyPanel from './components/PennyPanel';
-import { useFinPathStore } from '../lib/store';
-import { useAuthStore } from '../lib/auth-store';
+import { useState, useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router";
+import Landing from "./screens/Landing";
+import Onboarding from "./screens/Onboarding";
+import Loading from "./screens/Loading";
+import Dashboard from "./screens/Dashboard";
+import Journey from "./screens/Journey";
+import Tax from "./screens/Tax";
+import Month from "./screens/Month";
+import Scenarios from "./screens/Scenarios";
+import Progress from "./screens/Progress";
+import Celebrate from "./screens/Celebrate";
+import Auth from "./screens/Auth";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
+import PennyPanel from "./components/PennyPanel";
+import { useFinPathStore } from "../lib/store";
+import { useAuthStore } from "../lib/auth-store";
 
 function AppContent() {
   const [isDark, setIsDark] = useState(() => {
-    const stored = localStorage.getItem('finpath-mode');
-    return stored === 'light' ? false : true;
+    const stored = localStorage.getItem("finpath-mode");
+    return stored === "light" ? false : true;
   });
   const [pennyOpen, setPennyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const onboarded = useFinPathStore(s => s.onboarded);
+  const onboarded = useFinPathStore((s) => s.onboarded);
+  const goals = useFinPathStore((s) => s.goals);
+  const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
+  const computeHealthScore = useFinPathStore((s) => s.computeHealthScore);
+  const generatePlan = useFinPathStore((s) => s.generatePlan);
+  const resolveGoalCompletionDecision = useFinPathStore(
+    (s) => s.resolveGoalCompletionDecision,
+  );
 
   // Auth state
-  const user = useAuthStore(s => s.user);
-  const authLoading = useAuthStore(s => s.loading);
-  const initialize = useAuthStore(s => s.initialize);
+  const user = useAuthStore((s) => s.user);
+  const authLoading = useAuthStore((s) => s.loading);
+  const initialize = useAuthStore((s) => s.initialize);
 
   // Initialize auth on mount
   useEffect(() => {
@@ -38,41 +52,72 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('finpath-mode', isDark ? 'dark' : 'light');
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("finpath-mode", isDark ? "dark" : "light");
   }, [isDark]);
+
+  useEffect(() => {
+    if (!onboarded) return;
+
+    computeHealthScore();
+    generatePlan();
+  }, [computeHealthScore, generatePlan, onboarded]);
 
   // Show loading spinner while checking auth session
   if (authLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+      <div
+        className="h-screen w-screen flex items-center justify-center"
+        style={{ background: "var(--background)" }}
+      >
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--lime)' }} />
-          <span className="text-sm text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>Loading...</span>
+          <div
+            className="w-12 h-12 border-4 rounded-full animate-spin"
+            style={{
+              borderColor: "var(--border)",
+              borderTopColor: "var(--lime)",
+            }}
+          />
+          <span
+            className="text-sm text-[var(--secondary)]"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            Loading...
+          </span>
         </div>
       </div>
     );
   }
 
   // If not authenticated, show auth screen (except for landing)
-  const isAuthPage = location.pathname === '/auth';
-  const isLandingPage = location.pathname === '/';
+  const isAuthPage = location.pathname === "/auth";
+  const isLandingPage = location.pathname === "/";
 
   if (!user && !isLandingPage && !isAuthPage) {
     return <Navigate to="/auth" replace />;
   }
 
   // Redirect logic for authenticated users
-  const isPublicPage = ['/', '/onboarding', '/loading', '/auth'].includes(location.pathname);
+  const isPublicPage = ["/", "/onboarding", "/loading", "/auth"].includes(
+    location.pathname,
+  );
   const showLayout = !isPublicPage;
+  const activeDecision = pendingGoalDecisions[0];
+  const hasRemainingGoals = goals.some((goal) => goal.status !== "complete");
+  const formatInr = (value: number) =>
+    `₹${Math.round(Math.max(0, value)).toLocaleString("en-IN")}`;
 
   // If authenticated + onboarded user visits landing or auth, redirect to dashboard
-  if (user && onboarded && (location.pathname === '/' || location.pathname === '/auth')) {
+  if (
+    user &&
+    onboarded &&
+    (location.pathname === "/" || location.pathname === "/auth")
+  ) {
     return <Navigate to="/dashboard" replace />;
   }
 
   // If authenticated but not onboarded and on auth page, go to onboarding
-  if (user && !onboarded && location.pathname === '/auth') {
+  if (user && !onboarded && location.pathname === "/auth") {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -87,7 +132,10 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden" style={{ fontFamily: 'var(--font-body)' }}>
+    <div
+      className="h-screen w-screen overflow-hidden"
+      style={{ fontFamily: "var(--font-body)" }}
+    >
       {showLayout ? (
         <div className="flex h-full">
           <Sidebar
@@ -103,7 +151,12 @@ function AppContent() {
             />
             <main className="flex-1 overflow-y-auto overflow-x-hidden px-2 md:px-6 py-2 md:py-8">
               <Routes>
-                <Route path="/dashboard" element={<Dashboard onPennyClick={() => setPennyOpen(true)} />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <Dashboard onPennyClick={() => setPennyOpen(true)} />
+                  }
+                />
                 <Route path="/journey" element={<Journey />} />
                 <Route path="/tax" element={<Tax />} />
                 <Route path="/month" element={<Month />} />
@@ -114,12 +167,112 @@ function AppContent() {
             </main>
           </div>
           <PennyPanel open={pennyOpen} onClose={() => setPennyOpen(false)} />
+
+          {activeDecision && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+              <div
+                className="w-full max-w-xl rounded-2xl p-6 md:p-7"
+                style={{
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  boxShadow: "var(--shadow-lg)",
+                }}
+              >
+                <div
+                  className="text-xs font-semibold tracking-wider uppercase mb-2"
+                  style={{ color: "var(--lime-text)" }}
+                >
+                  Goal Completed
+                </div>
+                <h3
+                  className="text-2xl font-bold mb-2 text-[var(--card-foreground)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {activeDecision.goalName} is done
+                </h3>
+                <p
+                  className="text-sm md:text-base text-[var(--secondary)] mb-4"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  The freed monthly allocation is{" "}
+                  {formatInr(activeDecision.freedMonthlyAmount)}. What should we
+                  do with it?
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    onClick={() =>
+                      resolveGoalCompletionDecision(
+                        activeDecision.goalId,
+                        "reinvest",
+                      )
+                    }
+                    disabled={!hasRemainingGoals}
+                    className="py-3 px-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: "var(--lime)",
+                      color: "#050F1C",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    Reinvest Into Remaining Goals
+                  </button>
+                  <button
+                    onClick={() =>
+                      resolveGoalCompletionDecision(
+                        activeDecision.goalId,
+                        "surplus",
+                      )
+                    }
+                    className="py-3 px-4 rounded-xl font-semibold transition-all"
+                    style={{
+                      background: "var(--surface-tint)",
+                      border: "1px solid var(--border)",
+                      color: "var(--card-foreground)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    Keep As Net Worth Surplus
+                  </button>
+                </div>
+
+                {!hasRemainingGoals && (
+                  <p
+                    className="text-xs mt-3"
+                    style={{ color: "var(--secondary)" }}
+                  >
+                    No active goals left, so only surplus mode can be applied
+                    right now.
+                  </p>
+                )}
+
+                {monthlySurplusReserve > 0 && (
+                  <p
+                    className="text-xs mt-2"
+                    style={{ color: "var(--secondary)" }}
+                  >
+                    Current monthly surplus reserve:{" "}
+                    {formatInr(monthlySurplusReserve)}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <Routes>
-          <Route path="/" element={<Landing isDark={isDark} setIsDark={setIsDark} />} />
-          <Route path="/auth" element={<Auth isDark={isDark} setIsDark={setIsDark} />} />
-          <Route path="/onboarding" element={<Onboarding isDark={isDark} setIsDark={setIsDark} />} />
+          <Route
+            path="/"
+            element={<Landing isDark={isDark} setIsDark={setIsDark} />}
+          />
+          <Route
+            path="/auth"
+            element={<Auth isDark={isDark} setIsDark={setIsDark} />}
+          />
+          <Route
+            path="/onboarding"
+            element={<Onboarding isDark={isDark} setIsDark={setIsDark} />}
+          />
           <Route path="/loading" element={<Loading />} />
         </Routes>
       )}
