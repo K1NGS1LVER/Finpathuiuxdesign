@@ -57,7 +57,7 @@ const GOAL_SET_TEMPLATES: GoalSetTemplate[] = [
         category: "travel",
         targetAmount: 100000,
         timelineMonths: 10,
-        color: "var(--lime)",
+        color: "var(--accent)",
       },
     ],
   },
@@ -71,7 +71,7 @@ const GOAL_SET_TEMPLATES: GoalSetTemplate[] = [
         category: "investment",
         targetAmount: 800000,
         timelineMonths: 36,
-        color: "var(--violet)",
+        color: "var(--blue)",
       },
       {
         name: "Upskill Course",
@@ -101,7 +101,7 @@ const GOAL_SET_TEMPLATES: GoalSetTemplate[] = [
         category: "family",
         targetAmount: 350000,
         timelineMonths: 20,
-        color: "var(--lime)",
+        color: "var(--accent)",
       },
     ],
   },
@@ -149,31 +149,80 @@ export default function Progress() {
     0,
     surplus - allocatedToGoals - reservedSurplus - pendingSurplus,
   );
-  const currentNetWorth =
-    month0?.netWorth ?? savings + investments + totalGoalValue;
+  const currentNetWorth = savings + investments + totalGoalValue;
 
-  // Generate net worth timeline from plan
+  // Generate a past-to-future net worth timeline from current state and plan.
   const netWorthData = useMemo(() => {
+    const monthsBack = 12;
+    const currentDate = new Date();
+    const monthlyProgress = Math.max(
+      1000,
+      allocatedToGoals + reservedSurplus + freeSurplus,
+    );
+    const startingNetWorth = Math.max(
+      0,
+      currentNetWorth - monthlyProgress * monthsBack,
+    );
+
+    const history = Array.from({ length: monthsBack }, (_, index) => {
+      const monthsAgo = monthsBack - index;
+      const d = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - monthsAgo,
+        1,
+      );
+      const progressRatio = (index + 1) / monthsBack;
+      return {
+        month: d.toLocaleDateString("en-IN", {
+          month: "short",
+          year: "numeric",
+        }),
+        netWorth: Math.round(
+          startingNetWorth +
+            (currentNetWorth - startingNetWorth) * progressRatio,
+        ),
+      };
+    });
+
+    const currentPoint = {
+      month: currentDate.toLocaleDateString("en-IN", {
+        month: "short",
+        year: "numeric",
+      }),
+      netWorth: Math.round(currentNetWorth),
+    };
+
     if (!plan?.months.length) {
-      // Generate synthetic data if no plan exists
-      const data = [];
+      const projection = [];
       let netWorth = currentNetWorth;
       for (let i = 0; i < 12; i++) {
         const d = new Date();
         d.setMonth(d.getMonth() + i);
         netWorth += freeSurplus;
-        data.push({
-          month: d.toLocaleDateString("en-IN", { month: "short" }),
+        projection.push({
+          month: d.toLocaleDateString("en-IN", {
+            month: "short",
+            year: "numeric",
+          }),
           netWorth: Math.round(netWorth),
         });
       }
-      return data;
+      return [...history, currentPoint, ...projection];
     }
-    return plan.months.slice(0, 24).map((m) => ({
-      month: m.date.split(" ")[0], // "Apr"
+
+    const projection = plan.months.map((m) => ({
+      month: m.date,
       netWorth: m.netWorth,
     }));
-  }, [plan, currentNetWorth, freeSurplus]);
+
+    return [...history, currentPoint, ...projection];
+  }, [
+    allocatedToGoals,
+    currentNetWorth,
+    freeSurplus,
+    plan,
+    reservedSurplus,
+  ]);
 
   // Streak counter (simulated based on consecutive goal allocations)
   const streakDays = useMemo(() => {
@@ -337,7 +386,7 @@ export default function Progress() {
       priority: activeGoals.length + 1,
       status: "not-started",
       monthlyAllocation: 0,
-      color: "var(--lime)",
+      color: "var(--accent)",
     });
 
     setNewGoalName("");
@@ -406,7 +455,7 @@ export default function Progress() {
           >
             {label}
           </p>
-          <p className="text-[var(--lime-text)] font-semibold slashed-zero">
+          <p className="text-[var(--accent-text)] font-semibold slashed-zero">
             {fmt(payload[0].value)}
           </p>
         </div>
@@ -420,7 +469,7 @@ export default function Progress() {
       {/* Decorative */}
       <div
         className="absolute -top-20 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
-        style={{ backgroundColor: "var(--lime)" }}
+        style={{ backgroundColor: "var(--accent)" }}
       />
 
       {/* Header */}
@@ -467,7 +516,7 @@ export default function Progress() {
           </div>
         </div>
         <div className="bento-card p-5 flex flex-col items-center text-center">
-          <Target size={24} className="mb-2" style={{ color: "var(--lime)" }} />
+          <Target size={24} className="mb-2" style={{ color: "var(--accent)" }} />
           <div
             className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
             style={{ fontFamily: "var(--font-display)" }}
@@ -498,7 +547,7 @@ export default function Progress() {
           <Award
             size={24}
             className="mb-2"
-            style={{ color: "var(--violet)" }}
+            style={{ color: "var(--blue)" }}
           />
           <div
             className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
@@ -520,11 +569,12 @@ export default function Progress() {
         >
           Net Worth Timeline
         </h3>
-        <div className="h-[250px] md:h-[300px]">
+        <div className="h-[320px] md:h-[420px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               key={`${netWorthData.length}-${Math.round(currentNetWorth)}`}
               data={netWorthData}
+              margin={{ top: 8, right: 12, bottom: 8, left: 0 }}
             >
               <defs>
                 <linearGradient
@@ -534,8 +584,8 @@ export default function Progress() {
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="0%" stopColor="var(--lime)" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="var(--lime)" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid
@@ -549,6 +599,9 @@ export default function Progress() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                interval="preserveStartEnd"
+                minTickGap={28}
+                tickFormatter={(value) => String(value).replace(" ", "\n")}
               />
               <YAxis
                 stroke="var(--secondary)"
@@ -561,13 +614,13 @@ export default function Progress() {
               <Area
                 type="monotone"
                 dataKey="netWorth"
-                stroke="var(--lime)"
+                stroke="var(--accent)"
                 strokeWidth={3}
                 fill="url(#netWorthGradient)"
                 dot={false}
                 activeDot={{
                   r: 6,
-                  fill: "var(--lime)",
+                  fill: "var(--accent)",
                   stroke: "var(--card)",
                   strokeWidth: 3,
                 }}
@@ -646,7 +699,7 @@ export default function Progress() {
             <button
               onClick={addCustomProgressGoal}
               className="w-full py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
-              style={{ background: "var(--lime)", color: "#050F1C" }}
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               <Plus size={16} />
               Add Goal
@@ -819,7 +872,7 @@ export default function Progress() {
                       style={{
                         color:
                           goal.status === "complete"
-                            ? "var(--lime-text)"
+                            ? "var(--accent-text)"
                             : "var(--secondary)",
                       }}
                     >
@@ -836,7 +889,7 @@ export default function Progress() {
                         width: `${progress}%`,
                         backgroundColor:
                           goal.status === "complete"
-                            ? "var(--lime)"
+                            ? "var(--accent)"
                             : "var(--blue)",
                       }}
                     />
@@ -851,10 +904,10 @@ export default function Progress() {
               onClick={handleCheckIn}
               className="w-full mt-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{
-                backgroundColor: "var(--lime)",
-                color: "#050F1C",
+                backgroundColor: "var(--accent)",
+                color: "var(--on-accent)",
                 fontFamily: "var(--font-body)",
-                boxShadow: "0 8px 24px rgba(176, 255, 9, 0.3)",
+                boxShadow: "0 8px 24px rgba(232, 52, 28, )",
               }}
             >
               <CheckCircle2 size={18} />
@@ -864,8 +917,8 @@ export default function Progress() {
             <div
               className="mt-6 py-3 rounded-xl font-bold text-center"
               style={{
-                backgroundColor: "var(--lime)",
-                color: "#050F1C",
+                backgroundColor: "var(--accent)",
+                color: "var(--on-accent)",
                 fontFamily: "var(--font-body)",
                 opacity: 0.7,
               }}
@@ -893,7 +946,7 @@ export default function Progress() {
                     ? "var(--surface-tint)"
                     : "var(--surface-hover)",
                   border: badge.earned
-                    ? "1px solid var(--lime)"
+                    ? "1px solid var(--accent)"
                     : "1px solid var(--border)",
                   opacity: badge.earned ? 1 : 0.4,
                 }}
@@ -929,7 +982,7 @@ export default function Progress() {
                 label: "Income Stability",
                 score: healthScore.incomeStability,
                 max: 25,
-                color: "var(--lime)",
+                color: "var(--accent)",
               },
               {
                 label: "Debt Load",
@@ -941,7 +994,7 @@ export default function Progress() {
                 label: "Savings Rate",
                 score: healthScore.savingsRate,
                 max: 25,
-                color: "var(--violet)",
+                color: "var(--blue)",
               },
               {
                 label: "Emergency Fund",
@@ -984,7 +1037,7 @@ export default function Progress() {
                 border: "1px solid var(--border)",
               }}
             >
-              <div className="text-xs font-semibold text-[var(--lime-text)] uppercase tracking-wider mb-2">
+              <div className="text-xs font-semibold text-[var(--accent-text)] uppercase tracking-wider mb-2">
                 Penny's Top Actions
               </div>
               {healthScore.actions.map((action, i) => (
@@ -993,7 +1046,7 @@ export default function Progress() {
                   className="flex items-start gap-2 text-sm text-[var(--card-foreground)]"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
-                  <span className="text-[var(--lime)] mt-0.5">•</span>
+                  <span className="text-[var(--accent)] mt-0.5">•</span>
                   {action}
                 </div>
               ))}

@@ -192,13 +192,13 @@ export default function Month() {
       category: "Savings",
       planned: savingsTarget,
       actual: savingsTarget,
-      color: "var(--lime)",
+      color: "var(--accent)",
     },
     {
       category: "Wants",
       planned: wantsTarget,
       actual: Math.round(wantsTarget * 1.1),
-      color: "var(--violet)",
+      color: "var(--blue)",
     },
     {
       category: "Debt",
@@ -212,7 +212,7 @@ export default function Month() {
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div
         className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
-        style={{ backgroundColor: "var(--lime)" }}
+        style={{ backgroundColor: "var(--accent)" }}
       />
       <div className="relative z-10">
         <h1
@@ -234,7 +234,7 @@ export default function Month() {
       </div>
 
       <div
-        className="p-6 md:p-8 relative overflow-hidden z-10 bento-card border border-[var(--lime)]"
+        className="p-6 md:p-8 relative overflow-hidden z-10 bento-card border border-[var(--accent)]"
         style={{
           background: "var(--surface-tint)",
           backdropFilter: "blur(32px)",
@@ -242,11 +242,11 @@ export default function Month() {
         }}
       >
         {/* Centered Prominent Lime Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-[var(--lime)] opacity-40 mix-blend-screen blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-[var(--accent)] opacity-40 mix-blend-screen blur-[80px] rounded-full pointer-events-none" />
 
         <div className="relative z-10">
           <div
-            className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-[var(--lime-text)] uppercase"
+            className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-[var(--accent-text)] uppercase"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Mission
@@ -327,12 +327,12 @@ export default function Month() {
               style={{
                 background:
                   strategy === "avalanche"
-                    ? "rgba(176, 255, 9, 0.12)"
+                    ? "rgba(232, 52, 28, )"
                     : "var(--surface-tint)",
-                border: `1px solid ${strategy === "avalanche" ? "var(--lime)" : "var(--border)"}`,
+                border: `1px solid ${strategy === "avalanche" ? "var(--accent)" : "var(--border)"}`,
                 boxShadow:
                   strategy === "avalanche"
-                    ? "0 0 20px rgba(176, 255, 9, 0.24)"
+                    ? "0 0 20px rgba(232, 52, 28, )"
                     : "none",
                 color: "var(--card-foreground)",
               }}
@@ -413,8 +413,8 @@ export default function Month() {
               disabled={!lumpsumGoalId || !lumpsumAmount}
               className="w-full py-3 rounded-xl font-bold transition-all disabled:opacity-50"
               style={{
-                background: "var(--lime)",
-                color: "#050F1C",
+                background: "var(--accent)",
+                color: "var(--on-accent)",
                 fontFamily: "var(--font-body)",
               }}
             >
@@ -454,9 +454,9 @@ export default function Month() {
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{
-                    backgroundColor: task.done ? "var(--lime)" : "transparent",
+                    backgroundColor: task.done ? "var(--accent)" : "transparent",
                     border: task.done ? "none" : "2px solid var(--border)",
-                    color: task.done ? "#050F1C" : "var(--secondary)",
+                    color: task.done ? "var(--on-accent)" : "var(--secondary)",
                   }}
                 >
                   {task.done ? <Check size={14} /> : <Circle size={14} />}
@@ -543,12 +543,12 @@ export default function Month() {
           </div>
         </div>
         <div className="bento-card p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[var(--lime)] opacity-5 pointer-events-none" />
+          <div className="absolute inset-0 bg-[var(--accent)] opacity-5 pointer-events-none" />
           <div className="text-sm font-medium mb-2 text-[var(--secondary)] relative z-10">
             Savings This Month
           </div>
           <div
-            className="text-4xl font-bold slashed-zero text-[var(--lime-text)] relative z-10"
+            className="text-4xl font-bold slashed-zero text-[var(--accent-text)] relative z-10"
             style={{ fontFamily: "var(--font-display)" }}
           >
             ₹{Math.round(savingsTarget / 1000)}K
@@ -559,7 +559,7 @@ export default function Month() {
             On Track
           </div>
           <div
-            className="text-4xl font-bold slashed-zero text-[var(--lime-text)]"
+            className="text-4xl font-bold slashed-zero text-[var(--accent-text)]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             {tasks.length > 0

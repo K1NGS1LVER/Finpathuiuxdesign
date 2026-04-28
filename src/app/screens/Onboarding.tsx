@@ -155,9 +155,9 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           : "Priority set complete. Bright glow = P1, medium = P2, soft = P3.";
 
   const getPriorityGlow = (priority: number) => {
-    if (priority === 1) return "0 0 42px rgba(176, 255, 9, 0.6)";
-    if (priority === 2) return "0 0 28px rgba(176, 255, 9, 0.38)";
-    return "0 0 16px rgba(176, 255, 9, 0.22)";
+    if (priority === 1) return "0 0 42px rgba(232, 52, 28, )";
+    if (priority === 2) return "0 0 28px rgba(232, 52, 28, )";
+    return "0 0 16px rgba(232, 52, 28, )";
   };
 
   const handleNext = () => {
@@ -328,13 +328,13 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           transition: all 0.3s ease;
         }
         .goal-option:hover {
-          box-shadow: 0 0 30px rgba(176, 255, 9, 0.3);
+          box-shadow: 0 0 30px rgba(232, 52, 28, );
           transform: translateY(-2px);
         }
         .goal-option.selected {
-          box-shadow: 0 0 40px rgba(176, 255, 9, 0.5);
-          border-color: var(--lime);
-          background: linear-gradient(135deg, var(--card) 0%, rgba(176, 255, 9, 0.05) 100%);
+          box-shadow: 0 0 40px rgba(232, 52, 28, );
+          border-color: var(--accent);
+          background: linear-gradient(135deg, var(--card) 0%, rgba(232, 52, 28, ) 100%);
         }
         @keyframes slideUpFade {
           from { opacity: 0; transform: translate(-50%, 20px); }
@@ -351,7 +351,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               "slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
             background: "var(--surface-tint)",
             backdropFilter: "blur(20px)",
-            border: `1px solid ${extractionPopup.type === "success" ? "var(--lime)" : "var(--red)"}`,
+            border: `1px solid ${extractionPopup.type === "success" ? "var(--accent)" : "var(--red)"}`,
             color: "var(--card-foreground)",
             fontFamily: "var(--font-body)",
           }}
@@ -361,12 +361,12 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             style={{
               background:
                 extractionPopup.type === "success"
-                  ? "rgba(176, 255, 9, 0.1)"
+                  ? "rgba(232, 52, 28, )"
                   : "rgba(239, 68, 68, 0.1)",
             }}
           >
             {extractionPopup.type === "success" ? (
-              <Sparkles size={20} className="text-[var(--lime)]" />
+              <Sparkles size={20} className="text-[var(--accent)]" />
             ) : (
               <Shield size={20} className="text-[var(--red)]" />
             )}
@@ -405,7 +405,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="data-blob absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full"
-          style={{ backgroundColor: "var(--violet)" }}
+          style={{ backgroundColor: "var(--blue)" }}
         />
         <div
           className="data-blob absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full"
@@ -422,8 +422,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               className="h-1.5 md:h-2 flex-1 rounded-full transition-all duration-500"
               style={{
                 background:
-                  i <= step ? "var(--lime)" : "var(--progress-inactive)",
-                boxShadow: i <= step ? "0 0 20px var(--lime)" : "none",
+                  i <= step ? "var(--accent)" : "var(--progress-inactive)",
+                boxShadow: i <= step ? "0 0 20px var(--accent)" : "none",
               }}
             />
           ))}
@@ -557,7 +557,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   />
                   <button
                     className="pill-button text-[10px] md:text-xs font-medium"
-                    style={{ color: "var(--lime-text)" }}
+                    style={{ color: "var(--accent-text)" }}
                   >
                     {showExpenseBreakdown ? "Hide" : "Breakdown"}
                   </button>
@@ -692,7 +692,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   />
                   <button
                     className="pill-button text-[10px] md:text-xs font-medium"
-                    style={{ color: "var(--lime-text)" }}
+                    style={{ color: "var(--accent-text)" }}
                   >
                     {showDebtBreakdown ? "Hide" : "Breakdown"}
                   </button>
@@ -853,14 +853,14 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   {
                     name: "Dream Bike",
                     icon: Target,
-                    color: "var(--lime)",
-                    colorText: "var(--lime-text)",
+                    color: "var(--accent)",
+                    colorText: "var(--accent-text)",
                   },
                   {
                     name: "Investment",
                     icon: TrendingUp,
-                    color: "var(--violet)",
-                    colorText: "var(--violet-text)",
+                    color: "var(--blue)",
+                    colorText: "var(--blue-text)",
                   },
                   {
                     name: "Emergency Fund",
@@ -877,14 +877,14 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   {
                     name: "Vacation",
                     icon: Calendar,
-                    color: "var(--lime)",
-                    colorText: "var(--lime-text)",
+                    color: "var(--accent)",
+                    colorText: "var(--accent-text)",
                   },
                   {
                     name: "Upskill Course",
                     icon: Lightbulb,
-                    color: "var(--violet)",
-                    colorText: "var(--violet-text)",
+                    color: "var(--blue)",
+                    colorText: "var(--blue-text)",
                   },
                 ].map((goal) => {
                   const selectedData = selectedGoals[goal.name];
@@ -898,7 +898,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                       style={{
                         background: "var(--card)",
                         border: isSelected
-                          ? "1px solid var(--lime)"
+                          ? "1px solid var(--accent)"
                           : "1px solid var(--border)",
                         boxShadow: isSelected
                           ? getPriorityGlow(priority)
@@ -967,7 +967,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                 style={{
                   background: "var(--card)",
                   border: !!selectedGoals["Custom"]
-                    ? "1px solid var(--lime)"
+                    ? "1px solid var(--accent)"
                     : "1px solid var(--border)",
                   boxShadow: selectedGoals["Custom"]
                     ? getPriorityGlow(selectedGoals["Custom"].priority)
@@ -982,8 +982,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   <div
                     className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
                     style={{
-                      backgroundColor: "rgba(176, 255, 9, 0.08)",
-                      color: "var(--lime-text)",
+                      backgroundColor: "rgba(232, 52, 28, )",
+                      color: "var(--accent-text)",
                     }}
                   >
                     <Target
@@ -1047,20 +1047,20 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   style={{
                     background:
                       selectedStrategy === "avalanche"
-                        ? "rgba(176, 255, 9, 0.08)"
+                        ? "rgba(232, 52, 28, )"
                         : "var(--card)",
-                    border: `1px solid ${selectedStrategy === "avalanche" ? "var(--lime)" : "var(--border)"}`,
+                    border: `1px solid ${selectedStrategy === "avalanche" ? "var(--accent)" : "var(--border)"}`,
                     boxShadow:
                       selectedStrategy === "avalanche"
-                        ? "0 0 24px rgba(176, 255, 9, 0.32)"
+                        ? "0 0 24px rgba(232, 52, 28, )"
                         : "none",
                   }}
                 >
                   <div
                     className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
                     style={{
-                      background: "rgba(176, 255, 9, 0.08)",
-                      color: "var(--lime-text)",
+                      background: "rgba(232, 52, 28, )",
+                      color: "var(--accent-text)",
                     }}
                   >
                     <TrendingUp size={20} className="icon-wireframe" />
@@ -1149,10 +1149,10 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             onClick={handleNext}
             className="flex-1 px-4 py-3 md:px-6 md:py-4 rounded-full font-bold flex items-center justify-center gap-2 transition-all hover:scale-105"
             style={{
-              backgroundColor: "var(--lime)",
-              color: "#050F1C",
+              backgroundColor: "var(--accent)",
+              color: "var(--on-accent)",
               fontFamily: "var(--font-body)",
-              boxShadow: "0 10px 40px rgba(176, 255, 9, 0.3)",
+              boxShadow: "0 10px 40px rgba(232, 52, 28, )",
             }}
           >
             <span className="text-sm md:text-base">

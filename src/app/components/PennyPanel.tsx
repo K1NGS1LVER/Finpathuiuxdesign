@@ -116,7 +116,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             P
           </div>
           <span className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Penny</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--lime)] text-[#050F1C] font-semibold">AI</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] font-semibold">AI</span>
         </div>
         <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]">
           <X size={18} />
@@ -129,8 +129,8 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             <div
               className="max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed"
               style={{
-                backgroundColor: msg.role === 'user' ? 'var(--lime)' : 'var(--surface-hover)',
-                color: msg.role === 'user' ? '#050F1C' : 'var(--card-foreground)',
+                backgroundColor: msg.role === 'user' ? 'var(--accent)' : 'var(--surface-hover)',
+                color: msg.role === 'user' ? 'var(--on-accent)' : 'var(--card-foreground)',
                 fontFamily: 'var(--font-body)',
                 border: msg.role === 'penny' ? '1px solid var(--border)' : 'none',
                 borderBottomRightRadius: msg.role === 'user' ? '4px' : undefined,
@@ -183,7 +183,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="Ask Penny anything..."
             disabled={isLoading}
-            className="flex-1 px-4 py-2.5 rounded-xl outline-none border border-[var(--border)] focus:border-[var(--lime)] transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 rounded-xl outline-none border border-[var(--border)] focus:border-[var(--accent)] transition-colors disabled:opacity-50"
             style={{ fontFamily: 'var(--font-body)', background: 'var(--surface-tint)', color: 'var(--card-foreground)' }}
           />
           <button

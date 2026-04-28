@@ -71,8 +71,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             <div
               className="w-3 h-3 rounded-full flex-shrink-0"
               style={{
-                backgroundColor: 'var(--lime)',
-                boxShadow: '0 0 12px var(--lime)',
+                backgroundColor: 'var(--accent)',
+                boxShadow: '0 0 12px var(--accent)',
               }}
             />
             <span
@@ -117,7 +117,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                 onClick={() => handleNavigation(item.path)}
                 className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 ${collapsed ? 'px-0 justify-center md:px-0' : 'px-4 justify-start'}`}
                 style={{
-                  backgroundColor: active ? 'rgba(176, 255, 9, 0.1)' : 'transparent',
+                  backgroundColor: active ? 'rgba(232, 52, 28, )' : 'transparent',
                   color: active ? 'var(--card-foreground)' : 'var(--secondary)',
                   fontFamily: 'var(--font-body)',
                   gap: collapsed ? '0' : '12px',
@@ -129,8 +129,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                   <div
                     className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full"
                     style={{
-                      backgroundColor: 'var(--lime)',
-                      boxShadow: '0 0 12px var(--lime)',
+                      backgroundColor: 'var(--accent)',
+                      boxShadow: '0 0 12px var(--accent)',
                     }}
                   />
                 )}
@@ -159,10 +159,10 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           <button
             className="w-full flex items-center justify-center py-4 rounded-full font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              backgroundColor: 'var(--lime)',
-              color: '#050F1C',
+              backgroundColor: 'var(--accent)',
+              color: 'var(--on-accent)',
               fontFamily: 'var(--font-body)',
-              boxShadow: '0 8px 24px rgba(176, 255, 9, 0.3)',
+              boxShadow: '0 8px 24px rgba(232, 52, 28, )',
               gap: collapsed ? '0' : '8px',
             }}
             title={collapsed ? 'Ask Penny' : undefined}

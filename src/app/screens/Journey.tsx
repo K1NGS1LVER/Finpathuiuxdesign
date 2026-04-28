@@ -172,7 +172,7 @@ export default function Journey() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "complete":
-        return "var(--lime)";
+        return "var(--accent)";
       case "in-progress":
         return "var(--amber)";
       default:
@@ -181,9 +181,9 @@ export default function Journey() {
   };
 
   const getPriorityGlow = (priority: number) => {
-    if (priority <= 1) return "0 0 40px rgba(176,255,9,0.42)";
-    if (priority === 2) return "0 0 26px rgba(176,255,9,0.3)";
-    return "0 0 16px rgba(176,255,9,0.2)";
+    if (priority <= 1) return "0 0 40px var(--accent-glow)";
+    if (priority === 2) return "0 0 26px var(--accent-glow)";
+    return "0 0 16px var(--accent-glow)";
   };
 
   // ── Handle complete ──
@@ -245,7 +245,7 @@ export default function Journey() {
       priority: activeGoals.length + 1,
       status: "not-started",
       monthlyAllocation: 0,
-      color: "var(--lime)",
+      color: "var(--accent)",
     });
     setShowAddModal(false);
   };
@@ -264,7 +264,7 @@ export default function Journey() {
       priority: activeGoals.length + 1,
       status: "not-started",
       monthlyAllocation: 0,
-      color: "var(--lime)",
+      color: "var(--accent)",
     });
     setCustomName("");
     setCustomTarget("");
@@ -319,7 +319,7 @@ export default function Journey() {
                 y2={goalPos.y + 80 + panOffset.y}
                 stroke={
                   goal.status === "complete"
-                    ? "var(--lime)"
+                    ? "var(--accent)"
                     : "var(--secondary)"
                 }
                 strokeWidth="3"
@@ -356,8 +356,8 @@ export default function Journey() {
           <div
             className="p-4 rounded-2xl bento-card"
             style={{
-              border: "2px solid var(--lime)",
-              boxShadow: "0 0 20px rgba(176,255,9,0.15), var(--shadow-md)",
+              border: "2px solid var(--accent)",
+              boxShadow: "0 0 20px var(--accent-glow), var(--shadow-md)",
             }}
           >
             <div
@@ -365,7 +365,7 @@ export default function Journey() {
               style={{
                 background:
                   "color-mix(in srgb, var(--surface-hover) 80%, transparent)",
-                color: "var(--lime)",
+                color: "var(--accent)",
               }}
             >
               <Wallet size={24} className="icon-wireframe" />
@@ -394,7 +394,7 @@ export default function Journey() {
             >
               <div
                 className="h-full rounded-full"
-                style={{ width: "100%", backgroundColor: "var(--lime)" }}
+                style={{ width: "100%", backgroundColor: "var(--accent)" }}
               />
             </div>
           </div>
@@ -456,7 +456,7 @@ export default function Journey() {
                 {isActiveGoal && (
                   <div
                     className="text-[10px] font-bold mb-1"
-                    style={{ color: "var(--lime-text)" }}
+                    style={{ color: "var(--accent-text)" }}
                   >
                     Priority P{goal.priority}
                   </div>
@@ -519,7 +519,7 @@ export default function Journey() {
         <button
           onClick={() => setShowAddModal(true)}
           className="absolute top-2 right-2 md:top-4 md:right-4 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform hover:scale-110 shadow-lg z-20"
-          style={{ backgroundColor: "var(--lime)", color: "#050F1C" }}
+          style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
         >
           <Plus size={18} className="md:w-5 md:h-5" />
         </button>
@@ -569,7 +569,7 @@ export default function Journey() {
                     <Icon
                       size={20}
                       className="mb-2"
-                      style={{ color: "var(--lime)" }}
+                      style={{ color: "var(--accent)" }}
                     />
                     <div
                       className="text-sm font-semibold text-[var(--card-foreground)]"
@@ -642,8 +642,8 @@ export default function Journey() {
                 disabled={!customName.trim() || !customTarget.trim()}
                 className="w-full py-3 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
                 style={{
-                  backgroundColor: "var(--lime)",
-                  color: "#050F1C",
+                  backgroundColor: "var(--accent)",
+                  color: "var(--on-accent)",
                   fontFamily: "var(--font-body)",
                 }}
               >
@@ -779,7 +779,7 @@ export default function Journey() {
                 className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
                 style={{
                   background: "var(--surface-hover)",
-                  color: "var(--lime)",
+                  color: "var(--accent)",
                 }}
               >
                 <Shield size={16} />
@@ -853,7 +853,7 @@ export default function Journey() {
                 className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
                 style={{
                   background: "var(--surface-hover)",
-                  color: "var(--violet)",
+                  color: "var(--blue)",
                 }}
               >
                 <Target size={16} />
@@ -923,10 +923,10 @@ export default function Journey() {
             {selectedGoal.status !== "complete" && (
               <button
                 onClick={() => handleComplete(selectedGoal.id)}
-                className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_rgba(176,255,9,0.2)]"
+                className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_var(--accent-glow)]"
                 style={{
-                  backgroundColor: "var(--lime)",
-                  color: "#050F1C",
+                  backgroundColor: "var(--accent)",
+                  color: "var(--on-accent)",
                   fontFamily: "var(--font-body)",
                 }}
               >

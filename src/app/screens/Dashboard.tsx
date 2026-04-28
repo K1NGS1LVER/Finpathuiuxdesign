@@ -164,8 +164,8 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
 
       {/* Ambient Blobs - Static instead of animating infinitely */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[500px] h-[500px] top-20 right-1/4 rounded-full bg-[var(--violet)] opacity-10 mix-blend-screen" />
-        <div className="data-blob w-[400px] h-[400px] bottom-40 left-1/4 rounded-full bg-[var(--lime)] opacity-10 mix-blend-screen" />
+        <div className="data-blob w-[500px] h-[500px] top-20 right-1/4 rounded-full bg-[var(--blue)] opacity-10 mix-blend-screen" />
+        <div className="data-blob w-[400px] h-[400px] bottom-40 left-1/4 rounded-full bg-[var(--accent)] opacity-10 mix-blend-screen" />
         <div className="data-blob w-[300px] h-[300px] top-1/2 right-1/3 rounded-full bg-[var(--blue)] opacity-10 mix-blend-screen" />
       </div>
 
@@ -192,8 +192,8 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
               <span
                 className="pill-button text-xs font-semibold"
                 style={{
-                  background: metric.positive ? "var(--lime)" : "var(--red)",
-                  color: "#050F1C",
+                  background: metric.positive ? "var(--accent)" : "var(--red)",
+                  color: "var(--on-accent)",
                 }}
               >
                 {metric.change}
@@ -220,8 +220,8 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
               className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl"
               style={{
                 backgroundColor: metric.positive
-                  ? "var(--lime)"
-                  : "var(--violet)",
+                  ? "var(--accent)"
+                  : "var(--blue)",
               }}
             />
           </div>
@@ -268,7 +268,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                     {metric.change.startsWith("+") ? (
                       <ArrowUpRight
                         size={12}
-                        style={{ color: "var(--lime-text)" }}
+                        style={{ color: "var(--accent-text)" }}
                       />
                     ) : metric.change.startsWith("-") ? (
                       <ArrowDownRight
@@ -311,14 +311,14 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 cy="80"
                 r={radius}
                 fill="none"
-                stroke="var(--lime)"
+                stroke="var(--accent)"
                 strokeWidth="12"
                 strokeDasharray={circumference}
                 strokeDashoffset={circumference}
                 strokeLinecap="round"
                 style={{
                   animation: "dash 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards",
-                  filter: "drop-shadow(0 0 4px rgba(176, 255, 9, 0.3))",
+                  filter: "drop-shadow(0 0 4px rgba(232, 52, 28, ))",
                 }}
               />
             </svg>
@@ -363,9 +363,9 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                       style={{
                         backgroundColor:
                           i === 0
-                            ? "var(--lime)"
+                            ? "var(--accent)"
                             : i === 1
-                              ? "var(--violet)"
+                              ? "var(--blue)"
                               : "var(--blue)",
                       }}
                     />
@@ -389,9 +389,9 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                       width: `${goal.progress}%`,
                       backgroundColor:
                         i === 0
-                          ? "var(--lime)"
+                          ? "var(--accent)"
                           : i === 1
-                            ? "var(--violet)"
+                            ? "var(--blue)"
                             : "var(--blue)",
                     }}
                   />

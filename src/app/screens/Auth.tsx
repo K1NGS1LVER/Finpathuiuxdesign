@@ -56,8 +56,8 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
           opacity: 0.5;
         }
         .auth-input:focus {
-          border-color: var(--lime) !important;
-          box-shadow: 0 0 0 2px rgba(176, 255, 9, 0.15);
+          border-color: var(--accent) !important;
+          box-shadow: 0 0 0 2px rgba(232, 52, 28, );
         }
       `}</style>
 
@@ -76,7 +76,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
 
       {/* Decorative Blurred Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="data-blob absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: 'var(--violet)' }} />
+        <div className="data-blob absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: 'var(--blue)' }} />
         <div className="data-blob absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: 'var(--blue)' }} />
       </div>
 
@@ -87,8 +87,8 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
             <div
               className="w-3 h-3 rounded-full"
               style={{
-                backgroundColor: 'var(--lime)',
-                boxShadow: '0 0 12px var(--lime)',
+                backgroundColor: 'var(--accent)',
+                boxShadow: '0 0 12px var(--accent)',
               }}
             />
             <span className="font-bold text-2xl slashed-zero text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
@@ -109,7 +109,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
 
         {confirmSent ? (
           <div className="bento-card !p-6 md:!p-8 text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center" style={{ background: 'var(--lime)', color: '#050F1C' }}>
+            <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center" style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}>
               <Mail size={28} />
             </div>
             <p className="text-sm text-[var(--secondary)]" style={{ fontFamily: 'var(--font-body)' }}>
@@ -118,7 +118,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
             <button
               onClick={() => { setConfirmSent(false); setIsSignUp(false); }}
               className="text-sm font-semibold transition-colors"
-              style={{ color: 'var(--lime-text)', fontFamily: 'var(--font-body)' }}
+              style={{ color: 'var(--accent-text)', fontFamily: 'var(--font-body)' }}
             >
               Back to Sign In →
             </button>
@@ -210,10 +210,10 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
               disabled={loading}
               className="w-full py-3.5 md:py-4 rounded-xl md:rounded-full font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
               style={{
-                backgroundColor: 'var(--lime)',
-                color: '#050F1C',
+                backgroundColor: 'var(--accent)',
+                color: 'var(--on-accent)',
                 fontFamily: 'var(--font-body)',
-                boxShadow: '0 10px 40px rgba(176, 255, 9, 0.3)',
+                boxShadow: '0 10px 40px rgba(232, 52, 28, )',
               }}
             >
               {loading ? (
@@ -235,7 +235,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                 type="button"
                 onClick={switchMode}
                 className="text-sm font-semibold transition-colors"
-                style={{ color: 'var(--lime-text)', fontFamily: 'var(--font-body)' }}
+                style={{ color: 'var(--accent-text)', fontFamily: 'var(--font-body)' }}
               >
                 {isSignUp ? 'Sign In' : 'Sign Up'}
               </button>
