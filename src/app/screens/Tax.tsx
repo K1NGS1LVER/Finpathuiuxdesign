@@ -32,7 +32,7 @@ export default function Tax() {
     <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
       {/* Decorative Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[400px] h-[400px] -top-40 right-1/4 rounded-full bg-[var(--violet)] opacity-10" />
+        <div className="data-blob w-[400px] h-[400px] -top-40 right-1/4 rounded-full bg-[var(--blue)] opacity-10" />
         <div className="data-blob w-[300px] h-[300px] bottom-0 -left-40 rounded-full bg-[var(--blue)] opacity-10" />
       </div>
 
@@ -57,7 +57,7 @@ export default function Tax() {
                   type="text"
                   value={income}
                   onChange={(e) => setIncome(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero border border-[var(--border)] focus:border-[var(--lime)] text-[var(--card-foreground)]"
+                  className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero border border-[var(--border)] focus:border-[var(--accent)] text-[var(--card-foreground)]"
                   style={{ background: 'var(--surface-tint)' }}
                   placeholder="1200000"
                   maxLength={10}
@@ -73,7 +73,7 @@ export default function Tax() {
                   type="text"
                   value={deductions}
                   onChange={(e) => setDeductions(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero border border-[var(--border)] focus:border-[var(--lime)] text-[var(--card-foreground)]"
+                  className="w-full pl-10 pr-4 py-3 md:py-4 text-xl md:text-2xl font-bold rounded-2xl outline-none slashed-zero border border-[var(--border)] focus:border-[var(--accent)] text-[var(--card-foreground)]"
                   style={{ background: 'var(--surface-tint)' }}
                   placeholder="150000"
                   maxLength={10}
@@ -104,14 +104,14 @@ export default function Tax() {
         {/* Comparison Cards */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Old Regime Card */}
-          <div className={`bento-card flex flex-col ${regime === 'old' ? 'border-[var(--lime)] border-2 shadow-[0_0_24px_rgba(176,255,9,0.1)]' : ''}`}>
+          <div className={`bento-card flex flex-col ${regime === 'old' ? 'border-[var(--accent)] border-2 shadow-[0_0_24px_var(--accent-glow)]' : ''}`}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Old Regime</h3>
                 <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[200px]">Allows deductions (80C, 80D, HRA). Best if you have high investments.</p>
               </div>
               {regime === 'old' && (
-                <div className="pill-button text-xs bg-[var(--lime)] text-[#050F1C] font-semibold">Selected</div>
+                <div className="pill-button text-xs bg-[var(--accent)] text-[var(--on-accent)] font-semibold">Selected</div>
               )}
             </div>
 
@@ -143,19 +143,19 @@ export default function Tax() {
           </div>
 
           {/* New Regime Card */}
-          <div className={`bento-card flex flex-col ${regime === 'new' ? 'border-[var(--lime)] border-2 shadow-[0_0_24px_rgba(176,255,9,0.1)]' : ''}`}>
+          <div className={`bento-card flex flex-col ${regime === 'new' ? 'border-[var(--accent)] border-2 shadow-[0_0_24px_var(--accent-glow)]' : ''}`}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <h3 className="text-title slashed-zero text-[var(--card-foreground)]">New Regime</h3>
                 <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[200px]">Default for FY 24-25. Lower tax slabs, but no investment deductions allowed.</p>
               </div>
               {regime === 'new' && (
-                <div className="pill-button text-xs bg-[var(--lime)] text-[#050F1C] font-semibold">Selected</div>
+                <div className="pill-button text-xs bg-[var(--accent)] text-[var(--on-accent)] font-semibold">Selected</div>
               )}
             </div>
 
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-[var(--lime)] opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-[var(--accent)] opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
               <div className="relative text-center py-6">
                 <div className="text-2xl md:text-3xl font-bold mb-2 slashed-zero text-[var(--card-foreground)] truncate px-2" style={{ fontFamily: 'var(--font-display)' }}>
                   ₹{newTax.toLocaleString('en-IN')}
@@ -199,14 +199,14 @@ export default function Tax() {
 
           <div className="flex items-center gap-4 md:gap-6">
             <div className="text-center">
-              <div className={`text-3xl md:text-5xl font-bold mb-1 slashed-zero ${savings > 0 ? 'text-[var(--lime-text)]' : savings < 0 ? 'text-[var(--red-text)]' : 'text-[var(--card-foreground)]'}`}>
+              <div className={`text-3xl md:text-5xl font-bold mb-1 slashed-zero ${savings > 0 ? 'text-[var(--accent-text)]' : savings < 0 ? 'text-[var(--red-text)]' : 'text-[var(--card-foreground)]'}`}>
                 ₹{Math.abs(savings).toLocaleString('en-IN')}
               </div>
               <div className="text-xs md:text-sm font-medium text-[var(--secondary)]">
                 {savingsPercentage}% {savings > 0 ? 'saved' : 'extra'}
               </div>
             </div>
-            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${savings > 0 ? 'text-[var(--lime-text)]' : 'text-[var(--red-text)]'}`} style={{ background: 'var(--surface-hover)' }}>
+            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${savings > 0 ? 'text-[var(--accent-text)]' : 'text-[var(--red-text)]'}`} style={{ background: 'var(--surface-hover)' }}>
               {savings > 0 ? <TrendingDown size={24} className="md:w-7 md:h-7" /> : <Calculator size={24} className="md:w-7 md:h-7" />}
             </div>
           </div>
@@ -214,8 +214,8 @@ export default function Tax() {
 
         {/* Recommendation */}
         {savings !== 0 && (
-          <div className={`lg:col-span-3 bento-card flex items-center gap-4 border-l-4 ${savings > 0 ? 'border-l-[var(--lime)]' : 'border-l-[var(--red)]'}`}>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${savings > 0 ? 'bg-[var(--lime)] text-[#050F1C]' : 'bg-[var(--red)] text-white'}`}>
+          <div className={`lg:col-span-3 bento-card flex items-center gap-4 border-l-4 ${savings > 0 ? 'border-l-[var(--accent)]' : 'border-l-[var(--red)]'}`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${savings > 0 ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'bg-[var(--red)] text-white'}`}>
               <ArrowRight size={20} />
             </div>
             <div>
@@ -246,7 +246,7 @@ export default function Tax() {
             ].map(deduction => (
               <div key={deduction.code} className="p-4 rounded-xl" style={{ background: 'var(--surface-hover)' }}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-[var(--lime-text)] text-sm">{deduction.code}</span>
+                  <span className="font-bold text-[var(--accent-text)] text-sm">{deduction.code}</span>
                   <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)' }}>Max {deduction.max}</span>
                 </div>
                 <p className="text-xs text-[var(--secondary)]">{deduction.desc}</p>

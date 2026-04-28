@@ -92,7 +92,7 @@ export default function Header({
             {pendingGoalDecisions.length > 0 && (
               <span
                 className="text-xs font-semibold"
-                style={{ color: "var(--lime-text)" }}
+                style={{ color: "var(--accent-text)" }}
               >
                 Decision Needed {formatInr(pendingFreedAmount)}/mo
               </span>
@@ -117,7 +117,7 @@ export default function Header({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg slashed-zero bg-[var(--lime)] text-[#050F1C] shadow-[0_4px_16px_rgba(176,255,9,0.3)] transition-transform hover:scale-105 active:scale-95"
+            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg slashed-zero bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_4px_16px_var(--accent-glow)] transition-transform hover:scale-105 active:scale-95"
             title={userName || "Account"}
           >
             {initial}
@@ -140,7 +140,7 @@ export default function Header({
                 style={{ borderBottom: "1px solid var(--border)" }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm slashed-zero bg-[var(--lime)] text-[#050F1C]">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm slashed-zero bg-[var(--accent)] text-[var(--on-accent)]">
                     {initial}
                   </div>
                   <div className="flex-1 min-w-0">

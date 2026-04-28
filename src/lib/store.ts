@@ -114,14 +114,14 @@ function goalNameToGoal(name: string, index: number): Goal {
       icon: "Bike",
       targetAmount: 120000,
       timelineMonths: 18,
-      color: "var(--lime)",
+      color: "var(--accent)",
     },
     Investment: {
       category: "investment",
       icon: "TrendingUp",
       targetAmount: 500000,
       timelineMonths: 36,
-      color: "var(--violet)",
+      color: "var(--blue)",
     },
     "Emergency Fund": {
       category: "savings",
@@ -142,14 +142,14 @@ function goalNameToGoal(name: string, index: number): Goal {
       icon: "Plane",
       targetAmount: 50000,
       timelineMonths: 6,
-      color: "var(--lime)",
+      color: "var(--accent)",
     },
     "Upskill Course": {
       category: "education",
       icon: "GraduationCap",
       targetAmount: 100000,
       timelineMonths: 12,
-      color: "var(--violet)",
+      color: "var(--blue)",
     },
     Custom: {
       category: "custom",
@@ -173,7 +173,7 @@ function goalNameToGoal(name: string, index: number): Goal {
     priority: index + 1,
     status: "not-started",
     monthlyAllocation: 0,
-    color: config.color || "var(--lime)",
+    color: config.color || "var(--accent)",
   };
 }
 

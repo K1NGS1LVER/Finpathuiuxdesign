@@ -68,14 +68,14 @@ function AppContent() {
     return (
       <div
         className="h-screen w-screen flex items-center justify-center"
-        style={{ background: "var(--background)" }}
+        style={{ background: "var(--background)", color: "var(--foreground)" }}
       >
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-12 h-12 border-4 rounded-full animate-spin"
             style={{
               borderColor: "var(--border)",
-              borderTopColor: "var(--lime)",
+              borderTopColor: "var(--accent)",
             }}
           />
           <span
@@ -133,8 +133,12 @@ function AppContent() {
 
   return (
     <div
-      className="h-screen w-screen overflow-hidden"
-      style={{ fontFamily: "var(--font-body)" }}
+      className="h-screen w-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]"
+      style={{
+        fontFamily: "var(--font-body)",
+        background: "var(--background)",
+        color: "var(--foreground)",
+      }}
     >
       {showLayout ? (
         <div className="flex h-full">
@@ -180,7 +184,7 @@ function AppContent() {
               >
                 <div
                   className="text-xs font-semibold tracking-wider uppercase mb-2"
-                  style={{ color: "var(--lime-text)" }}
+                  style={{ color: "var(--accent-text)" }}
                 >
                   Goal Completed
                 </div>
@@ -210,8 +214,8 @@ function AppContent() {
                     disabled={!hasRemainingGoals}
                     className="py-3 px-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
-                      background: "var(--lime)",
-                      color: "#050F1C",
+                      background: "var(--accent)",
+                      color: "var(--on-accent)",
                       fontFamily: "var(--font-body)",
                     }}
                   >

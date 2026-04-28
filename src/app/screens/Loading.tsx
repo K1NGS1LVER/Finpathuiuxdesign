@@ -67,8 +67,8 @@ export default function Loading() {
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
-                  backgroundColor: completed.includes(i) ? 'var(--lime)' : 'var(--border)',
-                  color: completed.includes(i) ? '#050F1C' : 'var(--secondary)',
+                  backgroundColor: completed.includes(i) ? 'var(--accent)' : 'var(--border)',
+                  color: completed.includes(i) ? 'var(--on-accent)' : 'var(--secondary)',
                 }}
               >
                 {completed.includes(i) ? <Check size={16} /> : <span>{i + 1}</span>}

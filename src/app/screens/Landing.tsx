@@ -8,12 +8,12 @@ interface LandingProps {
 }
 
 const goals = [
-  { icon: Target, title: 'Dream Bike', color: 'var(--lime)' },
-  { icon: TrendingUp, title: 'Investment', color: 'var(--violet)' },
+  { icon: Target, title: 'Dream Bike', color: 'var(--accent)' },
+  { icon: TrendingUp, title: 'Investment', color: 'var(--blue)' },
   { icon: Shield, title: 'Emergency Fund', color: 'var(--blue)' },
   { icon: Sparkles, title: 'Wedding', color: 'var(--amber)' },
-  { icon: Calendar, title: 'Vacation', color: 'var(--lime)' },
-  { icon: Lightbulb, title: 'Upskill Course', color: 'var(--violet)' },
+  { icon: Calendar, title: 'Vacation', color: 'var(--accent)' },
+  { icon: Lightbulb, title: 'Upskill Course', color: 'var(--blue)' },
 ];
 
 const testimonials = [
@@ -37,9 +37,9 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
 
       {/* Decorative Blurred Blobs (Fixed to background) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] top-[-10%] left-[-10%] bg-[var(--violet)] opacity-30" />
+        <div className="data-blob w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] top-[-10%] left-[-10%] bg-[var(--blue)] opacity-30" />
         <div className="data-blob w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bottom-[-20%] right-[-10%] bg-[var(--blue)] opacity-30" />
-        <div className="data-blob w-[30vw] h-[30vw] max-w-[400px] max-h-[400px] top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 bg-[var(--lime)] opacity-10 mix-blend-screen" />
+        <div className="data-blob w-[30vw] h-[30vw] max-w-[400px] max-h-[400px] top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 bg-[var(--accent)] opacity-10 mix-blend-screen" />
       </div>
 
       {/* HERO SECTION - 100vh (Single View) */}
@@ -48,7 +48,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
           
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[var(--lime)] shadow-[0_0_12px_var(--lime)]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--accent)]" />
               <span className="text-title slashed-zero text-base md:text-xl font-bold">
                 finpath
               </span>
@@ -56,7 +56,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
 
             <h1 className="text-hero slashed-zero !text-3xl md:!text-5xl leading-tight">
               Every rupee has a <br />
-              <span style={{ color: 'var(--lime-text)' }}>destination</span><span style={{ color: 'var(--lime-text)' }}>.</span>
+              <span style={{ color: 'var(--accent-text)' }}>destination</span><span style={{ color: 'var(--accent-text)' }}>.</span>
             </h1>
 
             <p className="text-xs md:text-base text-[var(--secondary)] font-medium max-w-lg mx-auto">
@@ -104,7 +104,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
           <div className="flex items-center gap-6 mt-2">
             <button
               onClick={() => navigate('/auth')}
-              className="px-6 md:px-8 py-3 md:py-3.5 rounded-full font-bold text-sm md:text-base flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 bg-[var(--lime)] text-[#050F1C] shadow-[0_8px_32px_rgba(176,255,9,0.3)]"
+              className="px-6 md:px-8 py-3 md:py-3.5 rounded-full font-bold text-sm md:text-base flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_8px_32px_var(--accent-glow)]"
             >
               Start My Journey
               <ArrowRight size={20} className="icon-wireframe" />
@@ -160,7 +160,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
                   perspective: 1000
                 }}
               >
-                <div className="text-[var(--lime)] mb-4 text-4xl font-serif">"</div>
+                <div className="text-[var(--accent)] mb-4 text-4xl font-serif">"</div>
                 <p className="text-sm md:text-base text-[var(--card-foreground)] mb-8 flex-1 italic leading-relaxed font-medium">
                   {testimonial.text}
                 </p>
@@ -168,7 +168,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
                   <img 
                     src={testimonial.image} 
                     alt={testimonial.name} 
-                    className="w-12 h-12 rounded-full object-cover border-2 border-[var(--lime)]"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-[var(--accent)]"
                   />
                   <div>
                     <h4 className="font-bold text-[var(--card-foreground)] text-sm">{testimonial.name}</h4>

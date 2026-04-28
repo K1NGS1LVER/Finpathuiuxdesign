@@ -1,5 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
-import { TrendingUp, Home, GraduationCap, Baby, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  TrendingUp,
+  Home,
+  GraduationCap,
+  Baby,
+  Sparkles,
+} from "lucide-react";
 import { useFinPathStore } from "../../lib/store";
 import { generatePlan as buildPlan } from "../../lib/plan-engine";
 
@@ -8,9 +15,9 @@ const SCENARIO_OPTIONS = [
     id: "salary",
     label: "Salary Change",
     icon: TrendingUp,
-    color: "var(--lime)",
+    color: "var(--accent)",
   },
-  { id: "property", label: "Buy Property", icon: Home, color: "var(--violet)" },
+  { id: "property", label: "Buy Property", icon: Home, color: "var(--blue)" },
   {
     id: "education",
     label: "Higher Education",
@@ -254,11 +261,82 @@ export default function Scenarios() {
     }
   };
 
+  const impactAnalysisSection = (
+    <div className="relative z-10">
+      <h3
+        className="font-bold mb-4 text-[var(--foreground)]"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        Impact Analysis
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {impacts.map((impact, i) => (
+          <div key={i} className="p-6 bento-card">
+            <div
+              className="text-sm mb-4 font-medium text-[var(--secondary)]"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              {impact.label}
+            </div>
+            <div className="flex items-end justify-between mb-4 gap-4">
+              <div className="flex-1">
+                <div
+                  className="text-xs mb-1 text-[var(--secondary)]"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  Current
+                </div>
+                <div
+                  className="text-xl font-bold slashed-zero text-[var(--card-foreground)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {impact.current}
+                </div>
+              </div>
+              <div className="px-2 text-[var(--card-foreground)] opacity-30">
+                <ArrowRight size={28} strokeWidth={1.8} />
+              </div>
+              <div className="text-right flex-1">
+                <div
+                  className="text-xs mb-1 text-[var(--secondary)]"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  After
+                </div>
+                <div
+                  className="text-xl font-bold slashed-zero"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    color: current?.color,
+                  }}
+                >
+                  {impact.future}
+                </div>
+              </div>
+            </div>
+            <div
+              className="text-sm font-bold text-center py-2 rounded-lg slashed-zero"
+              style={{
+                backgroundColor: impact.positive
+                  ? "var(--accent)"
+                  : "var(--red)",
+                color: "var(--on-accent)",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              {impact.change}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div
         className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
-        style={{ backgroundColor: "var(--violet)" }}
+        style={{ backgroundColor: "var(--blue)" }}
       />
       <div className="relative z-10">
         <h1
@@ -357,6 +435,8 @@ export default function Scenarios() {
         </div>
       </div>
 
+      {impactAnalysisSection}
+
       <div className="bento-card p-6 md:p-8 space-y-4 relative z-10">
         <h3
           className="text-xl font-bold text-[var(--card-foreground)]"
@@ -376,9 +456,9 @@ export default function Scenarios() {
               style={{
                 background:
                   strategy === "avalanche"
-                    ? "rgba(176, 255, 9, 0.12)"
+                    ? "rgba(232, 52, 28, )"
                     : "var(--surface-tint)",
-                border: `1px solid ${strategy === "avalanche" ? "var(--lime)" : "var(--border)"}`,
+                border: `1px solid ${strategy === "avalanche" ? "var(--accent)" : "var(--border)"}`,
                 color: "var(--card-foreground)",
               }}
             >
@@ -421,7 +501,7 @@ export default function Scenarios() {
             <button
               onClick={applySalary}
               className="w-full py-2 rounded-lg font-semibold"
-              style={{ background: "var(--lime)", color: "#050F1C" }}
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               Apply Salary
             </button>
@@ -500,7 +580,7 @@ export default function Scenarios() {
             onClick={applyScenarioLumpsum}
             disabled={!simGoalId || simLumpsumValue <= 0}
             className="py-2 rounded-lg font-semibold disabled:opacity-50"
-            style={{ background: "var(--lime)", color: "#050F1C" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Apply Lumpsum
           </button>
@@ -534,91 +614,23 @@ export default function Scenarios() {
         </div>
       </div>
 
-      <div className="relative z-10">
-        <h3
-          className="font-bold mb-4 text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Impact Analysis
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {impacts.map((impact, i) => (
-            <div key={i} className="p-6 bento-card">
-              <div
-                className="text-sm mb-4 font-medium text-[var(--secondary)]"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                {impact.label}
-              </div>
-              <div className="flex items-end justify-between mb-4 gap-4">
-                <div className="flex-1">
-                  <div
-                    className="text-xs mb-1 text-[var(--secondary)]"
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
-                    Current
-                  </div>
-                  <div
-                    className="text-xl font-bold slashed-zero text-[var(--card-foreground)]"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {impact.current}
-                  </div>
-                </div>
-                <div className="text-3xl opacity-20 px-2 text-[var(--card-foreground)]">
-                  →
-                </div>
-                <div className="text-right flex-1">
-                  <div
-                    className="text-xs mb-1 text-[var(--secondary)]"
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
-                    After
-                  </div>
-                  <div
-                    className="text-xl font-bold slashed-zero"
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      color: current?.color,
-                    }}
-                  >
-                    {impact.future}
-                  </div>
-                </div>
-              </div>
-              <div
-                className="text-sm font-bold text-center py-2 rounded-lg slashed-zero"
-                style={{
-                  backgroundColor: impact.positive
-                    ? "var(--lime)"
-                    : "var(--red)",
-                  color: "#050F1C",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                {impact.change}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       <div
-        className="p-6 md:p-8 rounded-2xl flex items-start gap-4 relative overflow-hidden z-10 bento-card border border-[var(--violet)]"
+        className="p-6 md:p-8 rounded-2xl flex items-start gap-4 relative overflow-hidden z-10 bento-card border border-[var(--blue)]"
         style={{
           background: "var(--surface-tint)",
           backdropFilter: "blur(32px)",
           WebkitBackdropFilter: "blur(32px)",
         }}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-[var(--violet)] opacity-30 mix-blend-screen blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-[var(--blue)] opacity-30 mix-blend-screen blur-[80px] rounded-full pointer-events-none" />
 
         <div className="relative z-10">
-          <Sparkles size={28} className="text-[var(--violet-text)]" />
+          <Sparkles size={28} className="text-[var(--blue-text)]" />
         </div>
         <div className="relative z-10 text-[var(--card-foreground)]">
           <div
-            className="text-sm font-semibold tracking-wider mb-1 text-[var(--violet-text)] uppercase"
+            className="text-sm font-semibold tracking-wider mb-1 text-[var(--blue-text)] uppercase"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Penny's Insight

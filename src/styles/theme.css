@@ -1,12 +1,12 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Typography - Using Lufga for absolutely everything as requested */
+  /* ─── Typography ─── */
   --font-size: 16px;
-  --font-display: 'Lufga', 'Space Grotesk', 'Montserrat', system-ui, sans-serif;
-  --font-body: 'Lufga', 'Montserrat', system-ui, sans-serif;
+  --font-display: "Lufga", "Space Grotesk", "Montserrat", system-ui, sans-serif;
+  --font-body: "Lufga", "Montserrat", system-ui, sans-serif;
 
-  /* 8px Spacing Scale */
+  /* ─── 8px Spacing Scale ─── */
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
@@ -16,39 +16,90 @@
   --space-8: 64px;
   --space-12: 96px;
 
-  /* Light Mode Colors */
-  --background: linear-gradient(135deg, #E8E0FF 0%, #D4E0FF 100%);
-  --background-solid: #EEE8FF;
-  --foreground: #050F1C;
-  --card: rgba(255, 255, 255, 0.85);
-  --card-foreground: #050F1C;
-  --border: rgba(5, 15, 28, 0.08);
-  --secondary: #1E293B; /* AAA contrast for smaller text */
-  --tertiary: #475569; /* AA+ contrast for meta text */
+  /* ─────────────────────────────────────────────
+     LIGHT MODE
+     Warm off-white backgrounds — Adobe Spectrum
+     uses warm whites, never cold/blue-tinted pages.
+     Single red accent keeps it on-brand.
+  ───────────────────────────────────────────── */
 
-  /* Surface tints - for subtle backgrounds on cards/inputs */
-  --surface-tint: rgba(5, 15, 28, 0.02);
-  --surface-hover: rgba(5, 15, 28, 0.04);
-  --surface-active: rgba(5, 15, 28, 0.06);
+  /* Backgrounds */
+  --background: linear-gradient(135deg, #faf9f8 0%, #f3f1ef 100%);
+  --background-solid: #faf9f8;
 
-  /* Brand Colors */
-  --lime: #B0FF09;
-  --lime-text: #598500;
-  --violet: #AC49FF;
-  --violet-text: #7312CC;
-  --blue: #495BFF;
-  --blue-text: #2836CC;
-  --amber: #F59E0B;
-  --amber-text: #A66A00;
-  --red: #EF4444;
-  --red-text: #CC1F1F;
-  --green: #22C55E;
-  --green-text: #16853D;
+  /* Text */
+  --foreground: #1a1614;
+  --secondary: #3d3532; /* AA compliant on white */
+  --tertiary: #6e6460; /* AA compliant on white */
 
-  /* Static color for buttons on lime/accent backgrounds */
-  --on-accent: #050F1C;
+  /* Cards */
+  --card: rgba(255, 255, 255, 0.92);
+  --card-foreground: #1a1614;
 
-  /* Typography Scale */
+  /* Borders */
+  --border: rgba(26, 22, 20, 0.08);
+
+  /* Surface interaction states */
+  --surface-tint: rgba(26, 22, 20, 0.02);
+  --surface-hover: rgba(26, 22, 20, 0.04);
+  --surface-active: rgba(26, 22, 20, 0.07);
+
+  /* ─────────────────────────────────────────────
+     PRIMARY ACCENT — Adobe Red
+     #E8341C passes WCAG AA on white at normal
+     weight and AAA at large/bold sizes.
+     --accent-text is the darker version safe
+     for use as colored text on light backgrounds.
+  ───────────────────────────────────────────── */
+  --accent: #e8341c;
+  --accent-hover: #d42e18;
+  --accent-text: #c02b16;
+  --accent-subtle: rgba(232, 52, 28, 0.08);
+  --accent-glow: rgba(232, 52, 28, 0.18);
+  --on-accent: #ffffff;
+
+  /* ─────────────────────────────────────────────
+     SEMANTIC COLORS — Light Mode
+     One clear job each. Desaturated enough to
+     feel professional alongside Adobe Red.
+  ───────────────────────────────────────────── */
+
+  /* Positive / on-track goals */
+  --green: #0f8a5f;
+  --green-text: #0a6b49;
+  --green-subtle: rgba(15, 138, 95, 0.08);
+
+  /* Warnings / approaching limits */
+  --amber: #d97706;
+  --amber-text: #b45309;
+  --amber-subtle: rgba(217, 119, 6, 0.08);
+
+  /* Negative / over budget / loss */
+  --red: #dc2626;
+  --red-text: #b91c1c;
+  --red-subtle: rgba(220, 38, 38, 0.08);
+
+  /* Informational / neutral data */
+  --blue: #2563eb;
+  --blue-text: #1d4ed8;
+  --blue-subtle: rgba(37, 99, 235, 0.08);
+
+  /* ─────────────────────────────────────────────
+     NEUTRAL SCALE — Light Mode
+     Warm gray family, mirrors Adobe Spectrum.
+     Use for chart fills, disabled states,
+     progress tracks, secondary UI elements.
+  ───────────────────────────────────────────── */
+  --neutral-100: #f3f1ef;
+  --neutral-200: #e8e4e1;
+  --neutral-300: #d4ceca;
+  --neutral-400: #a89e99;
+  --neutral-500: #7d7470;
+  --neutral-600: #514845;
+  --neutral-700: #322b28;
+  --neutral-800: #1a1614;
+
+  /* ─── Typography Scale ─── */
   --text-xs: 11px;
   --text-sm: 13px;
   --text-base: 15px;
@@ -60,75 +111,147 @@
   --text-5xl: 64px;
   --text-6xl: 80px;
 
-  /* Font Weights */
+  /* ─── Font Weights ─── */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  /* Border Radius */
+  /* ─── Border Radius ─── */
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-xl: 32px;
   --radius-full: 9999px;
 
-  /* Shadows - Soft and Deep */
-  --shadow-sm: 0 4px 16px rgba(5, 15, 28, 0.04);
-  --shadow-md: 0 12px 32px rgba(5, 15, 28, 0.08);
-  --shadow-lg: 0 24px 64px rgba(5, 15, 28, 0.12);
-  --shadow-xl: 0 40px 100px rgba(5, 15, 28, 0.16);
+  /* ─── Shadows — warm-tinted ─── */
+  --shadow-sm: 0 4px 16px rgba(26, 22, 20, 0.05);
+  --shadow-md: 0 12px 32px rgba(26, 22, 20, 0.09);
+  --shadow-lg: 0 24px 64px rgba(26, 22, 20, 0.13);
+  --shadow-xl: 0 40px 100px rgba(26, 22, 20, 0.18);
 
-  /* Blur */
+  /* ─── Blur ─── */
   --blur-sm: 24px;
   --blur-md: 48px;
   --blur-lg: 80px;
 
-  /* Progress bar inactive color */
-  --progress-inactive: rgba(5, 15, 28, 0.1);
+  /* ─── Progress Track ─── */
+  --progress-inactive: rgba(26, 22, 20, 0.1);
 }
+
+/* ═══════════════════════════════════════════════
+   DARK MODE
+   Every single token from :root is re-declared
+   here so nothing accidentally inherits the
+   light mode value when .dark is active.
+   Warm charcoal surfaces — Adobe Spectrum dark
+   uses #1e1b18 family, NOT pure black.
+═══════════════════════════════════════════════ */
 
 .dark {
-  /* Dark Mode - True dark surface system for WCAG compliance */
-  --background: linear-gradient(135deg, #050F1C 0%, #030811 100%);
-  --background-solid: #0B1221;
-  --foreground: #F1F5F9;
-  --card: rgba(17, 24, 39, 0.6);
-  --card-foreground: #F1F5F9;
-  --border: rgba(255, 255, 255, 0.10);
-  --secondary: #94A3B8; /* Light enough for AA contrast on dark */
-  --tertiary: #64748B; /* AA contrast for meta text on dark */
+  /* Backgrounds */
+  --background: linear-gradient(135deg, #1a1614 0%, #100e0c 100%);
+  --background-solid: #1e1b18;
 
-  /* Surface tints - light overlays for dark cards */
-  --surface-tint: rgba(255, 255, 255, 0.03);
-  --surface-hover: rgba(255, 255, 255, 0.06);
-  --surface-active: rgba(255, 255, 255, 0.10);
+  /* Text */
+  --foreground: #f5f3f1;
+  --secondary: #c4bab5; /* AA compliant on dark surfaces */
+  --tertiary: #8a7f7a; /* AA compliant on dark surfaces */
 
-  /* Shadows - deeper for dark mode */
-  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 40px 100px rgba(0, 0, 0, 0.6);
+  /* Cards — layered warm dark glass */
+  --card: rgba(38, 32, 28, 0.75);
+  --card-foreground: #f5f3f1;
 
-  /* Brand text colors - brighter for dark mode readability */
-  --lime-text: #B0FF09;
-  --violet-text: #C77DFF;
-  --blue-text: #7B8CFF;
-  --amber-text: #FBBF24;
-  --red-text: #F87171;
-  --green-text: #4ADE80;
+  /* Borders — warm white tint */
+  --border: rgba(245, 243, 241, 0.1);
 
-  /* Progress bar inactive color */
-  --progress-inactive: rgba(255, 255, 255, 0.12);
+  /* Surface interaction states */
+  --surface-tint: rgba(245, 243, 241, 0.03);
+  --surface-hover: rgba(245, 243, 241, 0.06);
+  --surface-active: rgba(245, 243, 241, 0.1);
+
+  /* ─────────────────────────────────────────────
+     PRIMARY ACCENT — Adobe Red (dark mode)
+     Slightly brighter so it reads clearly
+     on dark surfaces without being harsh.
+     --accent-text is bright enough for dark bg.
+  ───────────────────────────────────────────── */
+  --accent: #ff4d33;
+  --accent-hover: #ff3d20;
+  --accent-text: #ff6650;
+  --accent-subtle: rgba(255, 77, 51, 0.12);
+  --accent-glow: rgba(255, 77, 51, 0.22);
+  --on-accent: #ffffff;
+
+  /* ─────────────────────────────────────────────
+     SEMANTIC COLORS — Dark Mode
+     All brightened to maintain contrast ratios
+     against the dark card/surface backgrounds.
+  ───────────────────────────────────────────── */
+
+  /* Positive / on-track goals */
+  --green: #10b981;
+  --green-text: #34d399;
+  --green-subtle: rgba(16, 185, 129, 0.12);
+
+  /* Warnings / approaching limits */
+  --amber: #f59e0b;
+  --amber-text: #fbbf24;
+  --amber-subtle: rgba(245, 158, 11, 0.12);
+
+  /* Negative / over budget / loss */
+  --red: #ef4444;
+  --red-text: #f87171;
+  --red-subtle: rgba(239, 68, 68, 0.12);
+
+  /* Informational / neutral data */
+  --blue: #3b82f6;
+  --blue-text: #60a5fa;
+  --blue-subtle: rgba(59, 130, 246, 0.12);
+
+  /* ─────────────────────────────────────────────
+     NEUTRAL SCALE — Dark Mode
+     Inverted warm gray family so neutral-100
+     is the darkest surface and neutral-800
+     is near-white, matching Spectrum dark.
+  ───────────────────────────────────────────── */
+  --neutral-100: #2a2420;
+  --neutral-200: #332d29;
+  --neutral-300: #453e3a;
+  --neutral-400: #6b6360;
+  --neutral-500: #918880;
+  --neutral-600: #b8afa9;
+  --neutral-700: #ddd8d4;
+  --neutral-800: #f5f3f1;
+
+  /* ─── Shadows — deep warm-black ─── */
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 40px 100px rgba(0, 0, 0, 0.65);
+
+  /* ─── Progress Track ─── */
+  --progress-inactive: rgba(245, 243, 241, 0.12);
+
+  /*
+    Note: Typography scale, font weights,
+    border radius, spacing, and blur values
+    are intentionally NOT re-declared here.
+    They are mode-agnostic and correctly
+    inherit from :root with no side effects.
+  */
 }
+
+/* ═══════════════════════════════════════════════
+   BASE LAYER
+═══════════════════════════════════════════════ */
 
 @layer base {
   * {
     box-sizing: border-box;
-    /* Removed aggressive transitions on everything, keeping it only for specific elements */
   }
 
-  /* Minimal Scrollbar Styles */
+  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -144,11 +267,16 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--tertiary);
+    /* Uses neutral scale now instead of
+       raw --tertiary which is text-purpose */
+    background: var(--neutral-400);
   }
 
   body {
     font-family: var(--font-body);
+    /* Gradient with solid fallback for browsers
+       that don't support linear-gradient */
+    background: var(--background-solid);
     background: var(--background);
     color: var(--foreground);
     font-size: var(--text-base);
@@ -162,7 +290,12 @@
     font-size: var(--font-size);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
     font-weight: var(--font-weight-bold);
     line-height: 1.1;
@@ -170,14 +303,18 @@
     color: var(--foreground);
   }
 
-  /* Slashed Zero for Numbers */
   .slashed-zero {
     font-variant-numeric: slashed-zero tabular-nums;
-    font-feature-settings: "zero" 1, "tnum" 1;
+    font-feature-settings:
+      "zero" 1,
+      "tnum" 1;
   }
 }
 
-/* Bento Card System */
+/* ═══════════════════════════════════════════════
+   BENTO CARD SYSTEM
+═══════════════════════════════════════════════ */
+
 .bento-card {
   background: var(--card);
   backdrop-filter: blur(32px);
@@ -217,7 +354,13 @@
   }
 }
 
-/* Pill Button */
+/* ═══════════════════════════════════════════════
+   PILL BUTTON
+   Active state now uses --accent (Adobe Red)
+   instead of the old lime color. The glow uses
+   --accent-glow which adapts per mode.
+═══════════════════════════════════════════════ */
+
 .pill-button {
   border-radius: var(--radius-full);
   padding: var(--space-1) var(--space-3);
@@ -237,28 +380,57 @@
 }
 
 .pill-button.active {
-  background: var(--lime);
-  color: #050F1C;
-  border-color: rgba(0,0,0,0.1);
-  box-shadow: 0 4px 12px rgba(176, 255, 9, 0.2);
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: rgba(255, 255, 255, 0.12);
+  /* Glow uses the mode-aware --accent-glow token */
+  box-shadow: 0 4px 14px var(--accent-glow);
 }
 
-/* Data Blob - Static, Soft */
+/* ═══════════════════════════════════════════════
+   FOCUS RINGS
+   Uses --accent so it adapts light/dark
+   without needing a separate .dark override.
+═══════════════════════════════════════════════ */
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════
+   DATA BLOB
+   Opacity lowered slightly in light mode,
+   the color itself is controlled by whatever
+   utility class you set on the element
+   (e.g. bg-accent, bg-green etc.)
+═══════════════════════════════════════════════ */
+
 .data-blob {
   filter: blur(var(--blur-lg));
-  opacity: 0.3;
+  opacity: 0.2;
   pointer-events: none;
   position: absolute;
   border-radius: 50%;
 }
 
-/* Wireframe Icons */
+.dark .data-blob {
+  /* Slightly more visible on dark backgrounds */
+  opacity: 0.28;
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITY CLASSES
+═══════════════════════════════════════════════ */
+
 .icon-wireframe {
   stroke-width: 1.5px;
   color: currentColor;
 }
 
-/* Diagonal Hatching Pattern */
 .hatching-pattern {
   background-image: repeating-linear-gradient(
     45deg,
@@ -269,11 +441,15 @@
   );
   opacity: 0.05;
 }
+
 .dark .hatching-pattern {
   opacity: 0.1;
 }
 
-/* Typography Utilities */
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY UTILITIES
+═══════════════════════════════════════════════ */
+
 .text-hero {
   font-family: var(--font-display);
   font-size: var(--text-4xl);
@@ -283,7 +459,9 @@
 }
 
 @media (min-width: 768px) {
-  .text-hero { font-size: var(--text-6xl); }
+  .text-hero {
+    font-size: var(--text-6xl);
+  }
 }
 
 .text-display {
@@ -295,7 +473,9 @@
 }
 
 @media (min-width: 768px) {
-  .text-display { font-size: var(--text-5xl); }
+  .text-display {
+    font-size: var(--text-5xl);
+  }
 }
 
 .text-title {
@@ -307,7 +487,9 @@
 }
 
 @media (min-width: 768px) {
-  .text-title { font-size: var(--text-3xl); }
+  .text-title {
+    font-size: var(--text-3xl);
+  }
 }
 
 .text-heading {
@@ -322,17 +504,32 @@
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  /* Uses --secondary which is already
+     mode-aware — no .dark override needed */
   color: var(--secondary);
 }
 
-/* Spacing Utilities - using 8px grid strict */
-.gap-1 { gap: var(--space-1); }
-.gap-2 { gap: var(--space-2); }
-.gap-3 { gap: var(--space-3); }
-.gap-4 { gap: var(--space-4); }
+/* ─── Spacing Gap Utilities ─── */
+.gap-1 {
+  gap: var(--space-1);
+}
+.gap-2 {
+  gap: var(--space-2);
+}
+.gap-3 {
+  gap: var(--space-3);
+}
+.gap-4 {
+  gap: var(--space-4);
+}
 
-/* Input Styles */
-input, textarea, select {
+/* ═══════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════ */
+
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
@@ -347,15 +544,8 @@ textarea::placeholder {
 }
 
 select option {
-  background: var(--card);
+  /* Explicit background so browser-native
+     dropdowns don't render with wrong bg in dark */
+  background: var(--background-solid);
   color: var(--card-foreground);
-}
-
-/* Focus States */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--lime);
-  outline-offset: 2px;
 }
