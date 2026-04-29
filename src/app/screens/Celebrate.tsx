@@ -68,7 +68,7 @@ export default function Celebrate() {
           <Trophy size={48} className="md:w-16 md:h-16" style={{ color: 'var(--on-accent)' }} />
         </div>
         <h1 className="text-3xl md:text-5xl font-bold mb-3 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-          {completedGoals.length > 0 ? 'Congratulations! 🎉' : 'Your Milestones Await!'}
+          {completedGoals.length > 0 ? 'Congratulations!' : 'Your Milestones Await!'}
         </h1>
         <p className="text-lg md:text-xl text-[var(--secondary)] max-w-md mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
           {completedGoals.length > 0

@@ -9,6 +9,14 @@ import {
   Trash2,
   AlertTriangle,
   Wallet,
+  Rocket,
+  Dumbbell,
+  Crosshair,
+  Leaf,
+  Zap,
+  Trophy,
+  Gem,
+  type LucideIcon,
 } from "lucide-react";
 import { useFinPathStore } from "../../lib/store";
 import {
@@ -242,56 +250,64 @@ export default function Progress() {
 
   // Badges
   const badges = useMemo(() => {
-    const list = [];
+    const list: { name: string; icon: LucideIcon; color: string; desc: string; earned: boolean }[] = [];
     if (income.total > 0)
       list.push({
         name: "First Step",
-        icon: "🚀",
+        icon: Rocket,
+        color: "var(--accent)",
         desc: "Completed onboarding",
         earned: true,
       });
     if (healthScore && healthScore.overall >= 50)
       list.push({
         name: "Healthy Start",
-        icon: "💪",
+        icon: Dumbbell,
+        color: "var(--tertiary-accent)",
         desc: "Health score above 50",
         earned: true,
       });
     if (goals.length >= 2)
       list.push({
         name: "Goal Setter",
-        icon: "🎯",
+        icon: Crosshair,
+        color: "var(--accent)",
         desc: "Set 2+ financial goals",
         earned: true,
       });
     if (freeSurplus > 0)
       list.push({
         name: "In the Green",
-        icon: "💚",
+        icon: Leaf,
+        color: "var(--tertiary-accent)",
         desc: "Positive monthly surplus",
         earned: true,
       });
     list.push({
       name: "Debt Crusher",
-      icon: "⚡",
+      icon: Zap,
+      color: "var(--amber)",
       desc: "Pay off first debt",
       earned: debts.items.some((d) => d.remainingMonths <= 0),
     });
     list.push({
       name: "Goal Achiever",
-      icon: "🏆",
+      icon: Trophy,
+      color: "var(--amber)",
       desc: "Complete first goal",
       earned: goals.some((g) => g.status === "complete"),
     });
     list.push({
       name: "Streak Master",
-      icon: "🔥",
+      icon: Flame,
+      color: "var(--red)",
       desc: "30-day check-in streak",
       earned: streakDays >= 30,
     });
     list.push({
       name: "Wealth Builder",
-      icon: "💎",
+      icon: Gem,
+      color: "var(--tertiary-accent)",
       desc: "Net worth above ₹5L",
       earned: currentNetWorth >= 500000,
     });
@@ -389,16 +405,16 @@ export default function Progress() {
     const newMonthlyNeed = Math.round(targetAmount / timelineMonths);
     if (newMonthlyNeed > monthlySurplusAfterReserve && monthlySurplusAfterReserve > 0) {
       const minMonths = monthlySurplusAfterReserve > 0 ? Math.ceil(targetAmount / monthlySurplusAfterReserve) : 0;
-      setNotice(`❌ This goal needs ₹${newMonthlyNeed.toLocaleString("en-IN")}/mo but you only have ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo.${minMonths > 0 ? ` You'd need at least ${minMonths} months.` : ""} Reduce the amount, increase the timeline, or remove an existing goal.`);
+      setNotice(`This goal needs ₹${newMonthlyNeed.toLocaleString("en-IN")}/mo but you only have ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo.${minMonths > 0 ? ` You'd need at least ${minMonths} months.` : ""} Reduce the amount, increase the timeline, or remove an existing goal.`);
       return;
     }
     // Hard block: total goals now exceed surplus
     if (existingMonthlyNeed + newMonthlyNeed > monthlySurplusAfterReserve && monthlySurplusAfterReserve > 0) {
-      setNotice(`❌ Adding this goal pushes total commitments to ₹${(existingMonthlyNeed + newMonthlyNeed).toLocaleString("en-IN")}/mo — over your available ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo. Remove an existing goal first.`);
+      setNotice(`Adding this goal pushes total commitments to ₹${(existingMonthlyNeed + newMonthlyNeed).toLocaleString("en-IN")}/mo — over your available ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo. Remove an existing goal first.`);
       return;
     }
     if (monthlySurplusAfterReserve <= 0) {
-      setNotice("❌ You have no available surplus. Cannot add goals until income exceeds outgoings.");
+      setNotice("You have no available surplus. Cannot add goals until income exceeds outgoings.");
       return;
     }
 
@@ -987,7 +1003,7 @@ export default function Progress() {
                 opacity: 0.7,
               }}
             >
-              ✅ Checked in for this month!
+              Checked in for this month!
             </div>
           )}
         </div>
@@ -1015,7 +1031,18 @@ export default function Progress() {
                   opacity: badge.earned ? 1 : 0.4,
                 }}
               >
-                <div className="text-2xl mb-2">{badge.icon}</div>
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-2"
+                  style={{
+                    background: badge.earned ? "var(--surface-tint)" : "var(--surface-hover)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <badge.icon
+                    size={20}
+                    style={{ color: badge.earned ? badge.color : "var(--secondary)" }}
+                  />
+                </div>
                 <div
                   className="text-xs font-bold text-[var(--card-foreground)] mb-1"
                   style={{ fontFamily: "var(--font-body)" }}
