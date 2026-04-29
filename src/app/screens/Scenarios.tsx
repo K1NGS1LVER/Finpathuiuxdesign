@@ -493,6 +493,25 @@ export default function Scenarios() {
               Snowball
             </button>
           </div>
+          <div
+            className="text-xs md:text-sm p-3 rounded-xl mt-2"
+            style={{
+              background: "var(--surface-tint)",
+              border: "1px solid var(--border)",
+              color: "var(--secondary)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            {strategy === "avalanche" ? (
+              <span>
+                <strong className="text-[var(--card-foreground)]">Avalanche</strong> puts most money toward your highest-priority goal first. Once that’s done, everything shifts to the next. <em>Best if you want the fastest overall finish.</em>
+              </span>
+            ) : (
+              <span>
+                <strong className="text-[var(--card-foreground)]">Snowball</strong> tackles your smallest remaining goal first for a quick win, then rolls that freed-up money into the next. <em>Best if you need early motivation boosts.</em>
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
