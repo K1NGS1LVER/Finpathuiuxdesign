@@ -592,32 +592,32 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                     {[
                       {
                         key: "rent",
-                        label: "🏠 Rent",
+                        label: "Rent",
                         placeholder: "Monthly rent",
                       },
                       {
                         key: "food",
-                        label: "🍽️ Food & Groceries",
+                        label: "Food & Groceries",
                         placeholder: "Food expenses",
                       },
                       {
                         key: "transport",
-                        label: "🚗 Transport",
+                        label: "Transport",
                         placeholder: "Commute, fuel",
                       },
                       {
                         key: "utilities",
-                        label: "💡 Utilities",
+                        label: "Utilities",
                         placeholder: "Bills, internet",
                       },
                       {
                         key: "entertainment",
-                        label: "🎬 Entertainment",
+                        label: "Entertainment",
                         placeholder: "Movies, hobbies",
                       },
                       {
                         key: "other",
-                        label: "📦 Other",
+                        label: "Other",
                         placeholder: "Miscellaneous",
                       },
                     ].map(({ key, label, placeholder }) => (
@@ -727,32 +727,32 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                     {[
                       {
                         key: "homeLoan",
-                        label: "🏡 Home Loan EMI",
+                        label: "Home Loan EMI",
                         placeholder: "Monthly EMI",
                       },
                       {
                         key: "carLoan",
-                        label: "🚙 Car Loan EMI",
+                        label: "Car Loan EMI",
                         placeholder: "Monthly EMI",
                       },
                       {
                         key: "personalLoan",
-                        label: "💳 Personal Loan",
+                        label: "Personal Loan",
                         placeholder: "Monthly EMI",
                       },
                       {
                         key: "creditCard",
-                        label: "💰 Credit Card",
+                        label: "Credit Card",
                         placeholder: "Monthly payment",
                       },
                       {
                         key: "educationLoan",
-                        label: "🎓 Education Loan",
+                        label: "Education Loan",
                         placeholder: "Monthly EMI",
                       },
                       {
                         key: "otherEMI",
-                        label: "📋 Other EMIs",
+                        label: "Other EMIs",
                         placeholder: "Other debts",
                       },
                     ].map(({ key, label, placeholder }) => (

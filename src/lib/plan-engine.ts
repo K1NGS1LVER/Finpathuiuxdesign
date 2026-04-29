@@ -154,7 +154,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
   for (let m = 0; m < maxMonths; m++) {
     const milestones: string[] = [];
     if (m === 0 && isDebtOverIncome) {
-      milestones.push(`⚠️ Your debt payments (₹${debts.totalMonthly.toLocaleString("en-IN")}/mo) exceed your available income. Consider restructuring.`);
+      milestones.push(`Warning: Your debt payments (₹${debts.totalMonthly.toLocaleString("en-IN")}/mo) exceed your available income. Consider restructuring.`);
     }
 
     // Available surplus this month
@@ -188,7 +188,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
       ) {
         goalProgress[goal.id] = goal.targetAmount;
         goalCompletionDates[goal.id] = monthToDateStr(m + 1);
-        milestones.push(`🎉 ${goal.name} completed!`);
+        milestones.push(`${goal.name} completed!`);
       }
     }
 

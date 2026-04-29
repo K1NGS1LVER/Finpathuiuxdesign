@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calculator, TrendingDown, ArrowRight } from 'lucide-react';
+import { Calculator, TrendingDown, ArrowRight, Lightbulb as LightbulbIcon } from 'lucide-react';
 import { compareTaxRegimes } from '../../lib/tax-engine';
 import { useFinPathStore } from '../../lib/store';
 
@@ -232,7 +232,7 @@ export default function Tax() {
         {/* Deductions Insights */}
         <div className="lg:col-span-3 bento-card p-6 md:p-8 mt-2">
           <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)] flex items-center gap-2">
-            <span className="text-xl">💡</span> Penny's Deduction Guide
+            <LightbulbIcon size={18} className="inline-block mr-2 align-middle" style={{ color: "var(--accent)" }} />Penny's Deduction Guide
           </h3>
           <p className="text-sm text-[var(--secondary)] mb-6">
             If you opt for the <strong>Old Regime</strong>, here are the top deductions you should claim to lower your tax burden:

@@ -270,7 +270,8 @@ export default function Month() {
             fontFamily: "var(--font-body)",
           }}
         >
-          <span>💰 ₹{monthlySurplusReserve.toLocaleString("en-IN")}/mo is reserved as your surplus — not allocated to any goal.</span>
+          <Wallet size={16} style={{ color: "var(--accent)" }} className="flex-shrink-0" />
+          <span>₹{monthlySurplusReserve.toLocaleString("en-IN")}/mo is reserved as your surplus — not allocated to any goal.</span>
         </div>
       )}
 
