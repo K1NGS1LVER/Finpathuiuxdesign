@@ -112,7 +112,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       >
       <div className="h-14 flex items-center justify-between px-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--blue)', color: '#fff' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--tertiary-accent)', color: 'var(--on-tertiary-accent)' }}>
             P
           </div>
           <span className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Penny</span>
@@ -151,7 +151,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
                 borderBottomLeftRadius: '4px',
               }}
             >
-              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--blue)' }} />
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--tertiary-accent)' }} />
               <span className="text-[var(--secondary)]">Penny is thinking...</span>
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-            style={{ backgroundColor: 'var(--blue)', color: '#fff' }}
+            style={{ backgroundColor: 'var(--tertiary-accent)', color: 'var(--on-tertiary-accent)' }}
           >
             <Send size={18} />
           </button>

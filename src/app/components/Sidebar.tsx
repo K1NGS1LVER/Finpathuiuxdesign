@@ -117,7 +117,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                 onClick={() => handleNavigation(item.path)}
                 className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 ${collapsed ? 'px-0 justify-center md:px-0' : 'px-4 justify-start'}`}
                 style={{
-                  backgroundColor: active ? 'rgba(232, 52, 28, )' : 'transparent',
+                  backgroundColor: active ? 'var(--accent-glow)' : 'transparent',
                   color: active ? 'var(--card-foreground)' : 'var(--secondary)',
                   fontFamily: 'var(--font-body)',
                   gap: collapsed ? '0' : '12px',
@@ -162,7 +162,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
               backgroundColor: 'var(--accent)',
               color: 'var(--on-accent)',
               fontFamily: 'var(--font-body)',
-              boxShadow: '0 8px 24px rgba(232, 52, 28, )',
+              boxShadow: '0 8px 24px var(--accent-glow)',
               gap: collapsed ? '0' : '8px',
             }}
             title={collapsed ? 'Ask Penny' : undefined}

@@ -242,7 +242,7 @@ export default function Month() {
         }}
       >
         {/* Centered Prominent Lime Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-[var(--accent)] opacity-40 mix-blend-screen blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-[var(--accent)] opacity-20 dark:opacity-40 dark:mix-blend-screen blur-[80px] md:blur-[100px] rounded-full pointer-events-none" />
 
         <div className="relative z-10">
           <div

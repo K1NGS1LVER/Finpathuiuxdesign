@@ -121,14 +121,14 @@ function goalNameToGoal(name: string, index: number): Goal {
       icon: "TrendingUp",
       targetAmount: 500000,
       timelineMonths: 36,
-      color: "var(--blue)",
+      color: "var(--tertiary-accent)",
     },
     "Emergency Fund": {
       category: "savings",
       icon: "Shield",
       targetAmount: 300000,
       timelineMonths: 24,
-      color: "var(--blue)",
+      color: "var(--tertiary-accent)",
     },
     Wedding: {
       category: "family",
@@ -149,14 +149,14 @@ function goalNameToGoal(name: string, index: number): Goal {
       icon: "GraduationCap",
       targetAmount: 100000,
       timelineMonths: 12,
-      color: "var(--blue)",
+      color: "var(--tertiary-accent)",
     },
     Custom: {
       category: "custom",
       icon: "Target",
       targetAmount: 100000,
       timelineMonths: 12,
-      color: "var(--blue)",
+      color: "var(--tertiary-accent)",
     },
   };
 

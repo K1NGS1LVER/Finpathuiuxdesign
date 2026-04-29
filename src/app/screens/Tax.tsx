@@ -32,8 +32,8 @@ export default function Tax() {
     <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
       {/* Decorative Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[400px] h-[400px] -top-40 right-1/4 rounded-full bg-[var(--blue)] opacity-10" />
-        <div className="data-blob w-[300px] h-[300px] bottom-0 -left-40 rounded-full bg-[var(--blue)] opacity-10" />
+        <div className="data-blob w-[400px] h-[400px] -top-40 right-1/4 rounded-full bg-[var(--accent)] opacity-10" />
+        <div className="data-blob w-[300px] h-[300px] bottom-0 -left-40 rounded-full bg-[var(--tertiary-accent)] opacity-10" />
       </div>
 
       {/* Header */}

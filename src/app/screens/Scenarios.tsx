@@ -16,15 +16,29 @@ const SCENARIO_OPTIONS = [
     label: "Salary Change",
     icon: TrendingUp,
     color: "var(--accent)",
+    subtle: "var(--accent-subtle)",
   },
-  { id: "property", label: "Buy Property", icon: Home, color: "var(--blue)" },
+  {
+    id: "property",
+    label: "Buy Property",
+    icon: Home,
+    color: "var(--tertiary-accent)",
+    subtle: "var(--tertiary-accent-subtle)",
+  },
   {
     id: "education",
     label: "Higher Education",
     icon: GraduationCap,
-    color: "var(--blue)",
+    color: "var(--tertiary-accent)",
+    subtle: "var(--tertiary-accent-subtle)",
   },
-  { id: "family", label: "Start Family", icon: Baby, color: "var(--amber)" },
+  {
+    id: "family",
+    label: "Start Family",
+    icon: Baby,
+    color: "var(--amber)",
+    subtle: "var(--amber-subtle)",
+  },
 ] as const;
 
 type ScenarioId = (typeof SCENARIO_OPTIONS)[number]["id"];
@@ -336,7 +350,7 @@ export default function Scenarios() {
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div
         className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
-        style={{ backgroundColor: "var(--blue)" }}
+        style={{ backgroundColor: "var(--tertiary-accent)" }}
       />
       <div className="relative z-10">
         <h1
@@ -363,14 +377,14 @@ export default function Scenarios() {
               onClick={() => setScenario(s.id)}
               className={`p-3 md:p-5 rounded-xl text-left transition-all hover:scale-105 ${!active ? "bento-card" : ""}`}
               style={{
-                backgroundColor: active ? `${s.color}20` : undefined,
+                backgroundColor: active ? s.subtle : undefined,
                 border: `2px solid ${active ? s.color : "var(--border)"}`,
                 color: active ? "var(--foreground)" : "var(--card-foreground)",
               }}
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-                style={{ backgroundColor: `${s.color}20`, color: s.color }}
+                style={{ backgroundColor: s.subtle, color: s.color }}
               >
                 <Icon size={24} />
               </div>
@@ -456,7 +470,7 @@ export default function Scenarios() {
               style={{
                 background:
                   strategy === "avalanche"
-                    ? "rgba(232, 52, 28, )"
+                    ? "var(--accent-glow)"
                     : "var(--surface-tint)",
                 border: `1px solid ${strategy === "avalanche" ? "var(--accent)" : "var(--border)"}`,
                 color: "var(--card-foreground)",
@@ -470,9 +484,9 @@ export default function Scenarios() {
               style={{
                 background:
                   strategy === "snowball"
-                    ? "rgba(73, 91, 255, 0.12)"
+                    ? "var(--tertiary-accent-subtle)"
                     : "var(--surface-tint)",
-                border: `1px solid ${strategy === "snowball" ? "var(--blue)" : "var(--border)"}`,
+                border: `1px solid ${strategy === "snowball" ? "var(--tertiary-accent)" : "var(--border)"}`,
                 color: "var(--card-foreground)",
               }}
             >
@@ -526,7 +540,7 @@ export default function Scenarios() {
             <button
               onClick={applySalaryHike}
               className="w-full py-2 rounded-lg font-semibold"
-              style={{ background: "var(--blue)", color: "#fff" }}
+              style={{ background: "var(--tertiary-accent)", color: "var(--on-tertiary-accent)" }}
             >
               Apply Hike
             </button>
@@ -616,21 +630,21 @@ export default function Scenarios() {
 
 
       <div
-        className="p-6 md:p-8 rounded-2xl flex items-start gap-4 relative overflow-hidden z-10 bento-card border border-[var(--blue)]"
+        className="p-6 md:p-8 rounded-2xl flex items-start gap-4 relative overflow-hidden z-10 bento-card border border-[var(--tertiary-accent)]"
         style={{
           background: "var(--surface-tint)",
           backdropFilter: "blur(32px)",
           WebkitBackdropFilter: "blur(32px)",
         }}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-[var(--blue)] opacity-30 mix-blend-screen blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-[var(--tertiary-accent)] opacity-20 dark:opacity-30 dark:mix-blend-screen blur-[80px] md:blur-[100px] rounded-full pointer-events-none" />
 
         <div className="relative z-10">
-          <Sparkles size={28} className="text-[var(--blue-text)]" />
+          <Sparkles size={28} className="text-[var(--tertiary-accent-text)]" />
         </div>
         <div className="relative z-10 text-[var(--card-foreground)]">
           <div
-            className="text-sm font-semibold tracking-wider mb-1 text-[var(--blue-text)] uppercase"
+            className="text-sm font-semibold tracking-wider mb-1 text-[var(--tertiary-accent-text)] uppercase"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Penny's Insight

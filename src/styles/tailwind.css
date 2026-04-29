@@ -7,4 +7,34 @@
   --font-sans: 'Lufga', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Lufga', ui-serif, Georgia, serif;
   --font-mono: 'Lufga', ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background-solid);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--secondary-accent);
+  --color-secondary-foreground: var(--on-secondary-accent);
+  --color-muted: var(--surface-hover);
+  --color-muted-foreground: var(--secondary);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--on-accent);
+  --color-destructive: var(--red);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-input-background: var(--surface-tint);
+  --color-ring: var(--accent);
+  --color-switch-background: var(--progress-inactive);
+  --color-sidebar: var(--card);
+  --color-sidebar-foreground: var(--card-foreground);
+  --color-sidebar-primary: var(--accent);
+  --color-sidebar-primary-foreground: var(--on-accent);
+  --color-sidebar-accent: var(--surface-hover);
+  --color-sidebar-accent-foreground: var(--card-foreground);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-ring: var(--accent);
 }

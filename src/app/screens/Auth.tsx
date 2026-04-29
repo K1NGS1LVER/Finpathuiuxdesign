@@ -57,7 +57,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
         }
         .auth-input:focus {
           border-color: var(--accent) !important;
-          box-shadow: 0 0 0 2px rgba(232, 52, 28, );
+          box-shadow: 0 0 0 2px var(--accent-glow);
         }
       `}</style>
 
@@ -76,8 +76,8 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
 
       {/* Decorative Blurred Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="data-blob absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: 'var(--blue)' }} />
-        <div className="data-blob absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: 'var(--blue)' }} />
+        <div className="data-blob absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: 'var(--tertiary-accent)' }} />
+        <div className="data-blob absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: 'var(--tertiary-accent)' }} />
       </div>
 
       <div className="max-w-md w-full m-auto relative z-10 py-2 md:py-4 flex flex-col justify-center h-full">
@@ -127,7 +127,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
           <form onSubmit={handleSubmit} className="bento-card !p-6 md:!p-8 space-y-4 md:space-y-5">
             {/* Error */}
             {error && (
-              <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', fontFamily: 'var(--font-body)' }}>
+              <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--red-subtle)', color: 'var(--red-text)', border: '1px solid var(--red-subtle)', fontFamily: 'var(--font-body)' }}>
                 {error}
               </div>
             )}
@@ -213,7 +213,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                 backgroundColor: 'var(--accent)',
                 color: 'var(--on-accent)',
                 fontFamily: 'var(--font-body)',
-                boxShadow: '0 10px 40px rgba(232, 52, 28, )',
+                boxShadow: '0 10px 40px var(--accent-glow)',
               }}
             >
               {loading ? (

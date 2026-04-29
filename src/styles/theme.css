@@ -16,88 +16,143 @@
   --space-8: 64px;
   --space-12: 96px;
 
-  /* ─────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════
      LIGHT MODE
-     Warm off-white backgrounds — Adobe Spectrum
-     uses warm whites, never cold/blue-tinted pages.
-     Single red accent keeps it on-brand.
-  ───────────────────────────────────────────── */
 
-  /* Backgrounds */
-  --background: linear-gradient(135deg, #faf9f8 0%, #f3f1ef 100%);
-  --background-solid: #faf9f8;
+     Background blob hierarchy (left → right):
+       1. Lime/Green — top-left (tertiary, smallest, subtle)
+       2. Blue — center-left (primary, LARGEST, dominant)
+       3. Indigo — center-right (secondary blue-purple)
+       4. Violet — bottom-right (secondary, medium)
 
-  /* Text */
-  --foreground: #1a1614;
-  --secondary: #3d3532; /* AA compliant on white */
-  --tertiary: #6e6460; /* AA compliant on white */
+     Blue dominates the center taking the most
+     visual real estate. Green is pushed to the
+     corner at reduced opacity. Purple provides
+     depth in the lower-right region.
+
+     The base gradient runs from a soft blue-white
+     through a lavender-blue center into gentle
+     purple-tinted whites.
+  ═══════════════════════════════════════════════ */
+
+  /* Main dashboard background — full blob system */
+  --background:
+    radial-gradient(circle at 8% 10%, rgba(176, 255, 9, 0.08) 0, rgba(176, 255, 9, 0) 30%),
+    radial-gradient(circle at 45% 35%, rgba(73, 91, 255, 0.24) 0, rgba(73, 91, 255, 0) 50%),
+    radial-gradient(circle at 75% 60%, rgba(123, 100, 255, 0.14) 0, rgba(123, 100, 255, 0) 38%),
+    radial-gradient(circle at 88% 82%, rgba(172, 73, 255, 0.18) 0, rgba(172, 73, 255, 0) 34%),
+    linear-gradient(135deg, #eef4f8 0%, #e8edff 35%, #edeaff 65%, #f0ebff 85%, #f6f4ff 100%);
+
+  /* Solid fallback — flat tint of the primary blue family */
+  --background-solid: #eef0ff;
+
+  /* Loading state background — stripped of blobs,
+     just the base gradient at reduced saturation.
+     Cleaner for skeleton states, no visual noise.
+     Transitions smoothly into --background once
+     the dashboard content mounts. */
+  --background-loading:
+    linear-gradient(135deg, #f4f6f2 0%, #eff1fa 40%, #f2eff8 75%, #f5f4f9 100%);
+
+  /* Text — deep navy-ink */
+  --foreground: #050f1c;
+  --secondary: #1e293b;
+  --tertiary: #475569;
 
   /* Cards */
-  --card: rgba(255, 255, 255, 0.92);
-  --card-foreground: #1a1614;
+  --card: rgba(255, 255, 255, 0.85);
+  --card-foreground: #050f1c;
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
 
   /* Borders */
-  --border: rgba(26, 22, 20, 0.08);
+  --border: rgba(5, 15, 28, 0.08);
 
-  /* Surface interaction states */
-  --surface-tint: rgba(26, 22, 20, 0.02);
-  --surface-hover: rgba(26, 22, 20, 0.04);
-  --surface-active: rgba(26, 22, 20, 0.07);
+  /* Surface states */
+  --surface-tint: rgba(5, 15, 28, 0.02);
+  --surface-hover: rgba(5, 15, 28, 0.04);
+  --surface-active: rgba(5, 15, 28, 0.06);
 
-  /* ─────────────────────────────────────────────
-     PRIMARY ACCENT — Adobe Red
-     #E8341C passes WCAG AA on white at normal
-     weight and AAA at large/bold sizes.
-     --accent-text is the darker version safe
-     for use as colored text on light backgrounds.
-  ───────────────────────────────────────────── */
-  --accent: #e8341c;
-  --accent-hover: #d42e18;
-  --accent-text: #c02b16;
-  --accent-subtle: rgba(232, 52, 28, 0.08);
-  --accent-glow: rgba(232, 52, 28, 0.18);
+  /* ═══════════════════════════════════════════════
+     PRIMARY ACCENT — Blue / Indigo #495bff
+     ─────────────────────────────────────────────
+     Owns: primary CTAs, active nav, focus rings,
+     links, selected states, primary chart series.
+     --on-accent: white (blue is dark enough).
+  ═══════════════════════════════════════════════ */
+  --accent: #495bff;
+  --accent-hover: #3344ee;
+  --accent-text: #2836cc;
+  --accent-bright: #495bff;
+  --accent-subtle: rgba(73, 91, 255, 0.08);
+  --accent-glow: rgba(73, 91, 255, 0.18);
   --on-accent: #ffffff;
 
-  /* ─────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════
+     SECONDARY ACCENT — Violet / Purple #ac49ff
+     ─────────────────────────────────────────────
+     Owns: secondary actions, category badges,
+     investment-type indicators, chart series 2,
+     goal category color, milestone highlights.
+  ═══════════════════════════════════════════════ */
+  --secondary-accent: #ac49ff;
+  --secondary-accent-hover: #9b30ff;
+  --secondary-accent-text: #7312cc;
+  --secondary-accent-subtle: rgba(172, 73, 255, 0.08);
+  --secondary-accent-glow: rgba(172, 73, 255, 0.18);
+  --on-secondary-accent: #ffffff;
+
+  /* ═══════════════════════════════════════════════
+     TERTIARY ACCENT — Lime / Chartreuse #b0ff09
+     ─────────────────────────────────────────────
+     Owns: positive moments (goal reached, savings
+     milestone hit, budget under-spent), progress
+     bar fills, "on track" badges, chart series 3,
+     celebratory states.
+     --on-tertiary-accent: dark (lime is light).
+  ═══════════════════════════════════════════════ */
+  --tertiary-accent: #b0ff09;
+  --tertiary-accent-hover: #9de600;
+  --tertiary-accent-text: #598500;
+  --tertiary-accent-bright: #b0ff09;
+  --tertiary-accent-subtle: rgba(176, 255, 9, 0.1);
+  --tertiary-accent-glow: rgba(176, 255, 9, 0.2);
+  --on-tertiary-accent: #050f1c;
+
+  /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Light Mode
-     One clear job each. Desaturated enough to
-     feel professional alongside Adobe Red.
-  ───────────────────────────────────────────── */
+     Fixed financial meaning. Never decorative.
+  ═══════════════════════════════════════════════ */
 
-  /* Positive / on-track goals */
-  --green: #0f8a5f;
-  --green-text: #0a6b49;
-  --green-subtle: rgba(15, 138, 95, 0.08);
+  /* Positive / on-track / portfolio gain */
+  --green: #22c55e;
+  --green-text: #16853d;
+  --green-subtle: rgba(34, 197, 94, 0.08);
 
-  /* Warnings / approaching limits */
-  --amber: #d97706;
-  --amber-text: #b45309;
-  --amber-subtle: rgba(217, 119, 6, 0.08);
+  /* Warning / approaching budget limit */
+  --amber: #f59e0b;
+  --amber-text: #a66a00;
+  --amber-subtle: rgba(245, 158, 11, 0.08);
 
-  /* Negative / over budget / loss */
-  --red: #dc2626;
-  --red-text: #b91c1c;
-  --red-subtle: rgba(220, 38, 38, 0.08);
+  /* Negative / over budget / loss / error */
+  --red: #ef4444;
+  --red-text: #cc1f1f;
+  --red-subtle: rgba(239, 68, 68, 0.08);
 
-  /* Informational / neutral data */
-  --blue: #2563eb;
-  --blue-text: #1d4ed8;
-  --blue-subtle: rgba(37, 99, 235, 0.08);
-
-  /* ─────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════
      NEUTRAL SCALE — Light Mode
-     Warm gray family, mirrors Adobe Spectrum.
-     Use for chart fills, disabled states,
-     progress tracks, secondary UI elements.
-  ───────────────────────────────────────────── */
-  --neutral-100: #f3f1ef;
-  --neutral-200: #e8e4e1;
-  --neutral-300: #d4ceca;
-  --neutral-400: #a89e99;
-  --neutral-500: #7d7470;
-  --neutral-600: #514845;
-  --neutral-700: #322b28;
-  --neutral-800: #1a1614;
+     Blue-tinted neutrals harmonizing with
+     the blue primary accent family.
+     100 = lightest surface → 800 = near black.
+  ═══════════════════════════════════════════════ */
+  --neutral-100: #eef0f8;
+  --neutral-200: #dde1f0;
+  --neutral-300: #c5cae0;
+  --neutral-400: #a0a8c8;
+  --neutral-500: #7880a8;
+  --neutral-600: #505880;
+  --neutral-700: #2e3560;
+  --neutral-800: #050f1c;
 
   /* ─── Typography Scale ─── */
   --text-xs: 11px;
@@ -124,11 +179,11 @@
   --radius-xl: 32px;
   --radius-full: 9999px;
 
-  /* ─── Shadows — warm-tinted ─── */
-  --shadow-sm: 0 4px 16px rgba(26, 22, 20, 0.05);
-  --shadow-md: 0 12px 32px rgba(26, 22, 20, 0.09);
-  --shadow-lg: 0 24px 64px rgba(26, 22, 20, 0.13);
-  --shadow-xl: 0 40px 100px rgba(26, 22, 20, 0.18);
+  /* ─── Shadows ─── */
+  --shadow-sm: 0 4px 16px rgba(5, 15, 28, 0.04);
+  --shadow-md: 0 12px 32px rgba(5, 15, 28, 0.08);
+  --shadow-lg: 0 24px 64px rgba(5, 15, 28, 0.12);
+  --shadow-xl: 0 40px 100px rgba(5, 15, 28, 0.16);
 
   /* ─── Blur ─── */
   --blur-sm: 24px;
@@ -136,110 +191,161 @@
   --blur-lg: 80px;
 
   /* ─── Progress Track ─── */
-  --progress-inactive: rgba(26, 22, 20, 0.1);
+  --progress-inactive: rgba(5, 15, 28, 0.1);
+
+  /* ═══════════════════════════════════════════════
+     COMPATIBILITY ALIASES
+  ═══════════════════════════════════════════════ */
+  --lime: var(--tertiary-accent);
+  --lime-text: var(--tertiary-accent-text);
+  --violet: var(--secondary-accent);
+  --violet-text: var(--secondary-accent-text);
+  --blue: var(--accent);
+  --blue-text: var(--accent-text);
+  --orange: var(--amber);
+  --orange-text: var(--amber-text);
+  --yellow: var(--amber);
+  --yellow-text: var(--amber-text);
+  --spacing: 0.25rem;
+  --sidebar-border: 225 20% 86%;
+  --sidebar-accent: 230 100% 64%;
 }
 
 /* ═══════════════════════════════════════════════
    DARK MODE
-   Every single token from :root is re-declared
-   here so nothing accidentally inherits the
-   light mode value when .dark is active.
-   Warm charcoal surfaces — Adobe Spectrum dark
-   uses #1e1b18 family, NOT pure black.
+
+   Background blob order matches light mode:
+     1. Lime — top-left (smallest, subtle)
+     2. Blue — center (LARGEST, dominant)
+     3. Violet — bottom-right (medium)
+
+   Loading bg is the raw base gradient only,
+   no blobs — transitions into full bg on mount.
+
+   Every token re-declared. Nothing bleeds.
 ═══════════════════════════════════════════════ */
 
 .dark {
-  /* Backgrounds */
-  --background: linear-gradient(135deg, #1a1614 0%, #100e0c 100%);
-  --background-solid: #1e1b18;
+  /* Main dashboard background */
+  --background:
+    radial-gradient(circle at 8% 12%, rgba(176, 255, 9, 0.05) 0, rgba(176, 255, 9, 0) 22%),
+    radial-gradient(circle at 45% 38%, rgba(123, 140, 255, 0.2) 0, rgba(123, 140, 255, 0) 50%),
+    radial-gradient(circle at 72% 58%, rgba(160, 120, 255, 0.1) 0, rgba(160, 120, 255, 0) 36%),
+    radial-gradient(circle at 86% 80%, rgba(199, 125, 255, 0.14) 0, rgba(199, 125, 255, 0) 34%),
+    linear-gradient(135deg, #040a10 0%, #060d1e 35%, #0a0e24 60%, #0c0a20 85%, #050910 100%);
+
+  --background-solid: #0b1221;
+
+  /* Loading background — muted base gradient,
+     no blobs. Settles the eye before content. */
+  --background-loading:
+    linear-gradient(135deg, #060c14 0%, #090e1a 40%, #0b0f1e 75%, #070a12 100%);
 
   /* Text */
-  --foreground: #f5f3f1;
-  --secondary: #c4bab5; /* AA compliant on dark surfaces */
-  --tertiary: #8a7f7a; /* AA compliant on dark surfaces */
+  --foreground: #f1f5f9;
+  --secondary: #94a3b8;
+  --tertiary: #64748b;
 
-  /* Cards — layered warm dark glass */
-  --card: rgba(38, 32, 28, 0.75);
-  --card-foreground: #f5f3f1;
+  /* Cards */
+  --card: rgba(17, 24, 39, 0.6);
+  --card-foreground: #f1f5f9;
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
 
-  /* Borders — warm white tint */
-  --border: rgba(245, 243, 241, 0.1);
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.1);
 
-  /* Surface interaction states */
-  --surface-tint: rgba(245, 243, 241, 0.03);
-  --surface-hover: rgba(245, 243, 241, 0.06);
-  --surface-active: rgba(245, 243, 241, 0.1);
+  /* Surface states */
+  --surface-tint: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(255, 255, 255, 0.1);
 
-  /* ─────────────────────────────────────────────
-     PRIMARY ACCENT — Adobe Red (dark mode)
-     Slightly brighter so it reads clearly
-     on dark surfaces without being harsh.
-     --accent-text is bright enough for dark bg.
-  ───────────────────────────────────────────── */
-  --accent: #ff4d33;
-  --accent-hover: #ff3d20;
-  --accent-text: #ff6650;
-  --accent-subtle: rgba(255, 77, 51, 0.12);
-  --accent-glow: rgba(255, 77, 51, 0.22);
+  /* ═══════════════════════════════════════════════
+     PRIMARY ACCENT — Blue (dark mode)
+     Stepped up to #7b8cff for dark surface contrast.
+  ═══════════════════════════════════════════════ */
+  --accent: #7b8cff;
+  --accent-hover: #6674f0;
+  --accent-text: #7b8cff;
+  --accent-bright: #7b8cff;
+  --accent-subtle: rgba(123, 140, 255, 0.14);
+  --accent-glow: rgba(123, 140, 255, 0.24);
   --on-accent: #ffffff;
 
-  /* ─────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════
+     SECONDARY ACCENT — Violet (dark mode)
+  ═══════════════════════════════════════════════ */
+  --secondary-accent: #c77dff;
+  --secondary-accent-hover: #b85fff;
+  --secondary-accent-text: #c77dff;
+  --secondary-accent-subtle: rgba(199, 125, 255, 0.14);
+  --secondary-accent-glow: rgba(199, 125, 255, 0.24);
+  --on-secondary-accent: #050f1c;
+
+  /* ═══════════════════════════════════════════════
+     TERTIARY ACCENT — Lime (dark mode)
+     #b0ff09 has 12:1+ on dark — stays raw.
+  ═══════════════════════════════════════════════ */
+  --tertiary-accent: #b0ff09;
+  --tertiary-accent-hover: #9de600;
+  --tertiary-accent-text: #b0ff09;
+  --tertiary-accent-bright: #b0ff09;
+  --tertiary-accent-subtle: rgba(176, 255, 9, 0.12);
+  --tertiary-accent-glow: rgba(176, 255, 9, 0.22);
+  --on-tertiary-accent: #050f1c;
+
+  /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Dark Mode
-     All brightened to maintain contrast ratios
-     against the dark card/surface backgrounds.
-  ───────────────────────────────────────────── */
+  ═══════════════════════════════════════════════ */
 
-  /* Positive / on-track goals */
-  --green: #10b981;
-  --green-text: #34d399;
-  --green-subtle: rgba(16, 185, 129, 0.12);
+  --green: #22c55e;
+  --green-text: #4ade80;
+  --green-subtle: rgba(34, 197, 94, 0.12);
 
-  /* Warnings / approaching limits */
   --amber: #f59e0b;
   --amber-text: #fbbf24;
   --amber-subtle: rgba(245, 158, 11, 0.12);
 
-  /* Negative / over budget / loss */
   --red: #ef4444;
   --red-text: #f87171;
   --red-subtle: rgba(239, 68, 68, 0.12);
 
-  /* Informational / neutral data */
-  --blue: #3b82f6;
-  --blue-text: #60a5fa;
-  --blue-subtle: rgba(59, 130, 246, 0.12);
-
-  /* ─────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════
      NEUTRAL SCALE — Dark Mode
-     Inverted warm gray family so neutral-100
-     is the darkest surface and neutral-800
-     is near-white, matching Spectrum dark.
-  ───────────────────────────────────────────── */
-  --neutral-100: #2a2420;
-  --neutral-200: #332d29;
-  --neutral-300: #453e3a;
-  --neutral-400: #6b6360;
-  --neutral-500: #918880;
-  --neutral-600: #b8afa9;
-  --neutral-700: #ddd8d4;
-  --neutral-800: #f5f3f1;
+     100 = darkest, 800 = lightest.
+  ═══════════════════════════════════════════════ */
+  --neutral-100: #0d1525;
+  --neutral-200: #131c2f;
+  --neutral-300: #1e293b;
+  --neutral-400: #334155;
+  --neutral-500: #475569;
+  --neutral-600: #94a3b8;
+  --neutral-700: #cbd5e1;
+  --neutral-800: #f1f5f9;
 
-  /* ─── Shadows — deep warm-black ─── */
-  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
-  --shadow-xl: 0 40px 100px rgba(0, 0, 0, 0.65);
+  /* ─── Shadows ─── */
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 40px 100px rgba(0, 0, 0, 0.6);
 
   /* ─── Progress Track ─── */
-  --progress-inactive: rgba(245, 243, 241, 0.12);
+  --progress-inactive: rgba(255, 255, 255, 0.12);
 
-  /*
-    Note: Typography scale, font weights,
-    border radius, spacing, and blur values
-    are intentionally NOT re-declared here.
-    They are mode-agnostic and correctly
-    inherit from :root with no side effects.
-  */
+  /* Compatibility aliases */
+  --lime: var(--tertiary-accent);
+  --lime-text: var(--tertiary-accent-text);
+  --violet: var(--secondary-accent);
+  --violet-text: var(--secondary-accent-text);
+  --blue: var(--accent);
+  --blue-text: var(--accent-text);
+  --orange: var(--amber);
+  --orange-text: var(--amber-text);
+  --yellow: var(--amber);
+  --yellow-text: var(--amber-text);
+  --spacing: 0.25rem;
+  --sidebar-border: 221 22% 24%;
+  --sidebar-accent: 230 100% 72%;
 }
 
 /* ═══════════════════════════════════════════════
@@ -251,7 +357,6 @@
     box-sizing: border-box;
   }
 
-  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -267,15 +372,11 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    /* Uses neutral scale now instead of
-       raw --tertiary which is text-purpose */
     background: var(--neutral-400);
   }
 
   body {
     font-family: var(--font-body);
-    /* Gradient with solid fallback for browsers
-       that don't support linear-gradient */
     background: var(--background-solid);
     background: var(--background);
     color: var(--foreground);
@@ -309,6 +410,30 @@
       "zero" 1,
       "tnum" 1;
   }
+}
+
+/* ═══════════════════════════════════════════════
+   LOADING STATE
+   ─────────────────────────────────────────────
+   Use .dashboard-loading on the root container
+   during skeleton/loading. Swap to
+   .dashboard-ready once content mounts.
+   The transition animates smoothly between
+   the muted loading bg and the full blob bg.
+═══════════════════════════════════════════════ */
+
+.dashboard-loading {
+  min-height: 100vh;
+  background: var(--background-loading);
+  color: var(--foreground);
+  transition: background 600ms ease;
+}
+
+.dashboard-ready {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  transition: background 600ms ease;
 }
 
 /* ═══════════════════════════════════════════════
@@ -356,9 +481,6 @@
 
 /* ═══════════════════════════════════════════════
    PILL BUTTON
-   Active state now uses --accent (Adobe Red)
-   instead of the old lime color. The glow uses
-   --accent-glow which adapts per mode.
 ═══════════════════════════════════════════════ */
 
 .pill-button {
@@ -383,14 +505,11 @@
   background: var(--accent);
   color: var(--on-accent);
   border-color: rgba(255, 255, 255, 0.12);
-  /* Glow uses the mode-aware --accent-glow token */
-  box-shadow: 0 4px 14px var(--accent-glow);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 /* ═══════════════════════════════════════════════
    FOCUS RINGS
-   Uses --accent so it adapts light/dark
-   without needing a separate .dark override.
 ═══════════════════════════════════════════════ */
 
 button:focus-visible,
@@ -403,23 +522,18 @@ textarea:focus-visible {
 
 /* ═══════════════════════════════════════════════
    DATA BLOB
-   Opacity lowered slightly in light mode,
-   the color itself is controlled by whatever
-   utility class you set on the element
-   (e.g. bg-accent, bg-green etc.)
 ═══════════════════════════════════════════════ */
 
 .data-blob {
   filter: blur(var(--blur-lg));
-  opacity: 0.2;
+  opacity: 0.3;
   pointer-events: none;
   position: absolute;
   border-radius: 50%;
 }
 
 .dark .data-blob {
-  /* Slightly more visible on dark backgrounds */
-  opacity: 0.28;
+  opacity: 0.35;
 }
 
 /* ═══════════════════════════════════════════════
@@ -504,12 +618,10 @@ textarea:focus-visible {
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  /* Uses --secondary which is already
-     mode-aware — no .dark override needed */
   color: var(--secondary);
 }
 
-/* ─── Spacing Gap Utilities ─── */
+/* ─── Gap Utilities ─── */
 .gap-1 {
   gap: var(--space-1);
 }
@@ -544,8 +656,6 @@ textarea::placeholder {
 }
 
 select option {
-  /* Explicit background so browser-native
-     dropdowns don't render with wrong bg in dark */
   background: var(--background-solid);
   color: var(--card-foreground);
 }

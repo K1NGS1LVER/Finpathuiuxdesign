@@ -44,11 +44,11 @@ export default function Loading() {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center p-4 md:p-8 relative" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-15 blur-3xl animate-pulse" style={{ backgroundColor: 'var(--blue)' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-15 blur-3xl animate-pulse" style={{ backgroundColor: 'var(--tertiary-accent)' }} />
       </div>
       <div className="max-w-md w-full space-y-6 md:space-y-8 relative z-10">
         <div className="text-center space-y-3 md:space-y-4">
-          <div className="w-14 h-14 md:w-16 md:h-16 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--blue)20', color: 'var(--blue)' }}>
+          <div className="w-14 h-14 md:w-16 md:h-16 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--tertiary-accent)20', color: 'var(--tertiary-accent)' }}>
             <div className="w-10 h-10 md:w-12 md:h-12 border-4 border-current border-t-transparent rounded-full animate-spin" />
           </div>
           <h2 className="text-2xl md:text-3xl font-bold px-4" style={{ fontFamily: 'var(--font-display)' }}>Creating your FinPath...</h2>

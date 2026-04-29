@@ -86,6 +86,7 @@ export default function Journey() {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customTarget, setCustomTarget] = useState("");
@@ -131,8 +132,8 @@ export default function Journey() {
           );
     if (rect) {
       setDragOffset({
-        x: pos.x - rect.left - nodePos.x - panOffset.x,
-        y: pos.y - rect.top - nodePos.y - panOffset.y,
+        x: (pos.x - rect.left) / zoom - nodePos.x - panOffset.x,
+        y: (pos.y - rect.top) / zoom - nodePos.y - panOffset.y,
       });
     }
   };
@@ -142,15 +143,38 @@ export default function Journey() {
     if (dragging && canvasRef.current) {
       e.preventDefault();
       const rect = canvasRef.current.getBoundingClientRect();
-      const newX = pos.x - rect.left - dragOffset.x - panOffset.x;
-      const newY = pos.y - rect.top - dragOffset.y - panOffset.y;
+      const newX = (pos.x - rect.left) / zoom - dragOffset.x - panOffset.x;
+      const newY = (pos.y - rect.top) / zoom - dragOffset.y - panOffset.y;
       setPositions((prev) => ({ ...prev, [dragging]: { x: newX, y: newY } }));
     } else if (isPanning) {
       e.preventDefault();
       const dx = pos.x - panStart.x;
       const dy = pos.y - panStart.y;
-      setPanOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      setPanOffset((prev) => ({ x: prev.x + dx / zoom, y: prev.y + dy / zoom }));
       setPanStart({ x: pos.x, y: pos.y });
+    }
+  };
+
+  
+  const handleWheel = (e) => {
+    // Zoom in/out with the wheel
+    const zoomSpeed = 0.001;
+    if (canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      
+      setZoom((prevZoom) => {
+        const newZoom = Math.min(Math.max(0.2, prevZoom - e.deltaY * zoomSpeed), 3);
+        
+        // Zoom around pointer
+        setPanOffset((prevPan) => ({
+          x: prevPan.x - (px / prevZoom - px / newZoom),
+          y: prevPan.y - (py / prevZoom - py / newZoom),
+        }));
+        
+        return newZoom;
+      });
     }
   };
 
@@ -176,7 +200,18 @@ export default function Journey() {
       case "in-progress":
         return "var(--amber)";
       default:
-        return "var(--blue)";
+        return "var(--tertiary-accent)";
+    }
+  };
+
+  const getStatusGlow = (status: string) => {
+    switch (status) {
+      case "complete":
+        return "var(--accent-glow)";
+      case "in-progress":
+        return "var(--amber-subtle)";
+      default:
+        return "var(--tertiary-accent-glow)";
     }
   };
 
@@ -283,6 +318,7 @@ export default function Journey() {
           backgroundColor: "var(--background-solid)",
           cursor: isPanning ? "grabbing" : "grab",
         }}
+        onWheel={handleWheel}
         onMouseDown={handleCanvasPointerDown}
         onMouseMove={handlePointerMove}
         onMouseUp={handlePointerUp}
@@ -296,17 +332,18 @@ export default function Journey() {
           <defs>
             <pattern
               id="dots"
-              x="0"
-              y="0"
-              width="20"
-              height="20"
+              x={panOffset.x * zoom}
+              y={panOffset.y * zoom}
+              width={20 * zoom}
+              height={20 * zoom}
               patternUnits="userSpaceOnUse"
             >
-              <circle cx="1" cy="1" r="1" fill="var(--border)" />
+              <circle cx={1 * zoom} cy={1 * zoom} r={1 * zoom} fill="var(--border)" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dots)" />
 
+          <g transform={`scale(${zoom})`}>
           {/* Connection lines from income to each goal */}
           {sortedGoals.map((goal, i) => {
             const goalPos = getNodePos(goal.id, i);
@@ -328,6 +365,7 @@ export default function Journey() {
               />
             );
           })}
+          </g>
         </svg>
 
         <div
@@ -341,9 +379,10 @@ export default function Journey() {
           Priority glow guide: stronger glow = higher priority (P1).
         </div>
 
-        {/* Income Root Node */}
+        <div style={{ transform: `scale(${zoom})`, transformOrigin: "0 0", position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+          {/* Income Root Node */}
         <div
-          className="absolute cursor-pointer hover:scale-105"
+          className="absolute cursor-pointer hover:scale-105 pointer-events-auto"
           style={{
             left: incomePos.x + panOffset.x,
             top: incomePos.y + panOffset.y,
@@ -408,13 +447,14 @@ export default function Journey() {
               ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
               : 0;
           const statusColor = getStatusColor(goal.status);
+          const statusGlow = getStatusGlow(goal.status);
           const isActiveGoal = goal.status !== "complete";
           const Icon = ICON_MAP[goal.icon] || Target;
 
           return (
             <div
               key={goal.id}
-              className="absolute cursor-pointer hover:scale-105"
+              className="absolute cursor-pointer hover:scale-105 pointer-events-auto"
               style={{
                 left: pos.x + panOffset.x,
                 top: pos.y + panOffset.y,
@@ -434,7 +474,7 @@ export default function Journey() {
                   border: `2px solid ${statusColor}`,
                   boxShadow: isActiveGoal
                     ? `${getPriorityGlow(goal.priority)}, var(--shadow-md)`
-                    : `0 0 20px ${statusColor}15, var(--shadow-md)`,
+                    : `0 0 20px ${statusGlow}, var(--shadow-md)`,
                 }}
               >
                 <div
@@ -490,6 +530,8 @@ export default function Journey() {
           );
         })}
 
+        </div>
+
         {/* Empty state */}
         {sortedGoals.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -518,10 +560,11 @@ export default function Journey() {
         {/* Add Node Button */}
         <button
           onClick={() => setShowAddModal(true)}
-          className="absolute top-2 right-2 md:top-4 md:right-4 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform hover:scale-110 shadow-lg z-20"
+          className="absolute top-2 right-2 md:top-4 md:right-4 px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg z-20 pointer-events-auto"
           style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
         >
           <Plus size={18} className="md:w-5 md:h-5" />
+          <span className="font-semibold text-sm md:text-base hidden sm:inline" style={{ fontFamily: "var(--font-body)" }}>Add Goal</span>
         </button>
       </div>
 
@@ -532,10 +575,10 @@ export default function Journey() {
           onClick={() => setShowAddModal(false)}
         >
           <div
-            className="bento-card w-full max-w-md max-h-[80vh] overflow-y-auto !p-6"
+            className="bento-card w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden !p-0 pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-[var(--border)] shrink-0">
               <h3
                 className="text-xl font-bold text-[var(--card-foreground)]"
                 style={{ fontFamily: "var(--font-display)" }}
@@ -550,6 +593,8 @@ export default function Journey() {
               </button>
             </div>
 
+            {/* Scrollable area */}
+            <div className="p-6 overflow-y-auto flex-1">
             {/* Presets */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               {GOAL_PRESETS.filter(
@@ -649,6 +694,7 @@ export default function Journey() {
               >
                 Add Custom Goal
               </button>
+            </div>
             </div>
           </div>
         </div>
@@ -802,7 +848,7 @@ export default function Journey() {
                 className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
                 style={{
                   background: "var(--surface-hover)",
-                  color: "var(--blue)",
+                  color: "var(--tertiary-accent)",
                 }}
               >
                 <TrendingUp size={16} />
@@ -853,7 +899,7 @@ export default function Journey() {
                 className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
                 style={{
                   background: "var(--surface-hover)",
-                  color: "var(--blue)",
+                  color: "var(--tertiary-accent)",
                 }}
               >
                 <Target size={16} />
