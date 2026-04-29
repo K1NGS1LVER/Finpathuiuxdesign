@@ -190,10 +190,16 @@ export default function Month() {
     },
     {
       category: "Savings",
-      planned: savingsTarget,
-      actual: savingsTarget,
+      planned: goalSavingsTarget,
+      actual: goalSavingsTarget,
       color: "var(--accent)",
     },
+    ...(reservedSurplus > 0 ? [{
+      category: "Surplus Reserve",
+      planned: reservedSurplus,
+      actual: reservedSurplus,
+      color: "var(--tertiary-accent)",
+    }] : []),
     {
       category: "Wants",
       planned: wantsTarget,

@@ -13,6 +13,8 @@ import {
   Lightbulb,
   FileText,
   Loader2,
+  AlertTriangle,
+  Wallet,
 } from "lucide-react";
 import { useFinPathStore } from "../../lib/store";
 import type { InvestmentStrategy } from "../../lib/types";
@@ -41,6 +43,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
   >({});
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentStrategy>("avalanche");
+  const [surplusAmount, setSurplusAmount] = useState("");
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>(
     {},
   );
@@ -166,6 +169,12 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
     if (step === 1 && (!totalExpenses || parseFloat(totalExpenses) <= 0))
       return;
     if (step === 2 && Object.keys(selectedGoals).length === 0) return;
+    // Block if surplus exceeds income (hard error)
+    if (step === 3) {
+      const incINR = parseFloat(convertToINR(income, incomeCurrency) || income) || 0;
+      const surplusNum = parseFloat(surplusAmount) || 0;
+      if (surplusNum > incINR) return;
+    }
 
     if (step < steps.length - 1) {
       setStep(step + 1);
@@ -205,6 +214,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         expenseBreakdown: expBreakdown,
         debtBreakdown: dbtBreakdown,
         strategy: selectedStrategy,
+        surplus: parseFloat(surplusAmount) || 0,
       });
 
       navigate("/loading");
@@ -1033,8 +1043,20 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                 )}
               </div>
             </div>
-          ) : (
-            <div className="space-y-4 md:space-y-5">
+          ) : (() => {
+            // ── Surplus edge-case calculations ──
+            const _incomeINR = parseFloat(convertToINR(income, incomeCurrency) || income) || 0;
+            const _expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency) || totalExpenses) || 0;
+            const _debtINR = parseFloat(convertToINR(totalDebt, debtCurrency) || totalDebt || "0") || 0;
+            const availableForGoals = Math.max(0, _incomeINR - _expenseINR - _debtINR);
+            const surplusNum = parseFloat(surplusAmount) || 0;
+            const surplusExceedsAvailable = surplusNum > availableForGoals;
+            const surplusExceeds75 = surplusNum > _incomeINR * 0.75;
+            const surplusExceedsIncome = surplusNum > _incomeINR;
+            const remainingForGoals = Math.max(0, availableForGoals - surplusNum);
+
+            return (
+            <div className="space-y-4 md:space-y-5 flex-1 overflow-y-auto pr-1 custom-scrollbar">
               <div
                 className="p-3 rounded-xl md:rounded-2xl text-xs md:text-sm"
                 style={{
@@ -1125,8 +1147,154 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   </div>
                 </button>
               </div>
+
+              {/* ── Surplus Reserve Section ── */}
+              <div
+                className="p-4 rounded-xl md:rounded-2xl space-y-3"
+                style={{
+                  background: "var(--card)",
+                  border: `1px solid ${surplusExceedsAvailable ? "var(--red)" : surplusExceeds75 ? "var(--amber)" : "var(--border)"}`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: "var(--accent-glow)",
+                      color: "var(--accent-text)",
+                    }}
+                  >
+                    <Wallet size={16} />
+                  </div>
+                  <div>
+                    <div
+                      className="text-sm font-semibold text-[var(--card-foreground)]"
+                      style={{ fontFamily: "var(--font-body)" }}
+                    >
+                      Monthly Surplus Reserve
+                    </div>
+                    <div
+                      className="text-[10px] md:text-xs"
+                      style={{ color: "var(--secondary)" }}
+                    >
+                      Amount to keep aside each month, unallocated to any goal
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 items-center">
+                  <span
+                    className="text-lg font-bold text-[var(--secondary)]"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    ₹
+                  </span>
+                  <input
+                    type="text"
+                    value={surplusAmount}
+                    onChange={(e) =>
+                      setSurplusAmount(e.target.value.replace(/[^0-9]/g, ""))
+                    }
+                    placeholder="0 (optional)"
+                    className="flex-1 px-4 py-3 text-lg md:text-xl font-bold rounded-xl outline-none slashed-zero text-[var(--card-foreground)]"
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      background: "var(--surface-tint)",
+                      border: `1px solid ${surplusExceedsAvailable ? "var(--red)" : surplusExceeds75 ? "var(--amber)" : "var(--border)"}`,
+                    }}
+                  />
+                </div>
+
+                {/* Available budget summary */}
+                {surplusNum > 0 && (
+                  <div
+                    className="grid grid-cols-2 gap-2 text-xs pt-1"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    <div
+                      className="px-3 py-2 rounded-lg"
+                      style={{
+                        background: "var(--surface-tint)",
+                        color: "var(--secondary)",
+                      }}
+                    >
+                      <div className="font-medium mb-0.5">Available</div>
+                      <div className="font-bold text-sm text-[var(--card-foreground)] slashed-zero">
+                        ₹{availableForGoals.toLocaleString("en-IN")}
+                      </div>
+                    </div>
+                    <div
+                      className="px-3 py-2 rounded-lg"
+                      style={{
+                        background: surplusExceedsAvailable
+                          ? "var(--red-subtle)"
+                          : "var(--surface-tint)",
+                        color: surplusExceedsAvailable
+                          ? "var(--red-text)"
+                          : "var(--secondary)",
+                      }}
+                    >
+                      <div className="font-medium mb-0.5">For Goals</div>
+                      <div className="font-bold text-sm slashed-zero">
+                        ₹{remainingForGoals.toLocaleString("en-IN")}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Warning: exceeds 75% of income */}
+                {surplusExceeds75 && !surplusExceedsAvailable && !surplusExceedsIncome && (
+                  <div
+                    className="flex items-start gap-2 p-3 rounded-xl text-xs md:text-sm"
+                    style={{
+                      background: "var(--amber-subtle)",
+                      color: "var(--amber-text)",
+                      border: "1px solid var(--amber)",
+                    }}
+                  >
+                    <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                    <span style={{ fontFamily: "var(--font-body)" }}>
+                      This is more than 75% of your income. It'll take significantly longer to achieve your goals with this much reserved.
+                    </span>
+                  </div>
+                )}
+
+                {/* Error: exceeds available budget */}
+                {surplusExceedsAvailable && !surplusExceedsIncome && (
+                  <div
+                    className="flex items-start gap-2 p-3 rounded-xl text-xs md:text-sm"
+                    style={{
+                      background: "var(--red-subtle)",
+                      color: "var(--red-text)",
+                      border: "1px solid var(--red)",
+                    }}
+                  >
+                    <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                    <span style={{ fontFamily: "var(--font-body)" }}>
+                      Surplus exceeds your available budget after expenses and debt (₹{availableForGoals.toLocaleString("en-IN")}). Nothing will be left for your goals.
+                    </span>
+                  </div>
+                )}
+
+                {/* Error: exceeds total income */}
+                {surplusExceedsIncome && (
+                  <div
+                    className="flex items-start gap-2 p-3 rounded-xl text-xs md:text-sm"
+                    style={{
+                      background: "var(--red-subtle)",
+                      color: "var(--red-text)",
+                      border: "1px solid var(--red)",
+                    }}
+                  >
+                    <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                    <span style={{ fontFamily: "var(--font-body)" }}>
+                      This amount exceeds your total monthly income of ₹{_incomeINR.toLocaleString("en-IN")}. Please enter a realistic amount.
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          );})()}
         </div>
 
         {/* Navigation */}

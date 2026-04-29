@@ -92,6 +92,7 @@ interface FinPathStore extends FinancialProfile {
     expenseBreakdown?: Record<string, number>;
     debtBreakdown?: Record<string, number>;
     strategy?: InvestmentStrategy;
+    surplus?: number;
   }) => void;
 
   // ── Settings (editable, reflects everywhere) ──────
@@ -772,7 +773,7 @@ export const useFinPathStore = create<FinPathStore>()(
           investments: 0,
           emergencyFund: 0,
           strategy: data.strategy || "avalanche",
-          monthlySurplusReserve: 0,
+          monthlySurplusReserve: Math.max(0, data.surplus || 0),
           pendingGoalDecisions: [],
           lastUpdated: Date.now(),
         });
