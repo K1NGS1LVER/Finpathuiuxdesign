@@ -122,7 +122,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
       icon: Calendar,
     },
     {
-      label: "Reserve / Month",
+      label: "Surplus Reserve",
       value: fmt(reservedSurplus + pendingSurplus),
       change:
         pendingSurplus > 0
