@@ -148,8 +148,14 @@ export function generatePlan(input: PlanInput): FinancialPlan {
       (g) => goalProgress[g.id] >= g.targetAmount || g.status === "complete",
     );
 
+  // Edge case: debt payments exceed available income
+  const isDebtOverIncome = debts.totalMonthly > income.total - expenses.total;
+
   for (let m = 0; m < maxMonths; m++) {
     const milestones: string[] = [];
+    if (m === 0 && isDebtOverIncome) {
+      milestones.push(`⚠️ Your debt payments (₹${debts.totalMonthly.toLocaleString("en-IN")}/mo) exceed your available income. Consider restructuring.`);
+    }
 
     // Available surplus this month
     const surplus = Math.max(0, monthlySurplus);

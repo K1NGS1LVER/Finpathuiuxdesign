@@ -1,4 +1,4 @@
-import { Check, Circle } from "lucide-react";
+import { Check, Circle, AlertTriangle } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useFinPathStore } from "../../lib/store";
 
@@ -21,6 +21,7 @@ export default function Month() {
   const setStrategy = useFinPathStore((s) => s.setStrategy);
   const updateGoal = useFinPathStore((s) => s.updateGoal);
   const addLumpsum = useFinPathStore((s) => s.addLumpsum);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
 
   const activeGoals = useMemo(
     () =>
@@ -238,6 +239,40 @@ export default function Month() {
           Your mission this month
         </p>
       </div>
+
+      {/* Debt over income warning */}
+      {debts.totalMonthly > surplus && surplus >= 0 && (
+        <div
+          className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10"
+          style={{
+            background: "var(--red-subtle)",
+            color: "var(--red-text)",
+            border: "1px solid var(--red)",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="font-semibold mb-1">Debt payments exceed your surplus</div>
+            <span>Your monthly debt/EMI of ₹{debts.totalMonthly.toLocaleString("en-IN")} is more than your surplus of ₹{Math.max(0, income.total - expenses.total).toLocaleString("en-IN")}. Consider negotiating lower payments or consolidating debt.</span>
+          </div>
+        </div>
+      )}
+
+      {/* Surplus Reserve callout */}
+      {monthlySurplusReserve > 0 && (
+        <div
+          className="flex items-center gap-3 p-4 rounded-xl text-xs md:text-sm relative z-10"
+          style={{
+            background: "var(--surface-tint)",
+            border: "1px solid var(--border)",
+            color: "var(--secondary)",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          <span>💰 ₹{monthlySurplusReserve.toLocaleString("en-IN")}/mo is reserved as your surplus — not allocated to any goal.</span>
+        </div>
+      )}
 
       <div
         className="p-6 md:p-8 relative overflow-hidden z-10 bento-card border border-[var(--accent)]"

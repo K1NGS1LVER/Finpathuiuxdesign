@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Calendar,
   Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useFinPathStore } from "../../lib/store";
@@ -56,6 +57,9 @@ export default function Journey() {
   // ── Store (single source of truth) ──
   const storeGoals = useFinPathStore((s) => s.goals);
   const income = useFinPathStore((s) => s.income);
+  const expenses = useFinPathStore((s) => s.expenses);
+  const debts = useFinPathStore((s) => s.debts);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const addGoal = useFinPathStore((s) => s.addGoal);
   const setGoals = useFinPathStore((s) => s.setGoals);
   const completeGoal = useFinPathStore((s) => s.completeGoal);
@@ -91,7 +95,15 @@ export default function Journey() {
   const [customName, setCustomName] = useState("");
   const [customTarget, setCustomTarget] = useState("");
   const [customMonths, setCustomMonths] = useState("12");
+  const [addGoalError, setAddGoalError] = useState("");
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // ── Budget calculations for over-income warnings ──
+  const monthlySurplus = income.total - expenses.total - debts.totalMonthly - monthlySurplusReserve;
+  const existingMonthlyNeed = activeGoals
+    .filter((g) => g.category !== "debt")
+    .reduce((sum, g) => sum + Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths)), 0);
+  const budgetRemaining = monthlySurplus - existingMonthlyNeed;
 
   // ── Build visual nodes directly from store ──
   const getNodePos = (id: string, index: number) => {
@@ -269,6 +281,27 @@ export default function Journey() {
     // Don't add duplicates
     if (storeGoals.some((g) => g.name === preset.name)) return;
 
+    const presetMonthly = Math.round(preset.target / preset.months);
+    const totalAfterAdd = existingMonthlyNeed + presetMonthly;
+    const availableSurplus = Math.max(0, monthlySurplus);
+
+    // Hard block: the goal alone requires more than total available surplus
+    if (presetMonthly > availableSurplus && availableSurplus > 0) {
+      setAddGoalError(
+        `"${preset.name}" needs ₹${presetMonthly.toLocaleString("en-IN")}/mo to finish in ${preset.months} months, but you only have ₹${availableSurplus.toLocaleString("en-IN")}/mo available. Remove an existing goal or pick a smaller target.`
+      );
+      return;
+    }
+
+    // Soft block: total goals now exceed surplus
+    if (totalAfterAdd > availableSurplus && availableSurplus > 0) {
+      setAddGoalError(
+        `Adding "${preset.name}" will push your total monthly goal commitments to ₹${totalAfterAdd.toLocaleString("en-IN")}/mo — exceeding your available ₹${availableSurplus.toLocaleString("en-IN")}/mo. Remove an existing goal first, or your timelines will stretch significantly.`
+      );
+      return;
+    }
+
+    setAddGoalError("");
     addGoal({
       id: `goal-${Date.now()}`,
       name: preset.name,
@@ -288,14 +321,48 @@ export default function Journey() {
   // ── Add custom goal ──
   const handleAddCustom = () => {
     if (!customName.trim() || !customTarget.trim()) return;
+
+    const targetAmt = parseInt(customTarget) || 0;
+    const months = parseInt(customMonths) || 12;
+    const customMonthly = Math.round(targetAmt / months);
+    const availableSurplus = Math.max(0, monthlySurplus);
+
+    // Hard block: even this single goal can't be achieved in the given timeline
+    if (customMonthly > availableSurplus && availableSurplus > 0) {
+      const minMonthsNeeded = availableSurplus > 0 ? Math.ceil(targetAmt / availableSurplus) : Infinity;
+      setAddGoalError(
+        `This goal needs ₹${customMonthly.toLocaleString("en-IN")}/mo to finish in ${months} months, but you only have ₹${availableSurplus.toLocaleString("en-IN")}/mo available. ` +
+        (minMonthsNeeded < 999 ? `You'd need at least ${minMonthsNeeded} months to achieve this. ` : "") +
+        `Either increase the timeline, reduce the target, or remove an existing goal.`
+      );
+      return;
+    }
+
+    // Soft block: adding this would bust the total budget
+    const totalAfterAdd = existingMonthlyNeed + customMonthly;
+    if (totalAfterAdd > availableSurplus && availableSurplus > 0) {
+      setAddGoalError(
+        `Adding this goal pushes your total monthly commitments to ₹${totalAfterAdd.toLocaleString("en-IN")}/mo — over your available ₹${availableSurplus.toLocaleString("en-IN")}/mo. Remove an existing goal first.`
+      );
+      return;
+    }
+
+    if (availableSurplus <= 0) {
+      setAddGoalError(
+        "You have no available surplus after expenses, debt, and reserve. You cannot add any goals until your income exceeds your outgoings."
+      );
+      return;
+    }
+
+    setAddGoalError("");
     addGoal({
       id: `goal-${Date.now()}`,
       name: customName.trim(),
       icon: "Target",
       category: "custom",
-      targetAmount: parseInt(customTarget) || 100000,
+      targetAmount: targetAmt || 100000,
       currentAmount: 0,
-      timelineMonths: parseInt(customMonths) || 12,
+      timelineMonths: months,
       priority: activeGoals.length + 1,
       status: "not-started",
       monthlyAllocation: 0,
@@ -559,7 +626,7 @@ export default function Journey() {
 
         {/* Add Node Button */}
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => setAddGoalError(""); setShowAddModal(true)}
           className="absolute top-2 right-2 md:top-4 md:right-4 px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg z-20 pointer-events-auto"
           style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
         >
@@ -595,26 +662,63 @@ export default function Journey() {
 
             {/* Scrollable area */}
             <div className="p-6 overflow-y-auto flex-1">
+
+            {/* Over-budget warning */}
+            {budgetRemaining <= 0 && activeGoals.length > 0 && (
+              <div
+                className="flex items-start gap-2 p-3 rounded-xl text-xs md:text-sm mb-4"
+                style={{
+                  background: "var(--red-subtle)",
+                  color: "var(--red-text)",
+                  border: "1px solid var(--red)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-semibold mb-0.5">You're over budget</div>
+                  <span>
+                    Your existing goals already need ₹{existingMonthlyNeed.toLocaleString("en-IN")}/mo but you only have ₹{Math.max(0, monthlySurplus).toLocaleString("en-IN")}/mo available after expenses, debt, and surplus reserve. Adding more goals will significantly extend your timeline.
+                  </span>
+                </div>
+              </div>
+            )}
+            {budgetRemaining > 0 && (
+              <div
+                className="flex items-center gap-2 p-3 rounded-xl text-xs md:text-sm mb-4"
+                style={{
+                  background: "var(--surface-tint)",
+                  border: "1px solid var(--border)",
+                  color: "var(--secondary)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <span>₹{budgetRemaining.toLocaleString("en-IN")}/mo available for new goals</span>
+              </div>
+            )}
+
             {/* Presets */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               {GOAL_PRESETS.filter(
                 (p) => !storeGoals.some((g) => g.name === p.name),
               ).map((preset) => {
                 const Icon = ICON_MAP[preset.icon] || Target;
+                const presetMonthly = Math.round(preset.target / preset.months);
+                const wouldExceed = (existingMonthlyNeed + presetMonthly) > Math.max(0, monthlySurplus) && monthlySurplus > 0;
                 return (
                   <button
                     key={preset.name}
                     onClick={() => handleAddPreset(preset)}
-                    className="p-4 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className={`p-4 rounded-xl text-left transition-all ${wouldExceed ? "opacity-60" : "hover:scale-[1.02] active:scale-[0.98]"}`}
                     style={{
                       background: "var(--surface-tint)",
-                      border: "1px solid var(--border)",
+                      border: wouldExceed ? "1px solid var(--red)" : "1px solid var(--border)",
                     }}
                   >
                     <Icon
                       size={20}
                       className="mb-2"
-                      style={{ color: "var(--accent)" }}
+                      style={{ color: wouldExceed ? "var(--red)" : "var(--accent)" }}
                     />
                     <div
                       className="text-sm font-semibold text-[var(--card-foreground)]"
@@ -624,6 +728,9 @@ export default function Journey() {
                     </div>
                     <div className="text-xs text-[var(--secondary)] mt-1">
                       ₹{(preset.target / 1000).toFixed(0)}K · {preset.months}mo
+                    </div>
+                    <div className={`text-[10px] mt-1 font-medium ${wouldExceed ? "text-[var(--red-text)]" : "text-[var(--secondary)]"}`}>
+                      ₹{presetMonthly.toLocaleString("en-IN")}/mo needed
                     </div>
                   </button>
                 );
@@ -682,6 +789,65 @@ export default function Journey() {
                   }}
                 />
               </div>
+              {/* Live validation for custom goal */}
+              {customTarget && customMonths && (() => {
+                const cTarget = parseInt(customTarget) || 0;
+                const cMonths = parseInt(customMonths) || 12;
+                const cMonthly = cTarget > 0 && cMonths > 0 ? Math.round(cTarget / cMonths) : 0;
+                const available = Math.max(0, monthlySurplus);
+                const totalAfter = existingMonthlyNeed + cMonthly;
+                const impossible = cMonthly > available && available > 0;
+                const overBudget = totalAfter > available && available > 0 && !impossible;
+
+                if (impossible) {
+                  const minMonths = available > 0 ? Math.ceil(cTarget / available) : 0;
+                  return (
+                    <div
+                      className="flex items-start gap-2 p-3 rounded-xl text-xs"
+                      style={{ background: "var(--red-subtle)", color: "var(--red-text)", border: "1px solid var(--red)" }}
+                    >
+                      <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                      <span>
+                        This needs ₹{cMonthly.toLocaleString("en-IN")}/mo but you only have ₹{available.toLocaleString("en-IN")}/mo.
+                        {minMonths > 0 ? ` Minimum ${minMonths} months needed.` : ""}
+                      </span>
+                    </div>
+                  );
+                }
+                if (overBudget) {
+                  return (
+                    <div
+                      className="flex items-start gap-2 p-3 rounded-xl text-xs"
+                      style={{ background: "var(--red-subtle)", color: "var(--red-text)", border: "1px solid var(--red)" }}
+                    >
+                      <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                      <span>
+                        Total goal commitments would be ₹{totalAfter.toLocaleString("en-IN")}/mo — over your ₹{available.toLocaleString("en-IN")}/mo budget. Remove an existing goal first.
+                      </span>
+                    </div>
+                  );
+                }
+                if (cMonthly > 0) {
+                  return (
+                    <div className="text-xs px-1 text-[var(--secondary)]">
+                      This goal needs ₹{cMonthly.toLocaleString("en-IN")}/mo · ₹{budgetRemaining > cMonthly ? (budgetRemaining - cMonthly).toLocaleString("en-IN") : "0"}/mo would remain
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Error message from blocked attempts */}
+              {addGoalError && (
+                <div
+                  className="flex items-start gap-2 p-3 rounded-xl text-xs"
+                  style={{ background: "var(--red-subtle)", color: "var(--red-text)", border: "1px solid var(--red)" }}
+                >
+                  <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                  <span>{addGoalError}</span>
+                </div>
+              )}
+
               <button
                 onClick={handleAddCustom}
                 disabled={!customName.trim() || !customTarget.trim()}

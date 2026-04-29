@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   Plus,
   Trash2,
+  AlertTriangle,
+  Wallet,
 } from "lucide-react";
 import { useFinPathStore } from "../../lib/store";
 import {
@@ -118,6 +120,7 @@ export default function Progress() {
   const investments = useFinPathStore((s) => s.investments);
   const addGoal = useFinPathStore((s) => s.addGoal);
   const updateGoal = useFinPathStore((s) => s.updateGoal);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const removeGoal = useFinPathStore((s) => s.removeGoal);
 
   const surplus = income.total - expenses.total - debts.totalMonthly;
@@ -150,6 +153,13 @@ export default function Progress() {
     surplus - allocatedToGoals - reservedSurplus - pendingSurplus,
   );
   const currentNetWorth = savings + investments + totalGoalValue;
+
+  // Budget awareness for adding goals
+  const monthlySurplusAfterReserve = Math.max(0, surplus - reservedSurplus - pendingSurplus);
+  const existingMonthlyNeed = activeGoals
+    .filter((g) => g.category !== "debt")
+    .reduce((sum, g) => sum + Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths)), 0);
+  const goalBudgetRemaining = monthlySurplusAfterReserve - existingMonthlyNeed;
 
   // Generate a past-to-future net worth timeline from current state and plan.
   const netWorthData = useMemo(() => {
@@ -375,6 +385,23 @@ export default function Progress() {
 
     if (!name || targetAmount <= 0) return;
 
+    // Hard block: this goal alone can't be achieved in timeline
+    const newMonthlyNeed = Math.round(targetAmount / timelineMonths);
+    if (newMonthlyNeed > monthlySurplusAfterReserve && monthlySurplusAfterReserve > 0) {
+      const minMonths = monthlySurplusAfterReserve > 0 ? Math.ceil(targetAmount / monthlySurplusAfterReserve) : 0;
+      setNotice(`❌ This goal needs ₹${newMonthlyNeed.toLocaleString("en-IN")}/mo but you only have ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo.${minMonths > 0 ? ` You'd need at least ${minMonths} months.` : ""} Reduce the amount, increase the timeline, or remove an existing goal.`);
+      return;
+    }
+    // Hard block: total goals now exceed surplus
+    if (existingMonthlyNeed + newMonthlyNeed > monthlySurplusAfterReserve && monthlySurplusAfterReserve > 0) {
+      setNotice(`❌ Adding this goal pushes total commitments to ₹${(existingMonthlyNeed + newMonthlyNeed).toLocaleString("en-IN")}/mo — over your available ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo. Remove an existing goal first.`);
+      return;
+    }
+    if (monthlySurplusAfterReserve <= 0) {
+      setNotice("❌ You have no available surplus. Cannot add goals until income exceeds outgoings.");
+      return;
+    }
+
     addGoal({
       id: `goal-${Date.now()}-custom`,
       name,
@@ -543,6 +570,20 @@ export default function Progress() {
             Net Worth
           </div>
         </div>
+        {monthlySurplusReserve > 0 && (
+          <div className="bento-card p-5 flex flex-col items-center text-center">
+            <Wallet size={24} className="mb-2" style={{ color: "var(--tertiary-accent)" }} />
+            <div
+              className="text-2xl font-bold slashed-zero text-[var(--card-foreground)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              ₹{monthlySurplusReserve.toLocaleString("en-IN")}
+            </div>
+            <div className="text-xs font-medium text-[var(--secondary)] mt-1">
+              Surplus / Month
+            </div>
+          </div>
+        )}
         <div className="bento-card p-5 flex flex-col items-center text-center">
           <Award
             size={24}
@@ -696,6 +737,29 @@ export default function Progress() {
                 }}
               />
             </div>
+            {/* Budget indicator */}
+            {goalBudgetRemaining <= 0 && activeGoals.length > 0 && (
+              <div
+                className="flex items-start gap-2 p-3 rounded-xl text-xs"
+                style={{
+                  background: "var(--red-subtle)",
+                  color: "var(--red-text)",
+                  border: "1px solid var(--red)",
+                }}
+              >
+                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                <span>Your goals already exceed your available monthly surplus. Adding more will extend timelines.</span>
+              </div>
+            )}
+            {goalBudgetRemaining > 0 && (
+              <div
+                className="text-xs px-2 py-1 rounded-lg text-[var(--secondary)]"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                ₹{goalBudgetRemaining.toLocaleString("en-IN")}/mo available for new goals
+              </div>
+            )}
+
             <button
               onClick={addCustomProgressGoal}
               className="w-full py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
