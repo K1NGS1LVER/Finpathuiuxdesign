@@ -24,20 +24,27 @@ export default function Celebrate() {
       const duration = 3000;
       const end = Date.now() + duration;
 
+      // Resolve CSS variables to hex — canvas-confetti can't parse var()
+      const styles = getComputedStyle(document.documentElement);
+      const accent = styles.getPropertyValue('--accent').trim() || '#495bff';
+      const secondary = styles.getPropertyValue('--secondary-accent').trim() || '#ac49ff';
+      const amber = styles.getPropertyValue('--amber').trim() || '#f59e0b';
+      const green = styles.getPropertyValue('--green').trim() || '#22c55e';
+
       const frame = () => {
         confetti({
           particleCount: 3,
           angle: 60,
           spread: 55,
           origin: { x: 0, y: 0.7 },
-          colors: ['var(--accent)', '#495BFF', '#8B5CF6'],
+          colors: [accent, secondary, accent],
         });
         confetti({
           particleCount: 3,
           angle: 120,
           spread: 55,
           origin: { x: 1, y: 0.7 },
-          colors: ['var(--accent)', '#F59E0B', '#22C55E'],
+          colors: [accent, amber, green],
         });
 
         if (Date.now() < end) {
@@ -57,7 +64,7 @@ export default function Celebrate() {
 
       {/* Hero Celebration */}
       <div className="text-center py-8 md:py-12 relative z-10">
-        <div className="inline-flex w-24 h-24 md:w-32 md:h-32 rounded-full items-center justify-center mb-6" style={{ background: 'var(--accent)', boxShadow: '0 0 60px rgba(232, 52, 28, )' }}>
+        <div className="inline-flex w-24 h-24 md:w-32 md:h-32 rounded-full items-center justify-center mb-6" style={{ background: 'var(--accent)', boxShadow: '0 0 60px var(--accent-glow)' }}>
           <Trophy size={48} className="md:w-16 md:h-16" style={{ color: 'var(--on-accent)' }} />
         </div>
         <h1 className="text-3xl md:text-5xl font-bold mb-3 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
@@ -127,7 +134,7 @@ export default function Celebrate() {
           </div>
         </div>
         <div className="mt-6 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
-          <div className="h-full rounded-full bg-gradient-to-r from-[var(--blue)] via-[var(--accent)] to-[var(--accent)]" style={{ width: '100%', transition: 'width 2s ease' }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-[var(--tertiary-accent)] via-[var(--accent)] to-[var(--accent)]" style={{ width: '100%', transition: 'width 2s ease' }} />
         </div>
       </div>
 
@@ -136,7 +143,7 @@ export default function Celebrate() {
         <button
           onClick={() => navigate('/dashboard')}
           className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          style={{ backgroundColor: 'var(--accent)', color: 'var(--on-accent)', fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px rgba(232, 52, 28, )' }}
+          style={{ backgroundColor: 'var(--accent)', color: 'var(--on-accent)', fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px var(--accent-glow)' }}
         >
           Back to Dashboard
           <ArrowRight size={18} />

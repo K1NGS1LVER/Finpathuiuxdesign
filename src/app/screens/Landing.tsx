@@ -9,11 +9,11 @@ interface LandingProps {
 
 const goals = [
   { icon: Target, title: 'Dream Bike', color: 'var(--accent)' },
-  { icon: TrendingUp, title: 'Investment', color: 'var(--blue)' },
-  { icon: Shield, title: 'Emergency Fund', color: 'var(--blue)' },
+  { icon: TrendingUp, title: 'Investment', color: 'var(--tertiary-accent)' },
+  { icon: Shield, title: 'Emergency Fund', color: 'var(--tertiary-accent)' },
   { icon: Sparkles, title: 'Wedding', color: 'var(--amber)' },
   { icon: Calendar, title: 'Vacation', color: 'var(--accent)' },
-  { icon: Lightbulb, title: 'Upskill Course', color: 'var(--blue)' },
+  { icon: Lightbulb, title: 'Upskill Course', color: 'var(--tertiary-accent)' },
 ];
 
 const testimonials = [
@@ -37,8 +37,8 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
 
       {/* Decorative Blurred Blobs (Fixed to background) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] top-[-10%] left-[-10%] bg-[var(--blue)] opacity-30" />
-        <div className="data-blob w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bottom-[-20%] right-[-10%] bg-[var(--blue)] opacity-30" />
+        <div className="data-blob w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] top-[-10%] left-[-10%] bg-[var(--tertiary-accent)] opacity-30" />
+        <div className="data-blob w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bottom-[-20%] right-[-10%] bg-[var(--tertiary-accent)] opacity-30" />
         <div className="data-blob w-[30vw] h-[30vw] max-w-[400px] max-h-[400px] top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 bg-[var(--accent)] opacity-10 mix-blend-screen" />
       </div>
 

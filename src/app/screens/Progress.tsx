@@ -49,7 +49,7 @@ const GOAL_SET_TEMPLATES: GoalSetTemplate[] = [
         category: "savings",
         targetAmount: 300000,
         timelineMonths: 18,
-        color: "var(--blue)",
+        color: "var(--tertiary-accent)",
       },
       {
         name: "Vacation",
@@ -71,7 +71,7 @@ const GOAL_SET_TEMPLATES: GoalSetTemplate[] = [
         category: "investment",
         targetAmount: 800000,
         timelineMonths: 36,
-        color: "var(--blue)",
+        color: "var(--tertiary-accent)",
       },
       {
         name: "Upskill Course",
@@ -93,7 +93,7 @@ const GOAL_SET_TEMPLATES: GoalSetTemplate[] = [
         category: "home",
         targetAmount: 1200000,
         timelineMonths: 48,
-        color: "var(--blue)",
+        color: "var(--tertiary-accent)",
       },
       {
         name: "Family Safety Fund",
@@ -531,7 +531,7 @@ export default function Progress() {
           <TrendingUp
             size={24}
             className="mb-2"
-            style={{ color: "var(--blue)" }}
+            style={{ color: "var(--tertiary-accent)" }}
           />
           <div
             className="text-2xl font-bold slashed-zero text-[var(--card-foreground)]"
@@ -547,7 +547,7 @@ export default function Progress() {
           <Award
             size={24}
             className="mb-2"
-            style={{ color: "var(--blue)" }}
+            style={{ color: "var(--tertiary-accent)" }}
           />
           <div
             className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
@@ -744,7 +744,7 @@ export default function Progress() {
                         onClick={() => removeGoal(goal.id)}
                         className="w-8 h-8 rounded-lg flex items-center justify-center"
                         style={{
-                          background: "rgba(239, 68, 68, 0.1)",
+                          background: "var(--red-subtle)",
                           color: "var(--red)",
                         }}
                         aria-label={`Remove ${goal.name}`}
@@ -890,7 +890,7 @@ export default function Progress() {
                         backgroundColor:
                           goal.status === "complete"
                             ? "var(--accent)"
-                            : "var(--blue)",
+                            : "var(--tertiary-accent)",
                       }}
                     />
                   </div>
@@ -907,7 +907,7 @@ export default function Progress() {
                 backgroundColor: "var(--accent)",
                 color: "var(--on-accent)",
                 fontFamily: "var(--font-body)",
-                boxShadow: "0 8px 24px rgba(232, 52, 28, )",
+                boxShadow: "0 8px 24px var(--accent-glow)",
               }}
             >
               <CheckCircle2 size={18} />
@@ -988,13 +988,13 @@ export default function Progress() {
                 label: "Debt Load",
                 score: healthScore.debtLoad,
                 max: 25,
-                color: "var(--blue)",
+                color: "var(--tertiary-accent)",
               },
               {
                 label: "Savings Rate",
                 score: healthScore.savingsRate,
                 max: 25,
-                color: "var(--blue)",
+                color: "var(--tertiary-accent)",
               },
               {
                 label: "Emergency Fund",

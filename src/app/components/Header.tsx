@@ -168,12 +168,12 @@ export default function Header({
                   onClick={handleSignOut}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
                   style={{
-                    color: "#EF4444",
+                    color: "var(--red-text)",
                     fontFamily: "var(--font-body)",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background =
-                      "rgba(239, 68, 68, 0.08)";
+                      "var(--red-subtle)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "transparent";

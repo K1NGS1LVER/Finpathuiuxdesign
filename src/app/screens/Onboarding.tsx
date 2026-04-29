@@ -155,9 +155,9 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           : "Priority set complete. Bright glow = P1, medium = P2, soft = P3.";
 
   const getPriorityGlow = (priority: number) => {
-    if (priority === 1) return "0 0 42px rgba(232, 52, 28, )";
-    if (priority === 2) return "0 0 28px rgba(232, 52, 28, )";
-    return "0 0 16px rgba(232, 52, 28, )";
+    if (priority === 1) return "0 0 42px var(--accent-glow)";
+    if (priority === 2) return "0 0 28px var(--accent-glow)";
+    return "0 0 16px var(--accent-glow)";
   };
 
   const handleNext = () => {
@@ -328,13 +328,13 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           transition: all 0.3s ease;
         }
         .goal-option:hover {
-          box-shadow: 0 0 30px rgba(232, 52, 28, );
+          box-shadow: 0 0 30px var(--accent-glow);
           transform: translateY(-2px);
         }
         .goal-option.selected {
-          box-shadow: 0 0 40px rgba(232, 52, 28, );
+          box-shadow: 0 0 40px var(--accent-glow);
           border-color: var(--accent);
-          background: linear-gradient(135deg, var(--card) 0%, rgba(232, 52, 28, ) 100%);
+          background: linear-gradient(135deg, var(--card) 0%, var(--accent-glow) 100%);
         }
         @keyframes slideUpFade {
           from { opacity: 0; transform: translate(-50%, 20px); }
@@ -361,8 +361,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             style={{
               background:
                 extractionPopup.type === "success"
-                  ? "rgba(232, 52, 28, )"
-                  : "rgba(239, 68, 68, 0.1)",
+                  ? "var(--accent-glow)"
+                  : "var(--red-subtle)",
             }}
           >
             {extractionPopup.type === "success" ? (
@@ -405,11 +405,11 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="data-blob absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full"
-          style={{ backgroundColor: "var(--blue)" }}
+          style={{ backgroundColor: "var(--tertiary-accent)" }}
         />
         <div
           className="data-blob absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full"
-          style={{ backgroundColor: "var(--blue)" }}
+          style={{ backgroundColor: "var(--tertiary-accent)" }}
         />
       </div>
 
@@ -855,36 +855,42 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                     icon: Target,
                     color: "var(--accent)",
                     colorText: "var(--accent-text)",
+                    colorSubtle: "var(--accent-subtle)",
                   },
                   {
                     name: "Investment",
                     icon: TrendingUp,
-                    color: "var(--blue)",
-                    colorText: "var(--blue-text)",
+                    color: "var(--tertiary-accent)",
+                    colorText: "var(--tertiary-accent-text)",
+                    colorSubtle: "var(--tertiary-accent-subtle)",
                   },
                   {
                     name: "Emergency Fund",
                     icon: Shield,
-                    color: "var(--blue)",
-                    colorText: "var(--blue-text)",
+                    color: "var(--tertiary-accent)",
+                    colorText: "var(--tertiary-accent-text)",
+                    colorSubtle: "var(--tertiary-accent-subtle)",
                   },
                   {
                     name: "Wedding",
                     icon: Sparkles,
                     color: "var(--amber)",
                     colorText: "var(--amber-text)",
+                    colorSubtle: "var(--amber-subtle)",
                   },
                   {
                     name: "Vacation",
                     icon: Calendar,
                     color: "var(--accent)",
                     colorText: "var(--accent-text)",
+                    colorSubtle: "var(--accent-subtle)",
                   },
                   {
                     name: "Upskill Course",
                     icon: Lightbulb,
-                    color: "var(--blue)",
-                    colorText: "var(--blue-text)",
+                    color: "var(--tertiary-accent)",
+                    colorText: "var(--tertiary-accent-text)",
+                    colorSubtle: "var(--tertiary-accent-subtle)",
                   },
                 ].map((goal) => {
                   const selectedData = selectedGoals[goal.name];
@@ -913,7 +919,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                         <div
                           className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
                           style={{
-                            backgroundColor: goal.color + "15",
+                            backgroundColor: goal.colorSubtle,
                             color: goal.colorText,
                           }}
                         >
@@ -982,7 +988,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   <div
                     className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-transform duration-300"
                     style={{
-                      backgroundColor: "rgba(232, 52, 28, )",
+                      backgroundColor: "var(--accent-glow)",
                       color: "var(--accent-text)",
                     }}
                   >
@@ -1047,19 +1053,19 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   style={{
                     background:
                       selectedStrategy === "avalanche"
-                        ? "rgba(232, 52, 28, )"
+                        ? "var(--accent-glow)"
                         : "var(--card)",
                     border: `1px solid ${selectedStrategy === "avalanche" ? "var(--accent)" : "var(--border)"}`,
                     boxShadow:
                       selectedStrategy === "avalanche"
-                        ? "0 0 24px rgba(232, 52, 28, )"
+                        ? "0 0 24px var(--accent-glow)"
                         : "none",
                   }}
                 >
                   <div
                     className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
                     style={{
-                      background: "rgba(232, 52, 28, )",
+                      background: "var(--accent-glow)",
                       color: "var(--accent-text)",
                     }}
                   >
@@ -1086,20 +1092,20 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   style={{
                     background:
                       selectedStrategy === "snowball"
-                        ? "rgba(73, 91, 255, 0.1)"
+                        ? "var(--tertiary-accent-subtle)"
                         : "var(--card)",
-                    border: `1px solid ${selectedStrategy === "snowball" ? "var(--blue)" : "var(--border)"}`,
+                    border: `1px solid ${selectedStrategy === "snowball" ? "var(--tertiary-accent)" : "var(--border)"}`,
                     boxShadow:
                       selectedStrategy === "snowball"
-                        ? "0 0 24px rgba(73, 91, 255, 0.24)"
+                        ? "0 0 24px var(--tertiary-accent-glow)"
                         : "none",
                   }}
                 >
                   <div
                     className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
                     style={{
-                      background: "rgba(73, 91, 255, 0.1)",
-                      color: "var(--blue-text)",
+                      background: "var(--tertiary-accent-subtle)",
+                      color: "var(--tertiary-accent-text)",
                     }}
                   >
                     <Sparkles size={20} className="icon-wireframe" />
@@ -1152,7 +1158,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               backgroundColor: "var(--accent)",
               color: "var(--on-accent)",
               fontFamily: "var(--font-body)",
-              boxShadow: "0 10px 40px rgba(232, 52, 28, )",
+              boxShadow: "0 10px 40px var(--accent-glow)",
             }}
           >
             <span className="text-sm md:text-base">
