@@ -47,7 +47,7 @@ export default function Scenarios() {
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
   const debts = useFinPathStore((s) => s.debts);
-  const goals = useFinPathStore((s) => s.goals);
+  const goals = useFinPathStore((s) => s.goals) || [];
   const savings = useFinPathStore((s) => s.savings);
   const investments = useFinPathStore((s) => s.investments);
   const strategy = useFinPathStore((s) => s.strategy);

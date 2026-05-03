@@ -121,7 +121,7 @@ export default function Progress() {
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
   const debts = useFinPathStore((s) => s.debts);
-  const goals = useFinPathStore((s) => s.goals);
+  const goals = useFinPathStore((s) => s.goals) || [];
   const plan = useFinPathStore((s) => s.plan);
   const healthScore = useFinPathStore((s) => s.healthScore);
   const savings = useFinPathStore((s) => s.savings);
@@ -1074,24 +1074,28 @@ export default function Progress() {
                 score: healthScore.incomeStability,
                 max: 25,
                 color: "var(--accent)",
+                insight: [income.salary, income.freelance, income.passive].filter(s => s > 0).length >= 3 ? "3 income sources — well diversified" : [income.salary, income.freelance, income.passive].filter(s => s > 0).length >= 2 ? "2 sources — good, consider adding passive income" : "Single income source — consider freelancing or investing for diversification",
               },
               {
                 label: "Debt Load",
                 score: healthScore.debtLoad,
                 max: 25,
                 color: "var(--tertiary-accent)",
+                insight: debts.totalMonthly === 0 ? "Debt-free — excellent position" : `Debt-to-income: ${Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100)}%. ${Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100) < 20 ? "Healthy range" : Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100) < 35 ? "Moderate — try to reduce" : "High — prioritize debt payoff"}`,
               },
               {
                 label: "Savings Rate",
                 score: healthScore.savingsRate,
                 max: 25,
                 color: "var(--tertiary-accent)",
+                insight: `Saving ${Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100)}% of income. ${Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100) >= 30 ? "Outstanding — you're well ahead" : Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100) >= 20 ? "Solid — on track for wealth building" : Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100) >= 10 ? "Below 20% target — reduce non-essentials" : "Under 10% — needs urgent attention"}`,
               },
               {
                 label: "Emergency Fund",
                 score: healthScore.emergencyFund,
                 max: 25,
                 color: "var(--amber)",
+                insight: `${Math.round((savings / Math.max(1, expenses.total + debts.totalMonthly)) * 10) / 10} months of expenses covered. ${Math.round((savings / Math.max(1, expenses.total + debts.totalMonthly)) * 10) / 10 >= 6 ? "Fully protected" : Math.round((savings / Math.max(1, expenses.total + debts.totalMonthly)) * 10) / 10 >= 3 ? "Decent — aim for 6 months" : "Low — prioritize building this first"}`,
               },
             ].map((item, i) => (
               <div key={i} className="text-center">
@@ -1101,11 +1105,11 @@ export default function Progress() {
                 >
                   {item.score}
                 </div>
-                <div className="text-xs text-[var(--secondary)] mb-3">
+                <div className="text-xs font-medium text-[var(--secondary)] mb-1">
                   {item.label}
                 </div>
                 <div
-                  className="h-2 rounded-full overflow-hidden mx-auto max-w-[100px]"
+                  className="h-2 rounded-full overflow-hidden mx-auto max-w-[100px] mb-2"
                   style={{ backgroundColor: "var(--progress-inactive)" }}
                 >
                   <div
@@ -1115,6 +1119,9 @@ export default function Progress() {
                       backgroundColor: item.color,
                     }}
                   />
+                </div>
+                <div className="text-[10px] text-[var(--secondary)] leading-tight px-1" style={{ fontFamily: "var(--font-body)" }}>
+                  {item.insight}
                 </div>
               </div>
             ))}

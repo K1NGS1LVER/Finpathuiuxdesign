@@ -23,6 +23,7 @@ interface PlanInput {
   strategy?: InvestmentStrategy;
   monthlySurplusReserve?: number;
   pendingReallocationReserve?: number;
+  stepUpEnabled?: boolean;
 }
 
 /**
@@ -112,6 +113,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     strategy = "avalanche",
     monthlySurplusReserve = 0,
     pendingReallocationReserve = 0,
+    stepUpEnabled = false,
   } = input;
 
   const monthlySurplus = income.total - expenses.total - debts.totalMonthly;
@@ -128,6 +130,8 @@ export function generatePlan(input: PlanInput): FinancialPlan {
   // Track running state
   let cumulativeSavings = savings;
   let cumulativeInvestments = investments;
+  let currentIncomeTotal = income.total;
+  const baseAllocatableSurplus = availableForGoals;
   const goalProgress: Record<string, number> = {};
 
   // Initialize goal progress
@@ -157,15 +161,29 @@ export function generatePlan(input: PlanInput): FinancialPlan {
       milestones.push(`Warning: Your debt payments (₹${debts.totalMonthly.toLocaleString("en-IN")}/mo) exceed your available income. Consider restructuring.`);
     }
 
+    // Apply annual salary increment every 12 months
+    if (m > 0 && m % 12 === 0 && income.expectedAnnualIncrement) {
+      currentIncomeTotal *= (1 + income.expectedAnnualIncrement / 100);
+      milestones.push(`Annual salary increment applied (${income.expectedAnnualIncrement}%)`);
+    }
+
     // Available surplus this month
-    const surplus = Math.max(0, monthlySurplus);
+    const currentMonthlySurplus = currentIncomeTotal - expenses.total - debts.totalMonthly;
+    const surplus = Math.max(0, currentMonthlySurplus);
     const monthlyReservedSurplus = Math.min(surplus, reservedSurplus);
     const afterReserved = Math.max(0, surplus - monthlyReservedSurplus);
     const monthlyPendingSurplus = Math.min(afterReserved, pendingSurplus);
-    const allocatableSurplus = Math.max(
+    
+    let allocatableSurplus = Math.max(
       0,
       afterReserved - monthlyPendingSurplus,
     );
+
+    // If step-up plan is not enabled, cap the allocatable surplus to the original base amount.
+    // The extra income from salary growth will flow directly into general savings.
+    if (!stepUpEnabled) {
+      allocatableSurplus = Math.min(allocatableSurplus, baseAllocatableSurplus);
+    }
 
     // Allocate to goals
     const allocations = allocateSurplus(
@@ -177,9 +195,12 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     // Apply allocations and check for completions
     let totalAllocated = 0;
     for (const goal of goals) {
-      const allocation = allocations[goal.id] || 0;
+      let allocation = allocations[goal.id] || 0;
+      if (goal.category === "debt") {
+        allocation += goal.monthlyAllocation;
+      }
       goalProgress[goal.id] += allocation;
-      totalAllocated += allocation;
+      totalAllocated += (goal.category === "debt" ? 0 : allocation);
 
       // Check if goal just completed
       if (
@@ -211,7 +232,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     months.push({
       month: m,
       date: monthToDateStr(m + 1),
-      income: income.total,
+      income: currentIncomeTotal,
       expenses: expenses.total,
       debtPayments: debts.totalMonthly,
       surplus,

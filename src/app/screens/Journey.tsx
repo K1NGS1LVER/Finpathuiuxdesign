@@ -626,7 +626,7 @@ export default function Journey() {
 
         {/* Add Node Button */}
         <button
-          onClick={() => setAddGoalError(""); setShowAddModal(true)}
+          onClick={() => { setAddGoalError(""); setShowAddModal(true); }}
           className="absolute top-2 right-2 md:top-4 md:right-4 px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg z-20 pointer-events-auto"
           style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
         >

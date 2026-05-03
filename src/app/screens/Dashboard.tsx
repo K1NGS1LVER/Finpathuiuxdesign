@@ -6,8 +6,10 @@ import {
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
+  Sparkles,
+  AlertTriangle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useFinPathStore } from "../../lib/store";
 
@@ -22,12 +24,13 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
   const debts = useFinPathStore((s) => s.debts);
-  const storeGoals = useFinPathStore((s) => s.goals);
+  const storeGoals = useFinPathStore((s) => s.goals) || [];
   const savings = useFinPathStore((s) => s.savings);
   const healthScore = useFinPathStore((s) => s.healthScore);
   const plan = useFinPathStore((s) => s.plan);
-  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
-  const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve) || 0;
+  const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions) || [];
+  const strategy = useFinPathStore((s) => s.strategy) || "avalanche";
 
   useEffect(() => {
     // Animate to real health score
@@ -65,6 +68,61 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
     surplus - allocatedToGoals - reservedSurplus - pendingSurplus,
   );
   const fmt = (n: number) => n.toLocaleString("en-IN");
+
+  // ── Personalized actionable insights ──
+  const pennyInsights = useMemo(() => {
+    const tips: string[] = [];
+    const savingsRate = income.total > 0 ? ((surplus) / income.total) * 100 : 0;
+    const dti = income.total > 0 ? (debts.totalMonthly / income.total) * 100 : 0;
+
+    // Debt-to-income warning
+    if (dti > 40) {
+      tips.push("Your debt payments eat " + Math.round(dti) + "% of your income. Consider consolidating or negotiating lower EMIs to free up cash for goals.");
+    } else if (dti > 20) {
+      tips.push("Debt takes " + Math.round(dti) + "% of income. Prioritize paying off the smallest debt first for a quick win (snowball), or the highest-interest one to save money (avalanche).");
+    }
+
+    // Low savings rate
+    if (savingsRate < 10 && income.total > 0) {
+      const targetSave = Math.round(income.total * 0.2);
+      tips.push("You're saving under 10% of income. Try moving ₹" + fmt(Math.round(targetSave - Math.max(0, surplus))) + " from non-essentials to hit a 20% savings rate.");
+    } else if (savingsRate >= 30) {
+      tips.push("You're saving " + Math.round(savingsRate) + "% of income — that's excellent! Consider putting the extra toward investments or accelerating your top goal.");
+    }
+
+    // Expense ratio insight
+    const essentialRatio = income.total > 0 ? ((expenses.rent + expenses.food + expenses.transport + expenses.utilities) / income.total) * 100 : 0;
+    if (essentialRatio > 60) {
+      tips.push("Essentials consume " + Math.round(essentialRatio) + "% of your income. Review if rent or transport costs can be optimized — even a 5% cut frees ₹" + fmt(Math.round(income.total * 0.05)) + "/mo.");
+    }
+
+    // Goal progress insight
+    const activeGoals = storeGoals.filter(g => g.status !== "complete");
+    const closestGoal = activeGoals.sort((a, b) => {
+      const aRemain = a.targetAmount - a.currentAmount;
+      const bRemain = b.targetAmount - b.currentAmount;
+      return aRemain - bRemain;
+    })[0];
+    if (closestGoal) {
+      const remaining = closestGoal.targetAmount - closestGoal.currentAmount;
+      const monthly = closestGoal.monthlyAllocation || Math.round(remaining / Math.max(1, closestGoal.timelineMonths));
+      if (remaining > 0 && remaining < monthly * 3) {
+        tips.push('"' + closestGoal.name + '" is almost done — only ₹' + fmt(remaining) + ' left! A small lumpsum could finish it this month.');
+      }
+    }
+
+    // No surplus reserve
+    if (monthlySurplusReserve === 0 && surplus > 0) {
+      tips.push("You don't have a surplus reserve. Setting aside even ₹" + fmt(Math.round(surplus * 0.1)) + "/mo (10% of surplus) gives you a safety buffer outside your goals.");
+    }
+
+    // Fallback
+    if (tips.length === 0) {
+      tips.push("Your finances look solid! Keep checking in monthly to stay on track.");
+    }
+
+    return tips.slice(0, 3);
+  }, [income, expenses, debts, surplus, storeGoals, monthlySurplusReserve, freeSurplus]);
 
   const primaryMetrics = [
     {
@@ -411,7 +469,40 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Penny's Actionable Insights */}
+        <div className="col-span-12 bento-card border border-[var(--tertiary-accent)]"
+          style={{ background: "var(--surface-tint)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: "var(--tertiary-accent-subtle)", color: "var(--tertiary-accent-text)" }}
+            >
+              <Sparkles size={16} />
+            </div>
+            <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">
+              Penny's Insights
+            </h3>
+          </div>
+          <div className="space-y-3">
+            {pennyInsights.map((tip, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 p-3 rounded-xl text-sm"
+                style={{
+                  background: "var(--surface-hover)",
+                  border: "1px solid var(--border)",
+                  fontFamily: "var(--font-body)",
+                  color: "var(--card-foreground)",
+                }}
+              >
+                <span className="text-[var(--tertiary-accent)] mt-0.5 font-bold">{i + 1}.</span>
+                <span>{tip}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+                {/* Quick Actions */}
         <div className="col-span-12 md:col-span-6 bento-card">
           <h3 className="text-heading mb-4 slashed-zero text-[var(--card-foreground)]">
             Quick Actions
