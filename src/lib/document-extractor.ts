@@ -140,6 +140,8 @@ function detectSalarySlip(text: string): ExtractionResult['data'] | null {
     'dearness', 'conveyance', 'provident fund', 'pf', 'esi',
     'professional tax', 'tds', 'income tax', 'employer', 'employee',
     'designation', 'department', 'employee id', 'emp id',
+    'net salary', 'taxable salary', 'total', 'net income', 'remuneration',
+    'stipend', 'wages', 'compensation', 'in hand', 'in-hand',
   ];
   
   const matchedKeywords = salaryKeywords.filter(kw => lower.includes(kw));
@@ -207,7 +209,9 @@ function detectLoanDocument(text: string): ExtractionResult['data'] | null {
     'outstanding', 'disbursement', 'repayment', 'tenure', 'interest rate',
     'rate of interest', 'sanction', 'mortgage', 'home loan', 'car loan',
     'personal loan', 'education loan', 'credit card', 'statement',
-    'minimum due', 'total due', 'balance', 'overdue',
+    'minimum due', 'total due', 'balance', 'overdue', 'expenditure',
+    'debt', 'liability', 'obligation', 'borrowing', 'payoff', 'settlement',
+    'due date', 'amount due', 'outstanding balance',
   ];
   
   const matchedKeywords = loanKeywords.filter(kw => lower.includes(kw));
@@ -255,6 +259,18 @@ export async function extractFromDocument(
   let rawText = '';
   
   try {
+    // Step 0: Check file size
+    const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB limit
+    if (file.size > MAX_FILE_SIZE) {
+      return {
+        success: false,
+        type: 'unknown',
+        data: {},
+        rawText: '',
+        summary: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Please upload a file smaller than 15MB or enter details manually.`,
+      };
+    }
+
     // Step 1: Extract text based on file type
     const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     const isImage = file.type.startsWith('image/');
@@ -373,8 +389,8 @@ export async function extractFromDocument(
       success: false,
       type: 'unknown',
       data: {},
-      rawText,
-      summary: `Oops! Penny had trouble reading this file. Please make sure it's a clear document, or just enter your details manually.`,
+      rawText: '',
+      summary: `Extraction failed: The document might be too blurry, corrupted, or password-protected. You can safely enter your details manually.`,
     };
   }
 }

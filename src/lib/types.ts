@@ -23,6 +23,8 @@ export interface IncomeProfile {
   passive: number;
   /** Total monthly income in INR */
   total: number;
+  /** Expected annual increment percentage (e.g. 5 for 5%) */
+  expectedAnnualIncrement?: number;
 }
 
 /** Expense category breakdown */
@@ -59,6 +61,8 @@ export interface DebtProfile {
   items: DebtItem[];
   /** Total monthly debt payments */
   totalMonthly: number;
+  /** Total outstanding principal (lumpsum debt) */
+  totalPrincipal?: number;
 }
 
 /** User's financial goal */
@@ -189,4 +193,6 @@ export interface FinancialProfile {
   pendingGoalDecisions: GoalCompletionDecision[];
   /** When the profile was last updated */
   lastUpdated: number;
+  /** Whether to increment monthly payments with salary growth */
+  stepUpEnabled?: boolean;
 }

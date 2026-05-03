@@ -1,5 +1,5 @@
-import { X, Send, Loader2 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { X, Send, Loader2, Clock, WifiOff } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useFinPathStore } from '../../lib/store';
 
 interface PennyPanelProps {
@@ -13,16 +13,26 @@ interface Message {
   text: string;
 }
 
+// Loading phrases that rotate while waiting
+const LOADING_PHRASES = [
+  "Penny is thinking...",
+  "Crunching your numbers...",
+  "Analyzing your finances...",
+  "Looking at your goals...",
+  "Checking your budget...",
+];
+
 export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingPhrase, setLoadingPhrase] = useState(LOADING_PHRASES[0]);
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'welcome', role: 'penny', text: "Hi! I'm Penny, your AI finance companion. I have full context of your financial profile — ask me anything about your goals, budget, tax savings, or investments!" }
+    { id: 'welcome', role: 'penny', text: "Hi! I'm Penny, your AI finance companion. I can see your full financial profile — ask me anything about your goals, budget, savings strategy, or tax planning!" }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  // Get the full financial profile for context
-  // Use individual selectors to avoid creating new objects every render
+  // Store selectors
   const onboarded = useFinPathStore(s => s.onboarded);
   const income = useFinPathStore(s => s.income);
   const expenses = useFinPathStore(s => s.expenses);
@@ -32,61 +42,104 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   const emergencyFund = useFinPathStore(s => s.emergencyFund);
   const goals = useFinPathStore(s => s.goals);
   const healthScore = useFinPathStore(s => s.healthScore);
-  const plan = useFinPathStore(s => s.plan);
-  const chatHistory = useFinPathStore(s => s.chatHistory);
-  const currency = useFinPathStore(s => s.currency);
-  const lastUpdated = useFinPathStore(s => s.lastUpdated);
+  const strategy = useFinPathStore(s => s.strategy);
+  const monthlySurplusReserve = useFinPathStore(s => s.monthlySurplusReserve);
 
-  // Auto-scroll to bottom
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
+  // Rotate loading phrases
+  useEffect(() => {
+    if (!isLoading) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % LOADING_PHRASES.length;
+      setLoadingPhrase(LOADING_PHRASES[i]);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
+
+    // Check if user has any financial data
+    if (!onboarded && income.total === 0) {
+      const noDataMsg: Message = {
+        id: `penny-${Date.now()}`,
+        role: 'penny',
+        text: "It looks like you haven't set up your financial profile yet. Complete the onboarding first so I can give you personalized advice based on your real numbers!",
+      };
+      setMessages(prev => [...prev, { id: `user-${Date.now()}`, role: 'user', text: trimmed }, noDataMsg]);
+      setInput('');
+      return;
+    }
 
     const userMsg: Message = { id: `user-${Date.now()}`, role: 'user', text: trimmed };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
 
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
     try {
       const response = await fetch('/api/penny', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           message: trimmed,
           profile: {
             onboarded, income, expenses, debts, savings,
             investments, emergencyFund, goals, healthScore,
-            plan, chatHistory, currency, lastUpdated,
+            strategy, monthlySurplusReserve,
           },
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
+      clearTimeout(timeout);
+
+      if (response.status === 429) {
+        setMessages(prev => [...prev, {
+          id: `penny-${Date.now()}`,
+          role: 'penny',
+          text: "I'm getting a lot of questions right now! Please wait a moment and try again.",
+        }]);
+        return;
       }
 
+      if (!response.ok) throw new Error('Failed to get response');
+
       const data = await response.json();
-      const pennyMsg: Message = {
+      setMessages(prev => [...prev, {
         id: `penny-${Date.now()}`,
         role: 'penny',
         text: data.reply || "I'm having trouble thinking right now. Try again?",
-      };
-      setMessages(prev => [...prev, pennyMsg]);
-    } catch (err) {
-      const errorMsg: Message = {
+      }]);
+    } catch (err: any) {
+      clearTimeout(timeout);
+      const isTimeout = err?.name === 'AbortError';
+      setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'penny',
-        text: "Oops, I couldn't connect right now. Please check your connection and try again!",
-      };
-      setMessages(prev => [...prev, errorMsg]);
+        text: isTimeout
+          ? "That took too long — my thinking timed out. Try a simpler question, or try again in a moment!"
+          : "Oops, I couldn't connect right now. Please check your connection and try again!",
+      }]);
     } finally {
       setIsLoading(false);
+      abortRef.current = null;
     }
-  };
+  }, [input, isLoading, onboarded, income, expenses, debts, savings, investments, emergencyFund, goals, healthScore, strategy, monthlySurplusReserve]);
+
+  const quickSuggestions = onboarded || income.total > 0
+    ? ['How am I doing financially?', 'Help me save more', 'Analyze my goals', 'Can I afford a big purchase?']
+    : ['What is FinPath?', 'How do I get started?'];
 
   return (
     <>
@@ -118,7 +171,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           <span className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Penny</span>
           <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] font-semibold">AI</span>
         </div>
-        <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]">
+        <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]" aria-label="Close Penny">
           <X size={18} />
         </button>
       </div>
@@ -127,7 +180,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className="max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed"
+              className="max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-line"
               style={{
                 backgroundColor: msg.role === 'user' ? 'var(--accent)' : 'var(--surface-hover)',
                 color: msg.role === 'user' ? 'var(--on-accent)' : 'var(--card-foreground)',
@@ -152,7 +205,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
               }}
             >
               <Loader2 size={14} className="animate-spin" style={{ color: 'var(--tertiary-accent)' }} />
-              <span className="text-[var(--secondary)]">Penny is thinking...</span>
+              <span className="text-[var(--secondary)] transition-opacity">{loadingPhrase}</span>
             </div>
           </div>
         )}
@@ -162,7 +215,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       {/* Quick suggestion chips */}
       {messages.length <= 1 && (
         <div className="px-4 pb-2 flex gap-2 flex-wrap">
-          {['How am I doing financially?', 'Help me save more', 'Analyze my goals'].map((q) => (
+          {quickSuggestions.map((q) => (
             <button
               key={q}
               onClick={() => { setInput(q); }}

@@ -1,4 +1,4 @@
-import { Check, Circle, AlertTriangle } from "lucide-react";
+import { Check, Circle, AlertTriangle, Wallet } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useFinPathStore } from "../../lib/store";
 
@@ -9,6 +9,8 @@ interface MonthTask {
   isGoal: boolean;
   goalId?: string;
   amount?: number;
+  prefix?: string;
+  suffix?: string;
 }
 
 export default function Month() {
@@ -58,6 +60,8 @@ export default function Month() {
         isGoal: true,
         goalId: debtGoal.id,
         amount: debts.totalMonthly,
+        prefix: "Pay ₹",
+        suffix: "toward debt"
       });
     }
 
@@ -78,6 +82,8 @@ export default function Month() {
           isGoal: true,
           goalId: goal.id,
           amount: monthly,
+          prefix: "Add ₹",
+          suffix: `to ${goal.name} savings`
         });
       }
     }
@@ -101,8 +107,24 @@ export default function Month() {
   const [tasks, setTasks] = useState(initialTasks);
 
   useEffect(() => {
-    setTasks(initialTasks);
+    setTasks((prev) => {
+      // If task structure completely changed, adopt new tasks
+      if (prev.length !== initialTasks.length || !prev.every((pt, i) => pt.id === initialTasks[i].id)) {
+        return initialTasks;
+      }
+      // Otherwise synchronize done state but keep user's unsubmitted custom amounts
+      return prev.map((pt, i) => ({
+        ...initialTasks[i],
+        amount: pt.amount,
+      }));
+    });
   }, [initialTasks]);
+
+  const updateTaskAmount = (id: string, newAmount: number) => {
+    setTasks((prev) => 
+      prev.map((t) => (t.id === id ? { ...t, amount: newAmount } : t))
+    );
+  };
 
   useEffect(() => {
     if (!lumpsumGoalId && activeGoals.length > 0) {
@@ -117,7 +139,7 @@ export default function Month() {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
 
-    if (task.isGoal && task.goalId && task.amount) {
+    if (task.isGoal && task.goalId && task.amount !== undefined) {
       const goal = goals.find((g) => g.id === task.goalId);
       if (goal) {
         const newDoneState = !task.done;
@@ -488,13 +510,13 @@ export default function Month() {
           </h3>
           <div className="space-y-2">
             {tasks.map((task) => (
-              <button
+              <div
                 key={task.id}
-                onClick={() => toggleTask(task.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[var(--surface-hover)]"
+                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all focus-within:bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)]"
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                  onClick={() => toggleTask(task.id)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
                   style={{
                     backgroundColor: task.done ? "var(--accent)" : "transparent",
                     border: task.done ? "none" : "2px solid var(--border)",
@@ -503,13 +525,49 @@ export default function Month() {
                 >
                   {task.done ? <Check size={14} /> : <Circle size={14} />}
                 </div>
-                <span
-                  className={`text-left flex-1 text-[var(--card-foreground)] ${task.done ? "line-through opacity-50" : ""}`}
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  {task.text}
-                </span>
-              </button>
+
+                {task.isGoal && task.amount !== undefined ? (
+                  <div
+                    className={`flex-1 flex flex-wrap items-center gap-1.5 text-[var(--card-foreground)] ${task.done ? "opacity-50" : ""}`}
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    <span
+                      onClick={() => toggleTask(task.id)}
+                      className={`cursor-pointer ${task.done ? "line-through" : ""}`}
+                    >
+                      {task.prefix}
+                    </span>
+                    <input
+                      type="number"
+                      value={task.amount === 0 ? "" : task.amount}
+                      onChange={(e) =>
+                        updateTaskAmount(task.id, parseInt(e.target.value) || 0)
+                      }
+                      disabled={task.done}
+                      className="w-24 text-center px-2 py-0.5 rounded-md outline-none focus:ring-2 focus:ring-[var(--accent)] font-semibold transition-all"
+                      style={{
+                        background: "var(--surface-tint)",
+                        border: "1px solid var(--border)",
+                        ...task.done ? { textDecoration: 'line-through' } : {}
+                      }}
+                    />
+                    <span
+                      onClick={() => toggleTask(task.id)}
+                      className={`cursor-pointer ${task.done ? "line-through" : ""}`}
+                    >
+                      {task.suffix}
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => toggleTask(task.id)}
+                    className={`text-left flex-1 text-[var(--card-foreground)] ${task.done ? "line-through opacity-50" : ""}`}
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {task.text}
+                  </button>
+                )}
+              </div>
             ))}
           </div>
           <div

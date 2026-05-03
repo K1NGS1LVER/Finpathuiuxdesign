@@ -91,8 +91,11 @@ interface FinPathStore extends FinancialProfile {
     goals: { name: string; targetAmount?: number; priority?: number }[];
     expenseBreakdown?: Record<string, number>;
     debtBreakdown?: Record<string, number>;
+    totalDebtPrincipal?: number;
     strategy?: InvestmentStrategy;
     surplus?: number;
+    expectedAnnualIncrement?: number;
+    stepUpEnabled?: boolean;
   }) => void;
 
   // ── Settings (editable, reflects everywhere) ──────
@@ -185,6 +188,7 @@ function getDebtGoalTarget(debts: DebtProfile): number {
   );
 
   if (itemPrincipal > 0) return itemPrincipal;
+  if (debts.totalPrincipal && debts.totalPrincipal > 0) return debts.totalPrincipal;
   return Math.max(0, debts.totalMonthly || 0) * 12;
 }
 
@@ -201,6 +205,7 @@ function getDebtGoalTimeline(debts: DebtProfile): number {
 function hasDebt(debts: DebtProfile): boolean {
   return (
     Math.max(0, debts.totalMonthly || 0) > 0 ||
+    (debts.totalPrincipal && debts.totalPrincipal > 0) ||
     debts.items.some(
       (debt) =>
         Math.max(0, debt.principal || 0) > 0 &&
@@ -241,7 +246,8 @@ function normalizeDebtProfile(debts: DebtProfile): DebtProfile {
 
   return {
     items: activeItems,
-    totalMonthly: activeMonthly,
+    totalMonthly: Math.max(totalMonthly, activeMonthly),
+    totalPrincipal: debts.totalPrincipal,
   };
 }
 
@@ -279,7 +285,7 @@ function makeDebtGoal(
 
   return {
     id: DEBT_GOAL_ID,
-    name: "Debt Payoff",
+    name: "Debt Payoff (1yr Est.)",
     icon: "CreditCard",
     category: "debt",
     targetAmount,
@@ -679,6 +685,7 @@ export const useFinPathStore = create<FinPathStore>()(
             (sum, decision) => sum + Math.max(0, decision.freedMonthlyAmount),
             0,
           ),
+          stepUpEnabled: state.stepUpEnabled,
         });
 
         // Update goal monthly allocations
@@ -722,6 +729,7 @@ export const useFinPathStore = create<FinPathStore>()(
           freelance: 0,
           passive: 0,
           total: data.income,
+          expectedAnnualIncrement: data.expectedAnnualIncrement || 0,
         };
 
         const eb = data.expenseBreakdown || {};
@@ -749,6 +757,7 @@ export const useFinPathStore = create<FinPathStore>()(
               remainingMonths: 12,
             })),
           totalMonthly: data.debts,
+          totalPrincipal: data.totalDebtPrincipal,
         });
 
         const goals = data.goals.map((g, i) => {
@@ -773,6 +782,7 @@ export const useFinPathStore = create<FinPathStore>()(
           investments: 0,
           emergencyFund: 0,
           strategy: data.strategy || "avalanche",
+          stepUpEnabled: data.stepUpEnabled || false,
           monthlySurplusReserve: Math.max(0, data.surplus || 0),
           pendingGoalDecisions: [],
           lastUpdated: Date.now(),
