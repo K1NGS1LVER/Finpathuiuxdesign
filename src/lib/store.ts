@@ -252,18 +252,16 @@ function normalizeDebtProfile(debts: DebtProfile): DebtProfile {
 }
 
 function isDebtGoalComplete(goal: Goal | undefined): boolean {
-  return !!(
-    goal &&
-    goal.category === "debt" &&
-    (goal.status === "complete" ||
-      (goal.targetAmount > 0 && goal.currentAmount >= goal.targetAmount))
-  );
+  return !!(goal && goal.category === "debt" && goal.status === "complete");
 }
 
 function resolveDebtsFromGoals(debts: DebtProfile, goals: Goal[]): DebtProfile {
   const normalizedDebts = normalizeDebtProfile(debts);
   const debtGoal = goals.find((goal) => goal.category === "debt");
-  return isDebtGoalComplete(debtGoal) ? emptyDebtProfile() : normalizedDebts;
+  if (isDebtGoalComplete(debtGoal) && !hasDebt(normalizedDebts)) {
+    return emptyDebtProfile();
+  }
+  return normalizedDebts;
 }
 
 function makeDebtGoal(
@@ -505,7 +503,7 @@ export const useFinPathStore = create<FinPathStore>()(
               })
             : removeDecisionFromQueue(s.pendingGoalDecisions, id);
           const nextDebts =
-            existingGoal.category === "debt" && shouldComplete
+            existingGoal.category === "debt" && shouldComplete && !hasDebt(s.debts)
               ? emptyDebtProfile()
               : s.debts;
 
@@ -598,7 +596,7 @@ export const useFinPathStore = create<FinPathStore>()(
             : s.pendingGoalDecisions;
           const nextDebts = isDebtGoalComplete(
             nextGoals.find((goal) => goal.id === goalId),
-          )
+          ) && !hasDebt(s.debts)
             ? emptyDebtProfile()
             : s.debts;
 

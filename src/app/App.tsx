@@ -13,6 +13,7 @@ import Dashboard from "./screens/Dashboard";
 import Journey from "./screens/Journey";
 import Tax from "./screens/Tax";
 import Debt from "./screens/Debt";
+import Cashflow from "./screens/Cashflow";
 import Month from "./screens/Month";
 import Scenarios from "./screens/Scenarios";
 import Progress from "./screens/Progress";
@@ -210,6 +211,14 @@ function AppContent() {
                   element={
                     <ErrorBoundary key={location.pathname}>
                       <Debt />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/cashflow"
+                  element={
+                    <ErrorBoundary key={location.pathname}>
+                      <Cashflow />
                     </ErrorBoundary>
                   }
                 />
