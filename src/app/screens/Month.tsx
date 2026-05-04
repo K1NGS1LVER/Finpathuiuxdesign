@@ -1,6 +1,6 @@
 import { Check, Circle, AlertTriangle, Wallet } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
-import { useFinPathStore } from "../../lib/store";
+import { useFinPathStore } from '@/lib/store';
 
 interface MonthTask {
   id: string;

@@ -1,5 +1,5 @@
 import { TrendingUp, Sparkles, Wallet, AlertTriangle, ArrowUpRight, Calendar } from "lucide-react";
-import type { InvestmentStrategy } from "../../../lib/types";
+import type { InvestmentStrategy } from '@/lib/types';
 
 interface OnboardingStepStrategyProps {
   selectedStrategy: InvestmentStrategy;

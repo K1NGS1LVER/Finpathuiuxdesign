@@ -5,7 +5,7 @@
 // ============================================================
 
 import Groq from 'groq-sdk';
-import type { FinancialProfile } from '../lib/types';
+import type { FinancialProfile } from '@/lib/types';
 import type { Connect } from 'vite';
 
 let groqClient: Groq | null = null;

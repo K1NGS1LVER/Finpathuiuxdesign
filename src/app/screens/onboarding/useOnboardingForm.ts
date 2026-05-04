@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { useFinPathStore } from "../../../lib/store";
-import type { InvestmentStrategy } from "../../../lib/types";
-import { extractFromDocument } from "../../../lib/document-extractor";
+import { useFinPathStore } from '@/lib/store';
+import type { InvestmentStrategy } from '@/lib/types';
+import { extractFromDocument } from '@/lib/document-extractor';
 
 // ── Types ────────────────────────────────────────────────
 export interface GoalSelection {

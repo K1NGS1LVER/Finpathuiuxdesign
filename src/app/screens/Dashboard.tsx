@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { useFinPathStore } from "../../lib/store";
+import { useFinPathStore } from '@/lib/store';
 
 interface DashboardProps {
   onPennyClick: () => void;

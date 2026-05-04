@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useFinPathStore } from "../../../lib/store";
+import { useFinPathStore } from '@/lib/store';
 import confetti from "canvas-confetti";
 
 export const GOAL_PRESETS = [

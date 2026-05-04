@@ -7,8 +7,8 @@ import {
   Baby,
   Sparkles,
 } from "lucide-react";
-import { useFinPathStore } from "../../lib/store";
-import { generatePlan as buildPlan } from "../../lib/plan-engine";
+import { useFinPathStore } from '@/lib/store';
+import { generatePlan as buildPlan } from '@/lib/plan-engine';
 
 const SCENARIO_OPTIONS = [
   {

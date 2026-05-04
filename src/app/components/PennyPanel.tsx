@@ -1,6 +1,6 @@
 import { X, Send, Loader2, Clock, WifiOff } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useFinPathStore } from '../../lib/store';
+import { useFinPathStore } from '@/lib/store';
 
 interface PennyPanelProps {
   open: boolean;
