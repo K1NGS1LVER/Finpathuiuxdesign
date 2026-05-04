@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router';
-import { LayoutDashboard, Map, Calculator, Calendar, GitBranch, MessageCircle, ChevronLeft, ChevronRight, X, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Map, Calculator, Calendar, GitBranch, MessageCircle, ChevronLeft, ChevronRight, X, BarChart3, CreditCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
@@ -38,6 +38,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
     { icon: Calendar, label: 'Month', path: '/month' },
     { icon: Map, label: 'Scenarios', path: '/scenarios' },
     { icon: BarChart3, label: 'Progress', path: '/progress' },
+    { icon: CreditCard, label: 'Cashflow', path: '/debt' },
   ];
 
   const handleNavigation = (path: string) => {
