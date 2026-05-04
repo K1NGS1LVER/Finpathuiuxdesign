@@ -70,9 +70,9 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         <OnboardingProgressBar currentStep={form.step} totalSteps={form.TOTAL_STEPS} />
       </header>
 
-      <main className="flex-1 overflow-y-auto relative z-10 flex flex-col justify-center">
-        <div className="max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 py-4 md:py-6">
-          <div className="bento-card !p-5 md:!p-7">
+      <main className="flex-1 overflow-y-auto relative z-10">
+        <div className="min-h-full max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 py-12 md:py-20 flex flex-col">
+          <div className="bento-card !p-5 md:!p-7 my-auto">
             <div className="text-center mb-5 md:mb-6">
               <h2
                 className="text-2xl md:text-4xl font-bold slashed-zero leading-tight text-[var(--card-foreground)]"
@@ -124,7 +124,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             {form.step === 3 && (
               <OnboardingStepStrategy
                 selectedStrategy={form.selectedStrategy} onChangeStrategy={form.setSelectedStrategy}
-                stepUpEnabled={form.stepUpEnabled} onToggleStepUp={() => form.setStepUpEnabled(!form.stepUpEnabled)}
+                stepUpEnabled={form.stepUpEnabled} onToggleStepUp={() => form.setStepUpEnabled(!form.setStepUpEnabled)}
                 surplusAmount={form.surplusAmount} onChangeSurplusAmount={form.setSurplusAmount}
                 incomeINR={form.incomeINR} availableForGoals={form.availableForGoals}
                 surplusNum={form.surplusNum} surplusExceedsAvailable={form.surplusExceedsAvailable}
@@ -132,7 +132,6 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               />
             )}
           </div>
-          <div className="h-20 md:h-24 shrink-0" />
         </div>
       </main>
 
