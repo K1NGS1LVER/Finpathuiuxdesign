@@ -1,20 +1,26 @@
-import { Sparkles, Shield } from "lucide-react";
+import { Sparkles, Shield, X } from "lucide-react";
 import type { ExtractionPopupState } from "./useOnboardingForm";
 
-// ── Component ────────────────────────────────────────────
-export default function ExtractionPopup({ popup }: { popup: ExtractionPopupState }) {
+export default function ExtractionPopup({
+  popup,
+  onClose,
+}: {
+  popup: ExtractionPopupState;
+  onClose?: () => void;
+}) {
   if (!popup.show) return null;
 
   const isSuccess = popup.type === "success";
 
   return (
     <div
-      className="fixed bottom-24 left-1/2 z-50 p-4 rounded-2xl flex items-center gap-3 shadow-2xl max-w-[90vw] md:max-w-md w-full"
+      className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 p-5 rounded-2xl flex items-start gap-3 shadow-2xl max-w-[90vw] md:max-w-md w-full"
       style={{
         animation: "slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         background: "var(--surface-tint)",
-        backdropFilter: "blur(20px)",
-        border: `1px solid ${isSuccess ? "var(--accent)" : "var(--red)"}`,
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        border: `2px solid ${isSuccess ? "var(--accent)" : "var(--red)"}`,
         color: "var(--card-foreground)",
         fontFamily: "var(--font-body)",
       }}
@@ -28,12 +34,23 @@ export default function ExtractionPopup({ popup }: { popup: ExtractionPopupState
         }}
       >
         {isSuccess ? (
-          <Sparkles size={20} className="text-[var(--accent)]" />
+          <Sparkles size={18} style={{ color: "var(--accent)" }} />
         ) : (
-          <Shield size={20} className="text-[var(--red)]" />
+          <Shield size={18} style={{ color: "var(--red)" }} />
         )}
       </div>
-      <p className="text-sm font-medium">{popup.message}</p>
+      <p className="text-sm font-medium flex-1 pt-1">{popup.message}</p>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-[var(--surface-hover)] transition-colors"
+          style={{ color: "var(--secondary)" }}
+          aria-label="Close notification"
+        >
+          <X size={14} />
+        </button>
+      )}
     </div>
   );
 }

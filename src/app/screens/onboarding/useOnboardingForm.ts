@@ -147,11 +147,16 @@ export function useOnboardingForm() {
 
   const convertToINR = useCallback(
     (amount: string, currency: string): string => {
-      if (!amount || !exchangeRates[currency]) return "";
+      if (!amount || currency === "INR") {
+        const value = parseFloat(amount);
+        if (isNaN(value)) return "";
+        return value.toFixed(2);
+      }
+      const rate = exchangeRates[currency];
+      if (!rate) return amount;
       const value = parseFloat(amount);
       if (isNaN(value)) return "";
-      if (currency === "INR") return value.toFixed(2);
-      const inrRate = 1 / exchangeRates[currency];
+      const inrRate = 1 / rate;
       return (value * inrRate).toFixed(2);
     },
     [exchangeRates],
@@ -171,7 +176,7 @@ export function useOnboardingForm() {
       return Object.keys(selectedGoals).length > 0;
     }
     if (step === 3) {
-      const incINR = parseFloat(convertToINR(income, incomeCurrency) || income) || 0;
+      const incINR = parseFloat(income) || 0;
       const surplusNum = parseFloat(surplusAmount) || 0;
       if (surplusNum > incINR) return false;
       return true;
@@ -184,9 +189,9 @@ export function useOnboardingForm() {
   }, [step]);
 
   const submitOnboarding = useCallback(() => {
-    const incomeINR = parseFloat(convertToINR(income, incomeCurrency) || income) || 0;
-    const expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency) || totalExpenses) || 0;
-    const debtINR = parseFloat(convertToINR(totalDebt, debtCurrency) || totalDebt || "0") || 0;
+    const incomeINR = parseFloat(convertToINR(income, incomeCurrency)) || 0;
+    const expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency)) || 0;
+    const debtINR = parseFloat(convertToINR(totalDebt, debtCurrency)) || 0;
 
     const expBreakdown: Record<string, number> = {};
     for (const [k, v] of Object.entries(expenseBreakdown)) {
@@ -208,7 +213,7 @@ export function useOnboardingForm() {
       income: incomeINR,
       expenses: expenseINR,
       debts: debtINR,
-      totalDebtPrincipal: parseFloat(convertToINR(totalDebtPrincipal, debtCurrency) || totalDebtPrincipal) || 0,
+      totalDebtPrincipal: parseFloat(convertToINR(totalDebtPrincipal, debtCurrency)) || 0,
       goals: formattedGoals,
       expenseBreakdown: expBreakdown,
       debtBreakdown: dbtBreakdown,
@@ -316,9 +321,9 @@ export function useOnboardingForm() {
   );
 
   // ── Computed values for step 3 ─────────────────────────
-  const incomeINR = parseFloat(convertToINR(income, incomeCurrency) || income) || 0;
-  const expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency) || totalExpenses) || 0;
-  const debtINR = parseFloat(convertToINR(totalDebt, debtCurrency) || totalDebt || "0") || 0;
+  const incomeINR = parseFloat(income) || 0;
+  const expenseINR = parseFloat(totalExpenses) || 0;
+  const debtINR = parseFloat(totalDebt) || 0;
   const availableForGoals = Math.max(0, incomeINR - expenseINR - debtINR);
   const surplusNum = parseFloat(surplusAmount) || 0;
   const surplusExceedsAvailable = surplusNum > availableForGoals;
@@ -393,5 +398,7 @@ export function useOnboardingForm() {
     surplusExceeds75,
     surplusExceedsIncome,
     remainingForGoals,
+    // Currency conversion
+    convertToINR,
   };
 }
