@@ -1,7 +1,6 @@
 import { Loader2, FileText } from "lucide-react";
 import { CURRENCIES } from "./useOnboardingForm";
 
-// ── Types ────────────────────────────────────────────────
 interface OnboardingStepIncomeProps {
   income: string;
   onChangeIncome: (value: string) => void;
@@ -14,7 +13,6 @@ interface OnboardingStepIncomeProps {
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-// ── Component ────────────────────────────────────────────
 export default function OnboardingStepIncome({
   income,
   onChangeIncome,
@@ -27,31 +25,33 @@ export default function OnboardingStepIncome({
   onFileUpload,
 }: OnboardingStepIncomeProps) {
   return (
-    <div className="space-y-3 md:space-y-4">
-      {/* Income input with currency selector */}
+    <div className="space-y-4 md:space-y-5">
       <div className="flex gap-2 md:gap-3">
-        <input
-          type="text"
-          value={income}
-          onChange={(e) => onChangeIncome(e.target.value.replace(/[^0-9]/g, ""))}
-          className="flex-1 px-4 py-4 md:px-6 md:py-6 text-3xl md:text-5xl font-bold text-center rounded-2xl md:rounded-3xl outline-none slashed-zero text-[var(--card-foreground)]"
-          style={{
-            fontFamily: "var(--font-display)",
-            background: "var(--surface-tint)",
-            border: "1px solid var(--border)",
-          }}
-          placeholder="0"
-          inputMode="numeric"
-          aria-label="Monthly income"
-        />
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            value={income}
+            onChange={(e) => onChangeIncome(e.target.value.replace(/[^0-9]/g, ""))}
+            className="w-full px-5 py-5 md:px-8 md:py-7 text-3xl md:text-5xl font-bold text-center rounded-2xl md:rounded-3xl slashed-zero text-[var(--card-foreground)] transition-shadow"
+            style={{
+              fontFamily: "var(--font-display)",
+              background: "var(--surface-tint)",
+              border: "2px solid var(--border)",
+            }}
+            placeholder="0"
+            inputMode="numeric"
+            aria-label="Monthly income"
+          />
+        </div>
         <select
           value={incomeCurrency}
           onChange={(e) => onChangeIncomeCurrency(e.target.value)}
-          className="pill-button px-3 md:px-5 py-3 md:py-4 text-xs md:text-sm font-bold outline-none cursor-pointer rounded-2xl md:rounded-3xl"
+          className="pill-button px-4 md:px-5 py-3 md:py-4 text-xs md:text-sm font-bold outline-none cursor-pointer rounded-2xl md:rounded-3xl self-stretch"
           style={{
             fontFamily: "var(--font-body)",
             color: "var(--card-foreground)",
-            background: "var(--surface-hover)",
+            background: "var(--surface-tint)",
+            border: "2px solid var(--border)",
           }}
           aria-label="Income currency"
         >
@@ -63,7 +63,6 @@ export default function OnboardingStepIncome({
         </select>
       </div>
 
-      {/* INR conversion display */}
       {income && incomeCurrency !== "INR" && (() => {
         const inrVal = convertToINR(income, incomeCurrency);
         return inrVal ? (
@@ -73,8 +72,7 @@ export default function OnboardingStepIncome({
         ) : null;
       })()}
 
-      {/* Annual increment */}
-      <div className="mt-6 pt-4 border-t border-[var(--border)]">
+      <div className="pt-4 border-t border-[var(--border)]">
         <label
           className="text-xs md:text-sm font-medium mb-2 block"
           style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}
@@ -82,10 +80,10 @@ export default function OnboardingStepIncome({
           Expected Annual Salary Increment (%)
         </label>
         <div
-          className="flex gap-2 items-center px-4 py-3 rounded-2xl transition-all"
+          className="flex gap-2 items-center px-4 py-3 rounded-2xl transition-shadow"
           style={{
             background: "var(--surface-tint)",
-            border: "1px solid var(--border)",
+            border: "2px solid var(--border)",
           }}
         >
           <input
@@ -104,8 +102,7 @@ export default function OnboardingStepIncome({
         </div>
       </div>
 
-      {/* Document upload */}
-      <div className="pt-4 flex justify-center">
+      <div className="pt-2 flex justify-center">
         <label
           htmlFor="document-upload-income"
           className={`pill-button px-6 py-3 text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all ${isExtracting ? "opacity-70 pointer-events-none" : "hover:scale-105"}`}

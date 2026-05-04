@@ -1,7 +1,6 @@
-import { TrendingUp, Sparkles, Wallet, AlertTriangle } from "lucide-react";
+import { TrendingUp, Sparkles, Wallet, AlertTriangle, ArrowUpRight, Calendar } from "lucide-react";
 import type { InvestmentStrategy } from "../../../lib/types";
 
-// ── Types ────────────────────────────────────────────────
 interface OnboardingStepStrategyProps {
   selectedStrategy: InvestmentStrategy;
   onChangeStrategy: (strategy: InvestmentStrategy) => void;
@@ -13,16 +12,14 @@ interface OnboardingStepStrategyProps {
   availableForGoals: number;
   surplusNum: number;
   surplusExceedsAvailable: boolean;
-  surplusExceeds75: boolean;
   surplusExceedsIncome: boolean;
   remainingForGoals: number;
 }
 
-// ── Sub: Step-Up toggle ──────────────────────────────────
 function StepUpToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
     <div
-      className="mt-4 p-4 rounded-xl md:rounded-2xl border flex items-center justify-between cursor-pointer"
+      className="p-5 md:p-6 rounded-xl md:rounded-2xl border-2 flex items-center gap-4 cursor-pointer transition-all hover:border-[var(--accent)]"
       onClick={onToggle}
       role="switch"
       aria-checked={enabled}
@@ -33,28 +30,35 @@ function StepUpToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
         borderColor: enabled ? "var(--accent)" : "var(--border)",
       }}
     >
-      <div>
-        <h4 className="font-bold text-sm md:text-base text-[var(--card-foreground)]">
-          Step-Up Plan (Recommended)
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{
+          background: enabled ? "var(--accent)" : "var(--surface-hover)",
+          color: enabled ? "var(--on-accent)" : "var(--accent-text)",
+        }}
+      >
+        <ArrowUpRight size={22} className="icon-wireframe" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-bold text-sm md:text-base text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-body)" }}>
+          Step-Up Plan
         </h4>
-        <p className="text-xs md:text-sm text-[var(--secondary)] mt-1">
-          Increment monthly goal payments as your salary grows
+        <p className="text-xs md:text-sm text-[var(--secondary)] mt-0.5">
+          Automatically increase monthly goal contributions as your salary grows each year
         </p>
       </div>
       <div
-        className={`w-10 h-6 rounded-full transition-colors relative flex items-center ${enabled ? "bg-[var(--accent)]" : "bg-[var(--surface-hover)]"}`}
+        className={`w-12 h-7 rounded-full transition-colors relative flex items-center flex-shrink-0 ${enabled ? "bg-[var(--accent)]" : "bg-[var(--surface-hover)]"}`}
       >
         <div
-          className={`w-4 h-4 rounded-full bg-white absolute transition-transform ${enabled ? "translate-x-5" : "translate-x-1"}`}
+          className={`w-5 h-5 rounded-full bg-white shadow-md absolute transition-transform ${enabled ? "translate-x-6" : "translate-x-1"}`}
         />
       </div>
     </div>
   );
 }
 
-// ── Sub: Strategy card ───────────────────────────────────
 function StrategyCard({
-  strategy,
   isSelected,
   onClick,
   icon,
@@ -82,166 +86,119 @@ function StrategyCard({
     <button
       type="button"
       onClick={onClick}
-      className="text-left p-4 rounded-xl md:rounded-2xl transition-all"
+      className="text-left p-5 md:p-6 rounded-xl md:rounded-2xl transition-all"
       aria-pressed={isSelected}
       style={{
         background: isSelected ? accentSubtle : "var(--card)",
-        border: `1px solid ${isSelected ? borderColor : "var(--border)"}`,
-        boxShadow: isSelected ? `0 0 24px ${accentGlow}` : "none",
+        border: `2px solid ${isSelected ? borderColor : "var(--border)"}`,
+        boxShadow: isSelected ? `0 0 28px ${accentGlow}` : "none",
       }}
     >
       <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
+        className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
         style={{ background: accentSubtle, color: accentText }}
       >
         {icon}
       </div>
-      <div className="font-bold mb-1 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
+      <div className="font-bold mb-1.5 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
         {title}
       </div>
-      <div className="text-xs md:text-sm" style={{ color: "var(--secondary)" }}>
+      <div className="text-xs md:text-sm leading-relaxed" style={{ color: "var(--secondary)" }}>
         {description}
       </div>
     </button>
   );
 }
 
-// ── Sub: Surplus Reserve section ─────────────────────────
 function SurplusReserveSection({
   surplusAmount,
   onChangeSurplusAmount,
-  incomeINR,
   availableForGoals,
   surplusNum,
   surplusExceedsAvailable,
-  surplusExceeds75,
   surplusExceedsIncome,
   remainingForGoals,
 }: {
   surplusAmount: string;
   onChangeSurplusAmount: (v: string) => void;
-  incomeINR: number;
   availableForGoals: number;
   surplusNum: number;
   surplusExceedsAvailable: boolean;
-  surplusExceeds75: boolean;
   surplusExceedsIncome: boolean;
   remainingForGoals: number;
 }) {
-  const borderColor = surplusExceedsIncome || surplusExceedsAvailable
-    ? "var(--red)"
-    : surplusExceeds75
-      ? "var(--amber)"
-      : "var(--border)";
-
-  const inputBorderColor = surplusExceedsAvailable || surplusExceedsIncome
-    ? "var(--red)"
-    : surplusExceeds75
-      ? "var(--amber)"
-      : "var(--border)";
+  const hasWarning = surplusExceedsAvailable || surplusExceedsIncome;
+  const inputBorderColor = hasWarning ? "var(--red)" : "var(--border)";
 
   return (
     <div
-      className="p-4 rounded-xl md:rounded-2xl space-y-3"
+      className="p-5 md:p-6 rounded-xl md:rounded-2xl space-y-4"
       style={{
-        background: "var(--card)",
-        border: `1px solid ${borderColor}`,
+        background: "var(--surface-tint)",
+        border: `2px solid ${hasWarning ? "var(--red)" : "var(--border)"}`,
       }}
     >
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-3">
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center"
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: "var(--accent-glow)", color: "var(--accent-text)" }}
         >
-          <Wallet size={16} />
+          <Wallet size={18} />
         </div>
         <div>
-          <div className="text-sm font-semibold text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-body)" }}>
+          <div className="text-sm md:text-base font-semibold text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-body)" }}>
             Monthly Surplus Reserve
           </div>
-          <div className="text-[10px] md:text-xs" style={{ color: "var(--secondary)" }}>
-            Amount to keep aside each month, unallocated to any goal
+          <div className="text-[10px] md:text-xs mt-0.5" style={{ color: "var(--secondary)" }}>
+            Keep aside each month — remaining goes to your goals
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2 items-center">
-        <span className="text-lg font-bold text-[var(--secondary)]" style={{ fontFamily: "var(--font-display)" }}>
-          ₹
-        </span>
+      <div className="flex items-center gap-3">
         <input
           type="text"
           value={surplusAmount}
           onChange={(e) => onChangeSurplusAmount(e.target.value.replace(/[^0-9]/g, ""))}
-          placeholder="0 (optional)"
-          className="flex-1 px-4 py-3 text-lg md:text-xl font-bold rounded-xl outline-none slashed-zero text-[var(--card-foreground)]"
+          placeholder="0"
+          className="flex-1 px-5 py-3 text-lg md:text-xl font-bold rounded-xl outline-none slashed-zero text-[var(--card-foreground)]"
           style={{
             fontFamily: "var(--font-display)",
-            background: "var(--surface-tint)",
-            border: `1px solid ${inputBorderColor}`,
+            background: "var(--card)",
+            border: `2px solid ${inputBorderColor}`,
           }}
           inputMode="numeric"
           aria-label="Monthly surplus reserve amount"
         />
+        <span className="text-xs md:text-sm font-medium text-[var(--secondary)] flex-shrink-0">/month</span>
       </div>
 
-      {/* Available budget summary */}
       {surplusNum > 0 && (
-        <div className="grid grid-cols-2 gap-2 text-xs pt-1" style={{ fontFamily: "var(--font-body)" }}>
-          <div className="px-3 py-2 rounded-lg" style={{ background: "var(--surface-tint)", color: "var(--secondary)" }}>
-            <div className="font-medium mb-0.5">Available</div>
-            <div className="font-bold text-sm text-[var(--card-foreground)] slashed-zero">
-              ₹{availableForGoals.toLocaleString("en-IN")}
-            </div>
-          </div>
-          <div
-            className="px-3 py-2 rounded-lg"
-            style={{
-              background: surplusExceedsAvailable ? "var(--red-subtle)" : "var(--surface-tint)",
-              color: surplusExceedsAvailable ? "var(--red-text)" : "var(--secondary)",
-            }}
-          >
-            <div className="font-medium mb-0.5">For Goals</div>
-            <div className="font-bold text-sm slashed-zero">
-              ₹{remainingForGoals.toLocaleString("en-IN")}
-            </div>
-          </div>
+        <div className="flex items-center gap-2 text-xs md:text-sm py-1" style={{ fontFamily: "var(--font-body)", color: "var(--secondary)" }}>
+          <Calendar size={14} className="flex-shrink-0" />
+          <span>
+            <strong className="text-[var(--card-foreground)] slashed-zero">{remainingForGoals.toLocaleString("en-IN")}</strong> available for goals
+            {" · "}
+            <strong className="text-[var(--card-foreground)] slashed-zero">{surplusNum.toLocaleString("en-IN")}</strong> reserved
+          </span>
         </div>
       )}
 
-      {/* Warning: exceeds 75% of income (but not available budget) */}
-      {surplusExceeds75 && !surplusExceedsAvailable && !surplusExceedsIncome && (
-        <WarningBox
-          type="warning"
-          text={`This is more than 75% of your income. It'll take significantly longer to achieve your goals with this much reserved.`}
-        />
-      )}
-
-      {/* Error: exceeds available budget (but not income) */}
       {surplusExceedsAvailable && !surplusExceedsIncome && (
-        <WarningBox
-          type="error"
-          text={`Surplus exceeds your available budget after expenses and debt (₹${availableForGoals.toLocaleString("en-IN")}). Nothing will be left for your goals.`}
-        />
+        <WarningBox type="error" text="This exceeds your available budget. Nothing will be left for your goals." />
       )}
-
-      {/* Error: exceeds total income */}
       {surplusExceedsIncome && (
-        <WarningBox
-          type="error"
-          text={`This amount exceeds your total monthly income of ₹${incomeINR.toLocaleString("en-IN")}. Please enter a realistic amount.`}
-        />
+        <WarningBox type="error" text="This exceeds your total monthly income. Please enter a realistic amount." />
       )}
     </div>
   );
 }
 
-// ── Sub: Warning/Error banner ────────────────────────────
 function WarningBox({ type, text }: { type: "error" | "warning"; text: string }) {
   const isError = type === "error";
   return (
     <div
-      className="flex items-start gap-2 p-3 rounded-xl text-xs md:text-sm"
+      className="flex items-start gap-2.5 p-3 rounded-xl text-xs md:text-sm"
       style={{
         background: isError ? "var(--red-subtle)" : "var(--amber-subtle)",
         color: isError ? "var(--red-text)" : "var(--amber-text)",
@@ -255,80 +212,52 @@ function WarningBox({ type, text }: { type: "error" | "warning"; text: string })
   );
 }
 
-// ── Main Component ───────────────────────────────────────
 export default function OnboardingStepStrategy({
-  selectedStrategy,
-  onChangeStrategy,
-  stepUpEnabled,
-  onToggleStepUp,
-  surplusAmount,
-  onChangeSurplusAmount,
-  incomeINR,
-  availableForGoals,
-  surplusNum,
-  surplusExceedsAvailable,
-  surplusExceeds75,
-  surplusExceedsIncome,
-  remainingForGoals,
+  selectedStrategy, onChangeStrategy,
+  stepUpEnabled, onToggleStepUp,
+  surplusAmount, onChangeSurplusAmount,
+  incomeINR, availableForGoals, surplusNum,
+  surplusExceedsAvailable, surplusExceedsIncome, remainingForGoals,
 }: OnboardingStepStrategyProps) {
   return (
-    <div className="space-y-4 md:space-y-5">
-      {/* Info banner */}
+    <div className="space-y-5 md:space-y-6">
       <div
-        className="p-3 rounded-xl md:rounded-2xl text-xs md:text-sm"
-        style={{
-          background: "var(--surface-tint)",
-          border: "1px solid var(--border)",
-          color: "var(--secondary)",
-        }}
+        className="p-4 rounded-xl md:rounded-2xl text-xs md:text-sm"
+        style={{ background: "var(--surface-tint)", border: "1px solid var(--border)", color: "var(--secondary)" }}
       >
-        You can switch strategy later from Month and Scenarios pages.
+        You have <strong className="text-[var(--card-foreground)] slashed-zero">{availableForGoals.toLocaleString("en-IN")}</strong> available for goals after expenses and debt.
       </div>
 
-      {/* Step-Up toggle */}
       <StepUpToggle enabled={stepUpEnabled} onToggle={onToggleStepUp} />
 
-      {/* Strategy cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <StrategyCard
-          strategy="avalanche"
-          isSelected={selectedStrategy === "avalanche"}
-          onClick={() => onChangeStrategy("avalanche")}
-          icon={<TrendingUp size={20} className="icon-wireframe" />}
-          title="Avalanche"
-          description="Prioritizes highest-impact goals first to optimize outcome speed."
-          accentColor="var(--accent)"
-          accentSubtle="var(--accent-glow)"
-          accentText="var(--accent-text)"
-          accentGlow="var(--accent-glow)"
-          borderColor="var(--accent)"
-        />
-
-        <StrategyCard
-          strategy="snowball"
-          isSelected={selectedStrategy === "snowball"}
-          onClick={() => onChangeStrategy("snowball")}
-          icon={<Sparkles size={20} className="icon-wireframe" />}
-          title="Snowball"
-          description="Starts with smaller goals for faster wins and stronger momentum."
-          accentColor="var(--tertiary-accent)"
-          accentSubtle="var(--tertiary-accent-subtle)"
-          accentText="var(--tertiary-accent-text)"
-          accentGlow="var(--tertiary-accent-glow)"
-          borderColor="var(--tertiary-accent)"
-        />
+      <div className="space-y-1.5">
+        <label className="text-xs md:text-sm font-semibold" style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}>
+          Repayment Strategy
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+          <StrategyCard
+            strategy="avalanche" isSelected={selectedStrategy === "avalanche"}
+            onClick={() => onChangeStrategy("avalanche")}
+            icon={<TrendingUp size={22} className="icon-wireframe" />}
+            title="Avalanche"
+            description="Prioritize highest-impact goals first for maximum efficiency."
+            accentColor="var(--accent)" accentSubtle="var(--accent-glow)" accentText="var(--accent-text)" accentGlow="var(--accent-glow)" borderColor="var(--accent)"
+          />
+          <StrategyCard
+            strategy="snowball" isSelected={selectedStrategy === "snowball"}
+            onClick={() => onChangeStrategy("snowball")}
+            icon={<Sparkles size={22} className="icon-wireframe" />}
+            title="Snowball"
+            description="Start with smaller goals for quick wins and momentum."
+            accentColor="var(--tertiary-accent)" accentSubtle="var(--tertiary-accent-subtle)" accentText="var(--tertiary-accent-text)" accentGlow="var(--tertiary-accent-glow)" borderColor="var(--tertiary-accent)"
+          />
+        </div>
       </div>
 
-      {/* Surplus Reserve */}
       <SurplusReserveSection
-        surplusAmount={surplusAmount}
-        onChangeSurplusAmount={onChangeSurplusAmount}
-        incomeINR={incomeINR}
-        availableForGoals={availableForGoals}
-        surplusNum={surplusNum}
-        surplusExceedsAvailable={surplusExceedsAvailable}
-        surplusExceeds75={surplusExceeds75}
-        surplusExceedsIncome={surplusExceedsIncome}
+        surplusAmount={surplusAmount} onChangeSurplusAmount={onChangeSurplusAmount}
+        availableForGoals={availableForGoals} surplusNum={surplusNum}
+        surplusExceedsAvailable={surplusExceedsAvailable} surplusExceedsIncome={surplusExceedsIncome}
         remainingForGoals={remainingForGoals}
       />
     </div>

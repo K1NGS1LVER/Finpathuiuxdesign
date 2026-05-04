@@ -1,6 +1,5 @@
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
-// ── Types ────────────────────────────────────────────────
 interface OnboardingNavigationProps {
   step: number;
   totalSteps: number;
@@ -10,7 +9,6 @@ interface OnboardingNavigationProps {
   submitLabel?: string;
 }
 
-// ── Component ────────────────────────────────────────────
 export default function OnboardingNavigation({
   step,
   totalSteps,
@@ -20,17 +18,17 @@ export default function OnboardingNavigation({
   submitLabel = "Finish",
 }: OnboardingNavigationProps) {
   return (
-    <div className="flex gap-2 md:gap-3 mt-auto pt-2 md:pt-4">
+    <div className="flex gap-2.5 md:gap-3">
       {step > 0 && (
         <button
           type="button"
           onClick={onBack}
-          className="px-4 py-3 md:px-6 md:py-4 rounded-full font-medium flex items-center gap-2 transition-all hover:scale-105 text-[var(--card-foreground)]"
+          className="px-5 py-3.5 md:px-6 md:py-4 rounded-full font-semibold flex items-center gap-2 transition-all hover:scale-105 text-[var(--card-foreground)]"
           style={{
             fontFamily: "var(--font-body)",
             background: "var(--card)",
             boxShadow: "var(--shadow-sm)",
-            border: "1px solid var(--border)",
+            border: "2px solid var(--border)",
           }}
           aria-label="Go back to previous step"
         >
@@ -42,7 +40,7 @@ export default function OnboardingNavigation({
         type="button"
         onClick={onNext}
         disabled={!canAdvance}
-        className="flex-1 px-4 py-3 md:px-6 md:py-4 rounded-full font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="flex-1 px-5 py-3.5 md:px-6 md:py-4 rounded-full font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
         style={{
           backgroundColor: "var(--accent)",
           color: "var(--on-accent)",
