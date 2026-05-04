@@ -22,6 +22,7 @@ import Header from "./components/Header";
 import PennyPanel from "./components/PennyPanel";
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent() {
   const [isDark, setIsDark] = useState(() => {
@@ -158,15 +159,59 @@ function AppContent() {
                 <Route
                   path="/dashboard"
                   element={
-                    <Dashboard onPennyClick={() => setPennyOpen(true)} />
+                    <ErrorBoundary key={location.pathname}>
+                      <Dashboard onPennyClick={() => setPennyOpen(true)} />
+                    </ErrorBoundary>
                   }
                 />
-                <Route path="/journey" element={<Journey />} />
-                <Route path="/tax" element={<Tax />} />
-                <Route path="/month" element={<Month />} />
-                <Route path="/scenarios" element={<Scenarios />} />
-                <Route path="/progress" element={<Progress />} />
-                <Route path="/celebrate" element={<Celebrate />} />
+                <Route
+                  path="/journey"
+                  element={
+                    <ErrorBoundary key={location.pathname}>
+                      <Journey />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/tax"
+                  element={
+                    <ErrorBoundary key={location.pathname}>
+                      <Tax />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/month"
+                  element={
+                    <ErrorBoundary key={location.pathname}>
+                      <Month />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/scenarios"
+                  element={
+                    <ErrorBoundary key={location.pathname}>
+                      <Scenarios />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/progress"
+                  element={
+                    <ErrorBoundary key={location.pathname}>
+                      <Progress />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/celebrate"
+                  element={
+                    <ErrorBoundary key={location.pathname}>
+                      <Celebrate />
+                    </ErrorBoundary>
+                  }
+                />
               </Routes>
             </main>
           </div>
@@ -267,17 +312,36 @@ function AppContent() {
         <Routes>
           <Route
             path="/"
-            element={<Landing isDark={isDark} setIsDark={setIsDark} />}
+            element={
+              <ErrorBoundary key={location.pathname}>
+                <Landing isDark={isDark} setIsDark={setIsDark} />
+              </ErrorBoundary>
+            }
           />
           <Route
             path="/auth"
-            element={<Auth isDark={isDark} setIsDark={setIsDark} />}
+            element={
+              <ErrorBoundary key={location.pathname}>
+                <Auth isDark={isDark} setIsDark={setIsDark} />
+              </ErrorBoundary>
+            }
           />
           <Route
             path="/onboarding"
-            element={<Onboarding isDark={isDark} setIsDark={setIsDark} />}
+            element={
+              <ErrorBoundary key={location.pathname}>
+                <Onboarding isDark={isDark} setIsDark={setIsDark} />
+              </ErrorBoundary>
+            }
           />
-          <Route path="/loading" element={<Loading />} />
+          <Route
+            path="/loading"
+            element={
+              <ErrorBoundary key={location.pathname}>
+                <Loading />
+              </ErrorBoundary>
+            }
+          />
         </Routes>
       )}
     </div>
@@ -287,7 +351,9 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
