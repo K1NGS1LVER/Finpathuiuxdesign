@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sun, Moon, Loader2 } from 'lucide-react';
-import { useAuthStore } from '../../lib/auth-store';
+import { useAuthStore } from '@/lib/auth-store';
 
 interface AuthScreenProps {
   isDark: boolean;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calculator, TrendingDown, ArrowRight, Lightbulb as LightbulbIcon } from 'lucide-react';
-import { compareTaxRegimes } from '../../lib/tax-engine';
-import { useFinPathStore } from '../../lib/store';
+import { compareTaxRegimes } from '@/lib/tax-engine';
+import { useFinPathStore } from '@/lib/store';
 
 export default function Tax() {
   const storeIncome = useFinPathStore(s => s.income);

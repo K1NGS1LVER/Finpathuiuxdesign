@@ -18,7 +18,7 @@ import {
   Gem,
   type LucideIcon,
 } from "lucide-react";
-import { useFinPathStore } from "../../lib/store";
+import { useFinPathStore } from '@/lib/store';
 import {
   LineChart,
   Line,
@@ -31,7 +31,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import confetti from "canvas-confetti";
-import type { Goal } from "../../lib/types";
+import type { Goal } from '@/lib/types';
 
 interface GoalTemplate {
   name: string;

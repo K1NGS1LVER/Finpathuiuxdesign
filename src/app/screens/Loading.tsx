@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
-import { useFinPathStore } from '../../lib/store';
+import { useFinPathStore } from '@/lib/store';
 
 export default function Loading() {
   const navigate = useNavigate();

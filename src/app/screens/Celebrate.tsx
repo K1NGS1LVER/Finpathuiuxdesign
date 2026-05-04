@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Trophy, Clock, Sparkles, Share2, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { useFinPathStore } from '../../lib/store';
+import { useFinPathStore } from '@/lib/store';
 
 export default function Celebrate() {
   const navigate = useNavigate();

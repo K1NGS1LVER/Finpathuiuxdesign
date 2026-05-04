@@ -1,5 +1,5 @@
 import { Target, Bike, Plane, CreditCard, Home, Heart, TrendingUp, Shield, GraduationCap, Wallet } from "lucide-react";
-import type { Goal } from "../../../lib/types";
+import type { Goal } from '@/lib/types';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
   Bike,

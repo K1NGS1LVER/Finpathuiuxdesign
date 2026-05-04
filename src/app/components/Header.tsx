@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Sun, Moon, Menu, LogOut, User } from "lucide-react";
-import { useAuthStore } from "../../lib/auth-store";
-import { useFinPathStore } from "../../lib/store";
+import { useAuthStore } from '@/lib/auth-store';
+import { useFinPathStore } from '@/lib/store';
 import { useNavigate } from "react-router";
 
 interface HeaderProps {

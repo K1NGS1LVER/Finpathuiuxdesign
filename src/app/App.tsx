@@ -20,8 +20,8 @@ import Auth from "./screens/Auth";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import PennyPanel from "./components/PennyPanel";
-import { useFinPathStore } from "../lib/store";
-import { useAuthStore } from "../lib/auth-store";
+import { useFinPathStore } from '@/lib/store';
+import { useAuthStore } from '@/lib/auth-store';
 
 function AppContent() {
   const [isDark, setIsDark] = useState(() => {

@@ -1,5 +1,5 @@
 import { Target, Plus } from "lucide-react";
-import { useFinPathStore } from "../../lib/store";
+import { useFinPathStore } from '@/lib/store';
 import { useJourneyCanvas } from "./journey/useJourneyCanvas";
 import { useJourneyGoals } from "./journey/useJourneyGoals";
 import JourneyIncomeNode from "./journey/JourneyIncomeNode";
