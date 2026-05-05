@@ -3,10 +3,11 @@
 :root {
   /* ─── Typography ─── */
   --font-size: 16px;
-  --font-display: "Lufga", "Space Grotesk", "Montserrat", system-ui, sans-serif;
-  --font-body: "Lufga", "Montserrat", system-ui, sans-serif;
+  --font-display: "Lufga", system-ui, sans-serif;
+  --font-body: "Lufga", system-ui, sans-serif;
 
   /* ─── 8px Spacing Scale ─── */
+  --space-0: 0px;
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
@@ -155,8 +156,8 @@
   --neutral-800: #050f1c;
 
   /* ─── Typography Scale ─── */
-  --text-xs: 11px;
-  --text-sm: 13px;
+  --text-xs: 12px;
+  --text-sm: 14px;
   --text-base: 15px;
   --text-lg: 18px;
   --text-xl: 22px;
@@ -173,6 +174,7 @@
   --font-weight-bold: 700;
 
   /* ─── Border Radius ─── */
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -192,6 +194,22 @@
 
   /* ─── Progress Track ─── */
   --progress-inactive: rgba(5, 15, 28, 0.1);
+
+  /* ═══════════════════════════════════════════════
+     GOAL CATEGORY COLORS (Section 16)
+  ═══════════════════════════════════════════════ */
+  --teal: #14b8a6;
+  --teal-text: #0f766e;
+  --teal-subtle: rgba(20, 184, 166, 0.12);
+  --terracotta: #d97757;
+  --terracotta-text: #9a4a2e;
+  --terracotta-subtle: rgba(217, 119, 87, 0.12);
+  --cobalt: #3b82f6;
+  --cobalt-text: #1d4ed8;
+  --cobalt-subtle: rgba(59, 130, 246, 0.12);
+  --rose: #f43f5e;
+  --rose-text: #be123c;
+  --rose-subtle: rgba(244, 63, 94, 0.12);
 
   /* ═══════════════════════════════════════════════
      COMPATIBILITY ALIASES
@@ -332,6 +350,22 @@
   /* ─── Progress Track ─── */
   --progress-inactive: rgba(255, 255, 255, 0.12);
 
+  /* ═══════════════════════════════════════════════
+     GOAL CATEGORY COLORS — Dark Mode (Section 16)
+  ═══════════════════════════════════════════════ */
+  --teal: #2dd4bf;
+  --teal-text: #5eead4;
+  --teal-subtle: rgba(45, 212, 191, 0.14);
+  --terracotta: #f09b7a;
+  --terracotta-text: #f5b7a0;
+  --terracotta-subtle: rgba(240, 155, 122, 0.14);
+  --cobalt: #60a5fa;
+  --cobalt-text: #93bbfd;
+  --cobalt-subtle: rgba(96, 165, 250, 0.14);
+  --rose: #fb7185;
+  --rose-text: #fda4af;
+  --rose-subtle: rgba(251, 113, 133, 0.14);
+
   /* Compatibility aliases */
   --lime: var(--tertiary-accent);
   --lime-text: var(--tertiary-accent-text);
@@ -387,6 +421,34 @@
     min-height: 100vh;
   }
 
+  /* ═══════════════════════════════════════════════
+     UNIFIED BACKGROUND GRADIENT — All Screens (Section 1)
+     ─────────────────────────────────────────────
+     One canonical gradient, felt not seen.
+     Blue (trust, top-left), Violet (secondary, top-right),
+     Lime (growth, bottom-center).
+  ═══════════════════════════════════════════════ */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 45% at 15% 20%, rgba(73, 91, 255, 0.12), transparent),
+      radial-gradient(ellipse 50% 50% at 85% 35%, rgba(172, 73, 255, 0.07), transparent),
+      radial-gradient(ellipse 50% 40% at 50% 85%, rgba(176, 255, 9, 0.05), transparent),
+      radial-gradient(ellipse 35% 35% at 65% 18%, rgba(73, 91, 255, 0.04), transparent);
+  }
+
+  .dark body::before {
+    background:
+      radial-gradient(ellipse 70% 45% at 15% 20%, rgba(123, 140, 255, 0.06), transparent),
+      radial-gradient(ellipse 50% 50% at 85% 35%, rgba(199, 125, 255, 0.04), transparent),
+      radial-gradient(ellipse 50% 40% at 50% 85%, rgba(176, 255, 9, 0.03), transparent),
+      radial-gradient(ellipse 35% 35% at 65% 18%, rgba(123, 140, 255, 0.02), transparent);
+  }
+
   html {
     font-size: var(--font-size);
   }
@@ -410,30 +472,6 @@
       "zero" 1,
       "tnum" 1;
   }
-}
-
-/* ═══════════════════════════════════════════════
-   LOADING STATE
-   ─────────────────────────────────────────────
-   Use .dashboard-loading on the root container
-   during skeleton/loading. Swap to
-   .dashboard-ready once content mounts.
-   The transition animates smoothly between
-   the muted loading bg and the full blob bg.
-═══════════════════════════════════════════════ */
-
-.dashboard-loading {
-  min-height: 100vh;
-  background: var(--background-loading);
-  color: var(--foreground);
-  transition: background 600ms ease;
-}
-
-.dashboard-ready {
-  min-height: 100vh;
-  background: var(--background);
-  color: var(--foreground);
-  transition: background 600ms ease;
 }
 
 /* ═══════════════════════════════════════════════
@@ -527,6 +565,31 @@ textarea:focus-visible {
 }
 
 /* ═══════════════════════════════════════════════
+   BUTTON PRESS
+═══════════════════════════════════════════════ */
+
+.button-press {
+  transition: all 200ms ease;
+}
+
+.button-press:hover {
+  transform: scale(1.02);
+}
+
+.button-press:active {
+  transform: scale(0.98);
+}
+
+.button-press:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-press:disabled:hover {
+  transform: none;
+}
+
+/* ═══════════════════════════════════════════════
    DATA BLOB
 ═══════════════════════════════════════════════ */
 
@@ -541,6 +604,22 @@ textarea:focus-visible {
 .dark .data-blob {
   opacity: 0.35;
 }
+
+/* ═══════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+═══════════════════════════════════════════════ */
+
+@keyframes scenarioFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 /* ═══════════════════════════════════════════════
    UTILITY CLASSES
@@ -623,22 +702,64 @@ textarea:focus-visible {
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.07em;
   color: var(--secondary);
 }
 
-/* ─── Gap Utilities ─── */
-.gap-1 {
-  gap: var(--space-1);
+/* ═══════════════════════════════════════════════
+   PENNY INSIGHT CARD
+   ─────────────────────────────────────────────
+   Shared card pattern for AI-generated insights
+   and suggestions. Accented with tertiary
+   (lime) to signal growth/opportunity.
+   Includes a centered soft glow blob.
+═══════════════════════════════════════════════ */
+
+.penny-insight-card {
+  background: var(--surface-tint);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3);
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--tertiary-accent);
+  color: var(--card-foreground);
 }
-.gap-2 {
-  gap: var(--space-2);
+
+@media (min-width: 768px) {
+  .penny-insight-card {
+    padding: var(--space-4);
+  }
 }
-.gap-3 {
-  gap: var(--space-3);
+
+.penny-insight-blob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: var(--tertiary-accent);
+  opacity: 0.2;
+  filter: blur(80px);
+  border-radius: 50%;
+  pointer-events: none;
 }
-.gap-4 {
-  gap: var(--space-4);
+
+@media (min-width: 768px) {
+  .penny-insight-blob {
+    width: 600px;
+    height: 600px;
+    filter: blur(100px);
+  }
+}
+
+.dark .penny-insight-blob {
+  opacity: 0.3;
+  mix-blend-mode: screen;
 }
 
 /* ═══════════════════════════════════════════════
@@ -664,4 +785,58 @@ textarea::placeholder {
 select option {
   background: var(--background-solid);
   color: var(--card-foreground);
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION SEPARATOR (Section 14.2)
+═══════════════════════════════════════════════ */
+
+.section-sep {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  margin: var(--space-1) 0;
+}
+
+.section-sep::before,
+.section-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-sep-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--secondary);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════
+   PENNY CARD STANDARD (Section 14.3)
+   ─────────────────────────────────────────────
+   Penny card with lime border and lime blob.
+   Used across all Penny insight cards.
+═══════════════════════════════════════════════ */
+
+.penny-card {
+  border: 1px solid rgba(176, 255, 9, 0.18);
+}
+
+.penny-card::before {
+  content: "";
+  position: absolute;
+  bottom: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--tertiary-accent);
+  opacity: 0.06;
+  filter: blur(var(--blur-lg));
+  pointer-events: none;
 }

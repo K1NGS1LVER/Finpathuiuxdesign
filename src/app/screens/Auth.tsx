@@ -208,7 +208,7 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 md:py-4 rounded-xl md:rounded-full font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
+              className="w-full py-3.5 md:py-4 rounded-xl md:rounded-full font-bold flex items-center justify-center gap-2 button-press disabled:opacity-60 disabled:hover:scale-100"
               style={{
                 backgroundColor: 'var(--accent)',
                 color: 'var(--on-accent)',

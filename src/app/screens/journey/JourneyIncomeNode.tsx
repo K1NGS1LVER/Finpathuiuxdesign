@@ -23,7 +23,7 @@ export default function JourneyIncomeNode({
       style={{
         left: x,
         top: y,
-        width: 160,
+        width: 200,
         transition: dragging ? "none" : "transform 0.2s ease",
       }}
       onMouseDown={(e) => onPointerDown(e, "income")}

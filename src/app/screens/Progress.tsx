@@ -982,7 +982,7 @@ export default function Progress() {
           {!checkedIn ? (
             <button
               onClick={handleCheckIn}
-              className="w-full mt-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full mt-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
               style={{
                 backgroundColor: "var(--accent)",
                 color: "var(--on-accent)",
@@ -1080,7 +1080,7 @@ export default function Progress() {
                 label: "Debt Load",
                 score: healthScore.debtLoad,
                 max: 25,
-                color: "var(--tertiary-accent)",
+                color: "var(--red)",
                 insight: debts.totalMonthly === 0 ? "Debt-free — excellent position" : `Debt-to-income: ${Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100)}%. ${Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100) < 20 ? "Healthy range" : Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100) < 35 ? "Moderate — try to reduce" : "High — prioritize debt payoff"}`,
               },
               {
@@ -1135,7 +1135,7 @@ export default function Progress() {
                 border: "1px solid var(--border)",
               }}
             >
-              <div className="text-xs font-semibold text-[var(--accent-text)] uppercase tracking-wider mb-2">
+              <div className="text-xs font-semibold text-[var(--tertiary-accent-text)] uppercase tracking-wider mb-2">
                 Penny's Top Actions
               </div>
               {healthScore.actions.map((action, i) => (
@@ -1144,7 +1144,7 @@ export default function Progress() {
                   className="flex items-start gap-2 text-sm text-[var(--card-foreground)]"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
-                  <span className="text-[var(--accent)] mt-0.5">•</span>
+                  <span className="text-[var(--tertiary-accent)] mt-0.5">•</span>
                   {action}
                 </div>
               ))}
