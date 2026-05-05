@@ -25,7 +25,7 @@ export function usePalette() {
     purple: resolveCssVar('--accent'),
     teal: resolveCssVar('--green'),
     pink: resolveCssVar('--red'),
-    slate: '#64748b',
+    slate: resolveCssVar('--tertiary'),
   }), []);
 }
 

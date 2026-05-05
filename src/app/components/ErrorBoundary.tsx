@@ -68,7 +68,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
             </p>
             <button
               onClick={this.handleRetry}
-              className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 mx-auto transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 mx-auto button-press"
               style={{
                 background: 'var(--accent)',
                 color: 'var(--on-accent)',

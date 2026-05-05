@@ -300,7 +300,7 @@ export default function JourneyGoalDetailPanel({
         {goal.status !== "complete" && (
           <button
             onClick={() => onComplete(goal.id)}
-            className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_var(--accent-glow)]"
+            className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
             style={{
               backgroundColor: "var(--accent)",
               color: "var(--on-accent)",

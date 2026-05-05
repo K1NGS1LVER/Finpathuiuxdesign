@@ -218,11 +218,8 @@ export default function Cashflow() {
           </div>
         </div>
 
-        <div
-          className="lg:col-span-3 p-6 md:p-8 rounded-2xl flex flex-col gap-4 relative overflow-hidden z-10 bento-card border border-[var(--tertiary-accent)]"
-          style={{ background: 'var(--surface-tint)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}
-        >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-[var(--tertiary-accent)] opacity-20 dark:opacity-30 dark:mix-blend-screen blur-[80px] md:blur-[100px] rounded-full pointer-events-none" />
+        <div className="lg:col-span-3 flex flex-col gap-4 penny-insight-card">
+          <div className="penny-insight-blob" />
           <div className="relative z-10 flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--tertiary-accent-subtle)', color: 'var(--tertiary-accent-text)' }}>
               <Sparkles size={16} />

@@ -297,24 +297,16 @@ export default function Month() {
         </div>
       )}
 
-      <div
-        className="p-6 md:p-8 relative overflow-hidden z-10 bento-card border border-[var(--accent)]"
-        style={{
-          background: "var(--surface-tint)",
-          backdropFilter: "blur(32px)",
-          WebkitBackdropFilter: "blur(32px)",
-        }}
-      >
-        {/* Centered Prominent Lime Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-[var(--accent)] opacity-20 dark:opacity-40 dark:mix-blend-screen blur-[80px] md:blur-[100px] rounded-full pointer-events-none" />
+      <div className="relative overflow-hidden z-10 bento-card border-2 border-[var(--tertiary-accent)]" style={{ boxShadow: '0 0 40px var(--tertiary-accent-glow)' }}>
+        <div className="penny-insight-blob absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[700px] md:h-[700px] bg-[var(--tertiary-accent)] opacity-20 dark:opacity-40 dark:mix-blend-screen blur-[100px] md:blur-[120px] rounded-full pointer-events-none" />
 
         <div className="relative z-10">
-          <div
-            className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-[var(--accent-text)] uppercase"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            Mission
-          </div>
+              <div
+                className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-[var(--tertiary-accent-text)] uppercase"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                Mission
+              </div>
           <h2
             className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 slashed-zero text-[var(--card-foreground)]"
             style={{ fontFamily: "var(--font-display)" }}
@@ -391,36 +383,36 @@ export default function Month() {
               style={{
                 background:
                   strategy === "avalanche"
-                    ? "rgba(232, 52, 28, )"
+                    ? "var(--red-subtle)"
                     : "var(--surface-tint)",
-                border: `1px solid ${strategy === "avalanche" ? "var(--accent)" : "var(--border)"}`,
+                border: `1px solid ${strategy === "avalanche" ? "var(--red)" : "var(--border)"}`,
                 boxShadow:
                   strategy === "avalanche"
-                    ? "0 0 20px rgba(232, 52, 28, )"
+                    ? "0 0 20px var(--red-glow)"
                     : "none",
                 color: "var(--card-foreground)",
               }}
             >
               Avalanche
             </button>
-            <button
-              onClick={() => setStrategy("snowball")}
-              className="py-3 px-4 rounded-xl font-semibold transition-all"
-              style={{
-                background:
-                  strategy === "snowball"
-                    ? "rgba(73, 91, 255, 0.12)"
-                    : "var(--surface-tint)",
-                border: `1px solid ${strategy === "snowball" ? "var(--blue)" : "var(--border)"}`,
-                boxShadow:
-                  strategy === "snowball"
-                    ? "0 0 20px rgba(73, 91, 255, 0.2)"
-                    : "none",
-                color: "var(--card-foreground)",
-              }}
-            >
-              Snowball
-            </button>
+              <button
+                onClick={() => setStrategy("snowball")}
+                className="py-3 px-4 rounded-xl font-semibold transition-all"
+                style={{
+                  background:
+                    strategy === "snowball"
+                      ? "var(--accent-subtle)"
+                      : "var(--surface-tint)",
+                  border: `1px solid ${strategy === "snowball" ? "var(--accent)" : "var(--border)"}`,
+                  boxShadow:
+                    strategy === "snowball"
+                      ? "0 0 20px var(--accent-glow)"
+                      : "none",
+                  color: "var(--card-foreground)",
+                }}
+              >
+                Snowball
+              </button>
           </div>
         </div>
 
@@ -648,7 +640,7 @@ export default function Month() {
             Savings This Month
           </div>
           <div
-            className="text-4xl font-bold slashed-zero text-[var(--accent-text)] relative z-10"
+              className="text-4xl font-bold slashed-zero text-[var(--tertiary-accent-text)] relative z-10"
             style={{ fontFamily: "var(--font-display)" }}
           >
             ₹{Math.round(savingsTarget / 1000)}K
@@ -659,10 +651,10 @@ export default function Month() {
             On Track
           </div>
           <div
-            className="text-4xl font-bold slashed-zero text-[var(--accent-text)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {tasks.length > 0
+              className="text-4xl font-bold slashed-zero text-[var(--tertiary-accent-text)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {tasks.length > 0
               ? Math.round(
                   (tasks.filter((t) => t.done).length / tasks.length) * 100,
                 )

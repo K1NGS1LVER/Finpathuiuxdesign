@@ -268,7 +268,7 @@ export default function JourneyAddGoalModal({
             <button
               onClick={onAddCustom}
               disabled={!customName.trim() || !customTarget.trim()}
-              className="w-full py-3 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+              className="w-full py-3 rounded-xl font-bold button-press disabled:opacity-40 disabled:hover:scale-100"
               style={{
                 backgroundColor: "var(--accent)",
                 color: "var(--on-accent)",

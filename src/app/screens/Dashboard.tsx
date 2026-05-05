@@ -419,12 +419,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                     <div
                       className="w-2 h-2 rounded-full shadow-sm"
                       style={{
-                        backgroundColor:
-                          i === 0
-                            ? "var(--accent)"
-                            : i === 1
-                              ? "var(--tertiary-accent)"
-                              : "var(--tertiary-accent)",
+                        backgroundColor: "var(--tertiary-accent)",
                       }}
                     />
                     <span className="text-sm font-semibold text-[var(--card-foreground)]">
@@ -445,12 +440,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                     className="absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-out"
                     style={{
                       width: `${goal.progress}%`,
-                      backgroundColor:
-                        i === 0
-                          ? "var(--accent)"
-                          : i === 1
-                            ? "var(--tertiary-accent)"
-                            : "var(--tertiary-accent)",
+                      backgroundColor: "var(--tertiary-accent)",
                     }}
                   />
                   <div className="absolute inset-0 hatching-pattern mix-blend-overlay" />
