@@ -34,7 +34,6 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
   const items = [
     { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
     { icon: GitBranch, label: 'Journey', path: '/journey' },
-    { icon: Calculator, label: 'Tax', path: '/tax' },
     { icon: Calendar, label: 'Month', path: '/month' },
     { icon: Map, label: 'Scenarios', path: '/scenarios' },
     { icon: BarChart3, label: 'Progress', path: '/progress' },

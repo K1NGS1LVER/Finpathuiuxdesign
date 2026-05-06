@@ -38,7 +38,6 @@
 
   /* Main dashboard background — full blob system */
   --background:
-    radial-gradient(circle at 8% 10%, rgba(176, 255, 9, 0.08) 0, rgba(176, 255, 9, 0) 30%),
     radial-gradient(circle at 45% 35%, rgba(73, 91, 255, 0.24) 0, rgba(73, 91, 255, 0) 50%),
     radial-gradient(circle at 75% 60%, rgba(123, 100, 255, 0.14) 0, rgba(123, 100, 255, 0) 38%),
     radial-gradient(circle at 88% 82%, rgba(172, 73, 255, 0.18) 0, rgba(172, 73, 255, 0) 34%),
@@ -246,11 +245,10 @@
 .dark {
   /* Main dashboard background */
   --background:
-    radial-gradient(circle at 8% 12%, rgba(176, 255, 9, 0.05) 0, rgba(176, 255, 9, 0) 22%),
     radial-gradient(circle at 45% 38%, rgba(123, 140, 255, 0.2) 0, rgba(123, 140, 255, 0) 50%),
     radial-gradient(circle at 72% 58%, rgba(160, 120, 255, 0.1) 0, rgba(160, 120, 255, 0) 36%),
     radial-gradient(circle at 86% 80%, rgba(199, 125, 255, 0.14) 0, rgba(199, 125, 255, 0) 34%),
-    linear-gradient(135deg, #040a10 0%, #060d1e 35%, #0a0e24 60%, #0c0a20 85%, #050910 100%);
+    linear-gradient(135deg, #0f1422 0%, #161a33 35%, #181533 65%, #131022 85%, #080a14 100%);
 
   --background-solid: #0b1221;
 
@@ -437,7 +435,6 @@
     background:
       radial-gradient(ellipse 70% 45% at 15% 20%, rgba(73, 91, 255, 0.12), transparent),
       radial-gradient(ellipse 50% 50% at 85% 35%, rgba(172, 73, 255, 0.07), transparent),
-      radial-gradient(ellipse 50% 40% at 50% 85%, rgba(176, 255, 9, 0.05), transparent),
       radial-gradient(ellipse 35% 35% at 65% 18%, rgba(73, 91, 255, 0.04), transparent);
   }
 
@@ -445,7 +442,6 @@
     background:
       radial-gradient(ellipse 70% 45% at 15% 20%, rgba(123, 140, 255, 0.06), transparent),
       radial-gradient(ellipse 50% 50% at 85% 35%, rgba(199, 125, 255, 0.04), transparent),
-      radial-gradient(ellipse 50% 40% at 50% 85%, rgba(176, 255, 9, 0.03), transparent),
       radial-gradient(ellipse 35% 35% at 65% 18%, rgba(123, 140, 255, 0.02), transparent);
   }
 

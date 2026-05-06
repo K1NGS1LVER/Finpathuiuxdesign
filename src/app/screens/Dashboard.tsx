@@ -220,12 +220,6 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
         }
       `}</style>
 
-      {/* Ambient Blobs - Blue dominant, green accent, purple accent */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[550px] h-[550px] top-20 left-1/3 rounded-full bg-[var(--accent)] opacity-12 mix-blend-screen" />
-        <div className="data-blob w-[350px] h-[350px] top-10 -left-20 rounded-full bg-[var(--tertiary-accent)] opacity-8 mix-blend-screen" />
-        <div className="data-blob w-[400px] h-[400px] bottom-32 right-1/4 rounded-full bg-[var(--secondary-accent)] opacity-8 mix-blend-screen" />
-      </div>
 
       {/* Header - Minimal */}
       <div className="mb-6 md:mb-8 relative z-10">
