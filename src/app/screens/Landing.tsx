@@ -1,185 +1,351 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Target, TrendingUp, Shield, Sparkles, Calendar, Lightbulb, ArrowRight, Sun, Moon, ArrowDown } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Target, TrendingUp, Calculator, GitBranch, ArrowRight, Sun, Moon } from 'lucide-react';
 
 interface LandingProps {
   isDark: boolean;
   setIsDark: (dark: boolean) => void;
 }
 
-const goals = [
-  { icon: Target, title: 'Dream Bike', color: 'var(--accent)' },
-  { icon: TrendingUp, title: 'Investment', color: 'var(--tertiary-accent)' },
-  { icon: Shield, title: 'Emergency Fund', color: 'var(--tertiary-accent)' },
-  { icon: Sparkles, title: 'Wedding', color: 'var(--amber)' },
-  { icon: Calendar, title: 'Vacation', color: 'var(--accent)' },
-  { icon: Lightbulb, title: 'Upskill Course', color: 'var(--tertiary-accent)' },
-];
-
-const testimonials = [
-  { name: 'Aditi Sharma', role: 'Software Engineer', text: `"FinPath completely transformed how I track my mutual funds and EMIs. The UI is absolutely gorgeous and the AI insights are spot on."`, image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop' },
-  { name: 'Rahul Verma', role: 'Product Manager', text: `"I've never seen a finance app that looks this good. The glassmorphic design and the seamless dark mode make checking my budget a joy."`, image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150&auto=format&fit=crop' },
-  { name: 'Priya Patel', role: 'Freelancer', text: `"Penny is a lifesaver. She helps me categorize my irregular income and plan my taxes without any of the usual headache."`, image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop' }
-];
-
 export default function Landing({ isDark, setIsDark }: LandingProps) {
   const navigate = useNavigate();
+  const [health, setHealth] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setHealth(78), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (health / 100) * circumference;
 
   return (
-    <div className="h-full w-full overflow-x-hidden overflow-y-auto relative scroll-smooth" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
-      {/* Theme Toggle */}
-      <button
-        onClick={() => setIsDark(!isDark)}
-        className="fixed top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 z-50 bg-[var(--card)] shadow-[var(--shadow-md)] border border-[var(--border)] text-[var(--card-foreground)]"
-      >
-        {isDark ? <Sun size={20} className="icon-wireframe" /> : <Moon size={20} className="icon-wireframe" />}
-      </button>
-
-      {/* Decorative Blurred Blobs (Fixed to background) */}
+    <div className="h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth snap-y snap-mandatory" style={{ background: 'var(--background)', color: 'var(--foreground)', fontFamily: 'var(--font-body)' }}>
+      {/* Background Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] top-[-10%] left-[-10%] bg-[var(--tertiary-accent)] opacity-30" />
-        <div className="data-blob w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bottom-[-20%] right-[-10%] bg-[var(--tertiary-accent)] opacity-30" />
-        <div className="data-blob w-[30vw] h-[30vw] max-w-[400px] max-h-[400px] top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 bg-[var(--accent)] opacity-10 mix-blend-screen" />
+        <div className="absolute top-[25%] left-[15%] w-[80vw] h-[50vh] max-w-[800px] rounded-full bg-[var(--accent)] opacity-[0.08] mix-blend-screen blur-[120px] -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-[35%] right-[15%] w-[50vw] h-[60vh] max-w-[600px] rounded-full bg-[var(--secondary-accent)] opacity-[0.06] mix-blend-screen blur-[120px] translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-[20%] left-[50%] w-[55vw] h-[45vh] max-w-[700px] rounded-full bg-[var(--tertiary-accent)] opacity-[0.05] mix-blend-screen blur-[120px] -translate-x-1/2 translate-y-1/2" />
       </div>
 
-      {/* HERO SECTION - 100vh (Single View) */}
-      <div className="min-h-full w-full flex flex-col justify-center items-center px-4 py-8 relative z-10">
-        <div className="max-w-4xl w-full flex flex-col items-center gap-4 md:gap-6">
-          
-          <div className="text-center space-y-2">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--accent)]" />
-              <span className="text-title slashed-zero text-base md:text-xl font-bold">
-                finpath
-              </span>
-            </div>
-
-            <h1 className="text-hero slashed-zero !text-3xl md:!text-5xl leading-tight">
-              Every rupee has a <br />
-              <span style={{ color: 'var(--accent-text)' }}>destination</span><span style={{ color: 'var(--accent-text)' }}>.</span>
-            </h1>
-
-            <p className="text-xs md:text-base text-[var(--secondary)] font-medium max-w-lg mx-auto">
-              AI-powered finance companion for Indian professionals.
-            </p>
-          </div>
-
-          {/* Compact Bento Grid */}
-          <div className="grid grid-cols-3 gap-2 md:gap-3 w-full max-w-2xl mt-2">
-            {goals.map((goal, i) => {
-              const Icon = goal.icon;
-              return (
-                <motion.div
-                  key={i}
-                  animate={{ 
-                    y: [0, -5, 0],
-                    rotate: [0, 0.5, -0.5, 0]
-                  }}
-                  transition={{ 
-                    duration: 3 + (i % 3) * 0.5, 
-                    repeat: Infinity, 
-                    ease: "easeInOut",
-                    delay: i * 0.2
-                  }}
-                  className="bento-card flex flex-col items-center justify-center text-center p-2 md:p-4 cursor-default"
-                >
-                  <div
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center mb-1 md:mb-2"
-                    style={{
-                      backgroundColor: `color-mix(in srgb, ${goal.color} 15%, transparent)`,
-                      color: goal.color,
-                    }}
-                  >
-                    <Icon size={18} className="icon-wireframe w-4 h-4 md:w-5 md:h-5" />
-                  </div>
-                  <h3 className="font-semibold text-[10px] md:text-sm text-[var(--card-foreground)]">
-                    {goal.title}
-                  </h3>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* CTA & Scroll Indicator */}
-          <div className="flex items-center gap-6 mt-2">
-            <button
-              onClick={() => navigate('/auth')}
-              className="px-6 md:px-8 py-3 md:py-3.5 rounded-full font-bold text-sm md:text-base flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_8px_32px_var(--accent-glow)]"
-            >
-              Start My Journey
-              <ArrowRight size={20} className="icon-wireframe" />
-            </button>
-            
-            {/* Scroll Indicator */}
-            <motion.button 
-              className="flex items-center gap-2 text-[var(--secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer group outline-none"
-              animate={{ y: [0, 6, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              onClick={() => window.scrollBy({ top: window.innerHeight, behavior: 'smooth' })}
-            >
-              <span className="text-[10px] md:text-xs font-bold tracking-wider uppercase">Stories</span>
-              <div className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[var(--surface-tint)] border border-[var(--border)] group-hover:bg-[var(--surface-hover)] transition-colors shadow-sm">
-                <ArrowDown size={20} className="icon-wireframe" />
-              </div>
-            </motion.button>
-          </div>
+      {/* NAV */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4 md:px-8 bg-[var(--card)]/80 backdrop-blur-xl border-b border-[var(--border)]">
+        <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--accent-glow)]" />
+          finpath
         </div>
-      </div>
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#features" className="text-sm font-medium text-[var(--secondary)] hover:text-[var(--foreground)] transition-colors">Features</a>
+          <a href="#testimonials" className="text-sm font-medium text-[var(--secondary)] hover:text-[var(--foreground)] transition-colors">Testimonials</a>
+          <button onClick={() => navigate('/auth')} className="px-5 py-2.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-sm font-semibold shadow-[0_0_24px_var(--accent-glow)] hover:bg-[var(--accent-hover)] hover:shadow-[0_0_36px_var(--accent-glow)] transition-all">
+            Start My Journey
+          </button>
+          <button onClick={() => setIsDark(!isDark)} className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface-tint)] border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors">
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
+        
+        <div className="flex md:hidden items-center gap-4">
+          <button onClick={() => navigate('/auth')} className="px-4 py-2 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-xs font-semibold shadow-[0_0_16px_var(--accent-glow)]">
+            Start
+          </button>
+          <button onClick={() => setIsDark(!isDark)} className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--surface-tint)] border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors">
+            {isDark ? <Sun size={14} /> : <Moon size={14} />}
+          </button>
+        </div>
+      </nav>
 
-      {/* TESTIMONIALS SECTION */}
-      <div className="min-h-full w-full py-20 px-4 md:px-8 relative z-10 flex flex-col items-center justify-center">
-        <div className="max-w-5xl w-full">
-          <motion.div 
-            initial={{ opacity: 0, y: 30, scale: 0.95, filter: 'blur(8px)' }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            viewport={{ once: false, margin: "-100px" }}
-            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            className="text-center mb-12 md:mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold slashed-zero mb-4 text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-              Loved by thousands
-            </h2>
-            <p className="text-base md:text-xl text-[var(--secondary)]">
-              See what others are saying about their journey.
+      {/* HERO */}
+      <section className="relative z-10 min-h-screen flex items-center pt-[var(--space-12)] pb-[var(--space-8)] px-[var(--space-4)] md:px-[var(--space-8)] snap-start">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-[var(--space-8)] lg:gap-[var(--space-8)] items-center">
+          <div className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
+            <span className="inline-block text-[13px] font-semibold text-[var(--accent-text)] uppercase tracking-[0.08em] mb-[var(--space-4)]">
+              AI-Powered Financial Planning
+            </span>
+            <h1 className="text-5xl lg:text-[64px] font-bold tracking-tight text-[var(--foreground)] mb-[var(--space-6)] leading-[1.08] slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>
+              Every rupee has a <span className="text-transparent bg-clip-text bg-gradient-to-br from-[var(--accent)] to-[var(--secondary-accent)]">destination</span>
+            </h1>
+            <p className="text-lg text-[var(--secondary)] mb-[var(--space-8)] leading-relaxed">
+              FinPath maps your income to every goal, debt, and reserve — automatically.
+              No spreadsheets. No guesswork. Just a clear path from where you are to where
+              you want to be.
             </p>
-          </motion.div>
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-[var(--space-4)]">
+              <button onClick={() => navigate('/auth')} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_0_24px_var(--accent-glow)] hover:bg-[var(--accent-hover)] hover:shadow-[0_0_36px_var(--accent-glow)] transition-all">
+                Start My Journey <ArrowRight size={18} />
+              </button>
+              <a href="#features" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold bg-[var(--surface-tint)] text-[var(--secondary)] border border-[var(--border)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)] transition-all">
+                See how it works
+              </a>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            {testimonials.map((testimonial, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)', rotateX: 10 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', rotateX: 0 }}
-                viewport={{ once: false, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: i * 0.15, ease: [0.4, 0, 0.2, 1] }}
-                className="bento-card p-6 md:p-8 flex flex-col h-full cursor-default transition-transform hover:-translate-y-2"
-                style={{ 
-                  background: 'var(--surface-tint)', 
-                  backdropFilter: 'blur(32px)', 
-                  WebkitBackdropFilter: 'blur(32px)',
-                  perspective: 1000
-                }}
-              >
-                <div className="text-[var(--accent)] mb-4 text-4xl font-serif">"</div>
-                <p className="text-sm md:text-base text-[var(--card-foreground)] mb-8 flex-1 italic leading-relaxed font-medium">
-                  {testimonial.text}
-                </p>
-                <div className="flex items-center gap-4 mt-auto">
-                  <img 
-                    src={testimonial.image} 
-                    alt={testimonial.name} 
-                    className="w-12 h-12 rounded-full object-cover border-2 border-[var(--accent)]"
-                  />
-                  <div>
-                    <h4 className="font-bold text-[var(--card-foreground)] text-sm">{testimonial.name}</h4>
-                    <p className="text-xs text-[var(--secondary)]">{testimonial.role}</p>
+          <div className="flex justify-center lg:justify-end relative">
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-[480px] relative">
+              {/* Internal Blobs */}
+              <div className="absolute -top-10 -right-10 w-[180px] h-[180px] rounded-full bg-[var(--accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-8 -left-8 w-[180px] h-[180px] rounded-full bg-[var(--secondary-accent)] opacity-[0.08] blur-3xl pointer-events-none" />
+              
+              {/* Window Header */}
+              <div className="flex items-center gap-2 px-[var(--space-6)] py-[var(--space-4)] border-b border-[var(--border)]">
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--red)]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--amber)]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--green)]" />
+              </div>
+
+              {/* Card Body */}
+              <div className="p-6 md:p-8">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-[var(--space-6)]">
+                  {/* Score Ring */}
+                  <div className="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0">
+                    <svg
+                      className="transform -rotate-90 w-full h-full"
+                      viewBox="0 0 160 160"
+                    >
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r={radius}
+                        fill="none"
+                        stroke="var(--border)"
+                        strokeWidth="12"
+                        strokeDasharray="6 6"
+                      />
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r={radius}
+                        fill="none"
+                        stroke="var(--accent)"
+                        strokeWidth="12"
+                        strokeDasharray={circumference}
+                        strokeLinecap="round"
+                        style={{
+                          strokeDashoffset: offset,
+                          transition: "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                          filter: "drop-shadow(0 0 4px var(--accent-glow))",
+                        }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div
+                        className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
+                        {health}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wider text-[var(--tertiary)] font-semibold mt-1">
+                        Score
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex flex-col gap-[var(--space-4)] flex-1 w-full">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[var(--secondary)]">Monthly Income</span>
+                      <span className="font-semibold text-[var(--foreground)] slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>₹1,20,000</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[var(--secondary)]">Surplus</span>
+                      <span className="font-semibold text-[var(--foreground)] slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>₹34,500</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[var(--secondary)]">Savings Rate</span>
+                      <span className="font-semibold text-[var(--green-text)] slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>28.8%</span>
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[var(--secondary)] text-sm">Emergency Fund</span>
+                        <span className="font-semibold text-[var(--foreground)] text-xs slashed-zero" style={{ fontFamily: 'var(--font-display)' }}>62%</span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-[var(--border)] overflow-hidden">
+                        <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: '62%' }} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-[var(--space-4)] md:px-[var(--space-8)]"><hr className="border-t border-[var(--border)]" /></div>
+
+      {/* FEATURES */}
+      <section id="features" className="relative z-10 min-h-screen flex items-center py-[var(--space-8)] md:py-[var(--space-12)] px-[var(--space-4)] md:px-[var(--space-8)] snap-start">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-center text-[var(--foreground)] mb-[var(--space-4)]" style={{ fontFamily: 'var(--font-display)' }}>
+            Your CFO, in your control
+          </h2>
+          <p className="text-base md:text-lg text-center text-[var(--secondary)] max-w-2xl mx-auto mb-[var(--space-12)]">
+            FinPath brings the financial clarity of a corporate treasury desk to your personal finances.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-[var(--space-6)] md:gap-[var(--space-8)]">
+            {/* Feature 1 */}
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] p-[var(--space-8)] relative overflow-hidden group transition-all duration-300 hover:shadow-[var(--shadow-md)] hover:-translate-y-1">
+              <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[var(--accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[var(--accent-subtle)] text-[var(--accent-text)] mb-[var(--space-6)] relative z-10">
+                <Target size={24} className="icon-wireframe" />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-[var(--space-3)] relative z-10" style={{ fontFamily: 'var(--font-display)' }}>Goal-first planning</h3>
+              <p className="text-[var(--secondary)] leading-relaxed mb-[var(--space-6)] relative z-10 text-sm md:text-base">
+                Set any goal with a target amount and timeline. FinPath automatically allocates
+                your surplus across goals by priority, adjusting every month as your finances change.
+                Track progress with real-time bars and celebrate milestones.
+              </p>
+              <button onClick={() => navigate('/auth')} className="inline-flex items-center gap-1.5 text-[var(--accent-text)] font-semibold text-sm group-hover:gap-2.5 transition-all relative z-10">
+                Set a goal <ArrowRight size={14} />
+              </button>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] p-[var(--space-8)] relative overflow-hidden group transition-all duration-300 hover:shadow-[var(--shadow-md)] hover:-translate-y-1">
+              <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[var(--accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[var(--accent-subtle)] text-[var(--accent-text)] mb-[var(--space-6)] relative z-10">
+                <TrendingUp size={24} className="icon-wireframe" />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-[var(--space-3)] relative z-10" style={{ fontFamily: 'var(--font-display)' }}>Debt payoff intelligence</h3>
+              <p className="text-[var(--secondary)] leading-relaxed mb-[var(--space-6)] relative z-10 text-sm md:text-base">
+                Compare avalanche vs. snowball strategies down to the rupee. Simulate extra payments,
+                see your debt-free date, and watch your DTI ratio drop. FinPath picks the strategy
+                that saves you the most interest.
+              </p>
+              <button onClick={() => navigate('/auth')} className="inline-flex items-center gap-1.5 text-[var(--accent-text)] font-semibold text-sm group-hover:gap-2.5 transition-all relative z-10">
+                Simulate payoff <ArrowRight size={14} />
+              </button>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] p-[var(--space-8)] relative overflow-hidden group transition-all duration-300 hover:shadow-[var(--shadow-md)] hover:-translate-y-1">
+              <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[var(--accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[var(--accent-subtle)] text-[var(--accent-text)] mb-[var(--space-6)] relative z-10">
+                <Calculator size={24} className="icon-wireframe" />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-[var(--space-3)] relative z-10" style={{ fontFamily: 'var(--font-display)' }}>Tax regime optimizer</h3>
+              <p className="text-[var(--secondary)] leading-relaxed mb-[var(--space-6)] relative z-10 text-sm md:text-base">
+                Plug in your income and deductions. FinPath compares old and new Indian tax regimes
+                side-by-side and shows exactly which one saves you more — with a full deduction guide
+                so nothing is left on the table.
+              </p>
+              <button onClick={() => navigate('/auth')} className="inline-flex items-center gap-1.5 text-[var(--accent-text)] font-semibold text-sm group-hover:gap-2.5 transition-all relative z-10">
+                Compare regimes <ArrowRight size={14} />
+              </button>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] p-[var(--space-8)] relative overflow-hidden group transition-all duration-300 hover:shadow-[var(--shadow-md)] hover:-translate-y-1">
+              <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[var(--accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[var(--accent-subtle)] text-[var(--accent-text)] mb-[var(--space-6)] relative z-10">
+                <GitBranch size={24} className="icon-wireframe" />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-[var(--space-3)] relative z-10" style={{ fontFamily: 'var(--font-display)' }}>What-if scenario engine</h3>
+              <p className="text-[var(--secondary)] leading-relaxed mb-[var(--space-6)] relative z-10 text-sm md:text-base">
+                What if you get a 30% raise? Buy a house? Start a family? Model any life change
+                and see its impact on every goal, your emergency buffer, and your tax liability
+                — before you make the move.
+              </p>
+              <button onClick={() => navigate('/auth')} className="inline-flex items-center gap-1.5 text-[var(--accent-text)] font-semibold text-sm group-hover:gap-2.5 transition-all relative z-10">
+                Run a scenario <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-[var(--space-4)] md:px-[var(--space-8)]"><hr className="border-t border-[var(--border)]" /></div>
+
+      {/* TESTIMONIALS */}
+      <section id="testimonials" className="relative z-10 min-h-screen flex items-center py-[var(--space-8)] md:py-[var(--space-12)] px-[var(--space-4)] md:px-[var(--space-8)] snap-start">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-center text-[var(--foreground)] mb-[var(--space-4)]" style={{ fontFamily: 'var(--font-display)' }}>
+            Loved by professionals
+          </h2>
+          <p className="text-base md:text-lg text-center text-[var(--secondary)] max-w-2xl mx-auto mb-[var(--space-12)]">
+            From CFOs to first-time earners, our users trust FinPath to bring order to their money.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-[var(--space-6)] md:gap-[var(--space-8)]">
+            {/* T1 */}
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] p-6 md:p-8 relative overflow-hidden flex flex-col">
+              <div className="absolute -bottom-10 -left-10 w-[120px] h-[120px] rounded-full bg-[var(--secondary-accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="absolute top-4 left-6 text-6xl font-serif font-bold text-[var(--accent)] opacity-25 leading-none">“</div>
+              <p className="text-[var(--secondary)] leading-relaxed pt-[var(--space-8)] relative z-10 text-sm md:text-base flex-1">
+                I've spent 20 years running P&Ls at Fortune 500 companies. FinPath is the first
+                tool that brings that same rigour to my personal finances. The scenario engine alone
+                is worth it — I tested a property purchase before making the offer.
+              </p>
+              <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-6)] relative z-10">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-[var(--accent-text)] bg-[var(--accent-subtle)] flex-shrink-0">AK</div>
+                <div>
+                  <div className="font-semibold text-sm text-[var(--foreground)]">Ananya Krishnan</div>
+                  <div className="text-xs text-[var(--tertiary)]">CFO, Bangalore-based SaaS firm</div>
+                </div>
+              </div>
+            </div>
+
+            {/* T2 */}
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] p-6 md:p-8 relative overflow-hidden flex flex-col">
+              <div className="absolute -bottom-10 -left-10 w-[120px] h-[120px] rounded-full bg-[var(--secondary-accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="absolute top-4 left-6 text-6xl font-serif font-bold text-[var(--accent)] opacity-25 leading-none">“</div>
+              <p className="text-[var(--secondary)] leading-relaxed pt-[var(--space-8)] relative z-10 text-sm md:text-base flex-1">
+                My CA used to tell me I was saving too little. I set a target savings rate in FinPath
+                and within three months I'd gone from 12% to 26%. The automatic allocation across goals
+                removed the mental load of deciding where each rupee goes.
+              </p>
+              <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-6)] relative z-10">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-[var(--secondary-accent-text)] bg-[var(--secondary-accent-subtle)] flex-shrink-0">RV</div>
+                <div>
+                  <div className="font-semibold text-sm text-[var(--foreground)]">Rahul Venkatesh</div>
+                  <div className="text-xs text-[var(--tertiary)]">VP Product, Mumbai</div>
+                </div>
+              </div>
+            </div>
+
+            {/* T3 */}
+            <div className="bg-[var(--card)] backdrop-blur-[32px] border border-[var(--border)] rounded-[32px] p-6 md:p-8 relative overflow-hidden flex flex-col">
+              <div className="absolute -bottom-10 -left-10 w-[120px] h-[120px] rounded-full bg-[var(--secondary-accent)] opacity-10 blur-3xl pointer-events-none" />
+              <div className="absolute top-4 left-6 text-6xl font-serif font-bold text-[var(--accent)] opacity-25 leading-none">“</div>
+              <p className="text-[var(--secondary)] leading-relaxed pt-[var(--space-8)] relative z-10 text-sm md:text-base flex-1">
+                Debt payoff felt like a guessing game until FinPath showed me avalanche vs. snowball
+                side-by-side. I chose avalanche and will save ₹1.8L in interest. The progress bar
+                is satisfying — it's gamified getting out of debt.
+              </p>
+              <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-6)] relative z-10">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-[var(--tertiary-accent-text)] bg-[var(--tertiary-accent-subtle)] flex-shrink-0">PS</div>
+                <div>
+                  <div className="font-semibold text-sm text-[var(--foreground)]">Priya Sharma</div>
+                  <div className="text-xs text-[var(--tertiary)]">Engineering Lead, Delhi</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA FOOTER */}
+      <section className="relative z-10 py-[var(--space-12)] px-[var(--space-4)] md:px-[var(--space-8)] text-center snap-start">
+        <div className="max-w-2xl mx-auto relative py-[var(--space-12)]">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] rounded-full bg-[var(--accent)] opacity-10 blur-[80px] pointer-events-none" />
+          <h2 className="text-3xl md:text-[40px] font-bold tracking-tight text-[var(--foreground)] mb-[var(--space-4)] relative z-10" style={{ fontFamily: 'var(--font-display)' }}>
+            Where does your next rupee go?
+          </h2>
+          <p className="text-base md:text-lg text-[var(--secondary)] mb-[var(--space-8)] relative z-10">
+            Join thousands of Indian professionals who've stopped guessing and started knowing.
+          </p>
+          <button onClick={() => navigate('/auth')} className="relative z-10 inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full font-semibold bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_0_24px_var(--accent-glow)] hover:bg-[var(--accent-hover)] hover:shadow-[0_0_36px_var(--accent-glow)] transition-all text-base md:text-lg">
+            Start My Free Journey <ArrowRight size={20} />
+          </button>
+        </div>
+      </section>
+
+      <footer className="relative z-10 py-[var(--space-8)] text-center text-sm text-[var(--tertiary)] border-t border-[var(--border)] snap-end">
+        &copy; {new Date().getFullYear()} FinPath. Every rupee has a destination.
+      </footer>
     </div>
+
   );
 }

@@ -353,7 +353,7 @@ export default function Month() {
                 On Track
               </div>
               <div
-                  className="text-3xl font-bold slashed-zero text-[var(--tertiary-accent-text)]"
+                  className="text-3xl font-bold slashed-zero text-[var(--foreground)]"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
                   {tasks.length > 0

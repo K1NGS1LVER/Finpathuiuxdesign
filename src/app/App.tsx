@@ -25,6 +25,7 @@ import PennyPanel from "./components/PennyPanel";
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from "./components/ScrollToTop";
 
 function AppContent() {
   const [isDark, setIsDark] = useState(() => {
@@ -369,7 +370,8 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <ErrorBoundary>
+      <ScrollToTop />
+      <ErrorBoundary animate={false}>
         <AppContent />
       </ErrorBoundary>
     </BrowserRouter>

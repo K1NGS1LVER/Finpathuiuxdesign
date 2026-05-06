@@ -1,4 +1,5 @@
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router";
 import { useOnboardingForm } from "./onboarding/useOnboardingForm";
 import OnboardingProgressBar from "./onboarding/OnboardingProgressBar";
 import OnboardingNavigation from "./onboarding/OnboardingNavigation";
@@ -21,6 +22,7 @@ const STEP_META = [
 ];
 
 export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
+  const navigate = useNavigate();
   const form = useOnboardingForm();
   const currentMeta = STEP_META[form.step];
 
@@ -53,6 +55,16 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
 
       <button
         type="button"
+        onClick={() => navigate('/')}
+        className="absolute top-4 left-4 md:top-6 md:left-6 px-4 py-2 md:px-5 md:py-2.5 rounded-full flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 z-20 text-xs md:text-sm font-semibold"
+        style={{ background: "var(--surface-tint)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", color: "var(--secondary)" }}
+      >
+        <ArrowLeft size={16} className="icon-wireframe" />
+        Back
+      </button>
+
+      <button
+        type="button"
         onClick={() => setIsDark(!isDark)}
         className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 z-20"
         style={{ background: "var(--card)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", color: "var(--card-foreground)" }}
@@ -61,9 +73,10 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         {isDark ? <Sun size={18} className="icon-wireframe md:w-5 md:h-5" /> : <Moon size={18} className="icon-wireframe md:w-5 md:h-5" />}
       </button>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="data-blob absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: "var(--tertiary-accent)" }} />
-        <div className="data-blob absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full" style={{ backgroundColor: "var(--tertiary-accent)" }} />
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[25%] left-[15%] w-[80vw] h-[50vh] max-w-[800px] rounded-full bg-[var(--accent)] opacity-[0.08] mix-blend-screen blur-[120px] -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-[35%] right-[15%] w-[50vw] h-[60vh] max-w-[600px] rounded-full bg-[var(--secondary-accent)] opacity-[0.06] mix-blend-screen blur-[120px] translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-[20%] left-[50%] w-[55vw] h-[45vh] max-w-[700px] rounded-full bg-[var(--tertiary-accent)] opacity-[0.05] mix-blend-screen blur-[120px] -translate-x-1/2 translate-y-1/2" />
       </div>
 
       <header className="shrink-0 relative z-10 max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pt-6 md:pt-8 pb-2">
@@ -124,7 +137,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             {form.step === 3 && (
               <OnboardingStepStrategy
                 selectedStrategy={form.selectedStrategy} onChangeStrategy={form.setSelectedStrategy}
-                stepUpEnabled={form.stepUpEnabled} onToggleStepUp={() => form.setStepUpEnabled(!form.setStepUpEnabled)}
+                stepUpEnabled={form.stepUpEnabled} onToggleStepUp={() => form.setStepUpEnabled(!form.stepUpEnabled)}
                 surplusAmount={form.surplusAmount} onChangeSurplusAmount={form.setSurplusAmount}
                 incomeINR={form.incomeINR} availableForGoals={form.availableForGoals}
                 surplusNum={form.surplusNum} surplusExceedsAvailable={form.surplusExceedsAvailable}

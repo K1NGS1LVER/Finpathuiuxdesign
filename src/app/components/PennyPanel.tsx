@@ -152,13 +152,12 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       )}
 
       <div
-        className="fixed top-0 right-0 h-full w-full md:w-[380px] flex flex-col transition-transform duration-300 z-50 text-[var(--card-foreground)]"
+        className={`fixed top-0 right-0 h-full w-full md:w-[380px] flex flex-col z-50 text-[var(--card-foreground)] transition-all duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`}
         style={{
           background: 'var(--surface-tint)',
           borderLeft: '1px solid var(--border)',
-          transform: open ? 'translateX(0)' : 'translateX(100%)',
           borderRadius: 0,
-          boxShadow: 'var(--shadow-lg)',
+          boxShadow: open ? 'var(--shadow-lg)' : 'none',
           backdropFilter: 'blur(48px)',
           WebkitBackdropFilter: 'blur(48px)',
         }}

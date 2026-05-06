@@ -20,6 +20,7 @@ interface DashboardProps {
 export default function Dashboard({ onPennyClick }: DashboardProps) {
   const navigate = useNavigate();
   const [health, setHealth] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
@@ -33,11 +34,18 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
   const strategy = useFinPathStore((s) => s.strategy) || "avalanche";
 
   useEffect(() => {
+    // Simulate data loading for skeleton demonstration
+    const timer = setTimeout(() => setIsLoading(false), 400);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) return;
     // Animate to real health score
     const score = healthScore?.overall ?? 0;
     const timer = setTimeout(() => setHealth(score), 300);
     return () => clearTimeout(timer);
-  }, [healthScore]);
+  }, [healthScore, isLoading]);
 
   const surplus = income.total - expenses.total - debts.totalMonthly;
   const pendingFreedAmount = pendingGoalDecisions.reduce(
@@ -211,16 +219,73 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (health / 100) * circumference;
 
+  if (isLoading) {
+    return (
+      <div className="max-w-[1400px] mx-auto relative text-[var(--foreground)]">
+        {/* Header Skeleton */}
+        <div className="mb-6 md:mb-8 relative z-10">
+          <div className="skeleton w-48 h-10" />
+        </div>
+
+        {/* Bento Grid Skeleton */}
+        <div className="grid grid-cols-12 gap-4 md:gap-4 relative z-10">
+          {/* Primary Cards Skeletons */}
+          {[1, 2].map((i) => (
+            <div key={i} className="col-span-12 md:col-span-6 lg:col-span-6 bento-card flex flex-col justify-between min-h-[160px]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="skeleton w-24 h-4" />
+                <div className="skeleton w-12 h-6 rounded-full" />
+              </div>
+              <div className="mt-auto">
+                <div className="skeleton w-48 h-12 mb-2" />
+                <div className="skeleton w-32 h-4" />
+              </div>
+            </div>
+          ))}
+
+          {/* Secondary Metrics Skeleton */}
+          <div className="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bento-card p-4 md:p-5 flex flex-row items-center justify-between min-h-[80px]">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="skeleton w-10 h-10 md:w-12 md:h-12 rounded-xl" />
+                  <div className="skeleton w-20 h-4" />
+                </div>
+                <div className="skeleton w-16 h-8" />
+              </div>
+            ))}
+          </div>
+
+          {/* Health Score Skeleton */}
+          <div className="col-span-12 lg:col-span-4 bento-card flex flex-col items-center justify-center min-h-[220px]">
+            <div className="skeleton w-32 h-4 mb-4" />
+            <div className="skeleton w-32 h-32 rounded-full mb-4" />
+            <div className="skeleton w-24 h-6" />
+          </div>
+
+          {/* Bottom Row Skeletons */}
+          <div className="col-span-12 md:col-span-6 bento-card min-h-[200px]">
+            <div className="skeleton w-32 h-6 mb-6" />
+            <div className="space-y-4">
+              <div className="skeleton w-full h-12" />
+              <div className="skeleton w-full h-12" />
+            </div>
+          </div>
+          <div className="col-span-12 md:col-span-6 bento-card min-h-[200px]">
+            <div className="skeleton w-32 h-6 mb-6" />
+            <div className="space-y-4">
+              <div className="skeleton w-full h-10" />
+              <div className="skeleton w-full h-10" />
+              <div className="skeleton w-full h-10" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-[1400px] mx-auto relative text-[var(--foreground)]">
-      <style>{`
-        @keyframes dash {
-          from { stroke-dashoffset: ${circumference}; }
-          to { stroke-dashoffset: ${offset}; }
-        }
-      `}</style>
-
-
+    <div className="max-w-[1400px] mx-auto relative text-[var(--foreground)] page-animate">
       {/* Header - Minimal */}
       <div className="mb-6 md:mb-8 relative z-10">
         <h1 className="text-display slashed-zero text-[var(--foreground)]">
@@ -366,10 +431,10 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 stroke="var(--accent)"
                 strokeWidth="12"
                 strokeDasharray={circumference}
-                strokeDashoffset={circumference}
                 strokeLinecap="round"
                 style={{
-                  animation: "dash 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+                  strokeDashoffset: offset,
+                  transition: "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
                   filter: "drop-shadow(0 0 4px var(--accent-glow))",
                 }}
               />
