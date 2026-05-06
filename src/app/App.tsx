@@ -137,12 +137,7 @@ function AppContent() {
 
   return (
     <div
-      className="h-screen w-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]"
-      style={{
-        fontFamily: "var(--font-body)",
-        background: "var(--background)",
-        color: "var(--foreground)",
-      }}
+      className="h-screen w-screen overflow-hidden bg-background text-foreground font-body"
     >
       {showLayout ? (
         <div className="flex h-full">
@@ -239,28 +234,20 @@ function AppContent() {
           {activeDecision && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
               <div
-                className="w-full max-w-xl rounded-2xl p-6 md:p-7"
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  boxShadow: "var(--shadow-lg)",
-                }}
+                className="w-full max-w-xl rounded-2xl p-6 md:p-7 bg-card border border-border shadow-lg"
               >
                 <div
-                  className="text-xs font-semibold tracking-wider uppercase mb-2"
-                  style={{ color: "var(--accent-text)" }}
+                  className="text-xs font-semibold tracking-wider uppercase mb-2 text-accent-text"
                 >
                   Goal Completed
                 </div>
                 <h3
-                  className="text-2xl font-bold mb-2 text-[var(--card-foreground)]"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-2xl font-bold mb-2 text-card-foreground font-display"
                 >
                   {activeDecision.goalName} is done
                 </h3>
                 <p
-                  className="text-sm md:text-base text-[var(--secondary)] mb-4"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-sm md:text-base text-secondary mb-4 font-body"
                 >
                   The freed monthly allocation is{" "}
                   {formatInr(activeDecision.freedMonthlyAmount)}. What should we
@@ -275,13 +262,7 @@ function AppContent() {
                         "reinvest",
                       )
                     }
-                    disabled={!hasRemainingGoals}
-                    className="py-3 px-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      background: "var(--accent)",
-                      color: "var(--on-accent)",
-                      fontFamily: "var(--font-body)",
-                    }}
+                    className="py-3 px-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-accent text-on-accent font-body"
                   >
                     Reinvest Into Remaining Goals
                   </button>
@@ -292,13 +273,7 @@ function AppContent() {
                         "surplus",
                       )
                     }
-                    className="py-3 px-4 rounded-xl font-semibold transition-all"
-                    style={{
-                      background: "var(--surface-tint)",
-                      border: "1px solid var(--border)",
-                      color: "var(--card-foreground)",
-                      fontFamily: "var(--font-body)",
-                    }}
+                    className="py-3 px-4 rounded-xl font-semibold transition-all bg-surface-tint border border-border text-card-foreground font-body"
                   >
                     Keep As Net Worth Surplus
                   </button>
@@ -306,8 +281,7 @@ function AppContent() {
 
                 {!hasRemainingGoals && (
                   <p
-                    className="text-xs mt-3"
-                    style={{ color: "var(--secondary)" }}
+                    className="text-xs mt-3 text-secondary"
                   >
                     No active goals left, so only surplus mode can be applied
                     right now.
@@ -316,8 +290,7 @@ function AppContent() {
 
                 {monthlySurplusReserve > 0 && (
                   <p
-                    className="text-xs mt-2"
-                    style={{ color: "var(--secondary)" }}
+                    className="text-xs mt-2 text-secondary"
                   >
                     Current monthly surplus reserve:{" "}
                     {formatInr(monthlySurplusReserve)}

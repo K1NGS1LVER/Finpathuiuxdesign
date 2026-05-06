@@ -275,8 +275,7 @@ export default function Scenarios() {
   const impactAnalysisSection = (
     <div className="relative z-10">
       <h3
-        className="font-bold mb-4 text-[var(--foreground)]"
-        style={{ fontFamily: "var(--font-display)" }}
+        className="font-bold mb-4 text-foreground font-display"
       >
         Impact Analysis
       </h3>
@@ -286,18 +285,12 @@ export default function Scenarios() {
             {/* Header row: label + change value */}
             <div className="flex items-baseline justify-between mb-3">
               <div
-                className="font-semibold text-[var(--card-foreground)]"
-                style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-lg)" }}
+                className="font-semibold text-card-foreground font-display text-lg"
               >
                 {impact.label}
               </div>
               <div
-                className="font-bold slashed-zero"
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "var(--text-xl)",
-                  color: impact.positive ? "var(--green-text)" : "var(--red-text)",
-                }}
+                className={`font-bold slashed-zero font-display text-xl ${impact.positive ? 'text-green-text' : 'text-red-text'}`}
               >
                 {impact.change}
               </div>
@@ -306,32 +299,28 @@ export default function Scenarios() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div
-                  className="text-xs mb-0.5 text-[var(--tertiary)]"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-xs mb-0.5 text-tertiary font-body"
                 >
                   Before
                 </div>
                 <div
-                  className="text-lg font-bold slashed-zero text-[var(--card-foreground)]"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-lg font-bold slashed-zero text-card-foreground font-display"
                 >
                   {impact.current}
                 </div>
               </div>
-              <div className="text-[var(--card-foreground)] opacity-40 flex-shrink-0 px-2">
+              <div className="text-card-foreground opacity-40 flex-shrink-0 px-2">
                 <ArrowRight size={24} strokeWidth={2} />
               </div>
               <div className="flex-1 text-right">
                 <div
-                  className="text-xs mb-0.5 text-[var(--tertiary)]"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-xs mb-0.5 text-tertiary font-body"
                 >
                   After
                 </div>
                 <div
-                  className="text-lg font-bold slashed-zero"
+                  className="text-lg font-bold slashed-zero font-display"
                   style={{
-                    fontFamily: "var(--font-display)",
                     color: current?.color,
                   }}
                 >
@@ -348,19 +337,16 @@ export default function Scenarios() {
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div
-        className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
-        style={{ backgroundColor: "var(--tertiary-accent)" }}
+        className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-tertiary-accent"
       />
       <div className="relative z-10">
         <h1
-          className="text-2xl md:text-3xl font-bold mb-2 text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
+          className="text-2xl md:text-3xl font-bold mb-2 text-foreground font-display"
         >
           Scenario Explorer
         </h1>
         <p
-          className="text-sm md:text-base text-[var(--secondary)]"
-          style={{ fontFamily: "var(--font-body)" }}
+          className="text-sm md:text-base text-secondary font-body"
         >
           Edit assumptions and see every page update in sync
         </p>
@@ -369,8 +355,7 @@ export default function Scenarios() {
         {/* Dropdown scenario selector */}
         <div className="max-w-md mb-4 md:mb-6">
           <label
-            className="block text-[var(--secondary)] mb-2 font-medium"
-            style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-xs)", textTransform: "uppercase", letterSpacing: "0.07em" }}
+            className="block text-secondary mb-2 font-medium font-body text-xs uppercase tracking-[0.07em]"
           >
             Explore Scenario
           </label>
@@ -388,13 +373,10 @@ export default function Scenarios() {
             <select
               value={scenario}
               onChange={(e) => setScenario(e.target.value as ScenarioId)}
-              className="w-full pl-10 pr-10 py-3 rounded-xl outline-none cursor-pointer font-semibold text-base appearance-none"
+              className="w-full pl-10 pr-10 py-3 rounded-xl outline-none cursor-pointer font-semibold text-base appearance-none bg-card font-display transition-[border-color,color] duration-300"
               style={{
-                background: "var(--card)",
                 border: `2px solid ${current?.color ?? "var(--border)"}`,
                 color: current?.color ?? "var(--card-foreground)",
-                fontFamily: "var(--font-display)",
-                transition: "border-color 300ms ease, color 300ms ease",
               }}
             >
               {SCENARIO_OPTIONS.map((s) => {
@@ -402,11 +384,7 @@ export default function Scenarios() {
                   <option
                     key={s.id}
                     value={s.id}
-                    style={{
-                      background: "var(--background-solid)",
-                      color: "var(--card-foreground)",
-                      fontFamily: "var(--font-body)",
-                    }}
+                    className="bg-background-solid text-card-foreground font-body"
                   >
                     {s.label}
                   </option>
@@ -430,22 +408,20 @@ export default function Scenarios() {
           {/* Adjust Parameters */}
           <div className="bento-card p-4 md:p-8">
             <h3
-              className="font-bold mb-6 text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="font-bold mb-6 text-card-foreground font-display"
             >
               Adjust Parameters
             </h3>
               <div className="flex items-center justify-between mb-4">
-                <span className="font-medium text-[var(--card-foreground)]">
+                <span className="font-medium text-card-foreground">
                   {scenario === "salary" && "Salary Change"}
                   {scenario === "property" && "Property Value"}
                   {scenario === "education" && "Course Fee"}
                   {scenario === "family" && "Monthly Child Expenses"}
                 </span>
                 <span
-                  className="text-2xl font-bold slashed-zero"
+                  className="text-2xl font-bold slashed-zero font-display"
                   style={{
-                    fontFamily: "var(--font-display)",
                     color: current?.color,
                   }}
                 >
@@ -469,7 +445,7 @@ export default function Scenarios() {
                   [scenario]: Number(e.target.value),
                 }))
               }
-              className="w-full h-2 rounded-full appearance-none bg-[var(--progress-inactive)]"
+              className="w-full h-2 rounded-full appearance-none bg-progress-inactive"
               style={{
                 background: `linear-gradient(to right, ${current?.color} 0%, ${current?.color} ${progressPercent}%, var(--progress-inactive) ${progressPercent}%, var(--progress-inactive) 100%)`,
               }}
@@ -482,14 +458,12 @@ export default function Scenarios() {
           {/* Income Controls */}
           <div className="bento-card p-6 md:p-8 space-y-4 relative z-10">
             <h3
-              className="text-xl font-bold text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-xl font-bold text-card-foreground font-display"
             >
               Income Controls
             </h3>
             <p
-              className="text-sm text-[var(--secondary)]"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-sm text-secondary font-body"
             >
               Adjust your monthly salary or apply a percentage hike to see how
               it affects your financial plan.
@@ -499,8 +473,7 @@ export default function Scenarios() {
               <div className="flex items-end gap-3 flex-wrap">
                 <div className="flex-1 min-w-[140px]">
                   <label
-                    className="block text-xs text-[var(--secondary)] mb-1.5"
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className="block text-xs text-secondary mb-1.5 font-body"
                   >
                     {salaryHikeInput ? "Salary Hike %" : "Monthly Salary"}
                   </label>
@@ -516,18 +489,12 @@ export default function Scenarios() {
                       }
                     }}
                     placeholder={salaryHikeInput ? "e.g. 12 or -5" : "Enter amount"}
-                    className="w-full px-3 py-2.5 rounded-xl outline-none text-[var(--card-foreground)]"
-                    style={{
-                      background: "var(--surface-tint)",
-                      border: "1px solid var(--border)",
-                      fontFamily: "var(--font-body)",
-                    }}
+                    className="w-full px-3 py-2.5 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border font-body"
                   />
                 </div>
                 <div className="w-36">
                   <label
-                    className="block text-xs text-[var(--secondary)] mb-1.5"
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className="block text-xs text-secondary mb-1.5 font-body"
                   >
                     Type
                   </label>
@@ -541,12 +508,7 @@ export default function Scenarios() {
                         setSalaryInput(String(income.salary || income.total || 0));
                       }
                     }}
-                    className="w-full px-3 py-2.5 rounded-xl outline-none cursor-pointer text-[var(--card-foreground)]"
-                    style={{
-                      background: "var(--surface-tint)",
-                      border: "1px solid var(--border)",
-                      fontFamily: "var(--font-body)",
-                    }}
+                    className="w-full px-3 py-2.5 rounded-xl outline-none cursor-pointer text-card-foreground bg-surface-tint border border-border font-body"
                   >
                     <option value="salary">Set Salary</option>
                     <option value="hike">Salary Hike %</option>
@@ -562,12 +524,7 @@ export default function Scenarios() {
                   }
                 }}
                 disabled={salaryHikeInput ? !salaryHikeInput : !salaryInput}
-                className="w-full py-2.5 rounded-xl font-semibold transition-all disabled:opacity-40"
-                style={{
-                  background: "var(--secondary-accent)",
-                  color: "var(--on-secondary-accent)",
-                  fontFamily: "var(--font-body)",
-                }}
+                className="w-full py-2.5 rounded-xl font-semibold transition-all disabled:opacity-40 bg-secondary-accent text-on-secondary-accent font-body"
               >
                 Apply Change
               </button>
@@ -577,8 +534,7 @@ export default function Scenarios() {
           {/* Lumpsum Simulator */}
           <div className="bento-card p-6 md:p-8 relative z-10">
             <h3
-              className="text-xl font-bold mb-4 text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-xl font-bold mb-4 text-card-foreground font-display"
             >
               Lumpsum Course Simulator
             </h3>
@@ -586,11 +542,7 @@ export default function Scenarios() {
               <select
                 value={simGoalId}
                 onChange={(e) => setSimGoalId(e.target.value)}
-                className="px-3 py-2 rounded-lg outline-none text-[var(--card-foreground)]"
-                style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                }}
+                className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
                 disabled={activeGoals.length === 0}
               >
                 {activeGoals.length === 0 ? (
@@ -611,28 +563,19 @@ export default function Scenarios() {
                   setSimLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
                 }
                 placeholder="Lumpsum amount"
-                className="px-3 py-2 rounded-lg outline-none text-[var(--card-foreground)]"
-                style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                }}
+                className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
               />
               <button
                 onClick={applyScenarioLumpsum}
                 disabled={!simGoalId || simLumpsumValue <= 0}
-                className="py-2 rounded-lg font-semibold disabled:opacity-50"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                className="py-2 rounded-lg font-semibold disabled:opacity-50 bg-accent text-on-accent"
               >
                 Apply Lumpsum
               </button>
             </div>
 
             <div
-              className="mt-4 p-4 rounded-xl"
-              style={{
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-              }}
+              className="mt-4 p-4 rounded-xl bg-surface-tint border border-border"
             >
               <div className="text-sm text-[var(--secondary)] mb-1">
                 Projected Timeline Impact

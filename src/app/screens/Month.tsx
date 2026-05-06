@@ -213,14 +213,10 @@ export default function Month() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
-      <div
-        className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
-        style={{ backgroundColor: "var(--accent)" }}
-      />
+      <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-accent" />
       <div className="relative z-10">
         <h1
-          className="text-2xl md:text-3xl font-bold mb-2 text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
+          className="text-2xl md:text-3xl font-bold mb-2 text-foreground font-display"
         >
           {new Date().toLocaleDateString("en-IN", {
             month: "long",
@@ -229,8 +225,7 @@ export default function Month() {
           Plan
         </h1>
         <p
-          className="text-sm md:text-base text-[var(--secondary)]"
-          style={{ fontFamily: "var(--font-body)" }}
+          className="text-sm md:text-base text-secondary font-body"
         >
           Your mission this month
         </p>
@@ -239,13 +234,8 @@ export default function Month() {
       {/* Debt over income warning */}
       {debts.totalMonthly > surplus && surplus >= 0 && (
         <div
-          className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10"
-          style={{
-            background: "var(--red-subtle)",
-            color: "var(--red-text)",
-            border: "1px solid var(--red)",
-            fontFamily: "var(--font-body)",
-          }}
+          className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10 bg-red-subtle text-red-text border border-red font-body"
+          
         >
           <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
           <div>
@@ -265,20 +255,18 @@ export default function Month() {
         </div>
       )}
 
-      <div className="relative overflow-hidden z-10 bento-card border-2 border-[var(--tertiary-accent)]" style={{ boxShadow: '0 0 40px var(--tertiary-accent-glow)' }}>
-        <div className="penny-insight-blob absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[700px] md:h-[700px] bg-[var(--tertiary-accent)] opacity-20 dark:opacity-40 dark:mix-blend-screen blur-[100px] md:blur-[120px] rounded-full pointer-events-none" />
+      <div className="relative overflow-hidden z-10 bento-card border-2 border-tertiary-accent shadow-[0_0_40px_var(--tertiary-accent-glow)]">
+        <div className="penny-insight-blob absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[700px] md:h-[700px] bg-tertiary-accent opacity-20 dark:opacity-40 dark:mix-blend-screen blur-[100px] md:blur-[120px] rounded-full pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 justify-between">
           <div className="flex-1">
             <div
-              className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-[var(--tertiary-accent-text)] uppercase"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-tertiary-accent-text uppercase font-body"
             >
               Mission
             </div>
             <h2
-              className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 slashed-zero text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 slashed-zero text-card-foreground font-display"
             >
               Save ₹{Math.round(savingsTarget / 1000)}K
               {debts.totalMonthly > 0
@@ -288,28 +276,24 @@ export default function Month() {
             <div className="flex items-center gap-6 md:gap-8">
               <div>
                 <div
-                  className="text-xs md:text-sm font-medium mb-1 text-[var(--secondary)]"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-xs md:text-sm font-medium mb-1 text-secondary font-body"
                 >
                   Goals + Surplus Reserve
                 </div>
                 <div
-                  className="text-xl md:text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display"
                 >
                   ₹{savingsTarget.toLocaleString("en-IN")}
                 </div>
               </div>
               <div>
                 <div
-                  className="text-xs md:text-sm font-medium mb-1 text-[var(--secondary)]"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-xs md:text-sm font-medium mb-1 text-secondary font-body"
                 >
                   Debt Payments
                 </div>
                 <div
-                  className="text-xl md:text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display"
                 >
                   ₹{debts.totalMonthly.toLocaleString("en-IN")}
                 </div>
@@ -317,11 +301,7 @@ export default function Month() {
             </div>
             {pendingSurplus > 0 && (
               <div
-                className="mt-4 text-xs md:text-sm"
-                style={{
-                  color: "var(--secondary)",
-                  fontFamily: "var(--font-body)",
-                }}
+                className="mt-4 text-xs md:text-sm text-secondary font-body"
               >
                 ₹{pendingSurplus.toLocaleString("en-IN")} is waiting for your
                 reinvest/surplus decision.
@@ -329,14 +309,13 @@ export default function Month() {
             )}
           </div>
 
-          <div className="flex flex-col justify-center items-center text-center min-w-[140px] border-t md:border-t-0 md:border-l border-[var(--border)] pt-6 md:pt-0 md:pl-8 gap-6">
+          <div className="flex flex-col justify-center items-center text-center min-w-[140px] border-t md:border-t-0 md:border-l border-border pt-6 md:pt-0 md:pl-8 gap-6">
             <div className="w-full">
-              <div className="text-xs font-medium mb-1 text-[var(--secondary)] uppercase tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
+              <div className="text-xs font-medium mb-1 text-secondary uppercase tracking-wider font-body">
                 Days Remaining
               </div>
               <div
-                className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-3xl font-bold slashed-zero text-card-foreground font-display"
               >
                 {new Date(
                   new Date().getFullYear(),
@@ -346,15 +325,14 @@ export default function Month() {
               </div>
             </div>
             
-            <hr className="w-full border-t border-[var(--border)] opacity-50" />
+            <hr className="w-full border-t border-border opacity-50" />
             
             <div className="w-full">
-              <div className="text-xs font-medium mb-1 text-[var(--secondary)] uppercase tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
+              <div className="text-xs font-medium mb-1 text-secondary uppercase tracking-wider font-body">
                 On Track
               </div>
               <div
-                  className="text-3xl font-bold slashed-zero text-[var(--foreground)]"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-3xl font-bold slashed-zero text-foreground font-display"
                 >
                   {tasks.length > 0
                   ? Math.round(
@@ -371,8 +349,7 @@ export default function Month() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
         <div className="bento-card p-6 md:p-8 flex flex-col h-full">
           <h3
-            className="text-xl lg:text-2xl font-bold mb-4 slashed-zero text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="text-xl lg:text-2xl font-bold mb-4 slashed-zero text-card-foreground font-display"
           >
             Action Checklist
           </h3>
@@ -380,26 +357,18 @@ export default function Month() {
             {tasks.map((task) => (
               <div
                 key={task.id}
-                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all focus-within:bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)]"
+                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all focus-within:bg-surface-hover hover:bg-surface-hover"
               >
                 <div
                   onClick={() => toggleTask(task.id)}
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  style={{
-                    backgroundColor: task.done
-                      ? "var(--accent)"
-                      : "transparent",
-                    border: task.done ? "none" : "2px solid var(--border)",
-                    color: task.done ? "var(--on-accent)" : "var(--secondary)",
-                  }}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer ${task.done ? "bg-accent text-on-accent border-none" : "bg-transparent border-2 border-border text-secondary"}`}
                 >
                   {task.done ? <Check size={14} /> : <Circle size={14} />}
                 </div>
 
                 {task.isGoal && task.amount !== undefined ? (
                   <div
-                    className={`flex-1 flex flex-wrap items-center gap-1.5 text-[var(--card-foreground)] ${task.done ? "opacity-50" : ""}`}
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className={`flex-1 flex flex-wrap items-center gap-1.5 text-card-foreground font-body ${task.done ? "opacity-50" : ""}`}
                   >
                     <span
                       onClick={() => toggleTask(task.id)}
@@ -414,11 +383,8 @@ export default function Month() {
                         updateTaskAmount(task.id, parseInt(e.target.value) || 0)
                       }
                       disabled={task.done}
-                      className="w-24 text-center px-2 py-0.5 rounded-md outline-none focus:ring-2 focus:ring-[var(--accent)] font-semibold transition-all"
-                      style={{
-                        background: "var(--surface-tint)",
-                        border: "1px solid var(--border)",
-                        ...(task.done
+                      className="w-24 text-center px-2 py-0.5 rounded-md outline-none focus:ring-2 focus:ring-accent font-semibold transition-all bg-surface-tint border border-border"
+                      style={{ ...(task.done
                           ? { textDecoration: "line-through" }
                           : {}),
                       }}
@@ -433,8 +399,7 @@ export default function Month() {
                 ) : (
                   <button
                     onClick={() => toggleTask(task.id)}
-                    className={`text-left flex-1 text-[var(--card-foreground)] ${task.done ? "line-through opacity-50" : ""}`}
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className={`text-left flex-1 text-card-foreground ${task.done ? "line-through opacity-50" : ""} font-body`}
                   >
                     {task.text}
                   </button>
@@ -447,7 +412,7 @@ export default function Month() {
             style={{
               color: "var(--secondary)",
               fontFamily: "var(--font-body)",
-              background: "var(--surface-tint)",
+              background: "var(--bg-surface-tint)",
             }}
           >
             {tasks.filter((t) => t.done).length} of {tasks.length} completed
@@ -457,14 +422,12 @@ export default function Month() {
         <div className="bento-card p-6 md:p-8 flex flex-col h-full">
           <div>
             <h3
-              className="text-xl lg:text-2xl font-bold mb-1 slashed-zero text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-xl lg:text-2xl font-bold mb-1 slashed-zero text-card-foreground font-display"
             >
               This Month's Impact
             </h3>
             <p
-              className="text-sm text-[var(--secondary)] mb-6"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-sm text-secondary mb-6 font-body"
             >
               See how your monthly plan accelerates your targets.
             </p>
@@ -481,7 +444,7 @@ export default function Month() {
                 return (
                   <div
                     className="text-center p-6 rounded-xl border border-dashed border-[var(--border)] text-[var(--secondary)] text-sm"
-                    style={{ background: "var(--surface-tint)" }}
+                    style={{ background: "var(--bg-surface-tint)" }}
                   >
                     No goals are receiving funds this month. Try adding a
                     lumpsum!
@@ -533,11 +496,7 @@ export default function Month() {
                     </div>
 
                     <div
-                      className="h-3 rounded-full overflow-hidden flex relative"
-                      style={{
-                        background: "var(--progress-inactive)",
-                        boxShadow: "inset 0 1px 2px rgba(0,0,0,0.1)",
-                      }}
+                      className="h-3 rounded-full overflow-hidden flex relative bg-progress-inactive shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]"
                     >
                       <div
                         className="h-full transition-all duration-500"
@@ -556,11 +515,7 @@ export default function Month() {
                           }}
                         >
                           <div
-                            className="absolute inset-0"
-                            style={{
-                              backgroundImage:
-                                "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.15) 10px, rgba(255,255,255,0.15) 20px)",
-                            }}
+                            className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.15)_10px,rgba(255,255,255,0.15)_20px)]"
                           />
                         </div>
                       )}
@@ -584,8 +539,7 @@ export default function Month() {
         <div className="bento-card p-6 md:p-8 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h3
-              className="text-xl font-bold text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-xl font-bold text-card-foreground font-display"
             >
               Investment Strategy
             </h3>
@@ -593,26 +547,11 @@ export default function Month() {
               onClick={() =>
                 setStrategy(strategy === "avalanche" ? "snowball" : "avalanche")
               }
-              className="relative flex items-center h-9 px-1 rounded-full transition-all cursor-pointer select-none"
-              style={{
-                width: "10.5rem",
-                background:
-                  strategy === "avalanche"
-                    ? "var(--tertiary-accent)"
-                    : "var(--accent)",
-                border: "none",
-              }}
+              className="relative flex items-center h-9 px-1 rounded-full transition-all cursor-pointer select-none border-none w-[10.5rem] ${strategy === 'avalanche' ? 'bg-tertiary-accent' : 'bg-accent'}"
               aria-label={`Strategy: ${strategy}`}
             >
               <span
-                className="absolute top-0.5 h-8 rounded-full transition-all duration-300 ease-out"
-                style={{
-                  width: "calc(50% - 0.25rem)",
-                  left:
-                    strategy === "avalanche" ? "0.25rem" : "calc(50% + 0rem)",
-                  background: "var(--card)",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
-                }}
+                className={`absolute top-0.5 h-8 rounded-full transition-all duration-300 ease-out bg-card shadow-[0_1px_3px_rgba(0,0,0,0.18)] w-[calc(50%-0.25rem)] ${strategy === "avalanche" ? "left-[0.25rem]" : "left-[calc(50%+0rem)]"}`}
               />
               <span
                 className="relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-200"
@@ -642,17 +581,11 @@ export default function Month() {
           </div>
 
           <div
-            className="text-sm p-4 rounded-xl"
-            style={{
-              background: "var(--surface-tint)",
-              border: "1px solid var(--border)",
-              color: "var(--secondary)",
-              fontFamily: "var(--font-body)",
-            }}
+            className="text-sm p-4 rounded-xl  text-secondary font-body"
           >
             {strategy === "avalanche" ? (
               <p className="leading-relaxed">
-                <strong className="text-[var(--card-foreground)]">
+                <strong className="text-card-foreground">
                   Avalanche
                 </strong>{" "}
                 allocates funds by goal priority — highest priority goals get
@@ -662,11 +595,11 @@ export default function Month() {
                   return p1 ? (
                     <span>
                       Your{" "}
-                      <strong className="text-[var(--card-foreground)]">
+                      <strong className="text-card-foreground">
                         P1: {p1.name}
                       </strong>{" "}
                       receives{" "}
-                      <strong className="text-[var(--card-foreground)]">
+                      <strong className="text-card-foreground">
                         ₹{(p1.monthlyAllocation || 0).toLocaleString("en-IN")}
                         /mo
                       </strong>
@@ -677,7 +610,7 @@ export default function Month() {
               </p>
             ) : (
               <p className="leading-relaxed">
-                <strong className="text-[var(--card-foreground)]">
+                <strong className="text-card-foreground">
                   Snowball
                 </strong>{" "}
                 tackles the smallest remaining goal first for a quick win, then
@@ -692,11 +625,11 @@ export default function Month() {
                   return smallest ? (
                     <span>
                       Currently focused on{" "}
-                      <strong className="text-[var(--card-foreground)]">
+                      <strong className="text-card-foreground">
                         {smallest.name}
                       </strong>{" "}
                       with{" "}
-                      <strong className="text-[var(--card-foreground)]">
+                      <strong className="text-card-foreground">
                         ₹
                         {(smallest.monthlyAllocation || 0).toLocaleString(
                           "en-IN",
@@ -771,14 +704,12 @@ export default function Month() {
 
         <div className="bento-card p-6 md:p-8">
           <h3
-            className="text-xl font-bold mb-4 text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="text-xl font-bold mb-4 text-card-foreground font-display"
           >
             Lumpsum Fast-Track
           </h3>
           <p
-            className="text-sm mb-4 text-[var(--secondary)]"
-            style={{ fontFamily: "var(--font-body)" }}
+            className="text-sm mb-4 text-secondary font-body"
           >
             Add a one-time amount to accelerate a goal.
           </p>
@@ -786,11 +717,8 @@ export default function Month() {
             <select
               value={lumpsumGoalId}
               onChange={(e) => setLumpsumGoalId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)]"
-              style={{
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-              }}
+              className="w-full px-4 py-3 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border"
+              
               disabled={activeGoals.length === 0}
             >
               {activeGoals.length === 0 ? (
@@ -811,32 +739,19 @@ export default function Month() {
                 setLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
               }
               placeholder="Lumpsum amount (₹)"
-              className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)]"
-              style={{
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-              }}
+              className="w-full px-4 py-3 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border"
+              
             />
             <button
               onClick={applyLumpsum}
               disabled={!lumpsumGoalId || !lumpsumAmount}
-              className="w-full py-3 rounded-xl font-bold transition-all disabled:opacity-50"
-              style={{
-                background: "var(--accent)",
-                color: "var(--on-accent)",
-                fontFamily: "var(--font-body)",
-              }}
+              className="w-full py-3 rounded-xl font-bold transition-all disabled:opacity-50 bg-accent text-on-accent font-body"
             >
               Apply Lumpsum
             </button>
             {lumpsumNotice && (
               <div
-                className="text-xs rounded-lg px-3 py-2"
-                style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                  color: "var(--secondary)",
-                }}
+                className="text-xs rounded-lg px-3 py-2  text-secondary"
               >
                 {lumpsumNotice}
               </div>
@@ -847,3 +762,29 @@ export default function Month() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

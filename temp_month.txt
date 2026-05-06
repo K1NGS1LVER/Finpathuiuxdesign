@@ -1,0 +1,10 @@
+﻿    }, 0);
+  const savingsTarget = Math.max(0, goalSavingsTarget + reservedSurplus);
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
+      <div
+        className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
+        style={{ backgroundColor: "var(--accent)" }}
+      />
+      <div className="relative z-10">

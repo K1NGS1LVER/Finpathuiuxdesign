@@ -1,4 +1,4 @@
-import {
+﻿import {
   TrendingUp,
   Wallet,
   Target,
@@ -307,11 +307,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 {metric.label}
               </span>
               <span
-                className="pill-button text-xs font-semibold"
-                style={{
-                  background: metric.positive ? "var(--accent)" : "var(--red)",
-                  color: "var(--on-accent)",
-                }}
+                className={`pill-button text-xs font-semibold text-on-accent ${metric.positive ? 'bg-accent' : 'bg-red'}`}
               >
                 {metric.change}
               </span>
@@ -334,12 +330,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
 
             {/* Background Blob inside card */}
             <div
-              className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl"
-              style={{
-                backgroundColor: metric.positive
-                  ? "var(--accent)"
-                  : "var(--tertiary-accent)",
-              }}
+              className={`absolute -right-10 -bottom-10 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl ${metric.positive ? 'bg-accent' : 'bg-tertiary-accent'}`}
             />
           </div>
         ))}
@@ -356,8 +347,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 {/* Left side: Icon and Label */}
                 <div className="flex items-center gap-3 md:gap-4 min-w-0">
                   <div
-                    className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-[var(--card-foreground)] flex-shrink-0"
-                    style={{ background: "var(--surface-hover)" }}
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-card-foreground flex-shrink-0 bg-surface-hover"
                   >
                     <Icon size={18} className="icon-wireframe" />
                   </div>
@@ -370,13 +360,12 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 <div className="flex flex-col items-end flex-shrink-0 pl-2">
                   <div className="flex items-baseline gap-1 mb-1">
                     {metric.label !== "Active Goals" && (
-                      <span className="text-xs font-medium text-[var(--secondary)]">
+                      <span className="text-xs font-medium text-secondary">
                         ₹
                       </span>
                     )}
                     <h3
-                      className="text-lg md:text-xl lg:text-xl font-bold slashed-zero text-[var(--card-foreground)] tracking-tight"
-                      style={{ fontFamily: "var(--font-display)" }}
+                      className="text-lg md:text-xl lg:text-xl font-bold slashed-zero text-card-foreground tracking-tight font-display"
                     >
                       {metric.value}
                     </h3>
@@ -385,12 +374,12 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                     {metric.change.startsWith("+") ? (
                       <ArrowUpRight
                         size={12}
-                        style={{ color: "var(--accent-text)" }}
+                        className="text-accent-text"
                       />
                     ) : metric.change.startsWith("-") ? (
                       <ArrowDownRight
                         size={12}
-                        style={{ color: "var(--red-text)" }}
+                        className="text-red-text"
                       />
                     ) : null}
                     <span className="text-xs font-semibold slashed-zero text-[var(--card-foreground)]">
@@ -432,17 +421,15 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 strokeWidth="12"
                 strokeDasharray={circumference}
                 strokeLinecap="round"
+                className="transition-[stroke-dashoffset] duration-1500 ease-[cubic-bezier(0.4,0,0.2,1)] drop-shadow-[0_0_4px_var(--accent-glow)]"
                 style={{
                   strokeDashoffset: offset,
-                  transition: "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                  filter: "drop-shadow(0 0 4px var(--accent-glow))",
                 }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div
-                className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-3xl font-bold slashed-zero text-card-foreground font-display"
               >
                 {health}
               </div>
@@ -476,10 +463,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-2 h-2 rounded-full shadow-sm"
-                      style={{
-                        backgroundColor: "var(--tertiary-accent)",
-                      }}
+                      className="w-2 h-2 rounded-full shadow-sm bg-tertiary-accent"
                     />
                     <span className="text-sm font-semibold text-[var(--card-foreground)]">
                       {goal.name}
@@ -492,14 +476,12 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
 
                 {/* Progress Bar */}
                 <div
-                  className="h-4 rounded-full overflow-hidden relative"
-                  style={{ background: "var(--progress-inactive)" }}
+                  className="h-4 rounded-full overflow-hidden relative bg-[var(--progress-inactive)]"
                 >
                   <div
-                    className="absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-out"
+                    className="absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-out bg-tertiary-accent"
                     style={{
                       width: `${goal.progress}%`,
-                      backgroundColor: "var(--tertiary-accent)",
                     }}
                   />
                   <div className="absolute inset-0 hatching-pattern mix-blend-overlay" />
@@ -519,13 +501,9 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
         </div>
 
         {/* Penny's Actionable Insights */}
-        <div className="col-span-12 bento-card border border-[var(--tertiary-accent)]"
-          style={{ background: "var(--surface-tint)" }}
-        >
+        <div className="col-span-12 bento-card border border-tertiary-accent bg-surface-tint">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "var(--tertiary-accent-subtle)", color: "var(--tertiary-accent-text)" }}
-            >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-tertiary-accent-subtle text-tertiary-accent-text">
               <Sparkles size={16} />
             </div>
             <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">
@@ -536,13 +514,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             {pennyInsights.map((tip, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 p-3 rounded-xl text-sm"
-                style={{
-                  background: "var(--surface-hover)",
-                  border: "1px solid var(--border)",
-                  fontFamily: "var(--font-body)",
-                  color: "var(--card-foreground)",
-                }}
+                className="flex items-start gap-3 p-3 rounded-xl text-sm bg-surface-hover border border-border font-body text-card-foreground"
               >
                 <span className="text-[var(--tertiary-accent)] mt-0.5 font-bold">{i + 1}.</span>
                 <span>{tip}</span>
@@ -624,8 +596,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             })}
             {prioritizedActiveGoals.length === 0 && (
               <div
-                className="p-4 text-center text-sm text-[var(--secondary)]"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="p-4 text-center text-sm text-secondary font-body"
               >
                 No goals set yet. Add one from Journey!
               </div>
@@ -636,3 +607,4 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
     </div>
   );
 }
+

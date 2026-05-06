@@ -36,8 +36,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
 
   return (
     <div
-      className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
-      style={{ background: "var(--background)" }}
+      className="h-[100dvh] w-full flex flex-col relative overflow-hidden bg-background"
     >
       <style>{`
         @keyframes slideUpFade {
@@ -56,8 +55,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       <button
         type="button"
         onClick={() => navigate('/')}
-        className="absolute top-4 left-4 md:top-6 md:left-6 px-4 py-2 md:px-5 md:py-2.5 rounded-full flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 z-20 text-xs md:text-sm font-semibold"
-        style={{ background: "var(--surface-tint)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", color: "var(--secondary)" }}
+        className="absolute top-4 left-4 md:top-6 md:left-6 px-4 py-2 md:px-5 md:py-2.5 rounded-full flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 z-20 text-xs md:text-sm font-semibold bg-surface-tint shadow-sm border border-border text-secondary"
       >
         <ArrowLeft size={16} className="icon-wireframe" />
         Back
@@ -66,17 +64,16 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       <button
         type="button"
         onClick={() => setIsDark(!isDark)}
-        className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 z-20"
-        style={{ background: "var(--card)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", color: "var(--card-foreground)" }}
+        className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 z-20 bg-card shadow-sm border border-border text-card-foreground"
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       >
         {isDark ? <Sun size={18} className="icon-wireframe md:w-5 md:h-5" /> : <Moon size={18} className="icon-wireframe md:w-5 md:h-5" />}
       </button>
 
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[25%] left-[15%] w-[80vw] h-[50vh] max-w-[800px] rounded-full bg-[var(--accent)] opacity-[0.08] mix-blend-screen blur-[120px] -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute top-[35%] right-[15%] w-[50vw] h-[60vh] max-w-[600px] rounded-full bg-[var(--secondary-accent)] opacity-[0.06] mix-blend-screen blur-[120px] translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-[20%] left-[50%] w-[55vw] h-[45vh] max-w-[700px] rounded-full bg-[var(--tertiary-accent)] opacity-[0.05] mix-blend-screen blur-[120px] -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-[25%] left-[15%] w-[80vw] h-[50vh] max-w-[800px] rounded-full bg-accent opacity-[0.08] mix-blend-screen blur-[120px] -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-[35%] right-[15%] w-[50vw] h-[60vh] max-w-[600px] rounded-full bg-secondary-accent opacity-[0.06] mix-blend-screen blur-[120px] translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-[20%] left-[50%] w-[55vw] h-[45vh] max-w-[700px] rounded-full bg-tertiary-accent opacity-[0.05] mix-blend-screen blur-[120px] -translate-x-1/2 translate-y-1/2" />
       </div>
 
       <header className="shrink-0 relative z-10 max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pt-6 md:pt-8 pb-2">
@@ -88,14 +85,12 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           <div className="bento-card !p-5 md:!p-7 my-auto">
             <div className="text-center mb-5 md:mb-6">
               <h2
-                className="text-2xl md:text-4xl font-bold slashed-zero leading-tight text-[var(--card-foreground)]"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-2xl md:text-4xl font-bold slashed-zero leading-tight text-card-foreground font-display"
               >
                 {currentMeta.title}
               </h2>
               <p
-                className="text-sm md:text-base mt-2 md:mt-3"
-                style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}
+                className="text-sm md:text-base mt-2 md:mt-3 text-secondary font-body"
               >
                 {currentMeta.subtitle}
               </p>
@@ -149,8 +144,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       </main>
 
       <footer
-        className="shrink-0 relative z-10 max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pb-4 md:pb-6 pt-2"
-        style={{ background: "linear-gradient(to top, var(--background) 60%, transparent)" }}
+        className="shrink-0 relative z-10 max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pb-4 md:pb-6 pt-2 bg-gradient-to-t from-background via-background/60 to-transparent"
       >
         <OnboardingNavigation
           step={form.step} totalSteps={form.TOTAL_STEPS} canAdvance={form.canAdvance()}
