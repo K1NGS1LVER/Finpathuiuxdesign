@@ -4,37 +4,56 @@
 @import 'tw-animate-css';
 
 @theme {
-  --font-sans: 'Lufga', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Lufga', ui-serif, Georgia, serif;
-  --font-mono: 'Lufga', ui-monospace, SFMono-Regular, monospace;
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-sans: var(--font-body);
 
   --color-background: var(--background-solid);
   --color-foreground: var(--foreground);
+  --color-secondary: var(--secondary);
+  --color-tertiary: var(--tertiary);
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--accent);
-  --color-primary-foreground: var(--on-accent);
-  --color-secondary: var(--secondary-accent);
-  --color-secondary-foreground: var(--on-secondary-accent);
-  --color-muted: var(--surface-hover);
-  --color-muted-foreground: var(--secondary);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--on-accent);
-  --color-destructive: var(--red);
-  --color-destructive-foreground: #ffffff;
+  
   --color-border: var(--border);
   --color-input: var(--border);
-  --color-input-background: var(--surface-tint);
   --color-ring: var(--accent);
-  --color-switch-background: var(--progress-inactive);
-  --color-sidebar: var(--card);
-  --color-sidebar-foreground: var(--card-foreground);
-  --color-sidebar-primary: var(--accent);
-  --color-sidebar-primary-foreground: var(--on-accent);
-  --color-sidebar-accent: var(--surface-hover);
-  --color-sidebar-accent-foreground: var(--card-foreground);
-  --color-sidebar-border: var(--border);
-  --color-sidebar-ring: var(--accent);
+
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-glow: var(--accent-glow);
+  --color-on-accent: var(--on-accent);
+
+  --color-secondary-accent: var(--secondary-accent);
+  --color-secondary-accent-text: var(--secondary-accent-text);
+  --color-on-secondary-accent: var(--on-secondary-accent);
+
+  --color-tertiary-accent: var(--tertiary-accent);
+  --color-tertiary-accent-text: var(--tertiary-accent-text);
+  --color-on-tertiary-accent: var(--on-tertiary-accent);
+
+  --color-green: var(--green);
+  --color-green-text: var(--green-text);
+  --color-amber: var(--amber);
+  --color-amber-text: var(--amber-text);
+  --color-red: var(--red);
+  --color-red-text: var(--red-text);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }

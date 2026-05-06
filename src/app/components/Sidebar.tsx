@@ -57,11 +57,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
       )}
       
       <aside
-        className={`h-full flex flex-col overflow-hidden z-50 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] bg-[var(--card)] border-r border-[var(--border)]
-          fixed md:relative
-          ${mobileMenuOpen ? 'left-0 shadow-[var(--shadow-lg)]' : '-left-[240px] md:left-0 shadow-none'}
-          w-[240px] ${collapsed ? 'md:w-[80px]' : 'md:w-[240px]'}
-        `}
+        className={`h-full flex flex-col overflow-hidden z-50 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] bg-card border-r border-border fixed md:relative ${mobileMenuOpen ? 'left-0 shadow-[var(--shadow-lg)]' : '-left-[240px] md:left-0 shadow-none'} w-[240px] ${collapsed ? 'md:w-[80px]' : 'md:w-[240px]'}`}
       >
         {/* Header */}
         <div className="relative p-6">
@@ -70,16 +66,11 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             className="flex items-center gap-3 w-full hover:opacity-80 transition-all duration-300"
           >
             <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{
-                backgroundColor: 'var(--accent)',
-                boxShadow: '0 0 12px var(--accent)',
-              }}
+              className="w-3 h-3 rounded-full flex-shrink-0 bg-accent shadow-[0_0_12px_var(--accent)]"
             />
             <span
-              className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero text-[var(--card-foreground)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero text-card-foreground transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] font-display"
               style={{
-                fontFamily: 'var(--font-display)',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '200px',
               }}
@@ -91,8 +82,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           {/* Desktop Collapse */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full items-center justify-center transition-all duration-300 hover:scale-110 text-[var(--card-foreground)]"
-            style={{ background: 'var(--surface-hover)' }}
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full items-center justify-center transition-all duration-300 hover:scale-110 text-card-foreground bg-surface-hover"
           >
             {collapsed ? <ChevronRight size={16} className="icon-wireframe" /> : <ChevronLeft size={16} className="icon-wireframe" />}
           </button>
@@ -100,8 +90,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           {/* Mobile Close */}
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="md:hidden absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 text-[var(--card-foreground)]"
-            style={{ background: 'var(--surface-hover)' }}
+            className="md:hidden absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 text-card-foreground bg-surface-hover"
           >
             <X size={16} className="icon-wireframe" />
           </button>
@@ -116,23 +105,15 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
               <button
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
-                className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 ${collapsed ? 'px-0 justify-center md:px-0' : 'px-4 justify-start'}`}
+                className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 font-body ${collapsed ? 'px-0 justify-center md:px-0' : 'px-4 justify-start'} ${active ? 'bg-accent-glow text-card-foreground font-semibold' : 'bg-transparent text-secondary font-normal'}`}
                 style={{
-                  backgroundColor: active ? 'var(--accent-glow)' : 'transparent',
-                  color: active ? 'var(--card-foreground)' : 'var(--secondary)',
-                  fontFamily: 'var(--font-body)',
                   gap: collapsed ? '0' : '12px',
-                  fontWeight: active ? 600 : 400,
                 }}
                 title={collapsed ? item.label : undefined}
               >
                 {active && (
                   <div
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full"
-                    style={{
-                      backgroundColor: 'var(--accent)',
-                      boxShadow: '0 0 12px var(--accent)',
-                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-accent shadow-[0_0_12px_var(--accent)]"
                   />
                 )}
                 <Icon
@@ -158,12 +139,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
         {/* Ask Penny Button */}
         <div className="p-4">
           <button
-            className="w-full flex items-center justify-center py-4 rounded-full font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full flex items-center justify-center py-4 rounded-full font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] bg-accent text-on-accent font-body shadow-[0_8px_24px_var(--accent-glow)]"
             style={{
-              backgroundColor: 'var(--accent)',
-              color: 'var(--on-accent)',
-              fontFamily: 'var(--font-body)',
-              boxShadow: '0 8px 24px var(--accent-glow)',
               gap: collapsed ? '0' : '8px',
             }}
             title={collapsed ? 'Ask Penny' : undefined}

@@ -24,11 +24,7 @@ export default function Journey() {
     <div className="h-[calc(100vh-120px)] md:h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4">
       <div
         ref={canvas.canvasRef}
-        className="flex-1 rounded-2xl relative overflow-hidden"
-        style={{
-          backgroundColor: "var(--background-solid)",
-          cursor: canvas.isPanning ? "grabbing" : "grab",
-        }}
+        className={`flex-1 rounded-2xl relative overflow-hidden bg-background-solid ${canvas.isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
         onWheel={canvas.handleWheel}
         onMouseDown={canvas.handleCanvasPointerDown}
         onMouseMove={canvas.handlePointerMove}
@@ -48,7 +44,7 @@ export default function Journey() {
               height={20 * canvas.zoom}
               patternUnits="userSpaceOnUse"
             >
-              <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} fill="var(--border)" />
+              <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} className="fill-border" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dots)" />
@@ -63,11 +59,7 @@ export default function Journey() {
                   y1={canvas.incomePos.y + 80 + canvas.panOffset.y}
                   x2={goalPos.x + 80 + canvas.panOffset.x}
                   y2={goalPos.y + 80 + canvas.panOffset.y}
-                  stroke={
-                    goal.status === "complete"
-                      ? "var(--accent)"
-                      : "var(--secondary)"
-                  }
+                  className={goal.status === "complete" ? "stroke-accent" : "stroke-secondary"}
                   strokeWidth="3"
                   strokeDasharray={goal.status === "complete" ? "0" : "8,4"}
                   opacity={goal.status === "complete" ? 0.8 : 0.4}
@@ -78,12 +70,7 @@ export default function Journey() {
         </svg>
 
         <div
-          className="absolute top-2 left-2 md:top-4 md:left-4 px-3 py-2 rounded-xl text-[10px] md:text-xs z-10"
-          style={{
-            background: "var(--surface-tint)",
-            border: "1px solid var(--border)",
-            color: "var(--secondary)",
-          }}
+          className="absolute top-2 left-2 md:top-4 md:left-4 px-3 py-2 rounded-xl text-[10px] md:text-xs z-10 bg-surface-tint border border-border text-secondary"
         >
           Priority glow guide: stronger glow = higher priority (P1).
         </div>
@@ -124,18 +111,15 @@ export default function Journey() {
             <div className="text-center p-8">
               <Target
                 size={48}
-                className="mx-auto mb-4"
-                style={{ color: "var(--secondary)", opacity: 0.3 }}
+                className="mx-auto mb-4 text-secondary opacity-30"
               />
               <p
-                className="text-lg font-semibold text-[var(--secondary)] mb-2"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-lg font-semibold text-secondary mb-2 font-display"
               >
                 No goals yet
               </p>
               <p
-                className="text-sm text-[var(--secondary)]"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="text-sm text-secondary font-body"
               >
                 Click the + button to add your first goal
               </p>
@@ -145,11 +129,10 @@ export default function Journey() {
 
         <button
           onClick={() => { goals.setAddGoalError(""); goals.setShowAddModal(true); }}
-          className="absolute top-2 right-2 md:top-4 md:right-4 px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg z-20 pointer-events-auto"
-          style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
+          className="absolute top-2 right-2 md:top-4 md:right-4 px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg z-20 pointer-events-auto bg-accent text-on-accent"
         >
           <Plus size={18} className="md:w-5 md:h-5" />
-          <span className="font-semibold text-sm md:text-base hidden sm:inline" style={{ fontFamily: "var(--font-body)" }}>Add Goal</span>
+          <span className="font-semibold text-sm md:text-base hidden sm:inline font-body">Add Goal</span>
         </button>
       </div>
 

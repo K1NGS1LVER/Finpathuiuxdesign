@@ -38,44 +38,29 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
       return (
         <div
-          className="min-h-screen w-full flex items-center justify-center p-4"
-          style={{ background: 'var(--background)', color: 'var(--foreground)' }}
+          className="min-h-screen w-full flex items-center justify-center p-4 bg-background text-foreground"
         >
           <div
-            className="w-full max-w-md p-8 rounded-2xl text-center"
-            style={{
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              boxShadow: 'var(--shadow-lg)',
-            }}
+            className="w-full max-w-md p-8 rounded-2xl text-center bg-card border border-border shadow-lg"
           >
             <div
-              className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-              style={{ background: 'var(--red-subtle)', color: 'var(--red-text)' }}
+              className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-red-subtle text-red-text"
             >
               <AlertTriangle size={28} />
             </div>
             <h2
-              className="text-xl font-bold mb-2 text-[var(--card-foreground)]"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-xl font-bold mb-2 text-card-foreground font-display"
             >
               Something went wrong
             </h2>
             <p
-              className="text-sm text-[var(--secondary)] mb-6"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-sm text-secondary mb-6 font-body"
             >
               {this.state.error?.message || 'An unexpected error occurred. Please try again.'}
             </p>
             <button
               onClick={this.handleRetry}
-              className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 mx-auto button-press"
-              style={{
-                background: 'var(--accent)',
-                color: 'var(--on-accent)',
-                fontFamily: 'var(--font-body)',
-                boxShadow: '0 8px 24px var(--accent-glow)',
-              }}
+              className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 mx-auto button-press bg-accent text-on-accent font-body shadow-[0_8px_24px_var(--accent-glow)]"
             >
               <RefreshCw size={16} />
               Try Again
