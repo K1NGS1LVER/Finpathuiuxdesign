@@ -11,7 +11,7 @@ import Onboarding from "./screens/Onboarding";
 import Loading from "./screens/Loading";
 import Dashboard from "./screens/Dashboard";
 import Journey from "./screens/Journey";
-import Tax from "./screens/Tax";
+// import Tax from "./screens/Tax";
 import Debt from "./screens/Debt";
 import Cashflow from "./screens/Cashflow";
 import Month from "./screens/Month";
@@ -174,14 +174,14 @@ function AppContent() {
                     </ErrorBoundary>
                   }
                 />
-                <Route
+                {/* <Route
                   path="/tax"
                   element={
                     <ErrorBoundary key={location.pathname}>
                       <Tax />
                     </ErrorBoundary>
                   }
-                />
+                /> */}
                 <Route
                   path="/month"
                   element={

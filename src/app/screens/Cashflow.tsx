@@ -156,10 +156,7 @@ export default function Cashflow() {
 
   return (
     <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[400px] h-[400px] -top-40 right-1/4 rounded-full bg-[var(--accent)] opacity-10" />
-        <div className="data-blob w-[300px] h-[300px] bottom-0 -left-40 rounded-full bg-[var(--tertiary-accent)] opacity-10" />
-      </div>
+
 
       <div className="mb-6 md:mb-8 relative z-10">
         <h1 className="text-display mb-2 slashed-zero">Cashflow</h1>
