@@ -6,7 +6,10 @@ interface JourneyIncomeNodeProps {
   dragging: boolean;
   incomeTotal: number;
   formatCurrency: (amount: number) => string;
-  onPointerDown: (e: React.MouseEvent | React.TouchEvent, nodeId: string) => void;
+  onPointerDown: (
+    e: React.MouseEvent | React.TouchEvent,
+    nodeId: string,
+  ) => void;
 }
 
 export default function JourneyIncomeNode({

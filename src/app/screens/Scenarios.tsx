@@ -54,7 +54,6 @@ export default function Scenarios() {
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
   const plan = useFinPathStore((s) => s.plan);
-  const setStrategy = useFinPathStore((s) => s.setStrategy);
   const updateSettings = useFinPathStore((s) => s.updateSettings);
   const addLumpsum = useFinPathStore((s) => s.addLumpsum);
 
@@ -480,120 +479,98 @@ export default function Scenarios() {
           {/* Impact Analysis Section */}
           {impactAnalysisSection}
 
-          {/* Live Global Controls */}
+          {/* Income Controls */}
           <div className="bento-card p-6 md:p-8 space-y-4 relative z-10">
             <h3
               className="text-xl font-bold text-[var(--card-foreground)]"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Live Global Controls
+              Income Controls
             </h3>
+            <p
+              className="text-sm text-[var(--secondary)]"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Adjust your monthly salary or apply a percentage hike to see how
+              it affects your financial plan.
+            </p>
 
-            <div>
-              <div className="text-xs uppercase tracking-wider mb-2 text-[var(--secondary)]">
-                Strategy
+            <div className="space-y-3">
+              <div className="flex items-end gap-3 flex-wrap">
+                <div className="flex-1 min-w-[140px]">
+                  <label
+                    className="block text-xs text-[var(--secondary)] mb-1.5"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {salaryHikeInput ? "Salary Hike %" : "Monthly Salary"}
+                  </label>
+                  <input
+                    type="text"
+                    value={salaryHikeInput || salaryInput}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (salaryHikeInput) {
+                        setSalaryHikeInput(raw.replace(/[^0-9-]/g, ""));
+                      } else {
+                        setSalaryInput(raw.replace(/[^0-9]/g, ""));
+                      }
+                    }}
+                    placeholder={salaryHikeInput ? "e.g. 12 or -5" : "Enter amount"}
+                    className="w-full px-3 py-2.5 rounded-xl outline-none text-[var(--card-foreground)]"
+                    style={{
+                      background: "var(--surface-tint)",
+                      border: "1px solid var(--border)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  />
+                </div>
+                <div className="w-36">
+                  <label
+                    className="block text-xs text-[var(--secondary)] mb-1.5"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    Type
+                  </label>
+                  <select
+                    value={salaryHikeInput ? "hike" : "salary"}
+                    onChange={(e) => {
+                      if (e.target.value === "hike") {
+                        setSalaryInput("");
+                      } else {
+                        setSalaryHikeInput("");
+                        setSalaryInput(String(income.salary || income.total || 0));
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl outline-none cursor-pointer text-[var(--card-foreground)]"
+                    style={{
+                      background: "var(--surface-tint)",
+                      border: "1px solid var(--border)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    <option value="salary">Set Salary</option>
+                    <option value="hike">Salary Hike %</option>
+                  </select>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setStrategy("avalanche")}
-                  className="py-3 rounded-xl font-semibold transition-all"
-                  style={{
-                    background:
-                      strategy === "avalanche"
-                        ? "var(--accent-glow)"
-                        : "var(--surface-tint)",
-                    border: `1px solid ${strategy === "avalanche" ? "var(--accent)" : "var(--border)"}`,
-                    color: "var(--card-foreground)",
-                  }}
-                >
-                  Avalanche
-                </button>
-                <button
-                  onClick={() => setStrategy("snowball")}
-                  className="py-3 rounded-xl font-semibold transition-all"
-                  style={{
-                    background:
-                      strategy === "snowball"
-                        ? "var(--tertiary-accent-subtle)"
-                        : "var(--surface-tint)",
-                    border: `1px solid ${strategy === "snowball" ? "var(--tertiary-accent)" : "var(--border)"}`,
-                    color: "var(--card-foreground)",
-                  }}
-                >
-                  Snowball
-                </button>
-              </div>
-              <div
-                className="text-xs md:text-sm p-3 rounded-xl mt-2"
+              <button
+                onClick={() => {
+                  if (salaryHikeInput) {
+                    applySalaryHike();
+                  } else {
+                    applySalary();
+                  }
+                }}
+                disabled={salaryHikeInput ? !salaryHikeInput : !salaryInput}
+                className="w-full py-2.5 rounded-xl font-semibold transition-all disabled:opacity-40"
                 style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                  color: "var(--secondary)",
+                  background: "var(--secondary-accent)",
+                  color: "var(--on-secondary-accent)",
                   fontFamily: "var(--font-body)",
                 }}
               >
-                {strategy === "avalanche" ? (
-                  <span>
-                    <strong className="text-[var(--card-foreground)]">Avalanche</strong> puts most money toward your highest-priority goal first. Once that's done, everything shifts to the next. <em>Best if you want the fastest overall finish.</em>
-                  </span>
-                ) : (
-                  <span>
-                    <strong className="text-[var(--card-foreground)]">Snowball</strong> tackles your smallest remaining goal first for a quick win, then rolls that freed-up money into the next. <em>Best if you need early motivation boosts.</em>
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-xs text-[var(--secondary)]">
-                  Set Monthly Salary
-                </label>
-                <input
-                  type="text"
-                  value={salaryInput}
-                  onChange={(e) =>
-                    setSalaryInput(e.target.value.replace(/[^0-9]/g, ""))
-                  }
-                  className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)]"
-                  style={{
-                    background: "var(--surface-tint)",
-                    border: "1px solid var(--border)",
-                  }}
-                />
-                <button
-                  onClick={applySalary}
-                  className="w-full py-2 rounded-lg font-semibold"
-                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                >
-                  Apply Salary
-                </button>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-[var(--secondary)]">
-                  Apply Salary Hike %
-                </label>
-                <input
-                  type="text"
-                  value={salaryHikeInput}
-                  onChange={(e) =>
-                    setSalaryHikeInput(e.target.value.replace(/[^0-9-]/g, ""))
-                  }
-                  placeholder="e.g. 12 or -5"
-                  className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)]"
-                  style={{
-                    background: "var(--surface-tint)",
-                    border: "1px solid var(--border)",
-                  }}
-                />
-                <button
-                  onClick={applySalaryHike}
-                  className="w-full py-2 rounded-lg font-semibold"
-                  style={{ background: "var(--tertiary-accent)", color: "var(--on-tertiary-accent)" }}
-                >
-                  Apply Hike
-                </button>
-              </div>
+                Apply Change
+              </button>
             </div>
           </div>
 
