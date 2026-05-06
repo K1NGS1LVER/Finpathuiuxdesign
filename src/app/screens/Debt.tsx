@@ -230,7 +230,7 @@ export default function Debt() {
                 <Zap size={18} className="text-[var(--tertiary-accent-text)]" />
               </div>
               <div className="relative mb-4 flex-1 flex flex-col justify-center">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-[var(--tertiary-accent)] opacity-15 blur-2xl pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full radial-glow-lime pointer-events-none" />
                 <div className="relative text-center py-4">
                   <div className="text-xl font-bold mb-1 slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
                     {comparison.avalanche.totalMonths} months
@@ -258,7 +258,7 @@ export default function Debt() {
                 <Snowflake size={18} className="text-[var(--tertiary-accent-text)]" />
               </div>
               <div className="relative mb-4 flex-1 flex flex-col justify-center">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-[var(--tertiary-accent)] opacity-15 blur-2xl pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full radial-glow-blue pointer-events-none" />
                 <div className="relative text-center py-4">
                   <div className="text-xl font-bold mb-1 slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
                     {comparison.snowball.totalMonths} months
@@ -346,8 +346,43 @@ export default function Debt() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Payoff Timeline</h3>
                   <div className="flex gap-2">
-                    <button onClick={() => setTimelineStrategy('avalanche')} className={`pill-button text-xs py-1.5 px-3 ${timelineStrategy === 'avalanche' ? 'active' : ''}`}>Avalanche</button>
-                    <button onClick={() => setTimelineStrategy('snowball')} className={`pill-button text-xs py-1.5 px-3 ${timelineStrategy === 'snowball' ? 'active' : ''}`}>Snowball</button>
+                    <button
+                      onClick={() => setTimelineStrategy(timelineStrategy === 'avalanche' ? 'snowball' : 'avalanche')}
+                      className="relative flex items-center h-8 px-1 rounded-full transition-all cursor-pointer select-none"
+                      style={{
+                        width: "9rem",
+                        background: timelineStrategy === "avalanche" ? "var(--tertiary-accent)" : "var(--accent)",
+                        border: "none",
+                      }}
+                    >
+                      <span
+                        className="absolute top-0.5 h-7 rounded-full transition-all duration-300 ease-out"
+                        style={{
+                          width: "calc(50% - 0.25rem)",
+                          left: timelineStrategy === "avalanche" ? "0.25rem" : "calc(50% + 0rem)",
+                          background: "var(--card)",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
+                        }}
+                      />
+                      <span
+                        className="relative z-10 flex-1 text-center text-[10px] font-bold transition-colors duration-200"
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          color: timelineStrategy === "avalanche" ? "var(--on-tertiary-accent)" : "var(--on-accent)",
+                        }}
+                      >
+                        Avalanche
+                      </span>
+                      <span
+                        className="relative z-10 flex-1 text-center text-[10px] font-bold transition-colors duration-200"
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          color: timelineStrategy === "snowball" ? "var(--foreground)" : "var(--on-tertiary-accent)",
+                        }}
+                      >
+                        Snowball
+                      </span>
+                    </button>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>

@@ -102,15 +102,31 @@ export default function Header({
 
         <button
           onClick={() => setIsDark(!isDark)}
-          className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-[var(--foreground)]"
-          style={{ background: "var(--surface-hover)" }}
+          className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 text-[var(--foreground)]`}
+          style={{ 
+            background: "var(--surface-hover)",
+            boxShadow: isDark ? "0 0 15px var(--accent-glow)" : "none"
+          }}
           aria-label="Toggle Theme"
         >
-          {isDark ? (
-            <Sun size={18} className="icon-wireframe" />
-          ) : (
-            <Moon size={18} className="icon-wireframe" />
-          )}
+          <Sun 
+            size={18} 
+            className="icon-wireframe absolute transition-all duration-500" 
+            style={{ 
+              opacity: isDark ? 0 : 1, 
+              transform: isDark ? 'rotate(90deg) scale(0)' : 'rotate(0deg) scale(1)',
+              transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }} 
+          />
+          <Moon 
+            size={18} 
+            className="icon-wireframe absolute transition-all duration-500" 
+            style={{ 
+              opacity: isDark ? 1 : 0, 
+              transform: isDark ? 'rotate(0deg) scale(1)' : 'rotate(-90deg) scale(0)',
+              transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }} 
+          />
         </button>
 
         {/* User Avatar + Dropdown */}

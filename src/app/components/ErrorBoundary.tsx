@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  animate?: boolean;
 }
 
 interface ErrorBoundaryState {
@@ -84,6 +85,16 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       );
     }
 
-    return this.props.children;
+    const { animate = true } = this.props;
+
+    if (!animate) {
+      return <>{this.props.children}</>;
+    }
+
+    return (
+      <div className="page-animate h-full w-full">
+        {this.props.children}
+      </div>
+    );
   }
 }

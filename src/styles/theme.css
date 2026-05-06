@@ -608,12 +608,38 @@ textarea:focus-visible {
 @keyframes scenarioFadeSlide {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px) scale(0.995);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-tint) 25%,
+    var(--surface-hover) 50%,
+    var(--surface-tint) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: var(--radius-md);
+}
+
+.page-animate {
+  animation: scenarioFadeSlide 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Global Theme Transition */
+body {
+  transition: background-color 350ms ease, color 350ms ease;
 }
 
 
@@ -639,6 +665,25 @@ textarea:focus-visible {
 
 .dark .hatching-pattern {
   opacity: 0.1;
+}
+
+/* ─── Radial Glow Utilities ─── */
+.radial-glow-lime {
+  background: radial-gradient(circle at center, var(--tertiary-accent) 0%, transparent 70%);
+  opacity: 0.4;
+  filter: blur(40px);
+}
+
+.radial-glow-blue {
+  background: radial-gradient(circle at center, var(--accent) 0%, transparent 70%);
+  opacity: 0.4;
+  filter: blur(40px);
+}
+
+.dark .radial-glow-lime,
+.dark .radial-glow-blue {
+  opacity: 0.5;
+  mix-blend-mode: screen;
 }
 
 /* ═══════════════════════════════════════════════
@@ -835,4 +880,56 @@ select option {
   opacity: 0.06;
   filter: blur(var(--blur-lg));
   pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════
+   MICRO-INTERACTIONS
+   ═══════════════════════════════════════════════ */
+
+/* Global hover effect for cards, buttons, or interactive elements */
+.micro-hover {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.micro-hover:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 20px 48px -12px var(--accent-glow);
+}
+
+/* Global click effect */
+.micro-active:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Float animation for decorative elements */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Apply base interaction to elements globally */
+button:not(:disabled) {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease, background-color 350ms ease, color 350ms ease, border-color 350ms ease;
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Base Bento Card transitions */
+.bento-card {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1), background-color 350ms ease, color 350ms ease, border-color 350ms ease;
+}
+
+/* Only glow/lift if the card is explicitly clickable */
+button.bento-card:hover,
+a.bento-card:hover,
+.bento-card.interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px -12px var(--accent-glow);
 }
