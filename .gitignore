@@ -1,3 +1,5 @@
 node_modules
+dist/
+.kilo/
 css_audit.md
 design.md

@@ -203,7 +203,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
                 borderBottomLeftRadius: '4px',
               }}
             >
-              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--accent)' }} />
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--penny-accent)' }} />
               <span className="text-[var(--secondary)] transition-opacity">{loadingPhrase}</span>
             </div>
           </div>

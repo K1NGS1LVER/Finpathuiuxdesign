@@ -124,6 +124,14 @@
   --on-tertiary-accent: #050f1c;
 
   /* ═══════════════════════════════════════════════
+     PENNY ACCENT — Lighter Blue for Insights
+     ───────────────────────────────────────────── */
+  --penny-accent: #495bff;
+  --penny-accent-subtle: rgba(107, 122, 255, 0.12);
+  --penny-accent-glow: rgba(107, 122, 255, 0.22);
+  --penny-insight-border: rgba(107, 122, 255, 0.4);
+
+  /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Light Mode
      Fixed financial meaning. Never decorative.
   ═══════════════════════════════════════════════ */
@@ -317,6 +325,14 @@
   --tertiary-accent-subtle: rgba(176, 255, 9, 0.12);
   --tertiary-accent-glow: rgba(176, 255, 9, 0.22);
   --on-tertiary-accent: #050f1c;
+
+  /* ═══════════════════════════════════════════════
+     PENNY ACCENT — Lighter Blue for Insights
+     ───────────────────────────────────────────── */
+  --penny-accent: #8e9bff;
+  --penny-accent-subtle: rgba(142, 155, 255, 0.15);
+  --penny-accent-glow: rgba(142, 155, 255, 0.25);
+  --penny-insight-border: rgba(142, 155, 255, 0.5);
 
   /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Dark Mode
@@ -759,8 +775,8 @@ body {
    PENNY INSIGHT CARD
    ─────────────────────────────────────────────
    Shared card pattern for AI-generated insights
-   and suggestions. Accented with tertiary
-   (lime) to signal growth/opportunity.
+   and suggestions. Accented with blue
+   (penny-accent) to signal insight/opportunity.
    Includes a centered soft glow blob.
 ═══════════════════════════════════════════════ */
 
@@ -774,7 +790,7 @@ body {
   overflow: hidden;
   z-index: 10;
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--tertiary-accent);
+  border: 1px solid var(--penny-insight-border);
   color: var(--card-foreground);
 }
 
@@ -791,7 +807,7 @@ body {
   transform: translate(-50%, -50%);
   width: 400px;
   height: 400px;
-  background: var(--tertiary-accent);
+  background: var(--penny-accent);
   opacity: 0.2;
   filter: blur(80px);
   border-radius: 50%;

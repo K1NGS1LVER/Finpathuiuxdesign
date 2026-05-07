@@ -568,7 +568,7 @@ export default function Scenarios() {
               <button
                 onClick={applyScenarioLumpsum}
                 disabled={!simGoalId || simLumpsumValue <= 0}
-                className="py-2 rounded-lg font-semibold disabled:opacity-50 bg-accent text-on-accent"
+                className="py-2 rounded-lg font-semibold disabled:opacity-50 bg-[var(--penny-accent)] text-on-accent"
               >
                 Apply Lumpsum
               </button>
@@ -603,11 +603,11 @@ export default function Scenarios() {
             <div className="penny-insight-blob" />
             <div className="relative z-10 w-full">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
                   <Sparkles size={16} />
                 </div>
                 <div
-                  className="text-sm font-semibold tracking-wider text-[var(--accent)] uppercase"
+                  className="text-sm font-semibold tracking-wider text-[var(--penny-accent)] uppercase"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   Penny's Insight

@@ -1132,10 +1132,10 @@ export default function Progress() {
             <div className="mt-6 penny-insight-card">
               <div className="penny-insight-blob" />
               <div className="relative z-10 flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
                   <Sparkles size={16} />
                 </div>
-                <div className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">
+                <div className="text-xs font-semibold text-[var(--penny-accent)] uppercase tracking-wider">
                   Penny's Top Actions
                 </div>
               </div>
@@ -1146,7 +1146,7 @@ export default function Progress() {
                     className="flex items-start gap-3 p-3 rounded-xl text-sm text-card-foreground"
                     style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)' }}
                   >
-                    <span className="text-[var(--accent)] mt-0.5 font-bold">{i + 1}.</span>
+                    <span className="text-[var(--penny-accent)] mt-0.5 font-bold">{i + 1}.</span>
                     {action}
                   </div>
                 ))}
