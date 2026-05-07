@@ -64,10 +64,10 @@ export default function Celebrate() {
 
       {/* Hero Celebration */}
       <div className="text-center py-8 md:py-12 relative z-10">
-        <div className="inline-flex w-28 h-28 md:w-32 md:h-32 rounded-full items-center justify-center mb-6" style={{ background: 'var(--tertiary-accent)', boxShadow: '0 0 72px var(--tertiary-accent-glow)' }}>
-          <Trophy size={56} className="md:w-16 md:h-16" style={{ color: 'var(--on-accent)' }} />
+        <div className="inline-flex w-28 h-28 md:w-32 md:h-32 rounded-full items-center justify-center mb-6" style={{ background: 'var(--accent)', boxShadow: '0 0 72px var(--secondary-accent-glow)' }}>
+          <Trophy size={56} className="md:w-16 md:h-16" style={{ color: 'var(--on-secondary-accent)' }} />
         </div>
-        <h1 className="text-3xl md:text-5xl font-bold mb-3" style={{ fontFamily: 'var(--font-display)', background: 'linear-gradient(135deg, var(--tertiary-accent), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h1 className="text-3xl md:text-5xl font-bold mb-3" style={{ fontFamily: 'var(--font-display)', background: 'linear-gradient(135deg, var(--accent), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           {completedGoals.length > 0 ? 'Congratulations!' : 'Your Milestones Await!'}
         </h1>
         <p className="text-lg md:text-xl text-[var(--secondary)] max-w-md mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
@@ -81,16 +81,16 @@ export default function Celebrate() {
       {completedGoals.length > 0 && (
         <div className="space-y-4 relative z-10">
           {completedGoals.map((goal, i) => (
-            <div key={goal.id} className="bento-card relative overflow-hidden border-2 border-[var(--tertiary-accent)]" style={{ boxShadow: '0 0 32px var(--tertiary-accent-glow)' }}>
-              <div className="penny-insight-blob absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-[var(--tertiary-accent)] opacity-20 blur-[60px] rounded-full pointer-events-none" />
+            <div key={goal.id} className="bento-card relative overflow-hidden border-2 border-[var(--accent)]" style={{ boxShadow: '0 0 32px var(--secondary-accent-glow)' }}>
+              <div className="penny-insight-blob absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-[var(--accent)] opacity-20 blur-[60px] rounded-full pointer-events-none" />
               
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <div className="text-xs font-semibold tracking-wider text-[var(--tertiary-accent-text)] uppercase mb-1">Goal Complete</div>
+                    <div className="text-xs font-semibold tracking-wider text-[var(--secondary-accent-text)] uppercase mb-1">Goal Complete</div>
                     <h3 className="text-2xl font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{goal.name}</h3>
                   </div>
-                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--tertiary-accent)', color: 'var(--on-accent)' }}>
+                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--accent)', color: 'var(--on-secondary-accent)' }}>
                     <Sparkles size={28} />
                   </div>
                 </div>
@@ -127,13 +127,13 @@ export default function Celebrate() {
           </div>
           <div className="text-center">
             <div className="text-xs font-medium text-[var(--secondary)] mb-2">Today</div>
-              <div className="text-2xl md:text-3xl font-bold slashed-zero" style={{ fontFamily: 'var(--font-display)', color: 'var(--tertiary-accent-text)' }}>
+              <div className="text-2xl md:text-3xl font-bold slashed-zero" style={{ fontFamily: 'var(--font-display)', color: 'var(--secondary-accent-text)' }}>
                 {fmt(savings + investments + totalSaved)}
               </div>
           </div>
         </div>
         <div className="mt-6 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--progress-inactive)' }}>
-          <div className="h-full rounded-full" style={{ width: '100%', background: 'linear-gradient(90deg, var(--tertiary-accent), var(--tertiary-accent) 60%, var(--accent) 100%)', transition: 'width 2s ease' }} />
+          <div className="h-full rounded-full" style={{ width: '100%', background: 'linear-gradient(90deg, var(--accent), var(--accent) 60%, var(--accent) 100%)', transition: 'width 2s ease' }} />
         </div>
       </div>
 
@@ -142,7 +142,7 @@ export default function Celebrate() {
         <button
           onClick={() => navigate('/dashboard')}
           className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
-          style={{ backgroundColor: 'var(--tertiary-accent)', color: 'var(--on-accent)', fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px var(--tertiary-accent-glow)' }}
+          style={{ backgroundColor: 'var(--accent)', color: 'var(--on-secondary-accent)', fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px var(--secondary-accent-glow)' }}
         >
           Back to Dashboard
           <ArrowRight size={18} />

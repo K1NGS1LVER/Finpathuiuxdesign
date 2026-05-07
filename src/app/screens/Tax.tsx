@@ -32,8 +32,8 @@ export default function Tax() {
     <div className="max-w-7xl mx-auto relative text-foreground">
       {/* Decorative Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="data-blob w-[400px] h-[400px] -top-40 right-1/4 rounded-full bg-accent opacity-10" />
-        <div className="data-blob w-[300px] h-[300px] bottom-0 -left-40 rounded-full bg-tertiary-accent opacity-10" />
+        <div className="data-blob w-[400px] h-[400px] -top-40 right-1/4 rounded-full bg-secondary-accent opacity-10" />
+        <div className="data-blob w-[300px] h-[300px] bottom-0 -left-40 rounded-full bg-secondary-accent opacity-10" />
       </div>
 
       {/* Header */}
@@ -102,14 +102,14 @@ export default function Tax() {
         {/* Comparison Cards */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Old Regime Card */}
-          <div className={`bento-card flex flex-col ${regime === 'old' ? 'border-tertiary-accent border-2 shadow-[0_0_24px_var(--tertiary-accent-glow)]' : ''}`}>
+          <div className={`bento-card flex flex-col ${regime === 'old' ? 'border-tertiary-accent border-2 shadow-[0_0_24px_var(--secondary-accent-glow)]' : ''}`}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <h3 className="text-title slashed-zero text-card-foreground">Old Regime</h3>
                 <p className="text-[10px] text-secondary mt-1 max-w-[200px]">Allows deductions (80C, 80D, HRA). Best if you have high investments.</p>
               </div>
               {regime === 'old' && (
-                <div className="pill-button text-xs bg-tertiary-accent text-on-accent font-semibold">Selected</div>
+                <div className="pill-button text-xs bg-secondary-accent text-on-accent font-semibold">Selected</div>
               )}
             </div>
 
@@ -141,19 +141,19 @@ export default function Tax() {
           </div>
 
           {/* New Regime Card */}
-          <div className={`bento-card flex flex-col ${regime === 'new' ? 'border-tertiary-accent border-2 shadow-[0_0_24px_var(--tertiary-accent-glow)]' : ''}`}>
+          <div className={`bento-card flex flex-col ${regime === 'new' ? 'border-tertiary-accent border-2 shadow-[0_0_24px_var(--secondary-accent-glow)]' : ''}`}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <h3 className="text-title slashed-zero text-card-foreground">New Regime</h3>
                 <p className="text-[10px] text-secondary mt-1 max-w-[200px]">Default for FY 24-25. Lower tax slabs, but no investment deductions allowed.</p>
               </div>
               {regime === 'new' && (
-                <div className="pill-button text-xs bg-tertiary-accent text-on-accent font-semibold">Selected</div>
+                <div className="pill-button text-xs bg-secondary-accent text-on-accent font-semibold">Selected</div>
               )}
             </div>
 
             <div className="relative mb-8 flex-1 flex flex-col justify-center">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-accent opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-secondary-accent opacity-30 blur-2xl pointer-events-none mix-blend-screen" />
               <div className="relative text-center py-6">
                 <div className="text-2xl md:text-3xl font-bold mb-2 slashed-zero text-card-foreground truncate px-2 font-display">
                   ₹{newTax.toLocaleString('en-IN')}
@@ -197,14 +197,14 @@ export default function Tax() {
 
           <div className="flex items-center gap-4 md:gap-6">
             <div className="text-center">
-               <div className={`text-3xl md:text-5xl font-bold mb-1 slashed-zero ${savings > 0 ? 'text-tertiary-accent-text' : savings < 0 ? 'text-red-text' : 'text-card-foreground'}`}>
+               <div className={`text-3xl md:text-5xl font-bold mb-1 slashed-zero ${savings > 0 ? 'text-secondary-accent-text' : savings < 0 ? 'text-red-text' : 'text-card-foreground'}`}>
                 ₹{Math.abs(savings).toLocaleString('en-IN')}
               </div>
               <div className="text-xs md:text-sm font-medium text-secondary">
                 {savingsPercentage}% {savings > 0 ? 'saved' : 'extra'}
               </div>
             </div>
-            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${savings > 0 ? 'text-accent-text' : 'text-red-text'} bg-surface-hover`}>
+            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${savings > 0 ? 'text-secondary-accent-text' : 'text-red-text'} bg-surface-hover`}>
               {savings > 0 ? <TrendingDown size={24} className="md:w-7 md:h-7" /> : <Calculator size={24} className="md:w-7 md:h-7" />}
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function Tax() {
         {/* Recommendation */}
         {savings !== 0 && (
           <div className={`lg:col-span-3 bento-card flex items-center gap-4 border-l-4 ${savings > 0 ? 'border-l-tertiary-accent' : 'border-l-red'}`}>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${savings > 0 ? 'bg-tertiary-accent text-on-accent' : 'bg-red text-white'}`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${savings > 0 ? 'bg-secondary-accent text-on-accent' : 'bg-red text-white'}`}>
               <ArrowRight size={20} />
             </div>
             <div>
@@ -230,7 +230,7 @@ export default function Tax() {
         {/* Deductions Insights */}
         <div className="lg:col-span-3 bento-card p-6 md:p-8 mt-2">
           <h3 className="text-xl font-bold mb-4 text-card-foreground flex items-center gap-2">
-            <LightbulbIcon size={18} className="inline-block mr-2 align-middle text-accent" />Penny's Deduction Guide
+            <LightbulbIcon size={18} className="inline-block mr-2 align-middle text-secondary-accent-text" />Penny's Deduction Guide
           </h3>
           <p className="text-sm text-secondary mb-6">
             If you opt for the <strong>Old Regime</strong>, here are the top deductions you should claim to lower your tax burden:
@@ -244,7 +244,7 @@ export default function Tax() {
             ].map(deduction => (
               <div key={deduction.code} className="p-4 rounded-xl bg-surface-hover">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-accent-text text-sm">{deduction.code}</span>
+                  <span className="font-bold text-secondary-accent-text text-sm">{deduction.code}</span>
                   <span className="text-xs font-semibold px-2 py-1 rounded-md bg-surface-tint border border-border">Max {deduction.max}</span>
                 </div>
                 <p className="text-xs text-secondary">{deduction.desc}</p>

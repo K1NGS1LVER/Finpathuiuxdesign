@@ -271,7 +271,7 @@ export default function JourneyAddGoalModal({
               className="w-full py-3 rounded-xl font-bold button-press disabled:opacity-40 disabled:hover:scale-100"
               style={{
                 backgroundColor: "var(--accent)",
-                color: "var(--on-accent)",
+                color: "var(--on-secondary-accent)",
                 fontFamily: "var(--font-body)",
               }}
             >

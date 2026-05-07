@@ -36,7 +36,7 @@ export default function JourneyIncomeNode({
         className="p-4 rounded-2xl bento-card"
         style={{
           border: "2px solid var(--accent)",
-          boxShadow: "0 0 20px var(--accent-glow), var(--shadow-md)",
+          boxShadow: "0 0 20px var(--secondary-accent-glow), var(--shadow-md)",
         }}
       >
         <div

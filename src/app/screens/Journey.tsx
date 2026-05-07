@@ -24,7 +24,8 @@ export default function Journey() {
     <div className="h-[calc(100vh-120px)] md:h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4">
       <div
         ref={canvas.canvasRef}
-        className={`flex-1 rounded-2xl relative overflow-hidden bg-background-solid ${canvas.isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+        style={{ borderColor: 'var(--canvas-border)', backgroundColor: 'var(--card)' }}
         onWheel={canvas.handleWheel}
         onMouseDown={canvas.handleCanvasPointerDown}
         onMouseMove={canvas.handlePointerMove}
@@ -44,7 +45,7 @@ export default function Journey() {
               height={20 * canvas.zoom}
               patternUnits="userSpaceOnUse"
             >
-              <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} className="fill-border" />
+              <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} fill="var(--canvas-dot)" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dots)" />
