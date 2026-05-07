@@ -218,7 +218,7 @@ export default function Cashflow() {
         <div className="lg:col-span-3 flex flex-col gap-4 penny-insight-card">
           <div className="penny-insight-blob" />
           <div className="relative z-10 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
               <Sparkles size={16} />
             </div>
             <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">Penny's Insight</h3>
@@ -234,7 +234,7 @@ export default function Cashflow() {
               <div key={i} className="flex items-start gap-3 p-3 rounded-xl text-sm"
                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)', color: 'var(--card-foreground)' }}
               >
-                <span className="text-[var(--accent)] mt-0.5 font-bold">{i + 1}.</span>
+                <span className="text-[var(--penny-accent)] mt-0.5 font-bold">{i + 1}.</span>
                 <span>{tip}</span>
               </div>
             ))}

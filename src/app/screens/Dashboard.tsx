@@ -307,7 +307,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 {metric.label}
               </span>
               <span
-                className={`pill-button text-xs font-semibold text-on-accent ${metric.positive ? 'bg-accent' : 'bg-red'}`}
+                className={`pill-button text-xs font-semibold text-on-accent ${metric.positive ? 'bg-[var(--penny-accent)]' : 'bg-red'}`}
               >
                 {metric.change}
               </span>
@@ -330,7 +330,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
 
             {/* Background Blob inside card */}
             <div
-              className={`absolute -right-10 -bottom-10 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl ${metric.positive ? 'bg-accent' : 'bg-tertiary-accent'}`}
+              className={`absolute -right-10 -bottom-10 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl ${metric.positive ? 'bg-[var(--penny-accent)]' : 'bg-tertiary-accent'}`}
             />
           </div>
         ))}
@@ -504,7 +504,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
         <div className="col-span-12 penny-insight-card">
           <div className="penny-insight-blob" />
           <div className="relative z-10 flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
               <Sparkles size={16} />
             </div>
             <h3 className="text-heading slashed-zero text-card-foreground">
@@ -518,7 +518,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 className="flex items-start gap-3 p-3 rounded-xl text-sm font-body text-card-foreground"
                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}
               >
-                <span className="text-[var(--accent)] mt-0.5 font-bold">{i + 1}.</span>
+                <span className="text-[var(--penny-accent)] mt-0.5 font-bold">{i + 1}.</span>
                 <span>{tip}</span>
               </div>
             ))}
@@ -546,7 +546,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             <button
               onClick={onPennyClick}
               className="py-4 text-sm font-semibold rounded-2xl font-body transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
-              style={{ background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 4px 16px var(--accent-glow)' }}
+              style={{ background: 'var(--penny-accent)', color: 'var(--on-accent)', boxShadow: '0 4px 16px var(--penny-accent-glow)' }}
             >
               <Sparkles size={14} />
               Ask Penny
