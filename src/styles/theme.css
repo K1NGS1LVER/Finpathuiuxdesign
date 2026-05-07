@@ -68,6 +68,10 @@
   /* Borders */
   --border: rgba(5, 15, 28, 0.08);
 
+  /* Canvas grid dot — slightly decreased contrast in light mode */
+  --canvas-dot: rgba(5, 15, 28, 0.25);
+  --canvas-border: rgba(5, 15, 28, 0.15);
+
   /* Surface states */
   --surface-tint: rgba(5, 15, 28, 0.02);
   --surface-hover: rgba(5, 15, 28, 0.04);
@@ -270,6 +274,10 @@
 
   /* Borders */
   --border: rgba(255, 255, 255, 0.1);
+
+  /* Canvas grid dot — less contrast in dark mode */
+  --canvas-dot: rgba(255, 255, 255, 0.15);
+  --canvas-border: rgba(255, 255, 255, 0.2);
 
   /* Surface states */
   --surface-tint: rgba(255, 255, 255, 0.03);

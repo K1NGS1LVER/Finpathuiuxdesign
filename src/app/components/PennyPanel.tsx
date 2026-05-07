@@ -146,7 +146,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       {/* Mobile overlay */}
       {open && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
           onClick={onClose}
         />
       )}
@@ -158,13 +158,13 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           borderLeft: '1px solid var(--border)',
           borderRadius: 0,
           boxShadow: open ? 'var(--shadow-lg)' : 'none',
-          backdropFilter: 'blur(48px)',
-          WebkitBackdropFilter: 'blur(48px)',
+          backdropFilter: 'blur(32px)',
+          WebkitBackdropFilter: 'blur(32px)',
         }}
       >
       <div className="h-14 flex items-center justify-between px-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--tertiary-accent)', color: 'var(--on-tertiary-accent)' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--accent)', color: 'var(--on-accent)' }}>
             P
           </div>
           <span className="font-bold" style={{ fontFamily: 'var(--font-display)' }}>Penny</span>
@@ -203,7 +203,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
                 borderBottomLeftRadius: '4px',
               }}
             >
-              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--tertiary-accent)' }} />
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--accent)' }} />
               <span className="text-[var(--secondary)] transition-opacity">{loadingPhrase}</span>
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-            style={{ backgroundColor: 'var(--tertiary-accent)', color: 'var(--on-tertiary-accent)' }}
+            style={{ backgroundColor: 'var(--accent)', color: 'var(--on-accent)' }}
           >
             <Send size={18} />
           </button>

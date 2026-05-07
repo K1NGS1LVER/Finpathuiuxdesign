@@ -30,7 +30,7 @@ export default function ExtractionPopup({
       <div
         className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
         style={{
-          background: isSuccess ? "var(--accent-glow)" : "var(--red-subtle)",
+          background: isSuccess ? "var(--secondary-accent-glow)" : "var(--red-subtle)",
         }}
       >
         {isSuccess ? (

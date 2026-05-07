@@ -1,4 +1,4 @@
-﻿import {
+import {
   TrendingUp,
   Wallet,
   Target,
@@ -501,22 +501,24 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
         </div>
 
         {/* Penny's Actionable Insights */}
-        <div className="col-span-12 bento-card border border-tertiary-accent bg-surface-tint">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-tertiary-accent-subtle text-tertiary-accent-text">
+        <div className="col-span-12 penny-insight-card">
+          <div className="penny-insight-blob" />
+          <div className="relative z-10 flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
               <Sparkles size={16} />
             </div>
-            <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">
+            <h3 className="text-heading slashed-zero text-card-foreground">
               Penny's Insights
             </h3>
           </div>
-          <div className="space-y-3">
+          <div className="relative z-10 space-y-3">
             {pennyInsights.map((tip, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 p-3 rounded-xl text-sm bg-surface-hover border border-border font-body text-card-foreground"
+                className="flex items-start gap-3 p-3 rounded-xl text-sm font-body text-card-foreground"
+                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}
               >
-                <span className="text-[var(--tertiary-accent)] mt-0.5 font-bold">{i + 1}.</span>
+                <span className="text-[var(--accent)] mt-0.5 font-bold">{i + 1}.</span>
                 <span>{tip}</span>
               </div>
             ))}
@@ -543,9 +545,10 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             </button>
             <button
               onClick={onPennyClick}
-              className="pill-button py-4 text-sm font-semibold active shadow-lg"
+              className="py-4 text-sm font-semibold rounded-2xl font-body transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+              style={{ background: 'var(--accent)', color: 'var(--on-accent)', boxShadow: '0 4px 16px var(--accent-glow)' }}
             >
-              <Zap size={14} className="inline mr-2" />
+              <Sparkles size={14} />
               Ask Penny
             </button>
             <button

@@ -601,18 +601,20 @@ export default function Scenarios() {
           {/* Penny's Insight */}
           <div className="flex items-start gap-4 penny-insight-card">
             <div className="penny-insight-blob" />
-            <div className="relative z-10">
-              <Sparkles size={28} className="text-[var(--tertiary-accent-text)]" />
-            </div>
-            <div className="relative z-10 text-[var(--card-foreground)]">
-              <div
-                className="text-sm font-semibold tracking-wider mb-1 text-[var(--tertiary-accent-text)] uppercase"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                Penny's Insight
+            <div className="relative z-10 w-full">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                  <Sparkles size={16} />
+                </div>
+                <div
+                  className="text-sm font-semibold tracking-wider text-[var(--accent)] uppercase"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  Penny's Insight
+                </div>
               </div>
               <div
-                className="text-lg md:text-xl font-medium"
+                className="text-lg md:text-xl font-medium text-card-foreground"
                 style={{ fontFamily: "var(--font-body)" }}
               >
                 {scenario === "salary" &&

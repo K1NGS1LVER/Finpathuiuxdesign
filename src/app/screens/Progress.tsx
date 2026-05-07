@@ -16,6 +16,7 @@ import {
   Zap,
   Trophy,
   Gem,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { useFinPathStore } from '@/lib/store';
@@ -1128,26 +1129,28 @@ export default function Progress() {
           </div>
 
           {healthScore.actions.length > 0 && (
-            <div
-              className="mt-6 p-4 rounded-xl space-y-2"
-              style={{
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <div className="text-xs font-semibold text-[var(--tertiary-accent-text)] uppercase tracking-wider mb-2">
-                Penny's Top Actions
-              </div>
-              {healthScore.actions.map((action, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2 text-sm text-[var(--card-foreground)]"
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  <span className="text-[var(--tertiary-accent)] mt-0.5">•</span>
-                  {action}
+            <div className="mt-6 penny-insight-card">
+              <div className="penny-insight-blob" />
+              <div className="relative z-10 flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                  <Sparkles size={16} />
                 </div>
-              ))}
+                <div className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">
+                  Penny's Top Actions
+                </div>
+              </div>
+              <div className="relative z-10 space-y-2">
+                {healthScore.actions.map((action, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 p-3 rounded-xl text-sm text-card-foreground"
+                    style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)' }}
+                  >
+                    <span className="text-[var(--accent)] mt-0.5 font-bold">{i + 1}.</span>
+                    {action}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

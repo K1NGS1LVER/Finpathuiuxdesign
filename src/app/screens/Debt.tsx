@@ -221,13 +221,13 @@ export default function Debt() {
 
         {comparison && (
           <>
-            <div className={`bento-card flex flex-col ${!isSingleDebt && comparison.recommendation === 'avalanche' ? 'border-[var(--tertiary-accent)] border-2 shadow-[0_0_24px_var(--tertiary-accent-subtle)]' : ''}`}>
+            <div className={`bento-card flex flex-col ${!isSingleDebt && comparison.recommendation === 'avalanche' ? 'border-[var(--accent)] border-2 shadow-[0_0_24px_var(--secondary-accent-subtle)]' : ''}`}>
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Avalanche</h3>
                   <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[240px]">Pay highest interest first. Minimises total interest paid.</p>
                 </div>
-                <Zap size={18} className="text-[var(--tertiary-accent-text)]" />
+                <Zap size={18} className="text-[var(--secondary-accent-text)]" />
               </div>
               <div className="relative mb-4 flex-1 flex flex-col justify-center">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full radial-glow-lime pointer-events-none" />
@@ -249,13 +249,13 @@ export default function Debt() {
               </div>
             </div>
 
-            <div className={`bento-card flex flex-col ${!isSingleDebt && comparison.recommendation === 'snowball' ? 'border-[var(--tertiary-accent)] border-2 shadow-[0_0_24px_var(--tertiary-accent-subtle)]' : ''}`}>
+            <div className={`bento-card flex flex-col ${!isSingleDebt && comparison.recommendation === 'snowball' ? 'border-[var(--accent)] border-2 shadow-[0_0_24px_var(--secondary-accent-subtle)]' : ''}`}>
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Snowball</h3>
                   <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[240px]">Pay smallest balance first. Psychologically motivating with quick wins.</p>
                 </div>
-                <Snowflake size={18} className="text-[var(--tertiary-accent-text)]" />
+                <Snowflake size={18} className="text-[var(--secondary-accent-text)]" />
               </div>
               <div className="relative mb-4 flex-1 flex flex-col justify-center">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full radial-glow-blue pointer-events-none" />
@@ -293,7 +293,7 @@ export default function Debt() {
                         : 'No interest difference'}
                   </div>
                   {comparison.interestSaved !== 0 && (
-                    <div className="text-3xl font-bold slashed-zero text-[var(--tertiary-accent-text)]" style={{ fontFamily: 'var(--font-display)' }}>
+                    <div className="text-3xl font-bold slashed-zero text-[var(--secondary-accent-text)]" style={{ fontFamily: 'var(--font-display)' }}>
                       {formatInr(Math.abs(comparison.interestSaved))}
                     </div>
                   )}
@@ -333,7 +333,7 @@ export default function Debt() {
               </div>
               {extraPaymentImpact && (
                 <div className="mt-3 p-3 rounded-xl text-sm" style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}>
-                  <span className="text-[var(--tertiary-accent-text)] font-semibold">Impact: </span>
+                  <span className="text-[var(--secondary-accent-text)] font-semibold">Impact: </span>
                   <span className="text-[var(--card-foreground)]">
                     {`Saves ${extraPaymentImpact.savedMonths} month${extraPaymentImpact.savedMonths !== 1 ? 's' : ''}, ${formatInr(extraPaymentImpact.savedInterest)} in interest`}
                   </span>
@@ -351,7 +351,7 @@ export default function Debt() {
                       className="relative flex items-center h-8 px-1 rounded-full transition-all cursor-pointer select-none"
                       style={{
                         width: "9rem",
-                        background: timelineStrategy === "avalanche" ? "var(--tertiary-accent)" : "var(--accent)",
+                        background: timelineStrategy === "avalanche" ? "var(--accent)" : "var(--accent)",
                         border: "none",
                       }}
                     >
@@ -368,7 +368,7 @@ export default function Debt() {
                         className="relative z-10 flex-1 text-center text-[10px] font-bold transition-colors duration-200"
                         style={{
                           fontFamily: "var(--font-body)",
-                          color: timelineStrategy === "avalanche" ? "var(--on-tertiary-accent)" : "var(--on-accent)",
+                          color: timelineStrategy === "avalanche" ? "var(--on-secondary-accent)" : "var(--on-secondary-accent)",
                         }}
                       >
                         Avalanche
@@ -377,7 +377,7 @@ export default function Debt() {
                         className="relative z-10 flex-1 text-center text-[10px] font-bold transition-colors duration-200"
                         style={{
                           fontFamily: "var(--font-body)",
-                          color: timelineStrategy === "snowball" ? "var(--foreground)" : "var(--on-tertiary-accent)",
+                          color: timelineStrategy === "snowball" ? "var(--foreground)" : "var(--on-secondary-accent)",
                         }}
                       >
                         Snowball
@@ -437,7 +437,7 @@ export default function Debt() {
                             <span className="font-semibold text-[var(--card-foreground)]">{Math.round(paidPct)}%</span>
                           </div>
                           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--surface-tint)' }}>
-                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${paidPct}%`, background: 'var(--accent)', boxShadow: '0 0 8px var(--accent-glow)' }} />
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${paidPct}%`, background: 'var(--accent)', boxShadow: '0 0 8px var(--secondary-accent-glow)' }} />
                           </div>
                         </div>
                       )}
@@ -462,7 +462,7 @@ export default function Debt() {
         <div className="lg:col-span-3 flex flex-col gap-4 penny-insight-card">
           <div className="penny-insight-blob" />
           <div className="relative z-10 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--tertiary-accent-subtle)', color: 'var(--tertiary-accent-text)' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
               <Sparkles size={16} />
             </div>
             <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">Penny's Insight</h3>
@@ -478,7 +478,7 @@ export default function Debt() {
               <div key={i} className="flex items-start gap-3 p-3 rounded-xl text-sm"
                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)', color: 'var(--card-foreground)' }}
               >
-                <span className="text-[var(--tertiary-accent)] mt-0.5 font-bold">{i + 1}.</span>
+                <span className="text-[var(--accent)] mt-0.5 font-bold">{i + 1}.</span>
                 <span>{tip}</span>
               </div>
             ))}
