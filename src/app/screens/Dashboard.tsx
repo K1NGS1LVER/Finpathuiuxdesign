@@ -2,7 +2,6 @@ import {
   TrendingUp,
   Wallet,
   Target,
-  Zap,
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
@@ -16,6 +15,12 @@ import { useFinPathStore } from '@/lib/store';
 interface DashboardProps {
   onPennyClick: () => void;
 }
+
+const GOAL_ACCENTS = [
+  { bg: 'var(--accent)', subtle: 'var(--accent-subtle)', glow: 'var(--accent-glow)', text: 'var(--accent-text)' },
+  { bg: 'var(--secondary-accent)', subtle: 'var(--secondary-accent-subtle)', glow: 'var(--secondary-accent-glow)', text: 'var(--secondary-accent-text)' },
+  { bg: 'var(--tertiary-accent)', subtle: 'var(--tertiary-accent-subtle)', glow: 'var(--tertiary-accent-glow)', text: 'var(--tertiary-accent-text)' },
+];
 
 export default function Dashboard({ onPennyClick }: DashboardProps) {
   const navigate = useNavigate();
@@ -34,14 +39,12 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
   const strategy = useFinPathStore((s) => s.strategy) || "avalanche";
 
   useEffect(() => {
-    // Simulate data loading for skeleton demonstration
     const timer = setTimeout(() => setIsLoading(false), 400);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     if (isLoading) return;
-    // Animate to real health score
     const score = healthScore?.overall ?? 0;
     const timer = setTimeout(() => setHealth(score), 300);
     return () => clearTimeout(timer);
@@ -83,14 +86,12 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
     const savingsRate = income.total > 0 ? ((surplus) / income.total) * 100 : 0;
     const dti = income.total > 0 ? (debts.totalMonthly / income.total) * 100 : 0;
 
-    // Debt-to-income warning
     if (dti > 40) {
       tips.push("Your debt payments eat " + Math.round(dti) + "% of your income. Consider consolidating or negotiating lower EMIs to free up cash for goals.");
     } else if (dti > 20) {
       tips.push("Debt takes " + Math.round(dti) + "% of income. Prioritize paying off the smallest debt first for a quick win (snowball), or the highest-interest one to save money (avalanche).");
     }
 
-    // Low savings rate
     if (savingsRate < 10 && income.total > 0) {
       const targetSave = Math.round(income.total * 0.2);
       tips.push("You're saving under 10% of income. Try moving ₹" + fmt(Math.round(targetSave - Math.max(0, surplus))) + " from non-essentials to hit a 20% savings rate.");
@@ -98,13 +99,11 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
       tips.push("You're saving " + Math.round(savingsRate) + "% of income — that's excellent! Consider putting the extra toward investments or accelerating your top goal.");
     }
 
-    // Expense ratio insight
     const essentialRatio = income.total > 0 ? ((expenses.rent + expenses.food + expenses.transport + expenses.utilities) / income.total) * 100 : 0;
     if (essentialRatio > 60) {
       tips.push("Essentials consume " + Math.round(essentialRatio) + "% of your income. Review if rent or transport costs can be optimized — even a 5% cut frees ₹" + fmt(Math.round(income.total * 0.05)) + "/mo.");
     }
 
-    // Goal progress insight
     const activeGoals = storeGoals.filter(g => g.status !== "complete");
     const closestGoal = activeGoals.sort((a, b) => {
       const aRemain = a.targetAmount - a.currentAmount;
@@ -119,12 +118,10 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
       }
     }
 
-    // No surplus reserve
     if (monthlySurplusReserve === 0 && surplus > 0) {
       tips.push("You don't have a surplus reserve. Setting aside even ₹" + fmt(Math.round(surplus * 0.1)) + "/mo (10% of surplus) gives you a safety buffer outside your goals.");
     }
 
-    // Fallback
     if (tips.length === 0) {
       tips.push("Your finances look solid! Keep checking in monthly to stay on track.");
     }
@@ -132,35 +129,15 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
     return tips.slice(0, 3);
   }, [income, expenses, debts, surplus, storeGoals, monthlySurplusReserve, freeSurplus]);
 
-  const primaryMetrics = [
-    {
-      label: "Monthly Income",
-      value: fmt(income.total),
-      sublabel: "All sources",
-      change: "+0%",
-      positive: true,
-    },
-    {
-      label: "Monthly Surplus",
-      value: fmt(freeSurplus),
-      sublabel:
-        pendingSurplus > 0
-          ? `${fmt(pendingSurplus)} awaiting decision`
-          : `After goals ${fmt(allocatedToGoals)} and reserve ${fmt(reservedSurplus)}`,
-      change:
-        freeSurplus >= 0
-          ? "+" + Math.round((freeSurplus / (income.total || 1)) * 100) + "%"
-          : Math.round((freeSurplus / (income.total || 1)) * 100) + "%",
-      positive: freeSurplus >= 0,
-    },
-  ];
-
+  // ── Active goals sorted by priority ──
   const activeGoals = storeGoals.filter((g) => g.status !== "complete");
   const doneGoals = storeGoals.filter((g) => g.status === "complete");
-  const debtGoal = activeGoals.find((g) => g.category === "debt");
   const prioritizedActiveGoals = activeGoals
     .slice()
     .sort((a, b) => a.priority - b.priority);
+
+  // Top 3 goals for hero display
+  const topGoals = prioritizedActiveGoals.slice(0, 3);
 
   const secondaryMetrics = [
     {
@@ -200,48 +177,35 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
     },
   ];
 
-  const visibleProgressGoals = [
-    ...(debtGoal ? [debtGoal] : []),
-    ...prioritizedActiveGoals.filter((g) => g.id !== debtGoal?.id),
-  ].slice(0, 3);
-
-  const goals = visibleProgressGoals.map((g) => ({
-    name: g.name,
-    current: g.currentAmount,
-    target: g.targetAmount,
-    progress:
-      g.targetAmount > 0
-        ? Math.round((g.currentAmount / g.targetAmount) * 100)
-        : 0,
-  }));
-
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (health / 100) * circumference;
 
+  // ── Loading Skeleton ──
   if (isLoading) {
     return (
       <div className="max-w-[1400px] mx-auto relative text-[var(--foreground)]">
-        {/* Header Skeleton */}
         <div className="mb-6 md:mb-8 relative z-10">
           <div className="skeleton w-48 h-10" />
         </div>
 
-        {/* Bento Grid Skeleton */}
         <div className="grid grid-cols-12 gap-4 md:gap-4 relative z-10">
-          {/* Primary Cards Skeletons */}
-          {[1, 2].map((i) => (
-            <div key={i} className="col-span-12 md:col-span-6 lg:col-span-6 bento-card flex flex-col justify-between min-h-[160px]">
-              <div className="flex items-center justify-between mb-2">
-                <div className="skeleton w-24 h-4" />
-                <div className="skeleton w-12 h-6 rounded-full" />
-              </div>
-              <div className="mt-auto">
-                <div className="skeleton w-48 h-12 mb-2" />
-                <div className="skeleton w-32 h-4" />
-              </div>
+          {/* Active Goals Skeleton */}
+          <div className="col-span-12 bento-card min-h-[160px]">
+            <div className="skeleton w-32 h-6 mb-6" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <div className="skeleton w-20 h-4 mb-2" />
+                  <div className="skeleton w-full h-3 rounded-full mb-2" />
+                  <div className="flex items-center justify-between">
+                    <div className="skeleton w-12 h-4" />
+                    <div className="skeleton w-20 h-4" />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
 
           {/* Secondary Metrics Skeleton */}
           <div className="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -286,54 +250,129 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
 
   return (
     <div className="max-w-[1400px] mx-auto relative text-[var(--foreground)] page-animate">
-      {/* Header - Minimal */}
-      <div className="mb-6 md:mb-8 relative z-10">
-        <h1 className="text-display slashed-zero text-[var(--foreground)]">
-          Dashboard
-        </h1>
+      {/* Header */}
+      <div className="mb-8 relative z-10">
+        <h1 className="text-title text-secondary tracking-[0.15em] mb-1">Financial Overview</h1>
       </div>
 
-      {/* Bento Grid - Asymmetric Layout */}
+      {/* Bento Grid */}
       <div className="grid grid-cols-12 gap-4 md:gap-4 relative z-10">
-        {/* Hero Cards */}
-        {primaryMetrics.map((metric, i) => (
-          <div
-            key={i}
-            className="col-span-12 md:col-span-6 lg:col-span-6 bento-card flex flex-col justify-between min-h-[160px]"
-          >
-            {/* Small Label */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-label text-[var(--secondary)]">
-                {metric.label}
-              </span>
-              <span
-                className={`pill-button text-xs font-semibold text-on-accent ${metric.positive ? 'bg-[var(--penny-accent)]' : 'bg-red'}`}
-              >
-                {metric.change}
-              </span>
-            </div>
-
-            {/* Giant Number */}
-            <div className="mt-auto">
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-sm font-medium text-[var(--secondary)]">
-                  ₹
-                </span>
-                <h2 className="text-display slashed-zero text-[var(--card-foreground)]">
-                  {metric.value}
-                </h2>
-              </div>
-              <p className="text-sm text-[var(--tertiary)]">
-                {metric.sublabel}
-              </p>
-            </div>
-
-            {/* Background Blob inside card */}
-            <div
-              className={`absolute -right-10 -bottom-10 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl ${metric.positive ? 'bg-[var(--penny-accent)]' : 'bg-tertiary-accent'}`}
-            />
+        {/* ── Hero: Top 3 Active Goals (single card) ── */}
+        <div className="col-span-12 bento-card">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">
+              Active Goals
+            </h3>
+            <button
+              onClick={() => navigate("/journey")}
+              className="pill-button text-xs font-semibold px-4 py-2"
+            >
+              View All
+            </button>
           </div>
-        ))}
+
+          {topGoals.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {topGoals.map((goal, i) => {
+                const accent = GOAL_ACCENTS[i];
+                const progress = goal.targetAmount > 0
+                  ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
+                  : 0;
+                const completionDate = plan?.goalCompletionDates?.[goal.id] ?? null;
+                const monthly = goal.monthlyAllocation ||
+                  Math.round((goal.targetAmount - goal.currentAmount) / Math.max(1, goal.timelineMonths));
+
+                return (
+                  <div key={goal.id} className="flex flex-col gap-2">
+                    {/* Goal name + priority badge */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ background: accent.bg }}
+                        />
+                        <span className="text-sm font-semibold text-[var(--card-foreground)]">
+                          {goal.name}
+                        </span>
+                      </div>
+                      <span
+                        className="text-xs font-bold px-2 py-1 rounded-full"
+                        style={{
+                          background: accent.subtle,
+                          color: accent.text,
+                        }}
+                      >
+                        P{i + 1}
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div
+                      className="h-3 rounded-full overflow-hidden relative"
+                      style={{ background: 'var(--surface-hover)' }}
+                    >
+                      <div
+                        className="absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: `${Math.min(progress, 100)}%`,
+                          background: accent.bg,
+                          boxShadow: `0 0 12px ${accent.glow}`,
+                        }}
+                      />
+                    </div>
+
+                    {/* Stats row: percentage + allocated */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-[var(--card-foreground)]">
+                        {progress}%
+                      </span>
+                      <span className="text-xs text-[var(--tertiary)]">
+                        ₹{fmt(monthly)}/mo
+                      </span>
+                    </div>
+
+                    {/* Amounts row */}
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs font-medium text-[var(--secondary)] slashed-zero">
+                        ₹{fmt(goal.currentAmount)}
+                        <span className="text-[var(--tertiary)]"> / ₹{fmt(goal.targetAmount)}</span>
+                      </span>
+                      {completionDate ? (
+                        <span
+                          className="text-xs font-semibold"
+                          style={{ color: accent.text }}
+                        >
+                          by {completionDate}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--tertiary)]">
+                          {goal.timelineMonths}mo left
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Target size={32} className="text-[var(--tertiary)] mb-3" />
+              <p className="text-sm text-[var(--secondary)] mb-1">
+                No active goals yet
+              </p>
+              <p className="text-xs text-[var(--tertiary)] mb-4">
+                Set your first goal to start tracking your financial journey
+              </p>
+              <button
+                onClick={() => navigate("/journey")}
+                className="pill-button px-6 py-2 text-sm font-semibold"
+                style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+              >
+                + Add Your First Goal
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Secondary Metrics Grid (8 columns) */}
         <div className="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -344,7 +383,6 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                 key={i}
                 className="bento-card p-4 md:p-5 flex flex-row items-center justify-between min-h-[80px]"
               >
-                {/* Left side: Icon and Label */}
                 <div className="flex items-center gap-3 md:gap-4 min-w-0">
                   <div
                     className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-card-foreground flex-shrink-0 bg-surface-hover"
@@ -356,7 +394,6 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
                   </span>
                 </div>
 
-                {/* Right side: Values */}
                 <div className="flex flex-col items-end flex-shrink-0 pl-2">
                   <div className="flex items-baseline gap-1 mb-1">
                     {metric.label !== "Active Goals" && (
@@ -443,63 +480,6 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
           </p>
         </div>
 
-        {/* Goals Progress (Full Width) */}
-        <div className="col-span-12 bento-card">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">
-              Active Goals
-            </h3>
-            <button
-              onClick={() => navigate("/journey")}
-              className="pill-button text-xs font-semibold px-4 py-2"
-            >
-              View All
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {goals.map((goal, i) => (
-              <div key={i} className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2 h-2 rounded-full shadow-sm bg-tertiary-accent"
-                    />
-                    <span className="text-sm font-semibold text-[var(--card-foreground)]">
-                      {goal.name}
-                    </span>
-                  </div>
-                  <span className="text-sm font-bold slashed-zero text-[var(--card-foreground)]">
-                    {goal.progress}%
-                  </span>
-                </div>
-
-                {/* Progress Bar */}
-                <div
-                  className="h-4 rounded-full overflow-hidden relative bg-[var(--progress-inactive)]"
-                >
-                  <div
-                    className="absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-out bg-tertiary-accent"
-                    style={{
-                      width: `${goal.progress}%`,
-                    }}
-                  />
-                  <div className="absolute inset-0 hatching-pattern mix-blend-overlay" />
-                </div>
-
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs font-medium text-[var(--secondary)] slashed-zero">
-                    ₹{(goal.current / 1000).toFixed(0)}K
-                  </span>
-                  <span className="text-xs font-medium text-[var(--tertiary)] slashed-zero">
-                    / ₹{(goal.target / 1000).toFixed(0)}K
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Penny's Actionable Insights */}
         <div className="col-span-12 penny-insight-card">
           <div className="penny-insight-blob" />
@@ -525,7 +505,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
           </div>
         </div>
 
-                {/* Quick Actions */}
+        {/* Quick Actions */}
         <div className="col-span-12 md:col-span-6 bento-card">
           <h3 className="text-heading mb-4 slashed-zero text-[var(--card-foreground)]">
             Quick Actions
@@ -566,7 +546,7 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
             Recent Activity
           </h3>
           <div className="space-y-1">
-            {prioritizedActiveGoals.slice(0, 3).map((goal, i) => {
+            {prioritizedActiveGoals.slice(0, 3).map((goal) => {
               const monthly =
                 goal.monthlyAllocation ||
                 Math.round(
@@ -610,4 +590,3 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
     </div>
   );
 }
-

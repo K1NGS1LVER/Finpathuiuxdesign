@@ -196,7 +196,8 @@ export default function Month() {
         : "Lumpsum applied",
     );
   };
-
+  
+  const date_month_year = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
   const surplus = income.total - expenses.total - debts.totalMonthly;
   const reservedSurplus = plan?.months?.[0]?.reservedSurplus || 0;
   const pendingSurplus = plan?.months?.[0]?.pendingSurplus || 0;
@@ -214,28 +215,16 @@ export default function Month() {
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-accent" />
-      <div className="relative z-10">
-        <h1
-          className="text-2xl md:text-3xl font-bold mb-2 text-foreground font-display"
-        >
-          {new Date().toLocaleDateString("en-IN", {
-            month: "long",
-            year: "numeric",
-          })}{" "}
-          Plan
-        </h1>
-        <p
-          className="text-sm md:text-base text-secondary font-body"
-        >
-          Your mission this month
-        </p>
-      </div>
+      {/* <div className="mb-8 relative z-10">
+        <div className="text-title text-secondary tracking-[0.15em] mb-1 ">
+          <span >{date_month_year}</span>
+        </div>
+      </div> */}
 
       {/* Debt over income warning */}
       {debts.totalMonthly > surplus && surplus >= 0 && (
         <div
-          className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10 bg-red-subtle text-red-text border border-red font-body"
-          
+          className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10 bg-[var(--red-subtle)] text-red-text border border-red font-body"
         >
           <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
           <div>
@@ -412,7 +401,7 @@ export default function Month() {
             style={{
               color: "var(--secondary)",
               fontFamily: "var(--font-body)",
-              background: "var(--bg-surface-tint)",
+              background: "var(--surface-tint)",
             }}
           >
             {tasks.filter((t) => t.done).length} of {tasks.length} completed
@@ -444,7 +433,7 @@ export default function Month() {
                 return (
                   <div
                     className="text-center p-6 rounded-xl border border-dashed border-[var(--border)] text-[var(--secondary)] text-sm"
-                    style={{ background: "var(--bg-surface-tint)" }}
+                    style={{ background: "var(--surface-tint)" }}
                   >
                     No goals are receiving funds this month. Try adding a
                     lumpsum!
@@ -496,7 +485,7 @@ export default function Month() {
                     </div>
 
                     <div
-                      className="h-3 rounded-full overflow-hidden flex relative bg-progress-inactive shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]"
+                      className="h-3 rounded-full overflow-hidden flex relative bg-[var(--progress-inactive)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]"
                     >
                       <div
                         className="h-full transition-all duration-500"
@@ -581,7 +570,7 @@ export default function Month() {
           </div>
 
           <div
-            className="text-sm p-4 rounded-xl  text-secondary font-body"
+            className="text-sm p-4 rounded-xl bg-surface-tint border border-border text-secondary font-body"
           >
             {strategy === "avalanche" ? (
               <p className="leading-relaxed">
@@ -762,8 +751,6 @@ export default function Month() {
     </div>
   );
 }
-
-
 
 
 

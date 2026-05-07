@@ -80,8 +80,6 @@ export default function Journey() {
           <JourneyIncomeNode
             x={canvas.incomePos.x + canvas.panOffset.x}
             y={canvas.incomePos.y + canvas.panOffset.y}
-            panOffsetX={0}
-            panOffsetY={0}
             dragging={canvas.dragging === "income"}
             incomeTotal={income.total}
             formatCurrency={formatCurrency}
@@ -96,8 +94,6 @@ export default function Journey() {
                 goal={goal}
                 x={pos.x + canvas.panOffset.x}
                 y={pos.y + canvas.panOffset.y}
-                panOffsetX={0}
-                panOffsetY={0}
                 isDragging={canvas.dragging === goal.id}
                 onPointerDown={canvas.handlePointerDown}
                 onClick={() => goals.setSelectedGoalId(goal.id)}
