@@ -30,16 +30,16 @@ export function usePalette() {
 }
 
 export interface CustomNodeProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  index: number;
-  payload: SankeyNodePayload;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  index?: number;
+  payload?: SankeyNodePayload;
   palette: Record<string, string>;
 }
 
-export function CustomNode({ x, y, width, height, index, payload, palette }: CustomNodeProps) {
+export function CustomNode({ x = 0, y = 0, width = 0, height = 0, index = 0, payload = { name: '' }, palette }: CustomNodeProps) {
   const colors = [palette.blue, palette.amber, palette.red, palette.lime, palette.green, palette.purple, palette.teal, palette.pink, palette.slate];
   const color = colors[index % colors.length];
   const isLeft = x < 280;
@@ -85,28 +85,28 @@ export function CustomNode({ x, y, width, height, index, payload, palette }: Cus
 }
 
 export interface CustomLinkProps {
-  sourceX: number;
-  sourceY: number;
-  sourceControlX: number;
-  targetX: number;
-  targetY: number;
-  targetControlX: number;
-  linkWidth: number;
-  index: number;
-  payload: { source?: SankeyNodePayload; target?: SankeyNodePayload };
+  sourceX?: number;
+  sourceY?: number;
+  sourceControlX?: number;
+  targetX?: number;
+  targetY?: number;
+  targetControlX?: number;
+  linkWidth?: number;
+  index?: number;
+  payload?: { source?: SankeyNodePayload; target?: SankeyNodePayload };
   palette: Record<string, string>;
 }
 
 export function CustomLink({
-  sourceX,
-  sourceY,
-  sourceControlX,
-  targetX,
-  targetY,
-  targetControlX,
-  linkWidth,
-  index,
-  payload,
+  sourceX = 0,
+  sourceY = 0,
+  sourceControlX = 0,
+  targetX = 0,
+  targetY = 0,
+  targetControlX = 0,
+  linkWidth = 0,
+  index = 0,
+  payload = {},
   palette,
 }: CustomLinkProps) {
   let strokeColor = palette.slate;

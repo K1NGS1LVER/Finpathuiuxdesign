@@ -274,9 +274,7 @@ export default function Scenarios() {
 
   const impactAnalysisSection = (
     <div className="relative z-10">
-      <h3
-        className="font-bold mb-4 text-foreground font-display"
-      >
+      <h3 className="font-bold mb-4 text-foreground font-display">
         Impact Analysis
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -284,13 +282,11 @@ export default function Scenarios() {
           <div key={i} className="p-6 bento-card">
             {/* Header row: label + change value */}
             <div className="flex items-baseline justify-between mb-3">
-              <div
-                className="font-semibold text-card-foreground font-display text-lg"
-              >
+              <div className="font-semibold text-card-foreground font-display text-lg">
                 {impact.label}
               </div>
               <div
-                className={`font-bold slashed-zero font-display text-xl ${impact.positive ? 'text-green-text' : 'text-red-text'}`}
+                className={`font-bold slashed-zero font-display text-xl ${impact.positive ? "text-green-text" : "text-red-text"}`}
               >
                 {impact.change}
               </div>
@@ -298,14 +294,10 @@ export default function Scenarios() {
             {/* Before → After row */}
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <div
-                  className="text-xs mb-0.5 text-tertiary font-body"
-                >
+                <div className="text-xs mb-0.5 text-tertiary font-body">
                   Before
                 </div>
-                <div
-                  className="text-lg font-bold slashed-zero text-card-foreground font-display"
-                >
+                <div className="text-lg font-bold slashed-zero text-card-foreground font-display">
                   {impact.current}
                 </div>
               </div>
@@ -313,9 +305,7 @@ export default function Scenarios() {
                 <ArrowRight size={24} strokeWidth={2} />
               </div>
               <div className="flex-1 text-right">
-                <div
-                  className="text-xs mb-0.5 text-tertiary font-body"
-                >
+                <div className="text-xs mb-0.5 text-tertiary font-body">
                   After
                 </div>
                 <div
@@ -336,308 +326,313 @@ export default function Scenarios() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
-      <div
-        className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-tertiary-accent"
-      />
-      <div className="relative z-10">
-        <h1
-          className="text-2xl md:text-3xl font-bold mb-2 text-foreground font-display"
-        >
-          Scenario Explorer
-        </h1>
-        <p
-          className="text-sm md:text-base text-secondary font-body"
-        >
-          Edit assumptions and see every page update in sync
-        </p>
+      <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-tertiary-accent" />
+      <div className="mb-6 md:mb-8 relative z-10">
+
+        <h1 className="text-title text-secondary tracking-[0.15em] mb-1 ">Scenario Explorer</h1>
       </div>
 
-        {/* Dropdown scenario selector */}
-        <div className="max-w-md mb-4 md:mb-6">
-          <label
-            className="block text-secondary mb-2 font-medium font-body text-xs uppercase tracking-[0.07em]"
+      {/* Dropdown scenario selector */}
+      <div className="max-w-md mb-4 md:mb-6">
+        <label className="block text-secondary mb-2 font-medium font-body text-xs uppercase tracking-[0.07em]">
+          Explore Scenario
+        </label>
+        <div className="relative">
+          {/* Leading icon — centered vertically inside the select */}
+          <div
+            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+            style={{
+              color: current?.color ?? "var(--secondary)",
+              transition: "color 300ms ease",
+            }}
           >
-            Explore Scenario
-          </label>
-          <div className="relative">
-            {/* Leading icon — centered vertically inside the select */}
-            <div
-              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-              style={{ color: current?.color ?? "var(--secondary)", transition: "color 300ms ease" }}
-            >
-              {(() => {
-                const Icon = current?.icon;
-                return Icon ? <Icon size={16} strokeWidth={2} /> : null;
-              })()}
-            </div>
-            <select
-              value={scenario}
-              onChange={(e) => setScenario(e.target.value as ScenarioId)}
-              className="w-full pl-10 pr-10 py-3 rounded-xl outline-none cursor-pointer font-semibold text-base appearance-none bg-card font-display transition-[border-color,color] duration-300"
+            {(() => {
+              const Icon = current?.icon;
+              return Icon ? <Icon size={16} strokeWidth={2} /> : null;
+            })()}
+          </div>
+          <select
+            value={scenario}
+            onChange={(e) => setScenario(e.target.value as ScenarioId)}
+            className="w-full pl-10 pr-10 py-3 rounded-xl outline-none cursor-pointer font-semibold text-base appearance-none bg-card font-display transition-[border-color,color] duration-300"
+            style={{
+              border: `2px solid ${current?.color ?? "var(--border)"}`,
+              color: current?.color ?? "var(--card-foreground)",
+            }}
+          >
+            {SCENARIO_OPTIONS.map((s) => {
+              return (
+                <option
+                  key={s.id}
+                  value={s.id}
+                  className="bg-background-solid text-card-foreground font-body"
+                >
+                  {s.label}
+                </option>
+              );
+            })}
+          </select>
+          {/* Chevron */}
+          <div
+            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{
+              color: current?.color ?? "var(--secondary)",
+              transition: "color 300ms ease, transform 300ms ease",
+            }}
+          >
+            <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+              <path
+                d="M1 1L7 7L13 1"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Right content area — animated on scenario change */}
+      <div
+        className="space-y-4 md:space-y-6"
+        key={scenario}
+        style={{
+          animation: "scenarioFadeSlide 450ms cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      >
+        {/* Adjust Parameters */}
+        <div className="bento-card p-4 md:p-8">
+          <h3 className="font-bold mb-6 text-card-foreground font-display">
+            Adjust Parameters
+          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-medium text-card-foreground">
+              {scenario === "salary" && "Salary Change"}
+              {scenario === "property" && "Property Value"}
+              {scenario === "education" && "Course Fee"}
+              {scenario === "family" && "Monthly Child Expenses"}
+            </span>
+            <span
+              className="text-2xl font-bold slashed-zero font-display"
               style={{
-                border: `2px solid ${current?.color ?? "var(--border)"}`,
-                color: current?.color ?? "var(--card-foreground)",
+                color: current?.color,
               }}
             >
-              {SCENARIO_OPTIONS.map((s) => {
-                return (
-                  <option
-                    key={s.id}
-                    value={s.id}
-                    className="bg-background-solid text-card-foreground font-body"
-                  >
-                    {s.label}
-                  </option>
-                );
-              })}
-            </select>
-            {/* Chevron */}
-            <div
-              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: current?.color ?? "var(--secondary)", transition: "color 300ms ease, transform 300ms ease" }}
+              {scenario === "salary" &&
+                `${currentVal >= 0 ? "+" : ""}${currentVal}%`}
+              {scenario === "property" && `₹${currentVal}L`}
+              {scenario === "education" && `₹${currentVal}L`}
+              {scenario === "family" &&
+                `₹${currentVal.toLocaleString("en-IN")}`}
+            </span>
+          </div>
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={currentVal}
+            onChange={(e) =>
+              setValues((prev) => ({
+                ...prev,
+                [scenario]: Number(e.target.value),
+              }))
+            }
+              className="w-full h-2 rounded-full appearance-none bg-[var(--progress-inactive)]"
+            style={{
+              background: `linear-gradient(to right, ${current?.color} 0%, ${current?.color} ${progressPercent}%, var(--progress-inactive) ${progressPercent}%, var(--progress-inactive) 100%)`,
+            }}
+          />
+        </div>
+
+        {/* Impact Analysis Section */}
+        {impactAnalysisSection}
+
+        {/* Income Controls */}
+        <div className="bento-card p-6 md:p-8 space-y-4 relative z-10">
+          <h3 className="text-xl font-bold text-card-foreground font-display">
+            Income Controls
+          </h3>
+          <p className="text-sm text-secondary font-body">
+            Adjust your monthly salary or apply a percentage hike to see how it
+            affects your financial plan.
+          </p>
+
+          <div className="space-y-3">
+            <div className="flex items-end gap-3 flex-wrap">
+              <div className="flex-1 min-w-[140px]">
+                <label className="block text-xs text-secondary mb-1.5 font-body">
+                  {salaryHikeInput ? "Salary Hike %" : "Monthly Salary"}
+                </label>
+                <input
+                  type="text"
+                  value={salaryHikeInput || salaryInput}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (salaryHikeInput) {
+                      setSalaryHikeInput(raw.replace(/[^0-9-]/g, ""));
+                    } else {
+                      setSalaryInput(raw.replace(/[^0-9]/g, ""));
+                    }
+                  }}
+                  placeholder={
+                    salaryHikeInput ? "e.g. 12 or -5" : "Enter amount"
+                  }
+                  className="w-full px-3 py-2.5 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border font-body"
+                />
+              </div>
+              <div className="w-36">
+                <label className="block text-xs text-secondary mb-1.5 font-body">
+                  Type
+                </label>
+                <select
+                  value={salaryHikeInput ? "hike" : "salary"}
+                  onChange={(e) => {
+                    if (e.target.value === "hike") {
+                      setSalaryInput("");
+                    } else {
+                      setSalaryHikeInput("");
+                      setSalaryInput(
+                        String(income.salary || income.total || 0),
+                      );
+                    }
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl outline-none cursor-pointer text-card-foreground bg-surface-tint border border-border font-body"
+                >
+                  <option value="salary">Set Salary</option>
+                  <option value="hike">Salary Hike %</option>
+                </select>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (salaryHikeInput) {
+                  applySalaryHike();
+                } else {
+                  applySalary();
+                }
+              }}
+              disabled={salaryHikeInput ? !salaryHikeInput : !salaryInput}
+              className="w-full py-2.5 rounded-xl font-semibold transition-all disabled:opacity-40 bg-secondary-accent text-on-secondary-accent font-body"
             >
-              <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
-                <path d="M1 1L7 7L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              Apply Change
+            </button>
+          </div>
+        </div>
+
+        {/* Lumpsum Simulator */}
+        <div className="bento-card p-6 md:p-8 relative z-10">
+          <h3 className="text-xl font-bold mb-4 text-card-foreground font-display">
+            Lumpsum Course Simulator
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select
+              value={simGoalId}
+              onChange={(e) => setSimGoalId(e.target.value)}
+              className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
+              disabled={activeGoals.length === 0}
+            >
+              {activeGoals.length === 0 ? (
+                <option value="">No active goals</option>
+              ) : (
+                activeGoals.map((goal) => (
+                  <option
+                    key={`sim-${goal.id}`}
+                    value={goal.id}
+                  >{`P${goal.priority} - ${goal.name}`}</option>
+                ))
+              )}
+            </select>
+            <input
+              type="text"
+              value={simLumpsumAmount}
+              onChange={(e) =>
+                setSimLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
+              }
+              placeholder="Lumpsum amount"
+              className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
+            />
+            <button
+              onClick={applyScenarioLumpsum}
+              disabled={!simGoalId || simLumpsumValue <= 0}
+              className="py-2 rounded-lg font-semibold disabled:opacity-50 bg-[var(--penny-accent)] text-on-accent"
+            >
+              Apply Lumpsum
+            </button>
+          </div>
+
+          <div className="mt-4 p-4 rounded-xl bg-surface-tint border border-border">
+            <div className="text-sm text-[var(--secondary)] mb-1">
+              Projected Timeline Impact
+            </div>
+            <div
+              className="text-xl font-bold slashed-zero text-[var(--card-foreground)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {simLumpsumValue <= 0
+                ? "Enter an amount to simulate"
+                : timelineMonthsSaved > 0
+                  ? `${timelineMonthsSaved} month${timelineMonthsSaved > 1 ? "s" : ""} faster`
+                  : timelineMonthsSaved < 0
+                    ? `${Math.abs(timelineMonthsSaved)} month${Math.abs(timelineMonthsSaved) > 1 ? "s" : ""} longer`
+                    : "No timeline change"}
+            </div>
+            <div className="text-xs mt-1 text-[var(--secondary)]">
+              Based on your current profile, strategy, and active goals.
             </div>
           </div>
         </div>
 
-        {/* Right content area — animated on scenario change */}
-        <div className="space-y-4 md:space-y-6" key={scenario} style={{ animation: "scenarioFadeSlide 450ms cubic-bezier(0.16, 1, 0.3, 1)" }}>
-          {/* Adjust Parameters */}
-          <div className="bento-card p-4 md:p-8">
-            <h3
-              className="font-bold mb-6 text-card-foreground font-display"
-            >
-              Adjust Parameters
-            </h3>
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-medium text-card-foreground">
-                  {scenario === "salary" && "Salary Change"}
-                  {scenario === "property" && "Property Value"}
-                  {scenario === "education" && "Course Fee"}
-                  {scenario === "family" && "Monthly Child Expenses"}
-                </span>
-                <span
-                  className="text-2xl font-bold slashed-zero font-display"
-                  style={{
-                    color: current?.color,
-                  }}
-                >
-                  {scenario === "salary" &&
-                    `${currentVal >= 0 ? "+" : ""}${currentVal}%`}
-                  {scenario === "property" && `₹${currentVal}L`}
-                  {scenario === "education" && `₹${currentVal}L`}
-                  {scenario === "family" &&
-                    `₹${currentVal.toLocaleString("en-IN")}`}
-                </span>
-              </div>
-            <input
-              type="range"
-              min={min}
-              max={max}
-              step={step}
-              value={currentVal}
-              onChange={(e) =>
-                setValues((prev) => ({
-                  ...prev,
-                  [scenario]: Number(e.target.value),
-                }))
-              }
-              className="w-full h-2 rounded-full appearance-none bg-progress-inactive"
-              style={{
-                background: `linear-gradient(to right, ${current?.color} 0%, ${current?.color} ${progressPercent}%, var(--progress-inactive) ${progressPercent}%, var(--progress-inactive) 100%)`,
-              }}
-            />
-          </div>
-
-          {/* Impact Analysis Section */}
-          {impactAnalysisSection}
-
-          {/* Income Controls */}
-          <div className="bento-card p-6 md:p-8 space-y-4 relative z-10">
-            <h3
-              className="text-xl font-bold text-card-foreground font-display"
-            >
-              Income Controls
-            </h3>
-            <p
-              className="text-sm text-secondary font-body"
-            >
-              Adjust your monthly salary or apply a percentage hike to see how
-              it affects your financial plan.
-            </p>
-
-            <div className="space-y-3">
-              <div className="flex items-end gap-3 flex-wrap">
-                <div className="flex-1 min-w-[140px]">
-                  <label
-                    className="block text-xs text-secondary mb-1.5 font-body"
-                  >
-                    {salaryHikeInput ? "Salary Hike %" : "Monthly Salary"}
-                  </label>
-                  <input
-                    type="text"
-                    value={salaryHikeInput || salaryInput}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      if (salaryHikeInput) {
-                        setSalaryHikeInput(raw.replace(/[^0-9-]/g, ""));
-                      } else {
-                        setSalaryInput(raw.replace(/[^0-9]/g, ""));
-                      }
-                    }}
-                    placeholder={salaryHikeInput ? "e.g. 12 or -5" : "Enter amount"}
-                    className="w-full px-3 py-2.5 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border font-body"
-                  />
-                </div>
-                <div className="w-36">
-                  <label
-                    className="block text-xs text-secondary mb-1.5 font-body"
-                  >
-                    Type
-                  </label>
-                  <select
-                    value={salaryHikeInput ? "hike" : "salary"}
-                    onChange={(e) => {
-                      if (e.target.value === "hike") {
-                        setSalaryInput("");
-                      } else {
-                        setSalaryHikeInput("");
-                        setSalaryInput(String(income.salary || income.total || 0));
-                      }
-                    }}
-                    className="w-full px-3 py-2.5 rounded-xl outline-none cursor-pointer text-card-foreground bg-surface-tint border border-border font-body"
-                  >
-                    <option value="salary">Set Salary</option>
-                    <option value="hike">Salary Hike %</option>
-                  </select>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  if (salaryHikeInput) {
-                    applySalaryHike();
-                  } else {
-                    applySalary();
-                  }
+        {/* Penny's Insight */}
+        <div className="flex items-start gap-4 penny-insight-card">
+          <div className="penny-insight-blob" />
+          <div className="relative z-10 w-full">
+            <div className="flex items-center gap-2 mb-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: "var(--penny-accent-subtle)",
+                  color: "var(--penny-accent)",
                 }}
-                disabled={salaryHikeInput ? !salaryHikeInput : !salaryInput}
-                className="w-full py-2.5 rounded-xl font-semibold transition-all disabled:opacity-40 bg-secondary-accent text-on-secondary-accent font-body"
               >
-                Apply Change
-              </button>
-            </div>
-          </div>
-
-          {/* Lumpsum Simulator */}
-          <div className="bento-card p-6 md:p-8 relative z-10">
-            <h3
-              className="text-xl font-bold mb-4 text-card-foreground font-display"
-            >
-              Lumpsum Course Simulator
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <select
-                value={simGoalId}
-                onChange={(e) => setSimGoalId(e.target.value)}
-                className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
-                disabled={activeGoals.length === 0}
-              >
-                {activeGoals.length === 0 ? (
-                  <option value="">No active goals</option>
-                ) : (
-                  activeGoals.map((goal) => (
-                    <option
-                      key={`sim-${goal.id}`}
-                      value={goal.id}
-                    >{`P${goal.priority} - ${goal.name}`}</option>
-                  ))
-                )}
-              </select>
-              <input
-                type="text"
-                value={simLumpsumAmount}
-                onChange={(e) =>
-                  setSimLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
-                }
-                placeholder="Lumpsum amount"
-                className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
-              />
-              <button
-                onClick={applyScenarioLumpsum}
-                disabled={!simGoalId || simLumpsumValue <= 0}
-                className="py-2 rounded-lg font-semibold disabled:opacity-50 bg-[var(--penny-accent)] text-on-accent"
-              >
-                Apply Lumpsum
-              </button>
-            </div>
-
-            <div
-              className="mt-4 p-4 rounded-xl bg-surface-tint border border-border"
-            >
-              <div className="text-sm text-[var(--secondary)] mb-1">
-                Projected Timeline Impact
+                <Sparkles size={16} />
               </div>
               <div
-                className="text-xl font-bold slashed-zero text-[var(--card-foreground)]"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                {simLumpsumValue <= 0
-                  ? "Enter an amount to simulate"
-                  : timelineMonthsSaved > 0
-                    ? `${timelineMonthsSaved} month${timelineMonthsSaved > 1 ? "s" : ""} faster`
-                    : timelineMonthsSaved < 0
-                      ? `${Math.abs(timelineMonthsSaved)} month${Math.abs(timelineMonthsSaved) > 1 ? "s" : ""} longer`
-                      : "No timeline change"}
-              </div>
-              <div className="text-xs mt-1 text-[var(--secondary)]">
-                Based on your current profile, strategy, and active goals.
-              </div>
-            </div>
-          </div>
-
-          {/* Penny's Insight */}
-          <div className="flex items-start gap-4 penny-insight-card">
-            <div className="penny-insight-blob" />
-            <div className="relative z-10 w-full">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
-                  <Sparkles size={16} />
-                </div>
-                <div
-                  className="text-sm font-semibold tracking-wider text-[var(--penny-accent)] uppercase"
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  Penny's Insight
-                </div>
-              </div>
-              <div
-                className="text-lg md:text-xl font-medium text-card-foreground"
+                className="text-sm font-semibold tracking-wider text-[var(--penny-accent)] uppercase"
                 style={{ fontFamily: "var(--font-body)" }}
               >
-                {scenario === "salary" &&
-                  currentVal < 0 &&
-                  `A ${Math.abs(currentVal)}% pay cut means your timeline may stretch unless you rebalance goal priorities.`}
-                {scenario === "salary" &&
-                  currentVal >= 0 &&
-                  `A ${currentVal}% raise can be redirected to P1 goals to accelerate your plan.`}
-                {scenario === "property" &&
-                  "Large property commitments can still work if you protect emergency runway and keep lump-sum reserves."}
-                {scenario === "education" &&
-                  "Education can be high ROI. Shorten timeline pressure by using phased goal targets and periodic lumpsums."}
-                {scenario === "family" &&
-                  "Family expenses are manageable when your first-priority goals remain funded and strategy is reviewed monthly."}
+                Penny's Insight
               </div>
-              {notice && (
-                <div className="mt-3 text-sm" style={{ color: "var(--secondary)" }}>
-                  {notice}
-                </div>
-              )}
             </div>
+            <div
+              className="text-lg md:text-xl font-medium text-card-foreground"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              {scenario === "salary" &&
+                currentVal < 0 &&
+                `A ${Math.abs(currentVal)}% pay cut means your timeline may stretch unless you rebalance goal priorities.`}
+              {scenario === "salary" &&
+                currentVal >= 0 &&
+                `A ${currentVal}% raise can be redirected to P1 goals to accelerate your plan.`}
+              {scenario === "property" &&
+                "Large property commitments can still work if you protect emergency runway and keep lump-sum reserves."}
+              {scenario === "education" &&
+                "Education can be high ROI. Shorten timeline pressure by using phased goal targets and periodic lumpsums."}
+              {scenario === "family" &&
+                "Family expenses are manageable when your first-priority goals remain funded and strategy is reviewed monthly."}
+            </div>
+            {notice && (
+              <div
+                className="mt-3 text-sm"
+                style={{ color: "var(--secondary)" }}
+              >
+                {notice}
+              </div>
+            )}
           </div>
         </div>
+      </div>
     </div>
   );
 }

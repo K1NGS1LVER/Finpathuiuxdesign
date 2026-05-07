@@ -517,19 +517,9 @@ export default function Progress() {
       />
 
       {/* Header */}
-      <div className="relative z-10">
-        <h1
-          className="text-2xl md:text-3xl font-bold mb-2 text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Progress Tracking
-        </h1>
-        <p
-          className="text-sm md:text-base text-[var(--secondary)]"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          Your financial journey at a glance
-        </p>
+      <div className="mb-8 relative z-10">
+
+        <h1 className="text-title text-secondary tracking-[0.15em] mb-1">Analytics & Milestones</h1>
         {(reservedSurplus > 0 || pendingSurplus > 0) && (
           <p
             className="text-xs md:text-sm mt-2"

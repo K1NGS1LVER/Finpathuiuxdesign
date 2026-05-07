@@ -38,8 +38,7 @@ export default function Tax() {
 
       {/* Header */}
       <div className="mb-6 md:mb-8 relative z-10">
-        <h1 className="text-display mb-2 slashed-zero">Tax Calculator</h1>
-        <p className="text-lg text-secondary">Compare FY 2024-25 Old vs New tax regimes</p>
+        <h1 className="text-display font-bold slashed-zero text-secondary">Regime Comparison</h1>
       </div>
 
       {/* Bento Grid */}
