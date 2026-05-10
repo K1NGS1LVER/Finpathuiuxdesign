@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Target, TrendingUp, Calculator, GitBranch, ArrowRight, Sun, Moon } from 'lucide-react';
+import { Target, TrendingUp, Sparkles, GitBranch, ArrowRight, Sun, Moon } from 'lucide-react';
 
 interface LandingProps {
   isDark: boolean;
@@ -221,16 +221,14 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
             <div className="bg-card backdrop-blur-[32px] border border-border rounded-[32px] p-8 relative overflow-hidden group transition-all duration-300 hover:shadow-md hover:-translate-y-1">
               <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-accent opacity-10 blur-3xl pointer-events-none" />
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-accent-subtle text-accent-text mb-6 relative z-10">
-                <Calculator size={24} className="icon-wireframe" />
+                <Sparkles size={24} className="icon-wireframe" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3 relative z-10 font-display">Tax regime optimizer</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3 relative z-10 font-display">Penny AI Companion</h3>
               <p className="text-secondary leading-relaxed mb-6 relative z-10 text-sm md:text-base">
-                Plug in your income and deductions. FinPath compares old and new Indian tax regimes
-                side-by-side and shows exactly which one saves you more — with a full deduction guide
-                so nothing is left on the table.
+                Meet Penny, your personal AI financial assistant. Penny analyzes your goals, income, and spending to provide contextual insights and answers your finance questions in real-time.
               </p>
               <button onClick={() => navigate('/auth')} className="inline-flex items-center gap-1.5 text-accent-text font-semibold text-sm group-hover:gap-2.5 transition-all relative z-10">
-                Compare regimes <ArrowRight size={14} />
+                Meet Penny <ArrowRight size={14} />
               </button>
             </div>
 
