@@ -183,12 +183,6 @@ export default function Debt() {
 
   return (
     <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
-
-{/* 
-      <div className="mb-6 md:mb-8 relative z-10">
-        <h1 className="text-display font-bold slashed-zero text-secondary">Payoff Strategies</h1>
-      </div>
- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
         {debtItems.length > 0 && (
           <div className="lg:col-span-3 bento-card p-4">

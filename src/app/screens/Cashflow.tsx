@@ -156,13 +156,6 @@ export default function Cashflow() {
 
   return (
     <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
-
-
-      {/* <div className="mb-6 md:mb-8 relative z-10">
-
-        <h1 className="text-title text-secondary tracking-[0.15em] mb-1 ">Cashflow</h1>
-      </div>
- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
         <div className="lg:col-span-3 bento-card p-6">
           <h3 className="text-title slashed-zero text-[var(--card-foreground)] mb-4">Cash Flow Diagram</h3>

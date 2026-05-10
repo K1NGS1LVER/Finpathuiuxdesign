@@ -705,7 +705,9 @@ export const useFinPathStore = create<FinPathStore>()(
               monthlyAllocation:
                 g.category === "debt"
                   ? Math.max(0, debts.totalMonthly || 0)
-                  : plan.recommendedAllocations[g.id] || 0,
+                  : g.checkedThisMonth
+                    ? (g.monthlyAllocation || plan.recommendedAllocations[g.id] || 0)
+                    : (plan.recommendedAllocations[g.id] || 0),
               status: nextStatus,
             };
           }),
