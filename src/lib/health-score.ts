@@ -130,10 +130,12 @@ function generateActions(
 export function calculateHealthScore(input: HealthScoreInput): HealthScore {
   const { income, expenses, debts, emergencyFund } = input;
   
+  const monthlyExpensesDeduplicated = Math.max(0, expenses.total - debts.totalMonthly);
+  
   const incomeStability = scoreIncomeStability(income);
-  const savingsRate = scoreSavingsRate(income.total, expenses.total, debts.totalMonthly);
+  const savingsRate = scoreSavingsRate(income.total, monthlyExpensesDeduplicated, debts.totalMonthly);
   const debtLoad = scoreDebtLoad(income.total, debts.totalMonthly);
-  const emergencyFundScore = scoreEmergencyFund(emergencyFund, expenses.total + debts.totalMonthly);
+  const emergencyFundScore = scoreEmergencyFund(emergencyFund, monthlyExpensesDeduplicated + debts.totalMonthly);
 
   const overall = incomeStability + savingsRate + debtLoad + emergencyFundScore;
 
@@ -143,7 +145,7 @@ export function calculateHealthScore(input: HealthScoreInput): HealthScore {
     emergencyFundScore,
     incomeStability,
     income.total,
-    expenses.total,
+    monthlyExpensesDeduplicated,
     debts.totalMonthly,
     emergencyFund
   );

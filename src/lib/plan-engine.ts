@@ -116,7 +116,9 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     stepUpEnabled = false,
   } = input;
 
-  const monthlySurplus = income.total - expenses.total - debts.totalMonthly;
+  // Deduplicate debt payments if they were included in expenses.total
+  const monthlyExpensesDeduplicated = Math.max(0, expenses.total - debts.totalMonthly);
+  const monthlySurplus = income.total - monthlyExpensesDeduplicated - debts.totalMonthly;
   const reservedSurplus = Math.max(0, monthlySurplusReserve);
   const pendingSurplus = Math.max(0, pendingReallocationReserve);
   const availableForGoals = Math.max(
@@ -168,7 +170,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     }
 
     // Available surplus this month
-    const currentMonthlySurplus = currentIncomeTotal - expenses.total - debts.totalMonthly;
+    const currentMonthlySurplus = currentIncomeTotal - monthlyExpensesDeduplicated - debts.totalMonthly;
     const surplus = Math.max(0, currentMonthlySurplus);
     const monthlyReservedSurplus = Math.min(surplus, reservedSurplus);
     const afterReserved = Math.max(0, surplus - monthlyReservedSurplus);
