@@ -22,9 +22,7 @@ export function usePalette() {
     red: resolveCssVar('--red'),
     amber: resolveCssVar('--amber'),
     green: resolveCssVar('--green'),
-    purple: resolveCssVar('--accent'),
-    teal: resolveCssVar('--green'),
-    pink: resolveCssVar('--red'),
+    purple: resolveCssVar('--secondary-accent'),
     slate: resolveCssVar('--tertiary'),
   }), []);
 }
@@ -40,7 +38,7 @@ export interface CustomNodeProps {
 }
 
 export function CustomNode({ x = 0, y = 0, width = 0, height = 0, index = 0, payload = { name: '' }, palette }: CustomNodeProps) {
-  const colors = [palette.blue, palette.amber, palette.red, palette.lime, palette.green, palette.purple, palette.teal, palette.pink, palette.slate];
+  const colors = [palette.blue, palette.amber, palette.red, palette.lime, palette.green, palette.purple, palette.slate];
   const color = colors[index % colors.length];
   const isLeft = x < 280;
 

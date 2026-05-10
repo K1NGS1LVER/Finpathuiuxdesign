@@ -137,20 +137,6 @@ export interface HealthScore {
   actions: string[];
 }
 
-/** Tax calculation result */
-export interface TaxResult {
-  regime: "old" | "new";
-  grossIncome: number;
-  deductions: number;
-  taxableIncome: number;
-  tax: number;
-  cess: number;
-  totalTax: number;
-  effectiveRate: number;
-  /** Slab-wise breakdown */
-  slabs: { range: string; rate: number; tax: number }[];
-}
-
 /** Chat message */
 export interface ChatMessage {
   id: string;

@@ -197,7 +197,7 @@ export default function Month() {
     );
   };
   
-  const date_month_year = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  const dateMonthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
   const surplus = income.total - expenses.total - debts.totalMonthly;
   const reservedSurplus = plan?.months?.[0]?.reservedSurplus || 0;
   const pendingSurplus = plan?.months?.[0]?.pendingSurplus || 0;
@@ -215,12 +215,6 @@ export default function Month() {
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-accent" />
-      {/* <div className="mb-8 relative z-10">
-        <div className="text-title text-secondary tracking-[0.15em] mb-1 ">
-          <span >{date_month_year}</span>
-        </div>
-      </div> */}
-
       {/* Debt over income warning */}
       {debts.totalMonthly > surplus && surplus >= 0 && (
         <div
