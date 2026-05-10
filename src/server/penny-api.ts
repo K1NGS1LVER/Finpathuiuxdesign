@@ -134,8 +134,7 @@ RULES:
 1. ALWAYS reference the user's specific numbers — never give generic advice.
 2. Give actionable next-steps, not vague suggestions. e.g. "Move ₹5,000 from entertainment to your Emergency Fund goal this month."
 3. When discussing affordability, calculate using their actual surplus and timeline.
-4. For tax questions, use Indian tax law (Section 80C, 80D, HRA, NPS etc).
-5. If asked about strategy, explain avalanche vs snowball in plain language.`;
+4. If asked about strategy, explain avalanche vs snowball in plain language.`;
 }
 
 /**
