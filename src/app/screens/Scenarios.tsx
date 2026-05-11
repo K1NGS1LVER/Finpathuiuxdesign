@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router";
 import {
   ArrowRight,
   TrendingUp,
@@ -44,6 +45,7 @@ const SCENARIO_OPTIONS = [
 type ScenarioId = (typeof SCENARIO_OPTIONS)[number]["id"];
 
 export default function Scenarios() {
+  const navigate = useNavigate();
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
   const debts = useFinPathStore((s) => s.debts);
@@ -324,12 +326,44 @@ export default function Scenarios() {
     </div>
   );
 
+  if (!plan || !plan.months || plan.months.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+          style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
+        >
+          <Sparkles size={32} className="icon-wireframe" />
+        </div>
+        <h2 className="text-display mb-2 text-card-foreground">
+          No plan to simulate
+        </h2>
+        <p className="text-secondary mb-8 max-w-md font-body text-sm md:text-base">
+          Scenarios require an active financial plan to run simulations. Set
+          your first goal to see how different life events impact your future.
+        </p>
+        <button
+          onClick={() => navigate("/journey")}
+          className="px-8 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 active:scale-95"
+          style={{
+            background: "var(--accent)",
+            color: "var(--on-accent)",
+            boxShadow: "0 4px 20px var(--accent-glow)",
+          }}
+        >
+          Create Goals
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-tertiary-accent" />
       <div className="mb-6 md:mb-8 relative z-10">
-
-        <h1 className="text-title text-secondary tracking-[0.15em] mb-1 ">Scenario Explorer</h1>
+        <h1 className="text-title text-secondary tracking-[0.15em] mb-1 ">
+          Scenario Explorer
+        </h1>
       </div>
 
       {/* Dropdown scenario selector */}
@@ -439,7 +473,7 @@ export default function Scenarios() {
                 [scenario]: Number(e.target.value),
               }))
             }
-              className="w-full h-2 rounded-full appearance-none bg-[var(--progress-inactive)]"
+            className="w-full h-2 rounded-full appearance-none bg-[var(--progress-inactive)]"
             style={{
               background: `linear-gradient(to right, ${current?.color} 0%, ${current?.color} ${progressPercent}%, var(--progress-inactive) ${progressPercent}%, var(--progress-inactive) 100%)`,
             }}
