@@ -426,6 +426,32 @@ export default function Dashboard({ onPennyClick }: DashboardProps) {
   );
 }
 
+  // Handle missing plan state
+  if (!plan || !plan.months || plan.months.length === 0) {
+    return (
+      <div className="max-w-[1400px] mx-auto relative text-[var(--foreground)] page-animate flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+          <AlertTriangle size={32} className="icon-wireframe" />
+        </div>
+        <h2 className="text-display mb-2 text-center" style={{ color: 'var(--card-foreground)' }}>No financial plan found</h2>
+        <p className="text-secondary mb-8 text-center max-w-md font-body">
+          It looks like your financial plan hasn't been generated yet. Add your income and goals to unlock your personalized dashboard.
+        </p>
+        <button
+          onClick={() => navigate("/journey")}
+          className="px-6 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 active:scale-95"
+          style={{
+            background: "var(--accent)",
+            color: "var(--on-accent)",
+            boxShadow: "0 4px 20px var(--accent-glow)",
+          }}
+        >
+          Get Started
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-[1400px] mx-auto relative text-[var(--foreground)] page-animate">
       {/* ── Header Row ── */}

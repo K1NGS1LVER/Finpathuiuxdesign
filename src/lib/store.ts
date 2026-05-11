@@ -4,7 +4,7 @@
 // ============================================================
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   FinancialProfile,
   IncomeProfile,
@@ -48,6 +48,31 @@ const defaultProfile: FinancialProfile = {
   pendingGoalDecisions: [],
   lastUpdated: Date.now(),
 };
+
+const safeStorage = createJSONStorage(() => ({
+  getItem: (name: string) => {
+    try {
+      return localStorage.getItem(name);
+    } catch (e) {
+      console.warn("localStorage.getItem failed", e);
+      return null;
+    }
+  },
+  setItem: (name: string, value: string) => {
+    try {
+      localStorage.setItem(name, value);
+    } catch (e) {
+      console.warn("localStorage.setItem failed (quota exceeded?)", e);
+    }
+  },
+  removeItem: (name: string) => {
+    try {
+      localStorage.removeItem(name);
+    } catch (e) {
+      console.warn("localStorage.removeItem failed", e);
+    }
+  },
+}));
 
 const DEBT_GOAL_ID = "goal-debt-payoff";
 
@@ -839,6 +864,7 @@ export const useFinPathStore = create<FinPathStore>()(
     {
       name: "finpath-store",
       version: 1,
+      storage: safeStorage,
     },
   ),
 );

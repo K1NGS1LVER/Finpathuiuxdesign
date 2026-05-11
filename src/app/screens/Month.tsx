@@ -1,5 +1,6 @@
 import { Check, Circle, AlertTriangle, Wallet, Target } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "react-router";
 import { useFinPathStore } from "@/lib/store";
 
 interface MonthTask {
@@ -14,6 +15,7 @@ interface MonthTask {
 }
 
 export default function Month() {
+  const navigate = useNavigate();
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
   const debts = useFinPathStore((s) => s.debts);
@@ -196,8 +198,11 @@ export default function Month() {
         : "Lumpsum applied",
     );
   };
-  
-  const dateMonthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+  const dateMonthYear = new Date().toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+  });
   const surplus = income.total - expenses.total - debts.totalMonthly;
   const reservedSurplus = plan?.months?.[0]?.reservedSurplus || 0;
   const pendingSurplus = plan?.months?.[0]?.pendingSurplus || 0;
@@ -212,14 +217,43 @@ export default function Month() {
     }, 0);
   const savingsTarget = Math.max(0, goalSavingsTarget + reservedSurplus);
 
+  if (!plan || !plan.months || plan.months.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+          style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
+        >
+          <AlertTriangle size={32} className="icon-wireframe" />
+        </div>
+        <h2 className="text-display mb-2 text-card-foreground">
+          No plan generated
+        </h2>
+        <p className="text-secondary mb-8 max-w-md font-body text-sm md:text-base">
+          We couldn't find an active financial plan for you. Head over to the
+          Journey screen to set your goals and generate your path.
+        </p>
+        <button
+          onClick={() => navigate("/journey")}
+          className="px-8 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 active:scale-95"
+          style={{
+            background: "var(--accent)",
+            color: "var(--on-accent)",
+            boxShadow: "0 4px 20px var(--accent-glow)",
+          }}
+        >
+          Build Your Plan
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
       <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-accent" />
       {/* Debt over income warning */}
       {debts.totalMonthly > surplus && surplus >= 0 && (
-        <div
-          className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10 bg-[var(--red-subtle)] text-red-text border border-red font-body"
-        >
+        <div className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10 bg-[var(--red-subtle)] text-red-text border border-red font-body">
           <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
           <div>
             <div className="font-semibold mb-1">
@@ -243,14 +277,10 @@ export default function Month() {
 
         <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 justify-between">
           <div className="flex-1">
-            <div
-              className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-tertiary-accent-text uppercase font-body"
-            >
+            <div className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-tertiary-accent-text uppercase font-body">
               Mission
             </div>
-            <h2
-              className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 slashed-zero text-card-foreground font-display"
-            >
+            <h2 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 slashed-zero text-card-foreground font-display">
               Save ₹{Math.round(savingsTarget / 1000)}K
               {debts.totalMonthly > 0
                 ? ` & pay ₹${Math.round(debts.totalMonthly / 1000)}K debt`
@@ -258,34 +288,24 @@ export default function Month() {
             </h2>
             <div className="flex items-center gap-6 md:gap-8">
               <div>
-                <div
-                  className="text-xs md:text-sm font-medium mb-1 text-secondary font-body"
-                >
+                <div className="text-xs md:text-sm font-medium mb-1 text-secondary font-body">
                   Goals + Surplus Reserve
                 </div>
-                <div
-                  className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display"
-                >
+                <div className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display">
                   ₹{savingsTarget.toLocaleString("en-IN")}
                 </div>
               </div>
               <div>
-                <div
-                  className="text-xs md:text-sm font-medium mb-1 text-secondary font-body"
-                >
+                <div className="text-xs md:text-sm font-medium mb-1 text-secondary font-body">
                   Debt Payments
                 </div>
-                <div
-                  className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display"
-                >
+                <div className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display">
                   ₹{debts.totalMonthly.toLocaleString("en-IN")}
                 </div>
               </div>
             </div>
             {pendingSurplus > 0 && (
-              <div
-                className="mt-4 text-xs md:text-sm text-secondary font-body"
-              >
+              <div className="mt-4 text-xs md:text-sm text-secondary font-body">
                 ₹{pendingSurplus.toLocaleString("en-IN")} is waiting for your
                 reinvest/surplus decision.
               </div>
@@ -297,9 +317,7 @@ export default function Month() {
               <div className="text-xs font-medium mb-1 text-secondary uppercase tracking-wider font-body">
                 Days Remaining
               </div>
-              <div
-                className="text-3xl font-bold slashed-zero text-card-foreground font-display"
-              >
+              <div className="text-3xl font-bold slashed-zero text-card-foreground font-display">
                 {new Date(
                   new Date().getFullYear(),
                   new Date().getMonth() + 1,
@@ -307,17 +325,15 @@ export default function Month() {
                 ).getDate() - new Date().getDate()}
               </div>
             </div>
-            
+
             <hr className="w-full border-t border-border opacity-50" />
-            
+
             <div className="w-full">
               <div className="text-xs font-medium mb-1 text-secondary uppercase tracking-wider font-body">
                 On Track
               </div>
-              <div
-                  className="text-3xl font-bold slashed-zero text-foreground font-display"
-                >
-                  {tasks.length > 0
+              <div className="text-3xl font-bold slashed-zero text-foreground font-display">
+                {tasks.length > 0
                   ? Math.round(
                       (tasks.filter((t) => t.done).length / tasks.length) * 100,
                     )
@@ -331,9 +347,7 @@ export default function Month() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
         <div className="bento-card p-6 md:p-8 flex flex-col h-full">
-          <h3
-            className="text-xl lg:text-2xl font-bold mb-4 slashed-zero text-card-foreground font-display"
-          >
+          <h3 className="text-xl lg:text-2xl font-bold mb-4 slashed-zero text-card-foreground font-display">
             Action Checklist
           </h3>
           <div className="space-y-2">
@@ -367,7 +381,8 @@ export default function Month() {
                       }
                       disabled={task.done}
                       className="w-24 text-center px-2 py-0.5 rounded-md outline-none focus:ring-2 focus:ring-accent font-semibold transition-all bg-surface-tint border border-border"
-                      style={{ ...(task.done
+                      style={{
+                        ...(task.done
                           ? { textDecoration: "line-through" }
                           : {}),
                       }}
@@ -404,14 +419,10 @@ export default function Month() {
 
         <div className="bento-card p-6 md:p-8 flex flex-col h-full">
           <div>
-            <h3
-              className="text-xl lg:text-2xl font-bold mb-1 slashed-zero text-card-foreground font-display"
-            >
+            <h3 className="text-xl lg:text-2xl font-bold mb-1 slashed-zero text-card-foreground font-display">
               This Month's Impact
             </h3>
-            <p
-              className="text-sm text-secondary mb-6 font-body"
-            >
+            <p className="text-sm text-secondary mb-6 font-body">
               See how your monthly plan accelerates your targets.
             </p>
           </div>
@@ -478,9 +489,7 @@ export default function Month() {
                       </span>
                     </div>
 
-                    <div
-                      className="h-3 rounded-full overflow-hidden flex relative bg-[var(--progress-inactive)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]"
-                    >
+                    <div className="h-3 rounded-full overflow-hidden flex relative bg-[var(--progress-inactive)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
                       <div
                         className="h-full transition-all duration-500"
                         style={{
@@ -497,9 +506,7 @@ export default function Month() {
                             opacity: 0.6,
                           }}
                         >
-                          <div
-                            className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.15)_10px,rgba(255,255,255,0.15)_20px)]"
-                          />
+                          <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.15)_10px,rgba(255,255,255,0.15)_20px)]" />
                         </div>
                       )}
                     </div>
@@ -521,9 +528,7 @@ export default function Month() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
         <div className="bento-card p-6 md:p-8 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <h3
-              className="text-xl font-bold text-card-foreground font-display"
-            >
+            <h3 className="text-xl font-bold text-card-foreground font-display">
               Investment Strategy
             </h3>
             <button
@@ -563,14 +568,10 @@ export default function Month() {
             </button>
           </div>
 
-          <div
-            className="text-sm p-4 rounded-xl bg-surface-tint border border-border text-secondary font-body"
-          >
+          <div className="text-sm p-4 rounded-xl bg-surface-tint border border-border text-secondary font-body">
             {strategy === "avalanche" ? (
               <p className="leading-relaxed">
-                <strong className="text-card-foreground">
-                  Avalanche
-                </strong>{" "}
+                <strong className="text-card-foreground">Avalanche</strong>{" "}
                 allocates funds by goal priority — highest priority goals get
                 funded first.{" "}
                 {(() => {
@@ -593,9 +594,7 @@ export default function Month() {
               </p>
             ) : (
               <p className="leading-relaxed">
-                <strong className="text-card-foreground">
-                  Snowball
-                </strong>{" "}
+                <strong className="text-card-foreground">Snowball</strong>{" "}
                 tackles the smallest remaining goal first for a quick win, then
                 rolls freed-up money into the next.{" "}
                 {(() => {
@@ -686,14 +685,10 @@ export default function Month() {
         </div>
 
         <div className="bento-card p-6 md:p-8">
-          <h3
-            className="text-xl font-bold mb-4 text-card-foreground font-display"
-          >
+          <h3 className="text-xl font-bold mb-4 text-card-foreground font-display">
             Lumpsum Fast-Track
           </h3>
-          <p
-            className="text-sm mb-4 text-secondary font-body"
-          >
+          <p className="text-sm mb-4 text-secondary font-body">
             Add a one-time amount to accelerate a goal.
           </p>
           <div className="space-y-3">
@@ -701,7 +696,6 @@ export default function Month() {
               value={lumpsumGoalId}
               onChange={(e) => setLumpsumGoalId(e.target.value)}
               className="w-full px-4 py-3 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border"
-              
               disabled={activeGoals.length === 0}
             >
               {activeGoals.length === 0 ? (
@@ -723,7 +717,6 @@ export default function Month() {
               }
               placeholder="Lumpsum amount (₹)"
               className="w-full px-4 py-3 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border"
-              
             />
             <button
               onClick={applyLumpsum}
@@ -733,9 +726,7 @@ export default function Month() {
               Apply Lumpsum
             </button>
             {lumpsumNotice && (
-              <div
-                className="text-xs rounded-lg px-3 py-2  text-secondary"
-              >
+              <div className="text-xs rounded-lg px-3 py-2  text-secondary">
                 {lumpsumNotice}
               </div>
             )}
@@ -745,27 +736,3 @@ export default function Month() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
