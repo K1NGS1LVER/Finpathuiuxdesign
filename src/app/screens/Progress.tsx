@@ -1,124 +1,20 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
-  TrendingUp,
-  Award,
-  Flame,
-  Target,
   CheckCircle2,
-  Plus,
-  Trash2,
-  AlertTriangle,
-  Wallet,
-  Rocket,
-  Dumbbell,
-  Crosshair,
-  Leaf,
-  Zap,
-  Trophy,
-  Gem,
   Sparkles,
-  type LucideIcon,
+  Check,
+  Clock,
+  ArrowRight,
 } from "lucide-react";
 import { useFinPathStore } from '@/lib/store';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-  CartesianGrid,
-} from "recharts";
 import confetti from "canvas-confetti";
-import type { Goal } from '@/lib/types';
 
-interface GoalTemplate {
-  name: string;
-  icon: string;
-  category: Goal["category"];
-  targetAmount: number;
-  timelineMonths: number;
-  color: string;
-}
+type ChartPoint = { label: string; value: number; projected?: boolean };
 
-interface GoalSetTemplate {
-  id: string;
-  label: string;
-  goals: GoalTemplate[];
-}
+const SVG_W = 700;
+const SVG_H = 220;
 
-const GOAL_SET_TEMPLATES: GoalSetTemplate[] = [
-  {
-    id: "starter",
-    label: "Starter Set",
-    goals: [
-      {
-        name: "Emergency Fund",
-        icon: "Shield",
-        category: "savings",
-        targetAmount: 300000,
-        timelineMonths: 18,
-        color: "var(--tertiary-accent)",
-      },
-      {
-        name: "Vacation",
-        icon: "Plane",
-        category: "travel",
-        targetAmount: 100000,
-        timelineMonths: 10,
-        color: "var(--accent)",
-      },
-    ],
-  },
-  {
-    id: "growth",
-    label: "Growth Set",
-    goals: [
-      {
-        name: "Investment",
-        icon: "TrendingUp",
-        category: "investment",
-        targetAmount: 800000,
-        timelineMonths: 36,
-        color: "var(--tertiary-accent)",
-      },
-      {
-        name: "Upskill Course",
-        icon: "GraduationCap",
-        category: "education",
-        targetAmount: 180000,
-        timelineMonths: 14,
-        color: "var(--amber)",
-      },
-    ],
-  },
-  {
-    id: "family",
-    label: "Family Set",
-    goals: [
-      {
-        name: "Home Upgrade",
-        icon: "Home",
-        category: "home",
-        targetAmount: 1200000,
-        timelineMonths: 48,
-        color: "var(--tertiary-accent)",
-      },
-      {
-        name: "Family Safety Fund",
-        icon: "Heart",
-        category: "family",
-        targetAmount: 350000,
-        timelineMonths: 20,
-        color: "var(--accent)",
-      },
-    ],
-  },
-];
-
-export default function Progress() {
+export default function Progress({ onPennyClick }: { onPennyClick?: () => void }) {
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
   const debts = useFinPathStore((s) => s.debts);
@@ -127,18 +23,10 @@ export default function Progress() {
   const healthScore = useFinPathStore((s) => s.healthScore);
   const savings = useFinPathStore((s) => s.savings);
   const investments = useFinPathStore((s) => s.investments);
-  const addGoal = useFinPathStore((s) => s.addGoal);
-  const updateGoal = useFinPathStore((s) => s.updateGoal);
-  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
-  const removeGoal = useFinPathStore((s) => s.removeGoal);
 
   const surplus = income.total - expenses.total - debts.totalMonthly;
   const activeGoals = useMemo(
-    () =>
-      goals
-        .filter((g) => g.status !== "complete")
-        .slice()
-        .sort((a, b) => a.priority - b.priority),
+    () => goals.filter((g) => g.status !== "complete").slice().sort((a, b) => a.priority - b.priority),
     [goals],
   );
   const month0 = plan?.months?.[0];
@@ -149,368 +37,159 @@ export default function Progress() {
     [goals],
   );
   const allocatedToGoals = month0
-    ? Object.values(month0.goalAllocations).reduce(
-        (sum, amount) => sum + Math.max(0, amount || 0),
-        0,
-      )
-    : activeGoals.reduce(
-        (sum, goal) => sum + Math.max(0, goal.monthlyAllocation || 0),
-        0,
-      );
-  const freeSurplus = Math.max(
-    0,
-    surplus - allocatedToGoals - reservedSurplus - pendingSurplus,
-  );
+    ? Object.values(month0.goalAllocations).reduce((sum, amount) => sum + Math.max(0, amount || 0), 0)
+    : activeGoals.reduce((sum, goal) => sum + Math.max(0, goal.monthlyAllocation || 0), 0);
+  const freeSurplus = Math.max(0, surplus - allocatedToGoals - reservedSurplus - pendingSurplus);
   const currentNetWorth = savings + investments + totalGoalValue;
 
-  // Budget awareness for adding goals
-  const monthlySurplusAfterReserve = Math.max(0, surplus - reservedSurplus - pendingSurplus);
-  const existingMonthlyNeed = activeGoals
-    .filter((g) => g.category !== "debt")
-    .reduce((sum, g) => sum + Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths)), 0);
-  const goalBudgetRemaining = monthlySurplusAfterReserve - existingMonthlyNeed;
+  // KPI derived values
+  const prevNetWorth = Math.round(currentNetWorth * 0.92);
+  const netWorthDelta = currentNetWorth - prevNetWorth;
+  const netWorthDeltaPct = Math.round((netWorthDelta / Math.max(1, prevNetWorth)) * 100);
+  const completedGoals = goals.filter((g) => g.status === "complete").length;
+  const savingsRate = Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100);
 
-  // Generate a past-to-future net worth timeline from current state and plan.
-  const netWorthData = useMemo(() => {
-    const monthsBack = 12;
-    const currentDate = new Date();
-    const monthlyProgress = Math.max(
-      1000,
-      allocatedToGoals + reservedSurplus + freeSurplus,
-    );
-    const startingNetWorth = Math.max(
-      0,
-      currentNetWorth - monthlyProgress * monthsBack,
-    );
-
-    const history = Array.from({ length: monthsBack }, (_, index) => {
-      const monthsAgo = monthsBack - index;
-      const d = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() - monthsAgo,
-        1,
-      );
-      const progressRatio = (index + 1) / monthsBack;
-      return {
-        month: d.toLocaleDateString("en-IN", {
-          month: "short",
-          year: "numeric",
-        }),
-        netWorth: Math.round(
-          startingNetWorth +
-            (currentNetWorth - startingNetWorth) * progressRatio,
-        ),
-      };
-    });
-
-    const currentPoint = {
-      month: currentDate.toLocaleDateString("en-IN", {
-        month: "short",
-        year: "numeric",
-      }),
-      netWorth: Math.round(currentNetWorth),
-    };
-
-    if (!plan?.months.length) {
-      const projection = [];
-      let netWorth = currentNetWorth;
-      for (let i = 0; i < 12; i++) {
-        const d = new Date();
-        d.setMonth(d.getMonth() + i);
-        netWorth += freeSurplus;
-        projection.push({
-          month: d.toLocaleDateString("en-IN", {
-            month: "short",
-            year: "numeric",
-          }),
-          netWorth: Math.round(netWorth),
-        });
-      }
-      return [...history, currentPoint, ...projection];
-    }
-
-    const projection = plan.months.map((m) => ({
-      month: m.date,
-      netWorth: m.netWorth,
-    }));
-
-    return [...history, currentPoint, ...projection];
-  }, [
-    allocatedToGoals,
-    currentNetWorth,
-    freeSurplus,
-    plan,
-    reservedSurplus,
-  ]);
-
-  // Streak counter (simulated based on consecutive goal allocations)
   const streakDays = useMemo(() => {
-    const completedGoals = goals.filter((g) => g.status === "complete").length;
-    return Math.min(30, 7 + completedGoals * 5);
+    const completedCount = goals.filter((g) => g.status === "complete").length;
+    return Math.min(30, 7 + completedCount * 5);
   }, [goals]);
 
-  // Badges
-  const badges = useMemo(() => {
-    const list: { name: string; icon: LucideIcon; color: string; desc: string; earned: boolean }[] = [];
-    if (income.total > 0)
-      list.push({
-        name: "First Step",
-        icon: Rocket,
-        color: "var(--accent)",
-        desc: "Completed onboarding",
-        earned: true,
-      });
-    if (healthScore && healthScore.overall >= 50)
-      list.push({
-        name: "Healthy Start",
-        icon: Dumbbell,
-        color: "var(--tertiary-accent)",
-        desc: "Health score above 50",
-        earned: true,
-      });
-    if (goals.length >= 2)
-      list.push({
-        name: "Goal Setter",
-        icon: Crosshair,
-        color: "var(--accent)",
-        desc: "Set 2+ financial goals",
-        earned: true,
-      });
-    if (freeSurplus > 0)
-      list.push({
-        name: "In the Green",
-        icon: Leaf,
-        color: "var(--tertiary-accent)",
-        desc: "Positive monthly surplus",
-        earned: true,
-      });
-    list.push({
-      name: "Debt Crusher",
-      icon: Zap,
-      color: "var(--amber)",
-      desc: "Pay off first debt",
-      earned: debts.items.some((d) => d.remainingMonths <= 0),
-    });
-    list.push({
-      name: "Goal Achiever",
-      icon: Trophy,
-      color: "var(--amber)",
-      desc: "Complete first goal",
-      earned: goals.some((g) => g.status === "complete"),
-    });
-    list.push({
-      name: "Streak Master",
-      icon: Flame,
-      color: "var(--red)",
-      desc: "30-day check-in streak",
-      earned: streakDays >= 30,
-    });
-    list.push({
-      name: "Wealth Builder",
-      icon: Gem,
-      color: "var(--tertiary-accent)",
-      desc: "Net worth above ₹5L",
-      earned: currentNetWorth >= 500000,
-    });
-    return list;
-  }, [
-    income,
-    healthScore,
-    goals,
-    freeSurplus,
-    debts,
-    currentNetWorth,
-    streakDays,
-  ]);
+  // Chart data: 5 history + current + up to 6 projected
+  const chartData = useMemo((): ChartPoint[] => {
+    const monthlyGrowth = Math.max(1000, allocatedToGoals + reservedSurplus + freeSurplus);
+    const startNW = Math.max(0, currentNetWorth - monthlyGrowth * 5);
+    const now = new Date();
 
-  // Monthly check-in state
-  const [checkedIn, setCheckedIn] = useState(false);
-  const [newGoalName, setNewGoalName] = useState("");
-  const [newGoalTarget, setNewGoalTarget] = useState("");
-  const [newGoalMonths, setNewGoalMonths] = useState("12");
-  const [goalDrafts, setGoalDrafts] = useState<
-    Record<
-      string,
-      { targetAmount: string; timelineMonths: string; priority: string }
-    >
-  >({});
-  const [notice, setNotice] = useState("");
-
-  useEffect(() => {
-    const nextDrafts: Record<
-      string,
-      { targetAmount: string; timelineMonths: string; priority: string }
-    > = {};
-
-    for (const goal of activeGoals) {
-      nextDrafts[goal.id] = {
-        targetAmount: String(goal.targetAmount),
-        timelineMonths: String(goal.timelineMonths),
-        priority: String(goal.priority),
+    const history: ChartPoint[] = Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      const ratio = (i + 1) / 5;
+      return {
+        label: d.toLocaleDateString("en-IN", { month: "short" }),
+        value: Math.round(startNW + (currentNetWorth - startNW) * ratio),
       };
-    }
+    });
 
-    setGoalDrafts(nextDrafts);
-  }, [activeGoals]);
+    const current: ChartPoint = {
+      label: now.toLocaleDateString("en-IN", { month: "short" }),
+      value: Math.round(currentNetWorth),
+    };
+
+    const projection: ChartPoint[] = plan?.months?.length
+      ? plan.months.slice(0, 6).map((m) => ({
+          label: (m.date || "").split(" ")[0] || "",
+          value: m.netWorth,
+          projected: true,
+        }))
+      : Array.from({ length: 6 }, (_, i) => {
+          const d = new Date();
+          d.setMonth(d.getMonth() + i + 1);
+          return {
+            label: d.toLocaleDateString("en-IN", { month: "short" }),
+            value: Math.round(currentNetWorth + freeSurplus * (i + 1)),
+            projected: true,
+          };
+        });
+
+    return [...history, current, ...projection];
+  }, [allocatedToGoals, currentNetWorth, freeSurplus, plan, reservedSurplus]);
+
+  // SVG chart geometry
+  const chart = useMemo(() => {
+    const maxV = Math.max(...chartData.map((d) => d.value), 1);
+    const toX = (i: number) => chartData.length > 1 ? (i / (chartData.length - 1)) * SVG_W : SVG_W / 2;
+    const toY = (v: number) => SVG_H - (v / maxV) * (SVG_H - 30) - 10;
+    const pts = chartData.map((d, i): [number, number] => [toX(i), toY(d.value)]);
+    const histCount = chartData.filter((d) => !d.projected).length;
+
+    const solidPath = pts
+      .slice(0, histCount)
+      .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`)
+      .join(" ");
+
+    const dashedPath = histCount < pts.length
+      ? pts
+          .slice(histCount - 1)
+          .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`)
+          .join(" ")
+      : "";
+
+    const [lx, ly] = pts[histCount - 1] || pts[pts.length - 1] || [SVG_W, SVG_H];
+    const areaPath = `${solidPath} L ${lx.toFixed(1)} ${SVG_H} L 0 ${SVG_H} Z`;
+
+    return { pts, solidPath, dashedPath, areaPath, histCount };
+  }, [chartData]);
+
+
+  // Dynamic milestones
+  const milestones = useMemo(() => {
+    const emergencyFull = expenses.total * 6;
+    const emergencyHalf = expenses.total * 3;
+    const firstGoalDone = goals.some((g) => g.status === "complete");
+    const monthsTo5L = plan?.months?.findIndex((m) => m.netWorth >= 500000) ?? -1;
+    const monthsToEmFull = plan?.months?.findIndex((m) => m.netWorth >= emergencyFull) ?? -1;
+
+    const estDate = (months: number) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() + Math.max(1, months));
+      return `~${d.toLocaleDateString("en-IN", { month: "short", year: "numeric" })}`;
+    };
+
+    return [
+      {
+        title: "First ₹1L saved",
+        done: (savings + investments) >= 100000,
+        date: (savings + investments) >= 100000 ? "Achieved" : estDate(Math.ceil((100000 - savings - investments) / Math.max(1, surplus))),
+      },
+      {
+        title: "Emergency fund 50%",
+        done: savings >= emergencyHalf,
+        date: savings >= emergencyHalf ? "Achieved" : estDate(Math.ceil((emergencyHalf - savings) / Math.max(1, surplus * 0.4))),
+      },
+      {
+        title: "Emergency fund complete",
+        done: savings >= emergencyFull,
+        date: savings >= emergencyFull ? "Achieved" : (monthsToEmFull >= 0 ? estDate(monthsToEmFull) : estDate(Math.ceil((emergencyFull - savings) / Math.max(1, surplus * 0.4)))),
+      },
+      {
+        title: `${Math.max(streakDays, 4)}-month allocation streak`,
+        done: streakDays >= 4,
+        date: streakDays >= 4 ? "Achieved" : estDate(4 - Math.floor(streakDays / 5)),
+      },
+      {
+        title: "First ₹5L net worth",
+        done: currentNetWorth >= 500000,
+        date: currentNetWorth >= 500000 ? "Achieved" : (monthsTo5L >= 0 ? estDate(monthsTo5L) : estDate(Math.ceil((500000 - currentNetWorth) / Math.max(1, surplus)))),
+      },
+      {
+        title: "First goal completed",
+        done: firstGoalDone,
+        date: firstGoalDone ? "Achieved" : (activeGoals.length > 0 ? estDate(Math.min(...activeGoals.map((g) => g.timelineMonths))) : "—"),
+      },
+    ];
+  }, [savings, investments, expenses.total, goals, activeGoals, currentNetWorth, plan, surplus, streakDays]);
+
+  // Penny quarterly review text
+  const pennyText = useMemo(() => {
+    const nextPending = milestones.find((m) => !m.done);
+    if (savingsRate <= 0) return "Start building your savings rate to unlock your financial trajectory.";
+    if (nextPending) {
+      return `Your savings rate is ${savingsRate}% this quarter. Trajectory suggests reaching "${nextPending.title}" by ${nextPending.date.replace("~", "")}.`;
+    }
+    return `Your savings rate is ${savingsRate}%. All major milestones achieved — you're ahead of the curve.`;
+  }, [savingsRate, milestones]);
+
+  const [checkedIn, setCheckedIn] = useState(false);
 
   const handleCheckIn = () => {
     setCheckedIn(true);
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.7 },
-    });
-  };
-
-  const applyGoalSet = (template: GoalSetTemplate) => {
-    const existingNames = new Set(
-      goals.map((goal) => goal.name.trim().toLowerCase()),
-    );
-    let added = 0;
-    const startPriority = activeGoals.length;
-
-    template.goals.forEach((goalTemplate, index) => {
-      if (existingNames.has(goalTemplate.name.trim().toLowerCase())) return;
-
-      addGoal({
-        id: `goal-${Date.now()}-${template.id}-${index}`,
-        name: goalTemplate.name,
-        icon: goalTemplate.icon,
-        category: goalTemplate.category,
-        targetAmount: goalTemplate.targetAmount,
-        currentAmount: 0,
-        timelineMonths: goalTemplate.timelineMonths,
-        priority: startPriority + index + 1,
-        status: "not-started",
-        monthlyAllocation: 0,
-        color: goalTemplate.color,
-      });
-      added += 1;
-    });
-
-    setNotice(
-      added > 0
-        ? `${template.label} added (${added} goal${added > 1 ? "s" : ""}).`
-        : `${template.label} is already in your goals.`,
-    );
-  };
-
-  const addCustomProgressGoal = () => {
-    const name = newGoalName.trim();
-    const targetAmount = parseInt(newGoalTarget, 10) || 0;
-    const timelineMonths = parseInt(newGoalMonths, 10) || 12;
-
-    if (!name || targetAmount <= 0) return;
-
-    // Hard block: this goal alone can't be achieved in timeline
-    const newMonthlyNeed = Math.round(targetAmount / timelineMonths);
-    if (newMonthlyNeed > monthlySurplusAfterReserve && monthlySurplusAfterReserve > 0) {
-      const minMonths = monthlySurplusAfterReserve > 0 ? Math.ceil(targetAmount / monthlySurplusAfterReserve) : 0;
-      setNotice(`This goal needs ₹${newMonthlyNeed.toLocaleString("en-IN")}/mo but you only have ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo.${minMonths > 0 ? ` You'd need at least ${minMonths} months.` : ""} Reduce the amount, increase the timeline, or remove an existing goal.`);
-      return;
-    }
-    // Hard block: total goals now exceed surplus
-    if (existingMonthlyNeed + newMonthlyNeed > monthlySurplusAfterReserve && monthlySurplusAfterReserve > 0) {
-      setNotice(`Adding this goal pushes total commitments to ₹${(existingMonthlyNeed + newMonthlyNeed).toLocaleString("en-IN")}/mo — over your available ₹${monthlySurplusAfterReserve.toLocaleString("en-IN")}/mo. Remove an existing goal first.`);
-      return;
-    }
-    if (monthlySurplusAfterReserve <= 0) {
-      setNotice("You have no available surplus. Cannot add goals until income exceeds outgoings.");
-      return;
-    }
-
-    addGoal({
-      id: `goal-${Date.now()}-custom`,
-      name,
-      icon: "Target",
-      category: "custom",
-      targetAmount,
-      currentAmount: 0,
-      timelineMonths,
-      priority: activeGoals.length + 1,
-      status: "not-started",
-      monthlyAllocation: 0,
-      color: "var(--accent)",
-    });
-
-    setNewGoalName("");
-    setNewGoalTarget("");
-    setNewGoalMonths("12");
-    setNotice(`Added custom goal: ${name}.`);
-  };
-
-  const applyGoalDraft = (goal: Goal) => {
-    const draft = goalDrafts[goal.id];
-    if (!draft) return;
-
-    const nextTargetAmount = parseInt(draft.targetAmount, 10);
-    const nextTimelineMonths = parseInt(draft.timelineMonths, 10);
-    const nextPriority = parseInt(draft.priority, 10);
-
-    const updates: Partial<Goal> = {};
-
-    if (
-      Number.isFinite(nextTargetAmount) &&
-      nextTargetAmount > 0 &&
-      nextTargetAmount !== goal.targetAmount
-    ) {
-      updates.targetAmount = nextTargetAmount;
-    }
-
-    if (
-      Number.isFinite(nextTimelineMonths) &&
-      nextTimelineMonths > 0 &&
-      nextTimelineMonths !== goal.timelineMonths
-    ) {
-      updates.timelineMonths = nextTimelineMonths;
-    }
-
-    if (
-      Number.isFinite(nextPriority) &&
-      nextPriority > 0 &&
-      nextPriority !== goal.priority
-    ) {
-      updates.priority = nextPriority;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      updateGoal(goal.id, updates);
-      setNotice(`Updated ${goal.name}.`);
-    }
+    confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
   };
 
   const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
-
-  // Custom tooltip for Recharts
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload?.length) {
-      return (
-        <div
-          className="px-4 py-3 rounded-xl text-sm"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-            boxShadow: "var(--shadow-md)",
-          }}
-        >
-          <p
-            className="font-bold text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {label}
-          </p>
-          <p className="text-[var(--accent-text)] font-semibold slashed-zero">
-            {fmt(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const fmtCompact = (n: number) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : fmt(n);
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
-      {/* Decorative */}
       <div
         className="absolute -top-20 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
         style={{ backgroundColor: "var(--accent)" }}
@@ -518,16 +197,10 @@ export default function Progress() {
 
       {/* Header */}
       <div className="mb-8 relative z-10">
-
-        <h1 className="text-title text-secondary tracking-[0.15em] mb-1">Analytics & Milestones</h1>
+        <p className="text-label">Last 6 months</p>
+        <h1 className="text-title text-secondary tracking-[0.15em] mb-1">Progress</h1>
         {(reservedSurplus > 0 || pendingSurplus > 0) && (
-          <p
-            className="text-xs md:text-sm mt-2"
-            style={{
-              color: "var(--secondary)",
-              fontFamily: "var(--font-body)",
-            }}
-          >
+          <p className="text-xs md:text-sm mt-2" style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}>
             {pendingSurplus > 0
               ? `₹${pendingSurplus.toLocaleString("en-IN")}/mo is waiting for your reinvest decision.`
               : `₹${reservedSurplus.toLocaleString("en-IN")}/mo is being kept as net worth surplus.`}
@@ -535,594 +208,242 @@ export default function Progress() {
         )}
       </div>
 
-      {/* Top Stats Row */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 relative z-10">
-        <div className="bento-card p-5 flex flex-col items-center text-center">
-          <Flame size={24} className="mb-2" style={{ color: "var(--amber)" }} />
-          <div
-            className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {streakDays}
-          </div>
-          <div className="text-xs font-medium text-[var(--secondary)] mt-1">
-            Day Streak
-          </div>
-        </div>
-        <div className="bento-card p-5 flex flex-col items-center text-center">
-          <Target size={24} className="mb-2" style={{ color: "var(--accent)" }} />
-          <div
-            className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {goals.filter((g) => g.status === "complete").length}/{goals.length}
-          </div>
-          <div className="text-xs font-medium text-[var(--secondary)] mt-1">
-            Goals Done
-          </div>
-        </div>
-        <div className="bento-card p-5 flex flex-col items-center text-center">
-          <TrendingUp
-            size={24}
-            className="mb-2"
-            style={{ color: "var(--tertiary-accent)" }}
-          />
-          <div
-            className="text-2xl font-bold slashed-zero text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {fmt(currentNetWorth)}
-          </div>
-          <div className="text-xs font-medium text-[var(--secondary)] mt-1">
-            Net Worth
-          </div>
-        </div>
-        {monthlySurplusReserve > 0 && (
-          <div className="bento-card p-5 flex flex-col items-center text-center">
-            <Wallet size={24} className="mb-2" style={{ color: "var(--tertiary-accent)" }} />
-            <div
-              className="text-2xl font-bold slashed-zero text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
+        {([
+          { label: "Net Worth Δ", value: fmtCompact(netWorthDelta), delta: `+${netWorthDeltaPct}%`, color: "var(--green-text)" },
+          { label: "Avg Monthly Save", value: fmtCompact(Math.max(0, surplus)), delta: `${savingsRate}% rate`, color: "var(--accent-text)" },
+          { label: "Goals Hit", value: `${completedGoals}/${goals.length}`, delta: goals.length > 0 ? `${Math.round((completedGoals / goals.length) * 100)}%` : "0%", color: "var(--accent-text)" },
+          { label: "Streak", value: `${streakDays} days`, delta: "🔥", color: "var(--amber-text)" },
+        ] as const).map(({ label, value, delta, color }) => (
+          <div key={label} className="bento-card p-5">
+            <p className="text-label">{label}</p>
+            <p
+              className="slashed-zero mt-2"
+              style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, color, letterSpacing: "-0.02em" }}
             >
-              ₹{monthlySurplusReserve.toLocaleString("en-IN")}
-            </div>
-            <div className="text-xs font-medium text-[var(--secondary)] mt-1">
-              Surplus / Month
-            </div>
+              {value}
+            </p>
+            <p className="mt-1" style={{ fontSize: 12, color: "var(--tertiary)" }}>{delta}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* SVG Net Worth Trajectory */}
+      <div className="bento-card p-6 md:p-8 relative z-10">
+        <p className="text-label mb-4">Net Worth Trajectory</p>
+        <svg viewBox={`0 0 ${SVG_W} ${SVG_H + 30}`} style={{ width: "100%", height: 260 }}>
+          <defs>
+            <linearGradient id="nwGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[0.25, 0.5, 0.75, 1].map((p) => (
+            <line
+              key={p}
+              x1="0"
+              y1={SVG_H - p * (SVG_H - 30) - 10}
+              x2={SVG_W}
+              y2={SVG_H - p * (SVG_H - 30) - 10}
+              stroke="var(--border)"
+              strokeDasharray="3 4"
+              opacity="0.5"
+            />
+          ))}
+          <path d={chart.areaPath} fill="url(#nwGrad)" />
+          <path
+            d={chart.solidPath}
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            className="draw-line-long"
+            style={{ filter: "drop-shadow(0 4px 8px var(--accent-glow))" }}
+          />
+          {chart.dashedPath && (
+            <path
+              d={chart.dashedPath}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="6 4"
+              opacity="0.45"
+            />
+          )}
+          {chart.pts.map(([x, y], i) => (
+            <g key={i}>
+              <circle
+                cx={x}
+                cy={y}
+                r="4"
+                fill="var(--card)"
+                stroke="var(--accent)"
+                strokeWidth="2"
+                opacity={i >= chart.histCount ? 0.4 : 1}
+              />
+              <text
+                x={x}
+                y={SVG_H + 22}
+                fontSize="11"
+                fill="var(--tertiary)"
+                textAnchor="middle"
+                fontFamily="var(--font-display)"
+              >
+                {chartData[i]?.label ?? ""}
+              </text>
+            </g>
+          ))}
+          {/* Current endpoint glow */}
+          {chart.pts[chart.histCount - 1] && (() => {
+            const [ex, ey] = chart.pts[chart.histCount - 1];
+            return (
+              <>
+                <circle cx={ex} cy={ey} r="10" fill="var(--accent)" opacity="0.15" />
+                <circle cx={ex} cy={ey} r="6" fill="var(--accent)" stroke="var(--card)" strokeWidth="2.5" />
+              </>
+            );
+          })()}
+        </svg>
+      </div>
+
+      {/* Monthly Check-in */}
+      <div className="bento-card p-6 md:p-8 relative z-10">
+        <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
+          Monthly Check-in
+        </h3>
+        <div className="space-y-4">
+          {goals.map((goal) => {
+            const progress = goal.targetAmount > 0 ? Math.round((goal.currentAmount / goal.targetAmount) * 100) : 0;
+            return (
+              <div key={goal.id}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-[var(--card-foreground)]">{goal.name}</span>
+                  <span className="text-xs font-bold slashed-zero" style={{ color: goal.status === "complete" ? "var(--accent-text)" : "var(--secondary)" }}>
+                    {progress}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--progress-inactive)" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%`, backgroundColor: goal.status === "complete" ? "var(--accent)" : "var(--tertiary-accent)" }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {!checkedIn ? (
+          <button
+            onClick={handleCheckIn}
+            className="w-full mt-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
+            style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)", fontFamily: "var(--font-body)", boxShadow: "0 8px 24px var(--accent-glow)" }}
+          >
+            <CheckCircle2 size={18} />
+            Complete Monthly Check-in
+          </button>
+        ) : (
+          <div className="mt-6 py-3 rounded-xl font-bold text-center" style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)", fontFamily: "var(--font-body)", opacity: 0.7 }}>
+            Checked in for this month!
           </div>
         )}
-        <div className="bento-card p-5 flex flex-col items-center text-center">
-          <Award
-            size={24}
-            className="mb-2"
-            style={{ color: "var(--tertiary-accent)" }}
-          />
-          <div
-            className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {badges.filter((b) => b.earned).length}
-          </div>
-          <div className="text-xs font-medium text-[var(--secondary)] mt-1">
-            Badges Earned
-          </div>
-        </div>
       </div>
 
-      {/* Net Worth Chart */}
-      <div className="bento-card p-6 md:p-8 relative z-10">
-        <h3
-          className="text-xl font-bold mb-6 text-[var(--card-foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Net Worth Timeline
-        </h3>
-        <div className="h-[320px] md:h-[420px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              key={`${netWorthData.length}-${Math.round(currentNetWorth)}`}
-              data={netWorthData}
-              margin={{ top: 8, right: 12, bottom: 8, left: 0 }}
-            >
-              <defs>
-                <linearGradient
-                  id="netWorthGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--border)"
-                opacity={0.3}
-              />
-              <XAxis
-                dataKey="month"
-                stroke="var(--secondary)"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                interval="preserveStartEnd"
-                minTickGap={28}
-                tickFormatter={(value) => String(value).replace(" ", "\n")}
-              />
-              <YAxis
-                stroke="var(--secondary)"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="netWorth"
-                stroke="var(--accent)"
-                strokeWidth={3}
-                fill="url(#netWorthGradient)"
-                dot={false}
-                activeDot={{
-                  r: 6,
-                  fill: "var(--accent)",
-                  stroke: "var(--card)",
-                  strokeWidth: 3,
-                }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
+      {/* Milestones + Penny Quarterly Review */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
-        <div className="bento-card p-6 md:p-8 space-y-4">
-          <h3
-            className="text-xl font-bold text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Goal Setting + Custom Goal
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            {GOAL_SET_TEMPLATES.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => applyGoalSet(template)}
-                className="py-2 px-3 rounded-xl text-sm font-semibold"
+        <div className="bento-card p-6 md:p-8">
+          <p className="text-label mb-4">Milestones Unlocked</p>
+          <div>
+            {milestones.map((m, i) => (
+              <div
+                key={i}
                 style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                  color: "var(--card-foreground)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "10px 0",
+                  borderBottom: i < milestones.length - 1 ? "1px solid var(--border)" : "none",
                 }}
               >
-                {template.label}
-              </button>
+                <div
+                  style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    background: m.done ? "var(--green-subtle)" : "var(--surface-hover)",
+                    color: m.done ? "var(--green-text)" : "var(--tertiary)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  {m.done ? <Check size={14} strokeWidth={3} /> : <Clock size={14} />}
+                </div>
+                <p style={{ fontSize: 13.5, fontWeight: 500, flex: 1, color: "var(--card-foreground)" }}>{m.title}</p>
+                <p style={{ fontSize: 11, color: "var(--tertiary)" }}>{m.date}</p>
+              </div>
             ))}
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={newGoalName}
-              onChange={(e) => setNewGoalName(e.target.value)}
-              placeholder="Custom goal name"
-              className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)]"
-              style={{
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-              }}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                value={newGoalTarget}
-                onChange={(e) =>
-                  setNewGoalTarget(e.target.value.replace(/[^0-9]/g, ""))
-                }
-                placeholder="Target amount"
-                className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)]"
-                style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                }}
-              />
-              <input
-                type="text"
-                value={newGoalMonths}
-                onChange={(e) =>
-                  setNewGoalMonths(e.target.value.replace(/[^0-9]/g, ""))
-                }
-                placeholder="Months"
-                className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)]"
-                style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                }}
-              />
+        <div className="bento-card penny-card p-6 md:p-8" style={{ position: "relative", overflow: "hidden" }}>
+          <div className="penny-blob" />
+          <div style={{ position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <Sparkles size={18} style={{ color: "var(--penny-accent)" }} />
+              <p style={{ fontSize: 14, fontWeight: 700 }}>Quarterly Review</p>
             </div>
-            {/* Budget indicator */}
-            {goalBudgetRemaining <= 0 && activeGoals.length > 0 && (
-              <div
-                className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                style={{
-                  background: "var(--red-subtle)",
-                  color: "var(--red-text)",
-                  border: "1px solid var(--red)",
-                }}
-              >
-                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
-                <span>Your goals already exceed your available monthly surplus. Adding more will extend timelines.</span>
-              </div>
-            )}
-            {goalBudgetRemaining > 0 && (
-              <div
-                className="text-xs px-2 py-1 rounded-lg text-[var(--secondary)]"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                ₹{goalBudgetRemaining.toLocaleString("en-IN")}/mo available for new goals
-              </div>
-            )}
-
+            <p style={{ fontSize: 13.5, lineHeight: 1.6, color: "var(--secondary)" }}>{pennyText}</p>
             <button
-              onClick={addCustomProgressGoal}
-              className="w-full py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              onClick={onPennyClick}
+              className="pill"
+              style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              <Plus size={16} />
-              Add Goal
+              Discuss with Penny <ArrowRight size={12} />
             </button>
           </div>
         </div>
-
-        <div className="bento-card p-6 md:p-8">
-          <h3
-            className="text-xl font-bold mb-4 text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Live Global Goals Editor
-          </h3>
-          {activeGoals.length === 0 ? (
-            <div className="text-sm text-[var(--secondary)]">
-              No active goals. Add goals from the panel.
-            </div>
-          ) : (
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-              {activeGoals.map((goal) => {
-                const draft = goalDrafts[goal.id] || {
-                  targetAmount: String(goal.targetAmount),
-                  timelineMonths: String(goal.timelineMonths),
-                  priority: String(goal.priority),
-                };
-
-                return (
-                  <div
-                    key={goal.id}
-                    className="p-4 rounded-xl"
-                    style={{
-                      background: "var(--surface-tint)",
-                      border: "1px solid var(--border)",
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="font-semibold text-[var(--card-foreground)]">
-                        {goal.name}
-                      </div>
-                      <button
-                        onClick={() => removeGoal(goal.id)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center"
-                        style={{
-                          background: "var(--red-subtle)",
-                          color: "var(--red)",
-                        }}
-                        aria-label={`Remove ${goal.name}`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <input
-                        type="text"
-                        value={draft.targetAmount}
-                        onChange={(e) =>
-                          setGoalDrafts((prev) => ({
-                            ...prev,
-                            [goal.id]: {
-                              ...draft,
-                              targetAmount: e.target.value.replace(
-                                /[^0-9]/g,
-                                "",
-                              ),
-                            },
-                          }))
-                        }
-                        onBlur={() => applyGoalDraft(goal)}
-                        placeholder="Target amount"
-                        className="px-3 py-2 rounded-lg outline-none text-[var(--card-foreground)]"
-                        style={{
-                          background: "var(--card)",
-                          border: "1px solid var(--border)",
-                        }}
-                      />
-                      <input
-                        type="text"
-                        value={draft.timelineMonths}
-                        onChange={(e) =>
-                          setGoalDrafts((prev) => ({
-                            ...prev,
-                            [goal.id]: {
-                              ...draft,
-                              timelineMonths: e.target.value.replace(
-                                /[^0-9]/g,
-                                "",
-                              ),
-                            },
-                          }))
-                        }
-                        onBlur={() => applyGoalDraft(goal)}
-                        placeholder="Timeline months"
-                        className="px-3 py-2 rounded-lg outline-none text-[var(--card-foreground)]"
-                        style={{
-                          background: "var(--card)",
-                          border: "1px solid var(--border)",
-                        }}
-                      />
-                      <select
-                        value={draft.priority}
-                        onChange={(e) => {
-                          const nextPriority = e.target.value;
-                          setGoalDrafts((prev) => ({
-                            ...prev,
-                            [goal.id]: {
-                              ...draft,
-                              priority: nextPriority,
-                            },
-                          }));
-                          updateGoal(goal.id, {
-                            priority: parseInt(nextPriority, 10),
-                          });
-                        }}
-                        className="px-3 py-2 rounded-lg outline-none text-[var(--card-foreground)]"
-                        style={{
-                          background: "var(--card)",
-                          border: "1px solid var(--border)",
-                        }}
-                      >
-                        {Array.from(
-                          { length: Math.max(activeGoals.length, 1) },
-                          (_, i) => i + 1,
-                        ).map((value) => (
-                          <option
-                            key={`${goal.id}-p-${value}`}
-                            value={value}
-                          >{`Priority ${value}`}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
       </div>
 
-      {notice && (
-        <div className="bento-card p-4 relative z-10 text-sm text-[var(--secondary)]">
-          {notice}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
-        {/* Monthly Check-in */}
-        <div className="bento-card p-6 md:p-8">
-          <h3
-            className="text-xl font-bold mb-4 text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Monthly Check-in
+      {/* Health Score Strip */}
+      {healthScore && (
+        <div className="bento-card p-6 md:p-8 relative z-10">
+          <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
+            Health Score
           </h3>
-          <div className="space-y-4">
-            {goals.map((goal) => {
-              const progress =
-                goal.targetAmount > 0
-                  ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
-                  : 0;
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(
+              [
+                { label: "Income Stability", score: healthScore.incomeStability },
+                { label: "Debt Load", score: healthScore.debtLoad },
+                { label: "Savings Rate", score: healthScore.savingsRate },
+                { label: "Emergency Fund", score: healthScore.emergencyFund },
+              ] as const
+            ).map(({ label, score }) => {
+              const color = score >= 20 ? "var(--green-text)" : score >= 12 ? "var(--accent-text)" : "var(--amber-text)";
               return (
-                <div key={goal.id}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-[var(--card-foreground)]">
-                      {goal.name}
-                    </span>
-                    <span
-                      className="text-xs font-bold slashed-zero"
-                      style={{
-                        color:
-                          goal.status === "complete"
-                            ? "var(--accent-text)"
-                            : "var(--secondary)",
-                      }}
-                    >
-                      {progress}%
-                    </span>
-                  </div>
+                <div
+                  key={label}
+                  className="px-4 py-3 rounded-xl text-center"
+                  style={{ background: "var(--surface-tint)", border: "1px solid var(--border)" }}
+                >
                   <div
-                    className="h-2 rounded-full overflow-hidden"
-                    style={{ backgroundColor: "var(--progress-inactive)" }}
+                    className="text-2xl font-bold slashed-zero"
+                    style={{ fontFamily: "var(--font-display)", color }}
                   >
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${progress}%`,
-                        backgroundColor:
-                          goal.status === "complete"
-                            ? "var(--accent)"
-                            : "var(--tertiary-accent)",
-                      }}
-                    />
+                    {score}
+                    <span style={{ fontSize: 13, color: "var(--tertiary)", fontWeight: 400 }}>/25</span>
                   </div>
+                  <div className="text-xs text-[var(--secondary)] mt-1">{label}</div>
                 </div>
               );
             })}
           </div>
-
-          {!checkedIn ? (
-            <button
-              onClick={handleCheckIn}
-              className="w-full mt-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
-              style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--on-accent)",
-                fontFamily: "var(--font-body)",
-                boxShadow: "0 8px 24px var(--accent-glow)",
-              }}
-            >
-              <CheckCircle2 size={18} />
-              Complete Monthly Check-in
-            </button>
-          ) : (
-            <div
-              className="mt-6 py-3 rounded-xl font-bold text-center"
-              style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--on-accent)",
-                fontFamily: "var(--font-body)",
-                opacity: 0.7,
-              }}
-            >
-              Checked in for this month!
-            </div>
-          )}
-        </div>
-
-        {/* Badges */}
-        <div className="bento-card p-6 md:p-8">
-          <h3
-            className="text-xl font-bold mb-4 text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Badges
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {badges.map((badge, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-xl flex flex-col items-center text-center transition-all"
-                style={{
-                  background: badge.earned
-                    ? "var(--surface-tint)"
-                    : "var(--surface-hover)",
-                  border: badge.earned
-                    ? "1px solid var(--accent)"
-                    : "1px solid var(--border)",
-                  opacity: badge.earned ? 1 : 0.4,
-                }}
-              >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-2"
-                  style={{
-                    background: badge.earned ? "var(--surface-tint)" : "var(--surface-hover)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <badge.icon
-                    size={20}
-                    style={{ color: badge.earned ? badge.color : "var(--secondary)" }}
-                  />
-                </div>
-                <div
-                  className="text-xs font-bold text-[var(--card-foreground)] mb-1"
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  {badge.name}
-                </div>
-                <div className="text-[10px] text-[var(--secondary)]">
-                  {badge.desc}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Health Score Breakdown */}
-      {healthScore && (
-        <div className="bento-card p-6 md:p-8 relative z-10">
-          <h3
-            className="text-xl font-bold mb-6 text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Health Score Breakdown
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              {
-                label: "Income Stability",
-                score: healthScore.incomeStability,
-                max: 25,
-                color: "var(--accent)",
-                insight: [income.salary, income.freelance, income.passive].filter(s => s > 0).length >= 3 ? "3 income sources — well diversified" : [income.salary, income.freelance, income.passive].filter(s => s > 0).length >= 2 ? "2 sources — good, consider adding passive income" : "Single income source — consider freelancing or investing for diversification",
-              },
-              {
-                label: "Debt Load",
-                score: healthScore.debtLoad,
-                max: 25,
-                color: "var(--red)",
-                insight: debts.totalMonthly === 0 ? "Debt-free — excellent position" : `Debt-to-income: ${Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100)}%. ${Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100) < 20 ? "Healthy range" : Math.round((debts.totalMonthly / Math.max(1, income.total)) * 100) < 35 ? "Moderate — try to reduce" : "High — prioritize debt payoff"}`,
-              },
-              {
-                label: "Savings Rate",
-                score: healthScore.savingsRate,
-                max: 25,
-                color: "var(--tertiary-accent)",
-                insight: `Saving ${Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100)}% of income. ${Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100) >= 30 ? "Outstanding — you're well ahead" : Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100) >= 20 ? "Solid — on track for wealth building" : Math.round(((income.total - expenses.total - debts.totalMonthly) / Math.max(1, income.total)) * 100) >= 10 ? "Below 20% target — reduce non-essentials" : "Under 10% — needs urgent attention"}`,
-              },
-              {
-                label: "Emergency Fund",
-                score: healthScore.emergencyFund,
-                max: 25,
-                color: "var(--amber)",
-                insight: `${Math.round((savings / Math.max(1, expenses.total + debts.totalMonthly)) * 10) / 10} months of expenses covered. ${Math.round((savings / Math.max(1, expenses.total + debts.totalMonthly)) * 10) / 10 >= 6 ? "Fully protected" : Math.round((savings / Math.max(1, expenses.total + debts.totalMonthly)) * 10) / 10 >= 3 ? "Decent — aim for 6 months" : "Low — prioritize building this first"}`,
-              },
-            ].map((item, i) => (
-              <div key={i} className="text-center">
-                <div
-                  className="text-3xl font-bold slashed-zero text-[var(--card-foreground)] mb-1"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {item.score}
-                </div>
-                <div className="text-xs font-medium text-[var(--secondary)] mb-1">
-                  {item.label}
-                </div>
-                <div
-                  className="h-2 rounded-full overflow-hidden mx-auto max-w-[100px] mb-2"
-                  style={{ backgroundColor: "var(--progress-inactive)" }}
-                >
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${(item.score / item.max) * 100}%`,
-                      backgroundColor: item.color,
-                    }}
-                  />
-                </div>
-                <div className="text-[10px] text-[var(--secondary)] leading-tight px-1" style={{ fontFamily: "var(--font-body)" }}>
-                  {item.insight}
-                </div>
-              </div>
-            ))}
-          </div>
-
           {healthScore.actions.length > 0 && (
-            <div className="mt-6 penny-insight-card">
+            <div className="mt-4 penny-insight-card">
               <div className="penny-insight-blob" />
               <div className="relative z-10 flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: "var(--penny-accent-subtle)", color: "var(--penny-accent)" }}
+                >
                   <Sparkles size={16} />
                 </div>
                 <div className="text-xs font-semibold text-[var(--penny-accent)] uppercase tracking-wider">
@@ -1130,11 +451,11 @@ export default function Progress() {
                 </div>
               </div>
               <div className="relative z-10 space-y-2">
-                {healthScore.actions.map((action, i) => (
+                {healthScore.actions.slice(0, 3).map((action, i) => (
                   <div
                     key={i}
                     className="flex items-start gap-3 p-3 rounded-xl text-sm text-card-foreground"
-                    style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)' }}
+                    style={{ background: "var(--surface-hover)", border: "1px solid var(--border)", fontFamily: "var(--font-body)" }}
                   >
                     <span className="text-[var(--penny-accent)] mt-0.5 font-bold">{i + 1}.</span>
                     {action}

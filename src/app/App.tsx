@@ -191,7 +191,7 @@ function AppContent() {
                   path="/progress"
                   element={
                     <ErrorBoundary key={location.pathname}>
-                      <Progress />
+                      <Progress onPennyClick={() => setPennyOpen(true)} />
                     </ErrorBoundary>
                   }
                 />
