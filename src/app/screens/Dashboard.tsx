@@ -11,6 +11,15 @@ import {
   Plane,
   BookOpen,
   Users,
+  Rocket,
+  Dumbbell,
+  Crosshair,
+  Leaf,
+  Zap,
+  Trophy,
+  Flame,
+  Gem,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -66,13 +75,18 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
   const healthScore = useFinPathStore((s) => s.healthScore);
   const updateGoal  = useFinPathStore((s) => s.updateGoal);
 
+  const [period, setPeriod] = useState<"This month" | "Quarter" | "YTD">("This month");
+
   const totalDebt = debts.totalMonthly || 0;
   const surplus   = income.total - expenses.total - totalDebt;
   const health    = healthScore?.overall ?? 0;
 
-  const animIncome  = useCountUp(income.total);
-  const animSurplus = useCountUp(surplus);
-  const animSavings = useCountUp(savings);
+  const now = new Date();
+  const periodMonths = period === "This month" ? 1 : period === "Quarter" ? 3 : now.getMonth() + 1;
+
+  const animIncome  = useCountUp(income.total * periodMonths);
+  const animSurplus = useCountUp(surplus * periodMonths);
+  const animSavings = useCountUp(savings + (periodMonths > 1 ? surplus * (periodMonths - 1) : 0));
 
   const [healthAnim, setHealthAnim] = useState(0);
   useEffect(() => {
@@ -82,6 +96,22 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
 
   const activeGoals = goals.filter((g) => g.currentAmount < g.targetAmount).slice(0, 3);
   const nextGoal    = goals.find((g) => !g.checkedThisMonth && g.status !== "complete");
+
+  // Badge logic (moved from Progress)
+  const streakDays = Math.min(30, 7 + goals.filter((g) => g.status === "complete").length * 5);
+  const investments = useFinPathStore((s) => s.investments);
+  const currentNetWorth = savings + investments + goals.reduce((sum, g) => sum + Math.max(0, g.currentAmount), 0);
+
+  const badges = [
+    { name: "First Step", icon: Rocket as LucideIcon, color: "var(--accent)", desc: "Completed onboarding", earned: income.total > 0 },
+    { name: "Healthy Start", icon: Dumbbell as LucideIcon, color: "var(--tertiary-accent)", desc: "Health score above 50", earned: healthScore && healthScore.overall >= 50 },
+    { name: "Goal Setter", icon: Crosshair as LucideIcon, color: "var(--accent)", desc: "Set 2+ financial goals", earned: goals.length >= 2 },
+    { name: "In the Green", icon: Leaf as LucideIcon, color: "var(--tertiary-accent)", desc: "Positive monthly surplus", earned: surplus > 0 },
+    { name: "Debt Crusher", icon: Zap as LucideIcon, color: "var(--amber)", desc: "Pay off first debt", earned: debts.items.some((d) => d.remainingMonths <= 0) },
+    { name: "Goal Achiever", icon: Trophy as LucideIcon, color: "var(--amber)", desc: "Complete first goal", earned: goals.some((g) => g.status === "complete") },
+    { name: "Streak Master", icon: Flame as LucideIcon, color: "var(--red)", desc: "30-day check-in streak", earned: streakDays >= 30 },
+    { name: "Wealth Builder", icon: Gem as LucideIcon, color: "var(--tertiary-accent)", desc: "Net worth above ₹5L", earned: currentNetWorth >= 500000 },
+  ];
 
   const healthLabel =
     health >= 80 ? { t: "Excellent financial health",   c: "var(--tertiary-accent-text)" } :
@@ -99,86 +129,87 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
   const r = 78;
   const circum = 2 * Math.PI * r;
 
+  const subScores = [
+    { label: "Savings Rate",     score: healthScore?.savingsRate     ?? 0 },
+    { label: "Debt Load",        score: healthScore?.debtLoad        ?? 0 },
+    { label: "Emergency Fund",   score: healthScore?.emergencyFund   ?? 0 },
+    { label: "Income Stability", score: healthScore?.incomeStability ?? 0 },
+  ];
+
   return (
-    <div className="page-animate" style={{ padding: "var(--space-1) var(--space-2) var(--space-3)", maxWidth: 1400, margin: "0 auto" }}>
+    <div className="page-animate dashboard-page">
 
       {/* ── Header ── */}
-      <div className="flex items-baseline justify-between" style={{ marginBottom: "var(--space-3)" }}>
+      <div className="dashboard-header">
         <div>
           <p className="text-label">Financial Overview</p>
-          <h2 className="slashed-zero" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: "var(--font-weight-bold)", letterSpacing: "-0.03em", marginTop: 4, color: "var(--foreground)" }}>
-            Dashboard
-          </h2>
+          <h2 className="slashed-zero dashboard-title">Dashboard</h2>
+        </div>
+        <div className="dashboard-period-pills">
+          {(["This month", "Quarter", "YTD"] as const).map((p) => (
+            <button key={p} className={`pill${period === p ? " active" : ""}`} onClick={() => setPeriod(p)}>{p}</button>
+          ))}
         </div>
       </div>
 
       {/* ── Bento grid ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: "var(--space-2)" }}>
+      <div className="dashboard-grid">
 
         {/* ─ Active Goals (8 cols) ─ */}
         <div className="bento-card" style={{ gridColumn: "span 8" }}>
-          {/* decorative blob */}
-          <div className="data-blob" style={{ width: 280, height: 280, top: -80, right: -40, background: "var(--accent)" }} />
-
           <div style={{ position: "relative" }}>
-            <div className="flex justify-between items-start" style={{ marginBottom: "var(--space-2)" }}>
+            <div className="goals-header">
               <div>
                 <p className="text-label">Active Goals</p>
-                <p style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)", marginTop: 4 }}>
+                <p className="goals-subtitle">
                   {activeGoals.length} on track · {goals.filter((g) => g.status === "complete").length} completed
                 </p>
               </div>
               <button className="pill" onClick={() => navigate("/journey")}>View All</button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+            <div className="goals-list">
               {activeGoals.map((g) => {
-                const cat     = CATEGORY_STYLE[g.category] || CATEGORY_STYLE.default;
-                const GIcon   = ICONS[cat.icon] || Target;
+                const cat      = CATEGORY_STYLE[g.category] || CATEGORY_STYLE.default;
+                const GIcon    = ICONS[cat.icon] || Target;
                 const progress = Math.round((g.currentAmount / g.targetAmount) * 100);
                 const monthly  = g.monthlyAllocation || Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths));
                 return (
                   <div
                     key={g.id}
-                    className="card-hover flex items-center"
+                    className="card-hover goal-row"
                     onClick={() => navigate("/journey")}
-                    style={{ gap: "var(--space-2)", padding: "10px var(--space-2)", borderRadius: "var(--radius-md)" }}
                   >
-                    {/* category icon */}
-                    <div className="flex items-center justify-center flex-shrink-0" style={{ width: 36, height: 36, borderRadius: "var(--radius-sm)", background: cat.subtle, color: cat.color }}>
+                    <div className="goal-icon" style={{ background: cat.subtle, color: cat.color }}>
                       <GIcon size={18} />
                     </div>
 
-                    {/* name + sub */}
-                    <div style={{ minWidth: 130, flexShrink: 0 }}>
-                      <p style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--card-foreground)" }}>{g.name}</p>
-                      <p style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)", marginTop: 2 }}>₹{fmt(monthly)}/mo · {g.timelineMonths} mo left</p>
+                    <div className="goal-name-col">
+                      <p className="goal-name">{g.name}</p>
+                      <p className="goal-sub">₹{fmt(monthly)}/mo · {g.timelineMonths} mo left</p>
                     </div>
 
-                    {/* progress bar */}
-                    <div className="flex-1 relative rounded-full overflow-hidden" style={{ height: 8, background: "var(--surface-hover)" }}>
-                      <div className="absolute inset-0 rounded-full" style={{ backgroundImage: "repeating-linear-gradient(45deg, var(--border) 0 1px, transparent 1px 5px)", opacity: 0.5 }} />
-                      <div className="absolute left-0 top-0 h-full rounded-full" style={{ width: `${progress}%`, background: cat.color, boxShadow: `0 0 10px ${cat.color}`, transition: "width 1.2s cubic-bezier(0.22,1,0.36,1)" }} />
+                    <div className="goal-bar">
+                      <div className="goal-bar-hatch" />
+                      <div className="goal-bar-fill" style={{ width: `${progress}%`, background: cat.color, boxShadow: `0 0 10px ${cat.color}` }} />
                     </div>
 
-                    {/* % */}
-                    <p className="slashed-zero text-right flex-shrink-0" style={{ minWidth: 44, fontFamily: "var(--font-display)", fontWeight: "var(--font-weight-bold)", fontSize: "var(--text-base)", color: "var(--card-foreground)" }}>{progress}%</p>
+                    <p className="slashed-zero goal-pct">{progress}%</p>
 
-                    {/* amount pair */}
-                    <p className="slashed-zero text-right flex-shrink-0" style={{ display: "none", minWidth: 110, fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" }}>
-                      <span style={{ color: "var(--card-foreground)" }}>{fmtCompact(g.currentAmount)}</span>
-                      <span style={{ color: "var(--tertiary)" }}> / {fmtCompact(g.targetAmount)}</span>
+                    <p className="slashed-zero goal-amounts">
+                      <span className="goal-amounts-current">{fmtCompact(g.currentAmount)}</span>
+                      <span className="goal-amounts-target"> / {fmtCompact(g.targetAmount)}</span>
                     </p>
                   </div>
                 );
               })}
 
               {activeGoals.length === 0 && (
-                <div className="flex flex-col items-center justify-center text-center" style={{ padding: "var(--space-4) 0" }}>
-                  <div className="flex items-center justify-center" style={{ width: 48, height: 48, borderRadius: "var(--radius-md)", background: "var(--accent-subtle)", color: "var(--accent)", marginBottom: "var(--space-2)" }}>
+                <div className="goals-empty">
+                  <div className="goals-empty-icon">
                     <Target size={24} />
                   </div>
-                  <p style={{ fontSize: "var(--text-base)", fontWeight: "var(--font-weight-semibold)", color: "var(--card-foreground)", marginBottom: 6 }}>No active goals</p>
+                  <p className="goals-empty-text">No active goals</p>
                   <button className="pill active" onClick={() => navigate("/journey")}>+ Add a goal</button>
                 </div>
               )}
@@ -187,7 +218,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
         </div>
 
         {/* ─ Next Step (4 cols) ─ */}
-        <div className="bento-card flex flex-col" style={{ gridColumn: "span 4" }}>
+        <div className="bento-card" style={{ gridColumn: "span 4", display: "flex", flexDirection: "column" }}>
           <p className="text-label" style={{ marginBottom: "var(--space-2)" }}>Your Next Step</p>
 
           {nextGoal ? (() => {
@@ -196,21 +227,21 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
             const monthly = nextGoal.monthlyAllocation || Math.round((nextGoal.targetAmount - nextGoal.currentAmount) / Math.max(1, nextGoal.timelineMonths));
             return (
               <>
-                <div className="flex items-center" style={{ gap: "var(--space-1)", marginBottom: "var(--space-2)" }}>
-                  <div className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: "var(--radius-sm)", background: cat.subtle, color: cat.color }}>
+                <div className="next-step-header">
+                  <div className="next-step-icon" style={{ background: cat.subtle, color: cat.color }}>
                     <NIcon size={16} />
                   </div>
-                  <span style={{ fontSize: "var(--text-base)", fontWeight: "var(--font-weight-semibold)", color: "var(--card-foreground)" }}>{nextGoal.name}</span>
+                  <span className="next-step-name">{nextGoal.name}</span>
                 </div>
 
                 <p className="text-label" style={{ marginBottom: 4 }}>Recommended this month</p>
 
-                <p className="slashed-zero" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-2xl)", fontWeight: "var(--font-weight-bold)", letterSpacing: "-0.02em", color: "var(--card-foreground)" }}>
+                <p className="slashed-zero next-step-amount">
                   ₹{fmt(monthly)}
-                  <span style={{ fontSize: "var(--text-sm)", color: "var(--tertiary)", fontWeight: "var(--font-weight-medium)" }}>/mo</span>
+                  <span className="next-step-period">/mo</span>
                 </p>
 
-                <p style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)", margin: "4px 0 var(--space-2)" }}>
+                <p className="next-step-remaining">
                   {fmtCompact(nextGoal.targetAmount - nextGoal.currentAmount)} left to save
                 </p>
 
@@ -228,29 +259,29 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               </>
             );
           })() : (
-            <div className="flex flex-col items-center justify-center flex-1 text-center">
-              <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: "var(--radius-md)", background: "var(--green-subtle)", color: "var(--green)", marginBottom: "var(--space-1)" }}>
+            <div className="next-step-empty">
+              <div className="next-step-empty-icon">
                 <Check size={20} />
               </div>
-              <p style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--card-foreground)" }}>All caught up!</p>
-              <p style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)", marginTop: 4 }}>Check back next month.</p>
+              <p className="next-step-empty-title">All caught up!</p>
+              <p className="next-step-empty-sub">Check back next month.</p>
             </div>
           )}
         </div>
 
         {/* ─ Health + Metrics (7 cols) ─ */}
-        <div className="bento-card flex" style={{ gridColumn: "span 7", gap: "var(--space-3)" }}>
+        <div className="bento-card" style={{ gridColumn: "span 7", display: "flex", gap: "var(--space-3)" }}>
 
           {/* Metrics column */}
-          <div className="flex flex-col justify-around flex-1" style={{ padding: "var(--space-1) 0" }}>
+          <div className="metrics-col">
             {([
-              ["Monthly Income",  animIncome,  "var(--card-foreground)", ""],
-              ["Monthly Surplus", animSurplus, surplus > 0 ? "var(--green-text)" : "var(--red-text)", surplus > 0 ? "+" : ""],
+              [period === "This month" ? "Monthly Income"  : `${period} Income`,  animIncome,  "var(--card-foreground)", ""],
+              [period === "This month" ? "Monthly Surplus" : `${period} Surplus`, animSurplus, surplus > 0 ? "var(--green-text)" : "var(--red-text)", surplus > 0 ? "+" : ""],
               ["Total Savings",   animSavings, "var(--card-foreground)", ""],
             ] as [string, number, string, string][]).map(([label, value, color, prefix]) => (
               <div key={label}>
-                <p className="text-label" style={{ marginBottom: 4 }}>{label}</p>
-                <p className="slashed-zero" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", fontWeight: "var(--font-weight-bold)", letterSpacing: "-0.02em", color }}>
+                <p className="text-label metric-label">{label}</p>
+                <p className="slashed-zero metric-value" style={{ color }}>
                   {prefix}₹{fmt(value)}
                 </p>
               </div>
@@ -258,10 +289,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
           </div>
 
           {/* Health ring column */}
-          <div className="flex flex-col items-center justify-center flex-shrink-0" style={{ gap: "var(--space-1)" }}>
+          <div className="health-ring-col">
             <p className="text-label">Health Meter</p>
-            <div style={{ position: "relative", width: 188, height: 188 }}>
-              <svg viewBox="0 0 200 200" style={{ transform: "rotate(-90deg)", width: "100%", height: "100%" }}>
+            <div className="health-ring-wrap">
+              <svg viewBox="0 0 200 200" className="health-ring-svg">
                 <defs>
                   <linearGradient id="health-grad" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%"   stopColor="var(--accent)" />
@@ -276,44 +307,87 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
                   style={{ transition: "stroke-dashoffset 1500ms cubic-bezier(0.22,1,0.36,1)", filter: "drop-shadow(0 0 8px var(--accent-glow))" }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="slashed-zero" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-4xl)", fontWeight: "var(--font-weight-bold)", color: "var(--card-foreground)" }}>{healthAnim}</span>
+              <div className="health-score-overlay">
+                <span className="slashed-zero health-score-num">{healthAnim}</span>
                 <span className="text-label">Score</span>
               </div>
             </div>
-            <p style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: healthLabel.c }}>{healthLabel.t}</p>
+            <p className="health-label" style={{ color: healthLabel.c }}>{healthLabel.t}</p>
+
+            <div className="sub-score-list">
+              {subScores.map((s) => (
+                <div key={s.label} className="sub-score-item">
+                  <div className="sub-score-header">
+                    <span className="sub-score-label">{s.label}</span>
+                    <span className="sub-score-value">{s.score}/25</span>
+                  </div>
+                  <div className="sub-score-bar">
+                    <div className="sub-score-fill" style={{ width: `${(s.score / 25) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* ─ Recent Activity (5 cols) ─ */}
         <div className="bento-card" style={{ gridColumn: "span 5" }}>
-          <div style={{ marginBottom: "var(--space-2)" }}>
+          <div className="activity-header">
             <p className="text-label">Recent Activity</p>
-            <p style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)", marginTop: 4 }}>This month's allocations</p>
+            <p className="activity-subtitle">{period === "This month" ? "This month's" : period === "Quarter" ? "Quarterly" : "YTD"} allocations</p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div className="activity-list">
             {goals.slice(0, 5).map((g) => {
               const cat     = CATEGORY_STYLE[g.category] || CATEGORY_STYLE.default;
               const monthly = g.monthlyAllocation || Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths));
               return (
-                <div key={g.id} className="flex justify-between items-center" style={{ padding: "10px var(--space-2)", borderRadius: "var(--radius-sm)" }}>
-                  <div className="flex items-center" style={{ gap: "var(--space-1)" }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: cat.color, flexShrink: 0 }} />
+                <div key={g.id} className="activity-row">
+                  <div className="activity-left">
+                    <div className="activity-dot" style={{ background: cat.color }} />
                     <div>
-                      <p style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--card-foreground)" }}>{g.name}</p>
-                      <p style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)" }}>{g.checkedThisMonth ? "Allocated" : "Pending"}</p>
+                      <p className="activity-name">{g.name}</p>
+                      <p className="activity-status">{g.checkedThisMonth ? "Allocated" : "Pending"}</p>
                     </div>
                   </div>
-                  <span className="slashed-zero" style={{ fontFamily: "var(--font-display)", fontWeight: "var(--font-weight-bold)", fontSize: "var(--text-base)", color: "var(--card-foreground)", flexShrink: 0 }}>
-                    ₹{fmt(monthly)}<span style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)", fontWeight: "var(--font-weight-regular)" }}>/mo</span>
+                  <span className="slashed-zero activity-amount">
+                    ₹{fmt(monthly)}<span className="activity-period">/mo</span>
                   </span>
                 </div>
               );
             })}
             {goals.length === 0 && (
-              <p style={{ fontSize: "var(--text-sm)", color: "var(--tertiary)", padding: "var(--space-3) 0", textAlign: "center" }}>No goals yet.</p>
+              <p className="activity-empty">No goals yet.</p>
             )}
+          </div>
+        </div>
+
+        {/* ─ Achievements (12 cols) ─ */}
+        <div className="bento-card p-6 md:p-8" style={{ gridColumn: "span 12" }}>
+          <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
+            Achievements
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {badges.map((badge, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-xl flex flex-col items-center text-center transition-all"
+                style={{
+                  background: badge.earned ? "var(--surface-tint)" : "var(--surface-hover)",
+                  border: badge.earned ? "1px solid var(--accent)" : "1px solid var(--border)",
+                  opacity: badge.earned ? 1 : 0.4,
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-2"
+                  style={{ background: badge.earned ? "var(--surface-tint)" : "var(--surface-hover)", border: "1px solid var(--border)" }}
+                >
+                  <badge.icon size={20} style={{ color: badge.earned ? badge.color : "var(--secondary)" }} />
+                </div>
+                <div className="text-xs font-bold text-[var(--card-foreground)] mb-1" style={{ fontFamily: "var(--font-body)" }}>{badge.name}</div>
+                <div className="text-[10px] text-[var(--secondary)]">{badge.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -321,28 +395,28 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
         <div className="bento-card penny-card" style={{ gridColumn: "span 12" }}>
           <div className="penny-blob" />
 
-          <div className="relative flex items-center" style={{ gap: "var(--space-1)", marginBottom: "var(--space-2)" }}>
-            <div className="flex items-center justify-center" style={{ width: 36, height: 36, borderRadius: "var(--radius-sm)", background: "var(--penny-accent-subtle)", color: "var(--penny-accent)", flexShrink: 0 }}>
+          <div className="penny-insights-header">
+            <div className="penny-insights-icon">
               <Sparkles size={18} />
             </div>
             <div>
-              <h3 style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-weight-bold)", color: "var(--card-foreground)" }}>Penny's Insights</h3>
-              <p style={{ fontSize: "var(--text-xs)", color: "var(--tertiary)" }}>Personalized for your current plan</p>
+              <h3 className="penny-insights-title">Penny's Insights</h3>
+              <p className="penny-insights-sub">Personalized for your current plan</p>
             </div>
             <button className="pill" style={{ marginLeft: "auto" }} onClick={onPennyClick}>
               Ask follow-up <ArrowRight size={12} />
             </button>
           </div>
 
-          <div className="relative" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-1)" }}>
+          <div className="penny-insights-grid">
             {insights.map((tip, i) => {
               const TIcon = ICONS[tip.icon] || Sparkles;
               return (
-                <div key={i} className="flex" style={{ gap: "var(--space-1)", padding: "var(--space-2)", borderRadius: "var(--radius-md)", background: "var(--surface-hover)", border: "1px solid var(--border)" }}>
-                  <div className="flex items-center justify-center flex-shrink-0" style={{ width: 24, height: 24, borderRadius: "var(--radius-xs)", background: "var(--penny-accent-subtle)", color: "var(--penny-accent)" }}>
+                <div key={i} className="penny-tile">
+                  <div className="penny-tile-icon">
                     <TIcon size={14} />
                   </div>
-                  <p style={{ fontSize: "var(--text-sm)", lineHeight: 1.5, color: "var(--card-foreground)" }}>{tip.text}</p>
+                  <p className="penny-tile-text">{tip.text}</p>
                 </div>
               );
             })}
