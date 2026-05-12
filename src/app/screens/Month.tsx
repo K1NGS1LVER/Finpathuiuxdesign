@@ -1,4 +1,4 @@
-import { Check, Circle, AlertTriangle, Wallet, Target } from "lucide-react";
+import { Check, AlertTriangle, Target } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useFinPathStore } from "@/lib/store";
@@ -13,6 +13,8 @@ interface MonthTask {
   prefix?: string;
   suffix?: string;
 }
+
+const fmt = (n: number) => n.toLocaleString("en-IN");
 
 export default function Month() {
   const navigate = useNavigate();
@@ -199,10 +201,6 @@ export default function Month() {
     );
   };
 
-  const dateMonthYear = new Date().toLocaleDateString("en-IN", {
-    month: "long",
-    year: "numeric",
-  });
   const surplus = income.total - expenses.total - debts.totalMonthly;
   const reservedSurplus = plan?.months?.[0]?.reservedSurplus || 0;
   const pendingSurplus = plan?.months?.[0]?.pendingSurplus || 0;
@@ -358,9 +356,9 @@ export default function Month() {
               >
                 <div
                   onClick={() => toggleTask(task.id)}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer ${task.done ? "bg-accent text-on-accent border-none" : "bg-transparent border-2 border-border text-secondary"}`}
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer ${task.done ? "bg-green text-white border-none" : "bg-transparent border-2 border-border text-secondary"}`}
                 >
-                  {task.done ? <Check size={14} /> : <Circle size={14} />}
+                  {task.done && <Check size={14} />}
                 </div>
 
                 {task.isGoal && task.amount !== undefined ? (
@@ -494,7 +492,7 @@ export default function Month() {
                         className="h-full transition-all duration-500"
                         style={{
                           width: `${basePct}%`,
-                          backgroundColor: goal.color || "var(--accent)",
+                          backgroundColor: "var(--accent)",
                         }}
                       />
                       {!isDone && additionPct > 0 && (
@@ -502,7 +500,7 @@ export default function Month() {
                           className="h-full transition-all duration-1000 animate-pulse relative overflow-hidden"
                           style={{
                             width: `${additionPct}%`,
-                            backgroundColor: goal.color || "var(--accent)",
+                            backgroundColor: "var(--accent)",
                             opacity: 0.6,
                           }}
                         >
@@ -535,7 +533,7 @@ export default function Month() {
               onClick={() =>
                 setStrategy(strategy === "avalanche" ? "snowball" : "avalanche")
               }
-              className="relative flex items-center h-9 px-1 rounded-full transition-all cursor-pointer select-none border-none w-[10.5rem] ${strategy === 'avalanche' ? 'bg-tertiary-accent' : 'bg-accent'}"
+              className="relative flex items-center h-9 px-1 rounded-full transition-all cursor-pointer select-none border-none w-[10.5rem] bg-accent"
               aria-label={`Strategy: ${strategy}`}
             >
               <span
@@ -547,8 +545,8 @@ export default function Month() {
                   fontFamily: "var(--font-body)",
                   color:
                     strategy === "avalanche"
-                      ? "var(--on-tertiary-accent)"
-                      : "var(--on-accent)",
+                      ? "var(--on-accent)"
+                      : "var(--secondary)",
                 }}
               >
                 Avalanche
@@ -559,8 +557,8 @@ export default function Month() {
                   fontFamily: "var(--font-body)",
                   color:
                     strategy === "snowball"
-                      ? "var(--on-tertiary-accent)"
-                      : "var(--on-tertiary-accent)",
+                      ? "var(--on-accent)"
+                      : "var(--secondary)",
                 }}
               >
                 Snowball

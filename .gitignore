@@ -3,3 +3,6 @@ dist/
 .kilo/
 css_audit.md
 design.md
+.claude 
+CLAUDE.md       
+install.ps1
