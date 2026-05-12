@@ -53,22 +53,13 @@ export default function JourneyGoalDetailPanel({
 
   return (
     <div
-      className="absolute top-0 right-0 h-full w-full md:w-[360px] p-4 md:p-6 space-y-5 shadow-2xl z-30 overflow-y-auto transform transition-transform duration-300"
-      style={{
-        background: "var(--surface-tint)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderLeft: "1px solid var(--border)",
-      }}
+      className="absolute top-0 right-0 h-full w-full md:w-[360px] p-4 md:p-6 space-y-5 shadow-2xl z-30 overflow-y-auto transform transition-transform duration-300 journey-detail-panel"
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
-        <h3
-          className="text-xl font-bold text-[var(--card-foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+        <h3 className="text-xl font-bold text-[var(--card-foreground)] font-display-family">
           Goal Details
         </h3>
         <button
@@ -80,6 +71,7 @@ export default function JourneyGoalDetailPanel({
       </div>
 
       <div className="flex flex-col items-center text-center py-4">
+        {/* Icon circle: color from statusColor (runtime) — kept inline */}
         <div
           className="w-24 h-24 rounded-full flex items-center justify-center mb-5"
           style={{
@@ -90,34 +82,23 @@ export default function JourneyGoalDetailPanel({
         >
           <Icon size={40} className="icon-wireframe" strokeWidth={1.5} />
         </div>
-        <h2
-          className="text-2xl font-bold mb-1 text-[var(--card-foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+        <h2 className="text-2xl font-bold mb-1 text-[var(--card-foreground)] font-display-family">
           {goal.name || "Goal"}
         </h2>
         <div className="text-[13px] font-medium uppercase tracking-wider text-[var(--secondary)] mb-4">
           {(goal.status || "not-started").replace("-", " ")}
         </div>
 
+        {/* Amount color is statusColor (runtime) — kept inline */}
         <div
-          className="text-4xl font-extrabold slashed-zero tracking-tight"
-          style={{
-            fontFamily: "var(--font-display)",
-            color: statusColor,
-          }}
+          className="text-4xl font-extrabold slashed-zero tracking-tight font-display-family"
+          style={{ color: statusColor }}
         >
           ₹{(goal.targetAmount || 0).toLocaleString("en-IN")}
         </div>
       </div>
 
-      <div
-        className="p-4 rounded-2xl"
-        style={{
-          background: "var(--card)",
-          border: "1px solid var(--border)",
-        }}
-      >
+      <div className="p-4 rounded-2xl stat-card">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-[var(--secondary)]">
             Overall Progress
@@ -137,6 +118,7 @@ export default function JourneyGoalDetailPanel({
           className="h-2.5 rounded-full overflow-hidden"
           style={{ backgroundColor: "var(--progress-inactive)" }}
         >
+          {/* Width and color are runtime-computed — kept inline */}
           <div
             className="h-full rounded-full transition-all duration-1000 ease-out"
             style={{
@@ -149,20 +131,8 @@ export default function JourneyGoalDetailPanel({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div
-          className="p-4 rounded-2xl"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
-            style={{
-              background: "var(--surface-hover)",
-              color: "var(--accent)",
-            }}
-          >
+        <div className="p-4 rounded-2xl stat-card">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-accent">
             <Shield size={16} />
           </div>
           <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
@@ -172,20 +142,8 @@ export default function JourneyGoalDetailPanel({
             ₹{(goal.currentAmount || 0).toLocaleString("en-IN")}
           </div>
         </div>
-        <div
-          className="p-4 rounded-2xl"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
-            style={{
-              background: "var(--surface-hover)",
-              color: "var(--tertiary-accent)",
-            }}
-          >
+        <div className="p-4 rounded-2xl stat-card">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-lime">
             <TrendingUp size={16} />
           </div>
           <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
@@ -200,20 +158,8 @@ export default function JourneyGoalDetailPanel({
             ).toLocaleString("en-IN")}
           </div>
         </div>
-        <div
-          className="p-4 rounded-2xl"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
-            style={{
-              background: "var(--surface-hover)",
-              color: "var(--amber)",
-            }}
-          >
+        <div className="p-4 rounded-2xl stat-card">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-amber">
             <Calendar size={16} />
           </div>
           <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
@@ -223,20 +169,8 @@ export default function JourneyGoalDetailPanel({
             {goal.timelineMonths || 12} months
           </div>
         </div>
-        <div
-          className="p-4 rounded-2xl"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
-            style={{
-              background: "var(--surface-hover)",
-              color: "var(--tertiary-accent)",
-            }}
-          >
+        <div className="p-4 rounded-2xl stat-card">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-lime">
             <Target size={16} />
           </div>
           <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
@@ -256,13 +190,7 @@ export default function JourneyGoalDetailPanel({
       </div>
 
       {goal.status !== "complete" && (
-        <div
-          className="p-4 rounded-2xl"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-          }}
-        >
+        <div className="p-4 rounded-2xl stat-card">
           <div className="text-xs font-medium mb-2 text-[var(--secondary)]">
             Goal Priority
           </div>
@@ -271,11 +199,7 @@ export default function JourneyGoalDetailPanel({
             onChange={(e) =>
               onPriorityChange(goal.id, parseInt(e.target.value, 10))
             }
-            className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)]"
-            style={{
-              background: "var(--surface-tint)",
-              border: "1px solid var(--border)",
-            }}
+            className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)] goal-priority-select"
           >
             {Array.from(
               { length: Math.max(activeGoalsCount, 1) },
@@ -287,10 +211,7 @@ export default function JourneyGoalDetailPanel({
               >{`Priority ${priority}`}</option>
             ))}
           </select>
-          <div
-            className="text-[11px] mt-2"
-            style={{ color: "var(--secondary)" }}
-          >
+          <div className="text-[11px] mt-2 text-secondary-color">
             Brighter node glow means higher priority.
           </div>
         </div>
@@ -300,12 +221,7 @@ export default function JourneyGoalDetailPanel({
         {goal.status !== "complete" && (
           <button
             onClick={() => onComplete(goal.id)}
-            className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
-            style={{
-              backgroundColor: "var(--accent)",
-              color: "var(--on-accent)",
-              fontFamily: "var(--font-body)",
-            }}
+            className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 button-press btn-complete-goal"
           >
             <Sparkles size={18} />
             Mark Complete
@@ -313,8 +229,7 @@ export default function JourneyGoalDetailPanel({
         )}
         <button
           onClick={() => onDelete(goal.id)}
-          className="w-full py-3 rounded-xl font-semibold transition-colors hover:bg-[var(--surface-hover)] text-sm"
-          style={{ color: "var(--red)", fontFamily: "var(--font-body)" }}
+          className="w-full py-3 rounded-xl font-semibold transition-colors hover:bg-[var(--surface-hover)] text-sm btn-delete-goal"
         >
           Delete Goal
         </button>

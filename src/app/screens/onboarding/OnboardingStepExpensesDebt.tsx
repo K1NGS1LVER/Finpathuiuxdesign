@@ -49,13 +49,7 @@ function CurrencySelect({ value, onChange }: { value: string; onChange: (v: stri
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="text-[10px] md:text-xs font-semibold outline-none cursor-pointer rounded-lg px-2 py-1"
-      style={{
-        fontFamily: "var(--font-body)",
-        background: "var(--surface-tint)",
-        border: "1px solid var(--border)",
-        color: "var(--card-foreground)",
-      }}
+      className="text-[10px] md:text-xs font-semibold outline-none cursor-pointer rounded-lg px-2 py-1 currency-select"
       aria-label="Currency"
     >
       {CURRENCIES.map((curr) => (
@@ -82,12 +76,8 @@ function TotalInputRow({
 }) {
   return (
     <div
-      className="flex gap-2 md:gap-3 items-center px-5 py-5 md:px-7 md:py-6 rounded-2xl md:rounded-3xl cursor-pointer transition-all hover:shadow-lg"
+      className="flex gap-2 md:gap-3 items-center px-5 py-5 md:px-7 md:py-6 rounded-2xl md:rounded-3xl cursor-pointer transition-all hover:shadow-lg input-surface-2"
       onClick={onToggleBreakdown}
-      style={{
-        background: "var(--surface-tint)",
-        border: "2px solid var(--border)",
-      }}
     >
       <input
         type="text"
@@ -95,18 +85,13 @@ function TotalInputRow({
         onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
         onClick={(e) => e.stopPropagation()}
         placeholder="0"
-        className="flex-1 w-full bg-transparent text-2xl md:text-3xl font-bold text-center outline-none slashed-zero text-[var(--card-foreground)]"
-        style={{ fontFamily: "var(--font-display)" }}
+        className="flex-1 w-full bg-transparent text-2xl md:text-3xl font-bold text-center outline-none slashed-zero text-[var(--card-foreground)] font-display-family"
         inputMode="numeric"
         aria-label={ariaLabel}
       />
       <button
         type="button"
-        className="text-[10px] md:text-xs font-semibold px-3 py-1.5 rounded-full transition-colors"
-        style={{
-          background: "var(--surface-hover)",
-          color: "var(--accent-text)",
-        }}
+        className="text-[10px] md:text-xs font-semibold px-3 py-1.5 rounded-full transition-colors btn-breakdown-toggle"
       >
         {breakdownVisible ? "Hide" : "Breakdown"}
       </button>
@@ -127,7 +112,7 @@ function BreakdownField({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-[10px] md:text-xs font-semibold" style={{ color: "var(--secondary)" }}>
+      <label className="text-[10px] md:text-xs font-semibold text-secondary-color">
         {label}
       </label>
       <div className="relative">
@@ -135,13 +120,7 @@ function BreakdownField({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
-          className="w-full px-4 py-2.5 md:px-4 md:py-3 text-sm md:text-base font-bold rounded-lg md:rounded-xl outline-none slashed-zero"
-          style={{
-            fontFamily: "var(--font-display)",
-            color: "var(--card-foreground)",
-            background: "var(--card)",
-            border: "2px solid var(--border)",
-          }}
+          className="w-full px-4 py-2.5 md:px-4 md:py-3 text-sm md:text-base font-bold rounded-lg md:rounded-xl outline-none slashed-zero breakdown-input"
           placeholder={placeholder}
           inputMode="numeric"
           aria-label={label}
@@ -161,13 +140,7 @@ function BreakdownPanel({
   onChange: (key: string, value: string) => void;
 }) {
   return (
-    <div
-      className="space-y-2.5 p-4 md:p-5 rounded-xl md:rounded-2xl"
-      style={{
-        background: "var(--surface-tint)",
-        border: "1px solid var(--border)",
-      }}
-    >
+    <div className="space-y-2.5 p-4 md:p-5 rounded-xl md:rounded-2xl breakdown-panel">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
         {fields.map(({ key, label, placeholder }) => (
           <BreakdownField
@@ -210,10 +183,7 @@ export default function OnboardingStepExpensesDebt({
     <div className="space-y-6 md:space-y-7">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label
-            className="text-xs md:text-sm font-semibold"
-            style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}
-          >
+          <label className="text-xs md:text-sm font-semibold label-secondary">
             Monthly Expenses
           </label>
           <CurrencySelect value={expensesCurrency} onChange={onChangeExpensesCurrency} />
@@ -230,7 +200,7 @@ export default function OnboardingStepExpensesDebt({
         {totalExpenses && expensesCurrency !== "INR" && (() => {
           const inrVal = convertToINR(totalExpenses, expensesCurrency);
           return inrVal ? (
-            <p className="text-center text-xs md:text-sm slashed-zero" style={{ color: "var(--secondary)" }}>
+            <p className="text-center text-xs md:text-sm slashed-zero text-secondary-color">
               ≈ ₹{parseFloat(inrVal).toLocaleString("en-IN")} INR
             </p>
           ) : null;
@@ -250,10 +220,7 @@ export default function OnboardingStepExpensesDebt({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label
-            className="text-xs md:text-sm font-semibold"
-            style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}
-          >
+          <label className="text-xs md:text-sm font-semibold label-secondary">
             Total Debt/EMIs
           </label>
           <CurrencySelect value={debtCurrency} onChange={onChangeDebtCurrency} />
@@ -270,7 +237,7 @@ export default function OnboardingStepExpensesDebt({
         {totalDebt && debtCurrency !== "INR" && (() => {
           const inrVal = convertToINR(totalDebt, debtCurrency);
           return inrVal ? (
-            <p className="text-center text-xs md:text-sm slashed-zero" style={{ color: "var(--secondary)" }}>
+            <p className="text-center text-xs md:text-sm slashed-zero text-secondary-color">
               ≈ ₹{parseFloat(inrVal).toLocaleString("en-IN")} INR
             </p>
           ) : null;

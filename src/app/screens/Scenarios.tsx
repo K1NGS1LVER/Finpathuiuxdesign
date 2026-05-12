@@ -1,671 +1,381 @@
-import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router";
-import {
-  ArrowRight,
-  TrendingUp,
-  Home,
-  GraduationCap,
-  Baby,
-  Sparkles,
-} from "lucide-react";
+import { useState, useEffect, type ReactNode } from "react";
+import { GitCompare, Wallet, TrendingUp, Sparkles } from "lucide-react";
 import { useFinPathStore } from "@/lib/store";
-import { generatePlan as buildPlan } from "@/lib/plan-engine";
 
-const SCENARIO_OPTIONS = [
-  {
-    id: "salary",
-    label: "Salary Change",
-    icon: TrendingUp,
-    color: "var(--accent)",
-    subtle: "var(--accent-subtle)",
+const fmtCompact = (n: number): string => {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(1)}Cr`;
+  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(1)}L`;
+  if (abs >= 1_000) return `${sign}₹${(abs / 1_000).toFixed(0)}K`;
+  return `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
+};
+
+const fmt = (n: number): string =>
+  Math.abs(Math.round(n)).toLocaleString("en-IN");
+
+type RiskKey = "conservative" | "balanced" | "aggressive";
+
+const riskCfg: Record<
+  RiskKey,
+  { rate: number; label: string; desc: string; colorVar: string }
+> = {
+  conservative: {
+    rate: 7,
+    label: "Conservative",
+    desc: "Bonds, FDs, debt funds",
+    colorVar: "var(--cobalt)",
   },
-  {
-    id: "property",
-    label: "Buy Property",
-    icon: Home,
-    color: "var(--secondary-accent)",
-    subtle: "var(--secondary-accent-subtle)",
+  balanced: {
+    rate: 10,
+    label: "Balanced",
+    desc: "Index + debt mix",
+    colorVar: "var(--green)",
   },
-  {
-    id: "education",
-    label: "Higher Education",
-    icon: GraduationCap,
-    color: "var(--secondary-accent)",
-    subtle: "var(--secondary-accent-subtle)",
+  aggressive: {
+    rate: 14,
+    label: "Aggressive",
+    desc: "Equity-heavy, growth",
+    colorVar: "var(--amber)",
   },
-  {
-    id: "family",
-    label: "Start Family",
-    icon: Baby,
-    color: "var(--amber)",
-    subtle: "var(--amber-subtle)",
-  },
+};
+
+const presets = [
+  { name: "Plan A · Steady", monthly: 40000, rate: 9, years: 10, Icon: Wallet },
+  { name: "Plan B · Growth", monthly: 60000, rate: 12, years: 10, Icon: TrendingUp },
+  { name: "Plan C · Aggressive", monthly: 80000, rate: 14, years: 15, Icon: Sparkles },
 ] as const;
 
-type ScenarioId = (typeof SCENARIO_OPTIONS)[number]["id"];
-
-export default function Scenarios() {
-  const navigate = useNavigate();
-  const income = useFinPathStore((s) => s.income);
-  const expenses = useFinPathStore((s) => s.expenses);
-  const debts = useFinPathStore((s) => s.debts);
-  const goals = useFinPathStore((s) => s.goals) || [];
-  const savings = useFinPathStore((s) => s.savings);
-  const investments = useFinPathStore((s) => s.investments);
-  const strategy = useFinPathStore((s) => s.strategy);
-  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
-  const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
-  const plan = useFinPathStore((s) => s.plan);
-  const updateSettings = useFinPathStore((s) => s.updateSettings);
-  const addLumpsum = useFinPathStore((s) => s.addLumpsum);
-
-  const [scenario, setScenario] = useState<ScenarioId>("salary");
-
-  const [values, setValues] = useState({
-    salary: 15,
-    property: 150,
-    education: 30,
-    family: 15000,
-  });
-
-  const [salaryInput, setSalaryInput] = useState("");
-  const [salaryHikeInput, setSalaryHikeInput] = useState("");
-  const [simGoalId, setSimGoalId] = useState("");
-  const [simLumpsumAmount, setSimLumpsumAmount] = useState("");
-  const [notice, setNotice] = useState("");
-
-  const activeGoals = useMemo(
-    () =>
-      goals
-        .filter((goal) => goal.status !== "complete")
-        .slice()
-        .sort((a, b) => a.priority - b.priority),
-    [goals],
-  );
-
-  useEffect(() => {
-    setSalaryInput(String(income.salary || income.total || 0));
-  }, [income.salary, income.total]);
-
-  useEffect(() => {
-    if (!simGoalId && activeGoals.length > 0) {
-      setSimGoalId(activeGoals[0].id);
-    }
-    if (activeGoals.length === 0) {
-      setSimGoalId("");
-    }
-  }, [activeGoals, simGoalId]);
-
-  const current = SCENARIO_OPTIONS.find((s) => s.id === scenario);
-  const currentVal = values[scenario];
-
-  const getSliderConfig = () => {
-    switch (scenario) {
-      case "salary":
-        return { min: -50, max: 100, step: 1 };
-      case "property":
-        return { min: 0, max: 500, step: 5 };
-      case "education":
-        return { min: 0, max: 100, step: 1 };
-      case "family":
-        return { min: 0, max: 100000, step: 1000 };
-      default:
-        return { min: 0, max: 100, step: 1 };
-    }
-  };
-
-  const { min, max, step } = getSliderConfig();
-  const progressPercent = ((currentVal - min) / (max - min)) * 100;
-
-  const currentSurplus = income.total - expenses.total - debts.totalMonthly;
-  const fmt = (n: number) =>
-    `₹${Math.abs(Math.round(n)).toLocaleString("en-IN")}`;
-
-  const impacts = useMemo(() => {
-    let newSurplus = currentSurplus;
-    let additionalExpense = 0;
-
-    if (scenario === "salary") {
-      newSurplus =
-        income.total * (1 + currentVal / 100) -
-        expenses.total -
-        debts.totalMonthly;
-    } else if (scenario === "property") {
-      additionalExpense = (currentVal * 100000 * 0.08) / 12;
-      newSurplus = currentSurplus - additionalExpense;
-    } else if (scenario === "education") {
-      additionalExpense = (currentVal * 100000 * 0.09) / 12;
-      newSurplus = currentSurplus - additionalExpense;
-    } else if (scenario === "family") {
-      newSurplus = currentSurplus - currentVal;
-    }
-
-    const savingsChange =
-      currentSurplus > 0
-        ? Math.round(((newSurplus - currentSurplus) / currentSurplus) * 100)
-        : 0;
-    const timelineChange =
-      newSurplus > 0 && currentSurplus > 0
-        ? Math.round((currentSurplus / newSurplus - 1) * 100)
-        : 0;
-
-    return [
-      {
-        label: "Monthly Savings",
-        current: fmt(Math.max(0, currentSurplus)),
-        future: fmt(Math.max(0, newSurplus)),
-        change: `${savingsChange >= 0 ? "+" : ""}${savingsChange}%`,
-        positive: newSurplus >= currentSurplus,
-      },
-      {
-        label: "Goal Timeline",
-        current: "Current",
-        future:
-          timelineChange > 0
-            ? `+${timelineChange}% longer`
-            : `${Math.abs(timelineChange)}% faster`,
-        change: `${timelineChange >= 0 ? "+" : "-"}${Math.abs(timelineChange)}%`,
-        positive: timelineChange <= 0,
-      },
-      {
-        label: "Emergency Buffer",
-        current: "3 months",
-        future: newSurplus >= currentSurplus ? "5 months" : "2 months",
-        change: newSurplus >= currentSurplus ? "+67%" : "-33%",
-        positive: newSurplus >= currentSurplus,
-      },
-      {
-        label: "Tax Liability",
-        current: fmt(income.total * 12 * 0.05),
-        future: fmt(
-          (scenario === "salary"
-            ? income.total * (1 + currentVal / 100)
-            : income.total) *
-            12 *
-            0.05,
-        ),
-        change:
-          scenario === "salary"
-            ? `${currentVal >= 0 ? "+" : ""}${currentVal}%`
-            : "+0%",
-        positive: scenario === "salary" && currentVal < 0,
-      },
-    ];
-  }, [scenario, currentVal, income, expenses, debts, currentSurplus]);
-
-  const simLumpsumValue = parseInt(simLumpsumAmount, 10) || 0;
-
-  const simulatedPlan = useMemo(() => {
-    if (!simGoalId || simLumpsumValue <= 0) return null;
-
-    const simulatedGoals = goals.map((goal) => {
-      if (goal.id !== simGoalId) return goal;
-      return {
-        ...goal,
-        currentAmount: Math.min(
-          goal.targetAmount,
-          goal.currentAmount + simLumpsumValue,
-        ),
-      };
-    });
-
-    return buildPlan({
-      income,
-      expenses,
-      debts,
-      goals: simulatedGoals,
-      savings,
-      investments,
-      strategy,
-      monthlySurplusReserve,
-      pendingReallocationReserve: pendingGoalDecisions.reduce(
-        (sum, decision) => sum + Math.max(0, decision.freedMonthlyAmount),
-        0,
-      ),
-    });
-  }, [
-    simGoalId,
-    simLumpsumValue,
-    goals,
-    income,
-    expenses,
-    debts,
-    savings,
-    investments,
-    strategy,
-    monthlySurplusReserve,
-    pendingGoalDecisions,
-  ]);
-
-  const timelineMonthsSaved =
-    plan && simulatedPlan ? plan.totalMonths - simulatedPlan.totalMonths : 0;
-
-  const applySalary = () => {
-    const monthlySalary = parseInt(salaryInput, 10) || 0;
-    if (monthlySalary <= 0) return;
-
-    updateSettings({ income: monthlySalary });
-    setNotice(
-      `Monthly salary set to ₹${monthlySalary.toLocaleString("en-IN")}.`,
-    );
-  };
-
-  const applySalaryHike = () => {
-    const hike = Number(salaryHikeInput);
-    if (!Number.isFinite(hike) || hike === 0) return;
-
-    updateSettings({ salaryHike: hike });
-    setSalaryHikeInput("");
-    setNotice(`Applied ${hike > 0 ? "+" : ""}${hike}% salary adjustment.`);
-  };
-
-  const applyScenarioLumpsum = () => {
-    if (!simGoalId || simLumpsumValue <= 0) return;
-
-    const goal = goals.find((g) => g.id === simGoalId);
-    addLumpsum(simGoalId, simLumpsumValue);
-    setSimLumpsumAmount("");
-    if (goal) {
-      setNotice(
-        `Applied ₹${simLumpsumValue.toLocaleString("en-IN")} lumpsum to ${goal.name}.`,
-      );
-    } else {
-      setNotice("Applied lumpsum amount.");
-    }
-  };
-
-  const impactAnalysisSection = (
-    <div className="relative z-10">
-      <h3 className="font-bold mb-4 text-foreground font-display">
-        Impact Analysis
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {impacts.map((impact, i) => (
-          <div key={i} className="p-6 bento-card">
-            {/* Header row: label + change value */}
-            <div className="flex items-baseline justify-between mb-3">
-              <div className="font-semibold text-card-foreground font-display text-lg">
-                {impact.label}
-              </div>
-              <div
-                className={`font-bold slashed-zero font-display text-xl ${impact.positive ? "text-green-text" : "text-red-text"}`}
-              >
-                {impact.change}
-              </div>
-            </div>
-            {/* Before → After row */}
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-xs mb-0.5 text-tertiary font-body">
-                  Before
-                </div>
-                <div className="text-lg font-bold slashed-zero text-card-foreground font-display">
-                  {impact.current}
-                </div>
-              </div>
-              <div className="text-card-foreground opacity-40 flex-shrink-0 px-2">
-                <ArrowRight size={24} strokeWidth={2} />
-              </div>
-              <div className="flex-1 text-right">
-                <div className="text-xs mb-0.5 text-tertiary font-body">
-                  After
-                </div>
-                <div
-                  className="text-lg font-bold slashed-zero font-display"
-                  style={{
-                    color: current?.color,
-                  }}
-                >
-                  {impact.future}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+function Knob({
+  label,
+  value,
+  children,
+}: {
+  label: string;
+  value: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="knob">
+      <div className="knob-header">
+        <span className="text-label">{label}</span>
+        <span className="knob-value slashed-zero">{value}</span>
       </div>
+      {children}
     </div>
   );
+}
 
-  if (!plan || !plan.months || plan.months.length === 0) {
-    return (
-      <div className="max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-          style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
-        >
-          <Sparkles size={32} className="icon-wireframe" />
-        </div>
-        <h2 className="text-display mb-2 text-card-foreground">
-          No plan to simulate
-        </h2>
-        <p className="text-secondary mb-8 max-w-md font-body text-sm md:text-base">
-          Scenarios require an active financial plan to run simulations. Set
-          your first goal to see how different life events impact your future.
-        </p>
-        <button
-          onClick={() => navigate("/journey")}
-          className="px-8 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 active:scale-95"
-          style={{
-            background: "var(--accent)",
-            color: "var(--on-accent)",
-            boxShadow: "0 4px 20px var(--accent-glow)",
-          }}
-        >
-          Create Goals
-        </button>
-      </div>
-    );
-  }
+export default function Scenarios() {
+  const income = useFinPathStore((s) => s.income);
+
+  const [monthlySavings, setMonthlySavings] = useState(60000);
+  const [risk, setRisk] = useState<RiskKey>("balanced");
+  const [horizon, setHorizon] = useState(10);
+  const [returnRate, setReturnRate] = useState(10);
+  const [showCompare, setShowCompare] = useState(true);
+
+  useEffect(() => {
+    setReturnRate(riskCfg[risk].rate);
+  }, [risk]);
+
+  const project = (monthly: number, rate: number, years: number): number => {
+    const r = rate / 100 / 12;
+    const n = years * 12;
+    return Math.round((monthly * (Math.pow(1 + r, n) - 1)) / r);
+  };
+
+  const baselineMonthly = Math.max(20000, Math.round(income.total * 0.2));
+  const scenarioTotal = project(monthlySavings, returnRate, horizon);
+  const baselineTotal = project(baselineMonthly, 9, horizon);
+  const diff = scenarioTotal - baselineTotal;
+
+  const buildCurve = (monthly: number, rate: number): number[] => {
+    const r = rate / 100 / 12;
+    const points: number[] = [];
+    for (let m = 0; m <= horizon * 12; m += 6) {
+      points.push((monthly * (Math.pow(1 + r, m) - 1)) / r);
+    }
+    return points;
+  };
+
+  const curveS = buildCurve(monthlySavings, returnRate);
+  const curveB = buildCurve(baselineMonthly, 9);
+  const maxY = Math.max(...curveS, ...curveB, 1);
+  const W = 760;
+  const H = 280;
+
+  const toPath = (pts: number[]): string =>
+    pts
+      .map(
+        (v, i) =>
+          `${i === 0 ? "M" : "L"} ${(i / (pts.length - 1)) * W} ${H - (v / maxY) * (H - 20) - 10}`,
+      )
+      .join(" ");
+
+  const endY = H - (curveS[curveS.length - 1] / maxY) * (H - 20) - 10;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
-      <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-tertiary-accent" />
-      <div className="mb-6 md:mb-8 relative z-10">
-        <h1 className="text-title text-secondary tracking-[0.15em] mb-1 ">
-          Scenario Explorer
-        </h1>
-      </div>
-
-      {/* Dropdown scenario selector */}
-      <div className="max-w-md mb-4 md:mb-6">
-        <label className="block text-secondary mb-2 font-medium font-body text-xs uppercase tracking-[0.07em]">
-          Explore Scenario
-        </label>
-        <div className="relative">
-          {/* Leading icon — centered vertically inside the select */}
-          <div
-            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-            style={{
-              color: current?.color ?? "var(--secondary)",
-              transition: "color 300ms ease",
-            }}
-          >
-            {(() => {
-              const Icon = current?.icon;
-              return Icon ? <Icon size={16} strokeWidth={2} /> : null;
-            })()}
-          </div>
-          <select
-            value={scenario}
-            onChange={(e) => setScenario(e.target.value as ScenarioId)}
-            className="w-full pl-10 pr-10 py-3 rounded-xl outline-none cursor-pointer font-semibold text-base appearance-none bg-card font-display transition-[border-color,color] duration-300"
-            style={{
-              border: `2px solid ${current?.color ?? "var(--border)"}`,
-              color: current?.color ?? "var(--card-foreground)",
-            }}
-          >
-            {SCENARIO_OPTIONS.map((s) => {
-              return (
-                <option
-                  key={s.id}
-                  value={s.id}
-                  className="bg-background-solid text-card-foreground font-body"
-                >
-                  {s.label}
-                </option>
-              );
-            })}
-          </select>
-          {/* Chevron */}
-          <div
-            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{
-              color: current?.color ?? "var(--secondary)",
-              transition: "color 300ms ease, transform 300ms ease",
-            }}
-          >
-            <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
-              <path
-                d="M1 1L7 7L13 1"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* Right content area — animated on scenario change */}
-      <div
-        className="space-y-4 md:space-y-6"
-        key={scenario}
-        style={{
-          animation: "scenarioFadeSlide 450ms cubic-bezier(0.16, 1, 0.3, 1)",
-        }}
-      >
-        {/* Adjust Parameters */}
-        <div className="bento-card p-4 md:p-8">
-          <h3 className="font-bold mb-6 text-card-foreground font-display">
-            Adjust Parameters
-          </h3>
-          <div className="flex items-center justify-between mb-4">
-            <span className="font-medium text-card-foreground">
-              {scenario === "salary" && "Salary Change"}
-              {scenario === "property" && "Property Value"}
-              {scenario === "education" && "Course Fee"}
-              {scenario === "family" && "Monthly Child Expenses"}
-            </span>
-            <span
-              className="text-2xl font-bold slashed-zero font-display"
-              style={{
-                color: current?.color,
-              }}
-            >
-              {scenario === "salary" &&
-                `${currentVal >= 0 ? "+" : ""}${currentVal}%`}
-              {scenario === "property" && `₹${currentVal}L`}
-              {scenario === "education" && `₹${currentVal}L`}
-              {scenario === "family" &&
-                `₹${currentVal.toLocaleString("en-IN")}`}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={currentVal}
-            onChange={(e) =>
-              setValues((prev) => ({
-                ...prev,
-                [scenario]: Number(e.target.value),
-              }))
-            }
-            className="w-full h-2 rounded-full appearance-none bg-[var(--progress-inactive)]"
-            style={{
-              background: `linear-gradient(to right, ${current?.color} 0%, ${current?.color} ${progressPercent}%, var(--progress-inactive) ${progressPercent}%, var(--progress-inactive) 100%)`,
-            }}
-          />
-        </div>
-
-        {/* Impact Analysis Section */}
-        {impactAnalysisSection}
-
-        {/* Income Controls */}
-        <div className="bento-card p-6 md:p-8 space-y-4 relative z-10">
-          <h3 className="text-xl font-bold text-card-foreground font-display">
-            Income Controls
-          </h3>
-          <p className="text-sm text-secondary font-body">
-            Adjust your monthly salary or apply a percentage hike to see how it
-            affects your financial plan.
+    <div className="page-animate scenarios-page">
+      {/* Header */}
+      <div className="scenarios-header">
+        <div>
+          <p className="text-label">What-if Engine</p>
+          <h2 className="scenarios-title">Scenarios</h2>
+          <p className="scenarios-subtitle">
+            Model your future with confidence. Adjust the dials below — the
+            projection updates in real time.
           </p>
+        </div>
+        <button onClick={() => setShowCompare((v) => !v)} className="pill">
+          <GitCompare size={14} className="icon-wireframe" />
+          {showCompare ? "Hide" : "Show"} baseline
+        </button>
+      </div>
 
-          <div className="space-y-3">
-            <div className="flex items-end gap-3 flex-wrap">
-              <div className="flex-1 min-w-[140px]">
-                <label className="block text-xs text-secondary mb-1.5 font-body">
-                  {salaryHikeInput ? "Salary Hike %" : "Monthly Salary"}
-                </label>
-                <input
-                  type="text"
-                  value={salaryHikeInput || salaryInput}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (salaryHikeInput) {
-                      setSalaryHikeInput(raw.replace(/[^0-9-]/g, ""));
-                    } else {
-                      setSalaryInput(raw.replace(/[^0-9]/g, ""));
-                    }
-                  }}
-                  placeholder={
-                    salaryHikeInput ? "e.g. 12 or -5" : "Enter amount"
-                  }
-                  className="w-full px-3 py-2.5 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border font-body"
-                />
-              </div>
-              <div className="w-36">
-                <label className="block text-xs text-secondary mb-1.5 font-body">
-                  Type
-                </label>
-                <select
-                  value={salaryHikeInput ? "hike" : "salary"}
-                  onChange={(e) => {
-                    if (e.target.value === "hike") {
-                      setSalaryInput("");
-                    } else {
-                      setSalaryHikeInput("");
-                      setSalaryInput(
-                        String(income.salary || income.total || 0),
-                      );
-                    }
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl outline-none cursor-pointer text-card-foreground bg-surface-tint border border-border font-body"
-                >
-                  <option value="salary">Set Salary</option>
-                  <option value="hike">Salary Hike %</option>
-                </select>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                if (salaryHikeInput) {
-                  applySalaryHike();
-                } else {
-                  applySalary();
-                }
-              }}
-              disabled={salaryHikeInput ? !salaryHikeInput : !salaryInput}
-              className="w-full py-2.5 rounded-xl font-semibold transition-all disabled:opacity-40 bg-secondary-accent text-on-secondary-accent font-body"
-            >
-              Apply Change
-            </button>
-          </div>
+      {/* KPI row */}
+      <div className="scenarios-kpi-grid">
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <p className="text-label">Projected in {horizon} yrs</p>
+          <p className="kpi-value slashed-zero">{fmtCompact(scenarioTotal)}</p>
+          <p className="kpi-meta">
+            At ₹{fmt(monthlySavings)}/mo · {returnRate}% return
+          </p>
         </div>
 
-        {/* Lumpsum Simulator */}
-        <div className="bento-card p-6 md:p-8 relative z-10">
-          <h3 className="text-xl font-bold mb-4 text-card-foreground font-display">
-            Lumpsum Course Simulator
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <select
-              value={simGoalId}
-              onChange={(e) => setSimGoalId(e.target.value)}
-              className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
-              disabled={activeGoals.length === 0}
-            >
-              {activeGoals.length === 0 ? (
-                <option value="">No active goals</option>
-              ) : (
-                activeGoals.map((goal) => (
-                  <option
-                    key={`sim-${goal.id}`}
-                    value={goal.id}
-                  >{`P${goal.priority} - ${goal.name}`}</option>
-                ))
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <p className="text-label">vs. Baseline</p>
+          <p
+            className={`kpi-value slashed-zero ${diff >= 0 ? "kpi-value--positive" : "kpi-value--negative"}`}
+          >
+            {diff >= 0 ? "+" : ""}
+            {fmtCompact(diff)}
+          </p>
+          <p className="kpi-meta">
+            {diff >= 0 ? "Better than" : "Behind"} current trajectory
+          </p>
+        </div>
+
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <p className="text-label">Required Monthly</p>
+          <p className="kpi-value slashed-zero">₹{fmt(monthlySavings)}</p>
+          <p className="kpi-meta">
+            {income.total > 0
+              ? Math.round((monthlySavings / income.total) * 100)
+              : 0}
+            % of monthly income
+          </p>
+        </div>
+      </div>
+
+      {/* Chart + Controls */}
+      <div className="scenarios-main-grid">
+        {/* Chart */}
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <div className="chart-header">
+            <div>
+              <p className="text-label">Wealth Projection</p>
+              <p className="chart-subtitle">
+                {horizon}-year compounded growth curve
+              </p>
+            </div>
+            <div className="chart-legend">
+              <span className="chart-legend-item">
+                <span className="legend-dot" />
+                Scenario
+              </span>
+              {showCompare && (
+                <span className="chart-legend-item">
+                  <span className="legend-dash" />
+                  Baseline
+                </span>
               )}
-            </select>
-            <input
-              type="text"
-              value={simLumpsumAmount}
-              onChange={(e) =>
-                setSimLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
-              }
-              placeholder="Lumpsum amount"
-              className="px-3 py-2 rounded-lg outline-none text-card-foreground bg-surface-tint border border-border"
+            </div>
+          </div>
+
+          <svg
+            viewBox={`0 0 ${W} ${H + 30}`}
+            className="scenarios-svg"
+          >
+            <defs>
+              <linearGradient id="scenAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.32" />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {[0.25, 0.5, 0.75, 1].map((p, i) => (
+              <g key={i}>
+                <line
+                  x1="0"
+                  y1={H - p * (H - 20) - 10}
+                  x2={W}
+                  y2={H - p * (H - 20) - 10}
+                  stroke="var(--border)"
+                  strokeDasharray="3 4"
+                  opacity="0.6"
+                />
+                <text
+                  x={W + 8}
+                  y={H - p * (H - 20) - 7}
+                  fontSize="10"
+                  fill="var(--tertiary)"
+                  fontFamily="var(--font-display)"
+                >
+                  {fmtCompact(maxY * p)}
+                </text>
+              </g>
+            ))}
+
+            <path
+              d={`${toPath(curveS)} L ${W} ${H - 10} L 0 ${H - 10} Z`}
+              fill="url(#scenAreaGrad)"
             />
-            <button
-              onClick={applyScenarioLumpsum}
-              disabled={!simGoalId || simLumpsumValue <= 0}
-              className="py-2 rounded-lg font-semibold disabled:opacity-50 bg-[var(--penny-accent)] text-on-accent"
-            >
-              Apply Lumpsum
-            </button>
-          </div>
-
-          <div className="mt-4 p-4 rounded-xl bg-surface-tint border border-border">
-            <div className="text-sm text-[var(--secondary)] mb-1">
-              Projected Timeline Impact
-            </div>
-            <div
-              className="text-xl font-bold slashed-zero text-[var(--card-foreground)]"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {simLumpsumValue <= 0
-                ? "Enter an amount to simulate"
-                : timelineMonthsSaved > 0
-                  ? `${timelineMonthsSaved} month${timelineMonthsSaved > 1 ? "s" : ""} faster`
-                  : timelineMonthsSaved < 0
-                    ? `${Math.abs(timelineMonthsSaved)} month${Math.abs(timelineMonthsSaved) > 1 ? "s" : ""} longer`
-                    : "No timeline change"}
-            </div>
-            <div className="text-xs mt-1 text-[var(--secondary)]">
-              Based on your current profile, strategy, and active goals.
-            </div>
-          </div>
-        </div>
-
-        {/* Penny's Insight */}
-        <div className="flex items-start gap-4 penny-insight-card">
-          <div className="penny-insight-blob" />
-          <div className="relative z-10 w-full">
-            <div className="flex items-center gap-2 mb-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: "var(--penny-accent-subtle)",
-                  color: "var(--penny-accent)",
-                }}
-              >
-                <Sparkles size={16} />
-              </div>
-              <div
-                className="text-sm font-semibold tracking-wider text-[var(--penny-accent)] uppercase"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                Penny's Insight
-              </div>
-            </div>
-            <div
-              className="text-lg md:text-xl font-medium text-card-foreground"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              {scenario === "salary" &&
-                currentVal < 0 &&
-                `A ${Math.abs(currentVal)}% pay cut means your timeline may stretch unless you rebalance goal priorities.`}
-              {scenario === "salary" &&
-                currentVal >= 0 &&
-                `A ${currentVal}% raise can be redirected to P1 goals to accelerate your plan.`}
-              {scenario === "property" &&
-                "Large property commitments can still work if you protect emergency runway and keep lump-sum reserves."}
-              {scenario === "education" &&
-                "Education can be high ROI. Shorten timeline pressure by using phased goal targets and periodic lumpsums."}
-              {scenario === "family" &&
-                "Family expenses are manageable when your first-priority goals remain funded and strategy is reviewed monthly."}
-            </div>
-            {notice && (
-              <div
-                className="mt-3 text-sm"
-                style={{ color: "var(--secondary)" }}
-              >
-                {notice}
-              </div>
+            <path
+              d={toPath(curveS)}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              className="draw-line-long chart-scenario-line"
+            />
+            {showCompare && (
+              <path
+                d={toPath(curveB)}
+                fill="none"
+                stroke="var(--tertiary)"
+                strokeWidth="2"
+                strokeDasharray="6 6"
+                strokeLinecap="round"
+                opacity="0.6"
+              />
             )}
+
+            <circle cx={W} cy={endY} r="6" fill="var(--accent)" />
+            <circle
+              cx={W}
+              cy={endY}
+              r="12"
+              fill="var(--accent)"
+              opacity="0.2"
+              className="pulse-ring"
+            />
+
+            {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
+              <text
+                key={i}
+                x={p * W}
+                y={H + 20}
+                fontSize="10"
+                fill="var(--tertiary)"
+                fontFamily="var(--font-display)"
+                textAnchor={i === 0 ? "start" : i === 4 ? "end" : "middle"}
+              >
+                {Math.round(p * horizon)}y
+              </text>
+            ))}
+          </svg>
+        </div>
+
+        {/* Controls */}
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <p className="text-label controls-panel-header">Tune Your Plan</p>
+
+          <Knob label="Monthly Investment" value={`₹${fmt(monthlySavings)}`}>
+            <input
+              type="range"
+              min="10000"
+              max="200000"
+              step="2500"
+              value={monthlySavings}
+              onChange={(e) => setMonthlySavings(+e.target.value)}
+              className="range"
+            />
+          </Knob>
+
+          <Knob label="Time Horizon" value={`${horizon} years`}>
+            <input
+              type="range"
+              min="3"
+              max="30"
+              value={horizon}
+              onChange={(e) => setHorizon(+e.target.value)}
+              className="range"
+            />
+          </Knob>
+
+          <div className="risk-section">
+            <p className="text-label risk-section-heading">Risk Profile</p>
+            <div className="risk-list">
+              {(
+                Object.entries(riskCfg) as [
+                  RiskKey,
+                  (typeof riskCfg)[RiskKey],
+                ][]
+              ).map(([k, v]) => (
+                <button
+                  key={k}
+                  onClick={() => setRisk(k)}
+                  className={`risk-btn${risk === k ? " active" : ""}`}
+                  style={{
+                    border: `1.5px solid ${risk === k ? v.colorVar : "transparent"}`,
+                  }}
+                >
+                  <span
+                    className="risk-dot"
+                    style={{
+                      background: v.colorVar,
+                      boxShadow: risk === k ? `0 0 8px ${v.colorVar}` : "none",
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <p className="risk-label">{v.label}</p>
+                    <p className="risk-desc">{v.desc}</p>
+                  </div>
+                  <span
+                    className="risk-rate slashed-zero"
+                    style={{ color: v.colorVar }}
+                  >
+                    {v.rate}%
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Quick preset scenarios */}
+      <div className="scenarios-presets-grid">
+        {presets.map((p, i) => {
+          const fv = project(p.monthly, p.rate, p.years);
+          const isActive =
+            monthlySavings === p.monthly &&
+            returnRate === p.rate &&
+            horizon === p.years;
+          return (
+            <button
+              key={i}
+              onClick={() => {
+                setMonthlySavings(p.monthly);
+                setReturnRate(p.rate);
+                setHorizon(p.years);
+              }}
+              className={`preset-btn card-hover${isActive ? " active" : ""}`}
+            >
+              <div className="preset-btn-header">
+                <div className="preset-icon">
+                  <p.Icon size={16} className="icon-wireframe" />
+                </div>
+                <span className="preset-name">{p.name}</span>
+              </div>
+              <p className="preset-fv slashed-zero">{fmtCompact(fv)}</p>
+              <p className="preset-meta">
+                ₹{fmt(p.monthly)}/mo · {p.rate}% · {p.years}y
+              </p>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

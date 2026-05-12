@@ -68,6 +68,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             <div
               className="w-3 h-3 rounded-full flex-shrink-0 bg-[var(--penny-accent)] shadow-[0_0_12px_var(--accent)]"
             />
+            {/* opacity/maxWidth kept inline — driven by JS collapsed state */}
             <span
               className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero text-card-foreground transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] font-display"
               style={{
@@ -105,11 +106,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
               <button
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
-className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 font-body ${collapsed ? 'px-0 justify-center md:px-0' : 'px-4 justify-start'} ${active ? 'text-card-foreground font-semibold' : 'bg-transparent text-secondary font-normal'}`}
-                style={{
-                  gap: collapsed ? '0' : '12px',
-                  ...(active ? { background: 'var(--penny-accent-glow)' } : {}),
-                }}
+                className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 font-body ${collapsed ? 'px-0 justify-center md:px-0 gap-0' : 'px-4 justify-start gap-3'} ${active ? 'nav-item-active text-card-foreground font-semibold' : 'bg-transparent text-secondary font-normal'}`}
                 title={collapsed ? item.label : undefined}
               >
                 {active && (
@@ -119,9 +116,9 @@ className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hid
                 )}
                 <Icon
                   size={20}
-                  className="icon-wireframe flex-shrink-0"
-                  style={{ minWidth: '20px', minHeight: '20px' }}
+                  className="icon-wireframe flex-shrink-0 icon-20"
                 />
+                {/* opacity/maxWidth kept inline — driven by JS collapsed state */}
                 <span
                   className="font-medium overflow-hidden whitespace-nowrap slashed-zero"
                   style={{
@@ -140,14 +137,12 @@ className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hid
         {/* Ask Penny Button */}
         <div className="p-4">
           <button
-            className="w-full flex items-center justify-center py-4 rounded-full font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] bg-[var(--penny-accent)] text-on-accent font-body shadow-[0_8px_24px_var(--penny-accent-glow)]"
-            style={{
-              gap: collapsed ? '0' : '8px',
-            }}
+            className={`w-full flex items-center justify-center py-4 rounded-full font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] bg-[var(--penny-accent)] text-on-accent font-body shadow-[0_8px_24px_var(--penny-accent-glow)] ${collapsed ? 'gap-0' : 'gap-2'}`}
             title={collapsed ? 'Ask Penny' : undefined}
             onClick={() => { onPennyClick(); setMobileMenuOpen(false); }}
           >
-            <MessageCircle size={20} className="flex-shrink-0" style={{ minWidth: '20px', minHeight: '20px' }} />
+            <MessageCircle size={20} className="flex-shrink-0 icon-20" />
+            {/* opacity/maxWidth kept inline — driven by JS collapsed state */}
             <span
               className="overflow-hidden whitespace-nowrap slashed-zero"
               style={{
