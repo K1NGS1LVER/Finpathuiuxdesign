@@ -1,4 +1,4 @@
-import { Check, AlertTriangle, Target } from "lucide-react";
+import { Check, AlertTriangle, Target, Sparkles } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useFinPathStore } from "@/lib/store";
@@ -15,6 +15,11 @@ interface MonthTask {
 }
 
 const fmt = (n: number) => n.toLocaleString("en-IN");
+
+const now = new Date();
+const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+const daysLeft = daysInMonth - now.getDate();
+const monthLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
 
 export default function Month() {
   const navigate = useNavigate();
@@ -43,7 +48,6 @@ export default function Month() {
   const [lumpsumNotice, setLumpsumNotice] = useState("");
   const debtGoal = activeGoals.find((goal) => goal.category === "debt");
 
-  // Generate tasks from real goals
   const initialTasks = useMemo<MonthTask[]>(() => {
     const taskList: MonthTask[] = [];
 
@@ -116,15 +120,12 @@ export default function Month() {
     prevInitialTasksRef.current = initialTasks;
 
     setTasks((prev) => {
-      // If task structure completely changed, adopt new tasks
       if (
         prev.length !== initialTasks.length ||
         !prev.every((pt, i) => pt.id === initialTasks[i].id)
       ) {
         return initialTasks;
       }
-
-      // Otherwise synchronize done state, and update amount if the backend generated amount changed
       return prev.map((pt, i) => {
         const backendAmountChanged =
           prevInitial[i]?.amount !== initialTasks[i].amount;
@@ -163,10 +164,7 @@ export default function Month() {
         let newAmount = goal.currentAmount;
 
         if (newDoneState) {
-          newAmount = Math.min(
-            goal.targetAmount,
-            goal.currentAmount + task.amount,
-          );
+          newAmount = Math.min(goal.targetAmount, goal.currentAmount + task.amount);
         } else {
           newAmount = Math.max(0, goal.currentAmount - task.amount);
         }
@@ -208,367 +206,306 @@ export default function Month() {
     .filter((t) => t.isGoal && t.amount !== undefined)
     .reduce((sum, t) => {
       const g = activeGoals.find((g) => g.id === t.goalId);
-      if (g && g.category !== "debt") {
-        return sum + Math.max(0, t.amount || 0);
-      }
+      if (g && g.category !== "debt") return sum + Math.max(0, t.amount || 0);
       return sum;
     }, 0);
   const savingsTarget = Math.max(0, goalSavingsTarget + reservedSurplus);
 
+  const doneTasks = tasks.filter((t) => t.done).length;
+  const onTrackPct =
+    tasks.length > 0 ? Math.round((doneTasks / tasks.length) * 100) : 0;
+
   if (!plan || !plan.months || plan.months.length === 0) {
     return (
-      <div className="max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-          style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
-        >
-          <AlertTriangle size={32} className="icon-wireframe" />
+      <div className="month-page page-animate">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 icon-accent-subtle">
+            <AlertTriangle size={32} className="icon-wireframe" />
+          </div>
+          <h2 className="text-display mb-2">No plan generated</h2>
+          <p className="impact-subtitle max-w-md mb-8">
+            We couldn't find an active financial plan. Head to Journey to set
+            your goals and generate your path.
+          </p>
+          <button onClick={() => navigate("/journey")} className="btn-primary">
+            Build Your Plan
+          </button>
         </div>
-        <h2 className="text-display mb-2 text-card-foreground">
-          No plan generated
-        </h2>
-        <p className="text-secondary mb-8 max-w-md font-body text-sm md:text-base">
-          We couldn't find an active financial plan for you. Head over to the
-          Journey screen to set your goals and generate your path.
-        </p>
-        <button
-          onClick={() => navigate("/journey")}
-          className="px-8 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 active:scale-95"
-          style={{
-            background: "var(--accent)",
-            color: "var(--on-accent)",
-            boxShadow: "0 4px 20px var(--accent-glow)",
-          }}
-        >
-          Build Your Plan
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
-      <div className="absolute top-0 left-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none bg-accent" />
-      {/* Debt over income warning */}
+    <div className="month-page page-animate">
+      {/* Header */}
+      <div className="month-header">
+        <p className="text-label">{monthLabel} · {daysLeft} days left</p>
+        <h2 className="month-title">This Month's Plan</h2>
+      </div>
+
+      {/* Debt warning */}
       {debts.totalMonthly > surplus && surplus >= 0 && (
-        <div className="flex items-start gap-2 p-4 rounded-xl text-xs md:text-sm relative z-10 bg-[var(--red-subtle)] text-red-text border border-red font-body">
-          <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+        <div className="debt-warning">
+          <AlertTriangle size={18} className="flex-shrink-0 mt-0.5 icon-wireframe" />
           <div>
-            <div className="font-semibold mb-1">
-              Debt payments exceed your surplus
-            </div>
+            <div className="debt-warning-title">Debt payments exceed your surplus</div>
             <span>
-              Your monthly debt/EMI of ₹
-              {debts.totalMonthly.toLocaleString("en-IN")} is more than your
-              surplus of ₹
-              {Math.max(0, income.total - expenses.total).toLocaleString(
-                "en-IN",
-              )}
-              . Consider negotiating lower payments or consolidating debt.
+              Monthly debt/EMI of ₹{debts.totalMonthly.toLocaleString("en-IN")} exceeds
+              your surplus of ₹{Math.max(0, income.total - expenses.total).toLocaleString("en-IN")}.
+              Consider negotiating lower payments or consolidating debt.
             </span>
           </div>
         </div>
       )}
 
-      <div className="relative overflow-hidden z-10 bento-card border-2 border-tertiary-accent shadow-[0_0_40px_var(--tertiary-accent-glow)]">
-        <div className="penny-insight-blob absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[700px] md:h-[700px] bg-tertiary-accent opacity-20 dark:opacity-40 dark:mix-blend-screen blur-[100px] md:blur-[120px] rounded-full pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 justify-between">
-          <div className="flex-1">
-            <div className="text-xs md:text-sm font-semibold tracking-wider mb-2 text-tertiary-accent-text uppercase font-body">
-              Mission
-            </div>
-            <h2 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 slashed-zero text-card-foreground font-display">
+      {/* Mission card */}
+      <div className="bento-card mission-card">
+        <div className="mission-blob" />
+        <div className="mission-content">
+          <div className="mission-left">
+            <div className="mission-eyebrow">Mission</div>
+            <h2 className="mission-title slashed-zero">
               Save ₹{Math.round(savingsTarget / 1000)}K
               {debts.totalMonthly > 0
                 ? ` & pay ₹${Math.round(debts.totalMonthly / 1000)}K debt`
                 : ""}
             </h2>
-            <div className="flex items-center gap-6 md:gap-8">
+            <div className="mission-stats-row">
               <div>
-                <div className="text-xs md:text-sm font-medium mb-1 text-secondary font-body">
-                  Goals + Surplus Reserve
-                </div>
-                <div className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display">
+                <div className="mission-stat-label">Goals + Surplus Reserve</div>
+                <div className="mission-stat-value slashed-zero">
                   ₹{savingsTarget.toLocaleString("en-IN")}
                 </div>
               </div>
               <div>
-                <div className="text-xs md:text-sm font-medium mb-1 text-secondary font-body">
-                  Debt Payments
-                </div>
-                <div className="text-xl md:text-3xl font-bold slashed-zero text-card-foreground font-display">
+                <div className="mission-stat-label">Debt Payments</div>
+                <div className="mission-stat-value slashed-zero">
                   ₹{debts.totalMonthly.toLocaleString("en-IN")}
                 </div>
               </div>
             </div>
             {pendingSurplus > 0 && (
-              <div className="mt-4 text-xs md:text-sm text-secondary font-body">
+              <div className="mission-pending-note">
                 ₹{pendingSurplus.toLocaleString("en-IN")} is waiting for your
                 reinvest/surplus decision.
               </div>
             )}
           </div>
 
-          <div className="flex flex-col justify-center items-center text-center min-w-[140px] border-t md:border-t-0 md:border-l border-border pt-6 md:pt-0 md:pl-8 gap-6">
+          <div className="mission-right">
             <div className="w-full">
-              <div className="text-xs font-medium mb-1 text-secondary uppercase tracking-wider font-body">
-                Days Remaining
-              </div>
-              <div className="text-3xl font-bold slashed-zero text-card-foreground font-display">
-                {new Date(
-                  new Date().getFullYear(),
-                  new Date().getMonth() + 1,
-                  0,
-                ).getDate() - new Date().getDate()}
-              </div>
+              <div className="mission-right-label">Days Remaining</div>
+              <div className="mission-right-value slashed-zero">{daysLeft}</div>
             </div>
-
-            <hr className="w-full border-t border-border opacity-50" />
-
+            <hr className="mission-divider" />
             <div className="w-full">
-              <div className="text-xs font-medium mb-1 text-secondary uppercase tracking-wider font-body">
-                On Track
-              </div>
-              <div className="text-3xl font-bold slashed-zero text-foreground font-display">
-                {tasks.length > 0
-                  ? Math.round(
-                      (tasks.filter((t) => t.done).length / tasks.length) * 100,
-                    )
-                  : 0}
-                %
-              </div>
+              <div className="mission-right-label">On Track</div>
+              <div className="mission-right-value slashed-zero">{onTrackPct}%</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
-        <div className="bento-card p-6 md:p-8 flex flex-col h-full">
-          <h3 className="text-xl lg:text-2xl font-bold mb-4 slashed-zero text-card-foreground font-display">
-            Action Checklist
-          </h3>
-          <div className="space-y-2">
+      {/* Main 2-col grid */}
+      <div className="month-grid">
+        {/* Left: Checklist */}
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <div className="checklist-header">
+            <div>
+              <p className="text-label">Allocation Checklist</p>
+              <p className="checklist-count">
+                {doneTasks} of {tasks.length} complete
+              </p>
+            </div>
+            <div className="checklist-pct slashed-zero">{onTrackPct}%</div>
+          </div>
+
+          <div className="checklist-list">
             {tasks.map((task) => (
               <div
                 key={task.id}
-                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all focus-within:bg-surface-hover hover:bg-surface-hover"
+                className={`checklist-item${task.done ? " done" : ""}`}
               >
                 <div
                   onClick={() => toggleTask(task.id)}
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer ${task.done ? "bg-green text-white border-none" : "bg-transparent border-2 border-border text-secondary"}`}
+                  className={`checklist-check${task.done ? " done" : ""}`}
                 >
-                  {task.done && <Check size={14} />}
+                  {task.done && <Check size={14} className="icon-wireframe" />}
                 </div>
 
-                {task.isGoal && task.amount !== undefined ? (
-                  <div
-                    className={`flex-1 flex flex-wrap items-center gap-1.5 text-card-foreground font-body ${task.done ? "opacity-50" : ""}`}
-                  >
-                    <span
+                <div className="checklist-content">
+                  {task.isGoal && task.amount !== undefined ? (
+                    <div className={`checklist-inline-row${task.done ? " done" : ""}`}>
+                      <span
+                        onClick={() => toggleTask(task.id)}
+                        className={`cursor-pointer${task.done ? " done-text" : ""}`}
+                      >
+                        {task.prefix}
+                      </span>
+                      <input
+                        type="number"
+                        value={task.amount === 0 ? "" : task.amount}
+                        onChange={(e) =>
+                          updateTaskAmount(task.id, parseInt(e.target.value) || 0)
+                        }
+                        disabled={task.done}
+                        className={`task-amount-input${task.done ? " done" : ""}`}
+                      />
+                      <span
+                        onClick={() => toggleTask(task.id)}
+                        className={`cursor-pointer${task.done ? " done-text" : ""}`}
+                      >
+                        {task.suffix}
+                      </span>
+                    </div>
+                  ) : (
+                    <button
                       onClick={() => toggleTask(task.id)}
-                      className={`cursor-pointer ${task.done ? "line-through" : ""}`}
+                      className={`checklist-label${task.done ? " done" : ""}`}
                     >
-                      {task.prefix}
-                    </span>
-                    <input
-                      type="number"
-                      value={task.amount === 0 ? "" : task.amount}
-                      onChange={(e) =>
-                        updateTaskAmount(task.id, parseInt(e.target.value) || 0)
-                      }
-                      disabled={task.done}
-                      className="w-24 text-center px-2 py-0.5 rounded-md outline-none focus:ring-2 focus:ring-accent font-semibold transition-all bg-surface-tint border border-border"
-                      style={{
-                        ...(task.done
-                          ? { textDecoration: "line-through" }
-                          : {}),
-                      }}
-                    />
-                    <span
-                      onClick={() => toggleTask(task.id)}
-                      className={`cursor-pointer ${task.done ? "line-through" : ""}`}
-                    >
-                      {task.suffix}
-                    </span>
+                      {task.text}
+                    </button>
+                  )}
+                  <p className="checklist-meta">
+                    {task.isGoal ? "Goal contribution" : "General task"}
+                  </p>
+                </div>
+
+                {task.amount !== undefined && !task.isGoal && null}
+                {task.amount !== undefined && (
+                  <div className="checklist-amount slashed-zero">
+                    ₹{fmt(task.amount)}
                   </div>
-                ) : (
-                  <button
-                    onClick={() => toggleTask(task.id)}
-                    className={`text-left flex-1 text-card-foreground ${task.done ? "line-through opacity-50" : ""} font-body`}
-                  >
-                    {task.text}
-                  </button>
                 )}
               </div>
             ))}
           </div>
-          <div
-            className="mt-6 p-3 rounded-xl text-sm text-center"
-            style={{
-              color: "var(--secondary)",
-              fontFamily: "var(--font-body)",
-              background: "var(--surface-tint)",
-            }}
-          >
-            {tasks.filter((t) => t.done).length} of {tasks.length} completed
+
+          <div className="checklist-footer">
+            {doneTasks} of {tasks.length} completed
           </div>
         </div>
 
-        <div className="bento-card p-6 md:p-8 flex flex-col h-full">
-          <div>
-            <h3 className="text-xl lg:text-2xl font-bold mb-1 slashed-zero text-card-foreground font-display">
-              This Month's Impact
-            </h3>
-            <p className="text-sm text-secondary mb-6 font-body">
-              See how your monthly plan accelerates your targets.
+        {/* Right column */}
+        <div className="month-right-col">
+          {/* Impact card */}
+          <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+            <p className="text-label">This Month's Impact</p>
+            <p className="impact-subtitle">
+              How your contributions move the needle.
             </p>
-          </div>
-          <div className="space-y-5">
-            {(() => {
-              const impactGoals = activeGoals
-                .filter(
-                  (g) => (g.monthlyAllocation || 0) > 0 || g.checkedThisMonth,
-                )
-                .slice(0, 4);
+            <div className="impact-goals-list">
+              {(() => {
+                const impactGoals = activeGoals
+                  .filter((g) => (g.monthlyAllocation || 0) > 0 || g.checkedThisMonth)
+                  .slice(0, 4);
 
-              if (impactGoals.length === 0) {
-                return (
-                  <div
-                    className="text-center p-6 rounded-xl border border-dashed border-[var(--border)] text-[var(--secondary)] text-sm"
-                    style={{ background: "var(--surface-tint)" }}
-                  >
-                    No goals are receiving funds this month. Try adding a
-                    lumpsum!
-                  </div>
-                );
-              }
+                if (impactGoals.length === 0) {
+                  return (
+                    <div className="month-impact-empty">
+                      No goals receiving funds this month. Try adding a lumpsum!
+                    </div>
+                  );
+                }
 
-              return impactGoals.map((goal) => {
-                const task = tasks.find((t) => t.goalId === goal.id);
-                const isDone = task ? task.done : !!goal.checkedThisMonth;
-                const addition = isDone
-                  ? 0
-                  : task?.amount !== undefined
-                    ? task.amount
-                    : goal.monthlyAllocation || 0;
-                const safeTarget = Math.max(1, goal.targetAmount);
-                const basePct = Math.min(
-                  100,
-                  (goal.currentAmount / safeTarget) * 100,
-                );
-                const additionPct = Math.min(
-                  100 - basePct,
-                  (addition / safeTarget) * 100,
-                );
+                return impactGoals.map((goal) => {
+                  const task = tasks.find((t) => t.goalId === goal.id);
+                  const isDone = task ? task.done : !!goal.checkedThisMonth;
+                  const addition = isDone
+                    ? 0
+                    : task?.amount !== undefined
+                      ? task.amount
+                      : goal.monthlyAllocation || 0;
+                  const safeTarget = Math.max(1, goal.targetAmount);
+                  const basePct = Math.min(100, (goal.currentAmount / safeTarget) * 100);
+                  const additionPct = Math.min(100 - basePct, (addition / safeTarget) * 100);
 
-                return (
-                  <div key={goal.id}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-[var(--card-foreground)] flex items-center gap-2 text-sm">
-                        {goal.name}{" "}
-                        {isDone && (
-                          <Check size={14} style={{ color: "var(--accent)" }} />
+                  return (
+                    <div key={goal.id}>
+                      <div className="impact-goal-header">
+                        <span className="impact-goal-name">
+                          {goal.name}
+                          {isDone && <Check size={14} className="text-accent icon-wireframe" />}
+                        </span>
+                        <span className={`impact-goal-score${isDone ? " done" : " pending"}`}>
+                          {isDone
+                            ? goal.category === "debt" ? "Paid!" : "Funded!"
+                            : `+₹${(addition / 1000).toFixed(1)}K`}
+                        </span>
+                      </div>
+                      <div className="progress-bar-outer">
+                        <div className="progress-fill" style={{ width: `${basePct}%` }} />
+                        {!isDone && additionPct > 0 && (
+                          <div
+                            className="progress-fill-pending"
+                            style={{ width: `${additionPct}%` }}
+                          />
                         )}
-                      </span>
-                      <span
-                        className="text-xs font-semibold"
-                        style={{
-                          color: isDone
-                            ? "var(--accent)"
-                            : "var(--card-foreground)",
-                        }}
-                      >
-                        {isDone
-                          ? goal.category === "debt"
-                            ? "Paid!"
-                            : "Funded!"
-                          : `+₹${(addition / 1000).toFixed(1)}K`}
-                      </span>
+                      </div>
+                      <div className="progress-bar-labels">
+                        <span>₹{(goal.currentAmount / 1000).toFixed(1)}K</span>
+                        <span>{Math.round(basePct + additionPct)}%</span>
+                        <span>₹{(goal.targetAmount / 1000).toFixed(1)}K</span>
+                      </div>
                     </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
 
-                    <div className="h-3 rounded-full overflow-hidden flex relative bg-[var(--progress-inactive)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
-                      <div
-                        className="h-full transition-all duration-500"
-                        style={{
-                          width: `${basePct}%`,
-                          backgroundColor: "var(--accent)",
-                        }}
-                      />
-                      {!isDone && additionPct > 0 && (
-                        <div
-                          className="h-full transition-all duration-1000 animate-pulse relative overflow-hidden"
-                          style={{
-                            width: `${additionPct}%`,
-                            backgroundColor: "var(--accent)",
-                            opacity: 0.6,
-                          }}
-                        >
-                          <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.15)_10px,rgba(255,255,255,0.15)_20px)]" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex justify-between mt-1.5 text-[10px] text-[var(--secondary)] uppercase tracking-wider font-semibold">
-                      <span>₹{(goal.currentAmount / 1000).toFixed(1)}K</span>
-                      <span>{Math.round(basePct + additionPct)}%</span>
-                      <span>₹{(goal.targetAmount / 1000).toFixed(1)}K</span>
-                    </div>
-                  </div>
-                );
-              });
-            })()}
+          {/* Penny suggestion card */}
+          <div className="bento-card penny-card">
+            <div className="penny-blob" />
+            <div className="penny-suggest-inner">
+              <div className="penny-suggest-header">
+                <Sparkles size={18} className="text-accent icon-wireframe" />
+                <p className="penny-suggest-title">Penny suggests</p>
+              </div>
+              <p className="penny-suggest-text">
+                {surplus > 5000
+                  ? `You have ₹${fmt(Math.round(surplus - savingsTarget - debts.totalMonthly))} unallocated this month. Redirecting it to your top goal accelerates your plan.`
+                  : debts.totalMonthly > 0
+                    ? "Paying even ₹500 extra on your highest-rate debt each month compounds into significant savings over your timeline."
+                    : "Consistency is the engine. Checking off all tasks this month keeps your streak alive and your goals on schedule."}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Investment Strategy + Lumpsum — two-column */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
-        <div className="bento-card p-6 md:p-8 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h3 className="text-xl font-bold text-card-foreground font-display">
-              Investment Strategy
-            </h3>
+      {/* Strategy + Lumpsum */}
+      <div className="month-lower-grid">
+        {/* Investment Strategy */}
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <h3 className="text-heading">Investment Strategy</h3>
             <button
               onClick={() =>
                 setStrategy(strategy === "avalanche" ? "snowball" : "avalanche")
               }
-              className="relative flex items-center h-9 px-1 rounded-full transition-all cursor-pointer select-none border-none w-[10.5rem] bg-accent"
+              className="strategy-toggle"
               aria-label={`Strategy: ${strategy}`}
             >
               <span
-                className={`absolute top-0.5 h-8 rounded-full transition-all duration-300 ease-out bg-card shadow-[0_1px_3px_rgba(0,0,0,0.18)] w-[calc(50%-0.25rem)] ${strategy === "avalanche" ? "left-[0.25rem]" : "left-[calc(50%+0rem)]"}`}
+                className={`strategy-toggle-pill ${strategy === "avalanche" ? "left" : "right"}`}
               />
               <span
-                className="relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-200"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  color:
-                    strategy === "avalanche"
-                      ? "var(--on-accent)"
-                      : "var(--secondary)",
-                }}
+                className={`strategy-toggle-label ${strategy === "avalanche" ? "active" : "inactive"}`}
               >
                 Avalanche
               </span>
               <span
-                className="relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-200"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  color:
-                    strategy === "snowball"
-                      ? "var(--on-accent)"
-                      : "var(--secondary)",
-                }}
+                className={`strategy-toggle-label ${strategy === "snowball" ? "active" : "inactive"}`}
               >
                 Snowball
               </span>
             </button>
           </div>
 
-          <div className="text-sm p-4 rounded-xl bg-surface-tint border border-border text-secondary font-body">
+          <div className="strategy-info-box">
             {strategy === "avalanche" ? (
-              <p className="leading-relaxed">
+              <p>
                 <strong className="text-card-foreground">Avalanche</strong>{" "}
                 allocates funds by goal priority — highest priority goals get
                 funded first.{" "}
@@ -576,47 +513,31 @@ export default function Month() {
                   const p1 = activeGoals.find((g) => g.priority === 1);
                   return p1 ? (
                     <span>
-                      Your{" "}
+                      Your <strong className="text-card-foreground">P1: {p1.name}</strong> receives{" "}
                       <strong className="text-card-foreground">
-                        P1: {p1.name}
-                      </strong>{" "}
-                      receives{" "}
-                      <strong className="text-card-foreground">
-                        ₹{(p1.monthlyAllocation || 0).toLocaleString("en-IN")}
-                        /mo
-                      </strong>
-                      .
+                        ₹{(p1.monthlyAllocation || 0).toLocaleString("en-IN")}/mo
+                      </strong>.
                     </span>
                   ) : null;
                 })()}
               </p>
             ) : (
-              <p className="leading-relaxed">
+              <p>
                 <strong className="text-card-foreground">Snowball</strong>{" "}
                 tackles the smallest remaining goal first for a quick win, then
                 rolls freed-up money into the next.{" "}
                 {(() => {
                   const smallest = [...activeGoals].sort(
                     (a, b) =>
-                      a.targetAmount -
-                      a.currentAmount -
-                      (b.targetAmount - b.currentAmount),
+                      a.targetAmount - a.currentAmount - (b.targetAmount - b.currentAmount),
                   )[0];
                   return smallest ? (
                     <span>
                       Currently focused on{" "}
+                      <strong className="text-card-foreground">{smallest.name}</strong> with{" "}
                       <strong className="text-card-foreground">
-                        {smallest.name}
-                      </strong>{" "}
-                      with{" "}
-                      <strong className="text-card-foreground">
-                        ₹
-                        {(smallest.monthlyAllocation || 0).toLocaleString(
-                          "en-IN",
-                        )}
-                        /mo
-                      </strong>
-                      .
+                        ₹{(smallest.monthlyAllocation || 0).toLocaleString("en-IN")}/mo
+                      </strong>.
                     </span>
                   ) : null;
                 })()}
@@ -624,33 +545,17 @@ export default function Month() {
             )}
           </div>
 
-          {/* Warning when strategy has no effect */}
           {(() => {
-            const nonDebtGoals = activeGoals.filter(
-              (g) => g.category !== "debt",
-            );
-            const availableForGoals = Math.max(
-              0,
-              surplus - reservedSurplus - pendingSurplus,
-            );
+            const nonDebtGoals = activeGoals.filter((g) => g.category !== "debt");
+            const availableForGoals = Math.max(0, surplus - reservedSurplus - pendingSurplus);
 
             if (nonDebtGoals.length > 0 && availableForGoals <= 0) {
               return (
-                <div
-                  className="flex items-start gap-2 p-3 mt-2 rounded-xl text-xs"
-                  style={{
-                    background: "var(--amber-subtle)",
-                    color: "var(--amber-text)",
-                    border: "1px solid var(--amber)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  <Target size={16} className="flex-shrink-0 mt-0.5" />
+                <div className="warning-banner flex items-start gap-2 mt-3">
+                  <Target size={16} className="flex-shrink-0 mt-0.5 icon-wireframe" />
                   <span>
-                    <strong>Note:</strong> You currently have no available
-                    monthly surplus to distribute. The strategy engine needs
-                    extra funds to work, so switching plans won't change your
-                    Action Checklist amounts right now.
+                    <strong>Note:</strong> No monthly surplus to distribute. Switching
+                    strategies won't change your checklist amounts right now.
                   </span>
                 </div>
               );
@@ -658,21 +563,11 @@ export default function Month() {
 
             if (nonDebtGoals.length === 1 && availableForGoals > 0) {
               return (
-                <div
-                  className="flex items-start gap-2 p-3 mt-2 rounded-xl text-xs"
-                  style={{
-                    background: "var(--amber-subtle)",
-                    color: "var(--amber-text)",
-                    border: "1px solid var(--amber)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  <Target size={16} className="flex-shrink-0 mt-0.5" />
+                <div className="warning-banner flex items-start gap-2 mt-3">
+                  <Target size={16} className="flex-shrink-0 mt-0.5 icon-wireframe" />
                   <span>
-                    <strong>Note:</strong> You only have one active goal right
-                    now. Avalanche and Snowball strategies prioritize between{" "}
-                    <em>multiple</em> goals, so switching plans won't change
-                    your allocations. Add another goal to see it in action!
+                    <strong>Note:</strong> You only have one active goal. Strategies work
+                    across <em>multiple</em> goals — add another to see the difference.
                   </span>
                 </div>
               );
@@ -682,28 +577,24 @@ export default function Month() {
           })()}
         </div>
 
-        <div className="bento-card p-6 md:p-8">
-          <h3 className="text-xl font-bold mb-4 text-card-foreground font-display">
-            Lumpsum Fast-Track
-          </h3>
-          <p className="text-sm mb-4 text-secondary font-body">
-            Add a one-time amount to accelerate a goal.
-          </p>
-          <div className="space-y-3">
+        {/* Lumpsum Fast-Track */}
+        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <h3 className="text-heading mb-1">Lumpsum Fast-Track</h3>
+          <p className="impact-subtitle">Add a one-time amount to accelerate a goal.</p>
+          <div className="flex flex-col gap-3">
             <select
               value={lumpsumGoalId}
               onChange={(e) => setLumpsumGoalId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border"
+              className="input-surface w-full px-4 py-3 rounded-xl outline-none"
               disabled={activeGoals.length === 0}
             >
               {activeGoals.length === 0 ? (
                 <option value="">No active goals available</option>
               ) : (
                 activeGoals.map((goal) => (
-                  <option
-                    key={goal.id}
-                    value={goal.id}
-                  >{`P${goal.priority} - ${goal.name}`}</option>
+                  <option key={goal.id} value={goal.id}>
+                    {`P${goal.priority} - ${goal.name}`}
+                  </option>
                 ))
               )}
             </select>
@@ -714,19 +605,17 @@ export default function Month() {
                 setLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
               }
               placeholder="Lumpsum amount (₹)"
-              className="w-full px-4 py-3 rounded-xl outline-none text-card-foreground bg-surface-tint border border-border"
+              className="input-surface w-full px-4 py-3 rounded-xl outline-none"
             />
             <button
               onClick={applyLumpsum}
               disabled={!lumpsumGoalId || !lumpsumAmount}
-              className="w-full py-3 rounded-xl font-bold transition-all disabled:opacity-50 bg-accent text-on-accent font-body"
+              className="btn-primary w-full justify-center py-3 disabled:opacity-50"
             >
               Apply Lumpsum
             </button>
             {lumpsumNotice && (
-              <div className="text-xs rounded-lg px-3 py-2  text-secondary">
-                {lumpsumNotice}
-              </div>
+              <div className="lumpsum-notice">{lumpsumNotice}</div>
             )}
           </div>
         </div>

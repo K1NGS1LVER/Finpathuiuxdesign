@@ -32,12 +32,7 @@ export default function OnboardingStepIncome({
             type="text"
             value={income}
             onChange={(e) => onChangeIncome(e.target.value.replace(/[^0-9]/g, ""))}
-            className="w-full px-5 py-5 md:px-8 md:py-7 text-3xl md:text-5xl font-bold text-center rounded-2xl md:rounded-3xl slashed-zero text-[var(--card-foreground)] transition-shadow"
-            style={{
-              fontFamily: "var(--font-display)",
-              background: "var(--surface-tint)",
-              border: "2px solid var(--border)",
-            }}
+            className="w-full px-5 py-5 md:px-8 md:py-7 text-3xl md:text-5xl font-bold text-center rounded-2xl md:rounded-3xl slashed-zero text-[var(--card-foreground)] transition-shadow input-number-large"
             placeholder="0"
             inputMode="numeric"
             aria-label="Monthly income"
@@ -46,13 +41,7 @@ export default function OnboardingStepIncome({
         <select
           value={incomeCurrency}
           onChange={(e) => onChangeIncomeCurrency(e.target.value)}
-          className="pill-button px-4 md:px-5 py-3 md:py-4 text-xs md:text-sm font-bold outline-none cursor-pointer rounded-2xl md:rounded-3xl self-stretch"
-          style={{
-            fontFamily: "var(--font-body)",
-            color: "var(--card-foreground)",
-            background: "var(--surface-tint)",
-            border: "2px solid var(--border)",
-          }}
+          className="pill-button px-4 md:px-5 py-3 md:py-4 text-xs md:text-sm font-bold outline-none cursor-pointer rounded-2xl md:rounded-3xl self-stretch currency-select"
           aria-label="Income currency"
         >
           {CURRENCIES.map((curr) => (
@@ -66,7 +55,7 @@ export default function OnboardingStepIncome({
       {income && incomeCurrency !== "INR" && (() => {
         const inrVal = convertToINR(income, incomeCurrency);
         return inrVal ? (
-          <p className="text-center text-sm slashed-zero" style={{ color: "var(--secondary)" }}>
+          <p className="text-center text-sm slashed-zero text-secondary-color">
             ≈ ₹{parseFloat(inrVal).toLocaleString("en-IN")} INR
           </p>
         ) : null;
@@ -74,18 +63,11 @@ export default function OnboardingStepIncome({
 
       <div className="pt-4 border-t border-[var(--border)]">
         <label
-          className="text-xs md:text-sm font-medium mb-2 block"
-          style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}
+          className="text-xs md:text-sm font-medium mb-2 block label-secondary"
         >
           Expected Annual Salary Increment (%)
         </label>
-        <div
-          className="flex gap-2 items-center px-4 py-3 rounded-2xl transition-shadow"
-          style={{
-            background: "var(--surface-tint)",
-            border: "2px solid var(--border)",
-          }}
-        >
+        <div className="flex gap-2 items-center px-4 py-3 rounded-2xl transition-shadow input-surface-2">
           <input
             type="text"
             value={expectedAnnualIncrement}
@@ -93,8 +75,7 @@ export default function OnboardingStepIncome({
               onChangeExpectedAnnualIncrement(e.target.value.replace(/[^0-9.]/g, ""))
             }
             placeholder="e.g. 5 for 5%"
-            className="flex-1 w-full bg-transparent text-lg md:text-xl font-bold outline-none slashed-zero text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="flex-1 w-full bg-transparent text-lg md:text-xl font-bold outline-none slashed-zero text-[var(--card-foreground)] font-display-family"
             inputMode="decimal"
             aria-label="Annual salary increment percentage"
           />

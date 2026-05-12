@@ -70,10 +70,7 @@ export default function JourneyAddGoalModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4 border-b border-[var(--border)] shrink-0">
-          <h3
-            className="text-xl font-bold text-[var(--card-foreground)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <h3 className="text-xl font-bold text-[var(--card-foreground)] font-display-family">
             Add Goal
           </h3>
           <button
@@ -86,15 +83,7 @@ export default function JourneyAddGoalModal({
 
         <div className="p-6 overflow-y-auto flex-1">
           {budgetRemaining <= 0 && activeGoals.length > 0 && (
-            <div
-              className="flex items-start gap-2 p-3 rounded-xl text-xs md:text-sm mb-4"
-              style={{
-                background: "var(--red-subtle)",
-                color: "var(--red-text)",
-                border: "1px solid var(--red)",
-                fontFamily: "var(--font-body)",
-              }}
-            >
+            <div className="flex items-start gap-2 p-3 rounded-xl text-xs md:text-sm mb-4 error-banner">
               <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-semibold mb-0.5">You're over budget</div>
@@ -105,15 +94,7 @@ export default function JourneyAddGoalModal({
             </div>
           )}
           {budgetRemaining > 0 && (
-            <div
-              className="flex items-center gap-2 p-3 rounded-xl text-xs md:text-sm mb-4"
-              style={{
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-                color: "var(--secondary)",
-                fontFamily: "var(--font-body)",
-              }}
-            >
+            <div className="flex items-center gap-2 p-3 rounded-xl text-xs md:text-sm mb-4 info-banner">
               <span>₹{budgetRemaining.toLocaleString("en-IN")}/mo available for new goals</span>
             </div>
           )}
@@ -129,21 +110,16 @@ export default function JourneyAddGoalModal({
                 <button
                   key={preset.name}
                   onClick={() => onAddPreset(preset)}
-                  className={`p-4 rounded-xl text-left transition-all ${wouldExceed ? "opacity-60" : "hover:scale-[1.02] active:scale-[0.98]"}`}
-                  style={{
-                    background: "var(--surface-tint)",
-                    border: wouldExceed ? "1px solid var(--red)" : "1px solid var(--border)",
-                  }}
+                  className={`p-4 rounded-xl text-left transition-all preset-card ${wouldExceed ? "opacity-60" : "hover:scale-[1.02] active:scale-[0.98]"}`}
+                  style={wouldExceed ? { border: "1px solid var(--red)" } : undefined}
                 >
+                  {/* Icon color: conditional on wouldExceed (runtime) — kept inline */}
                   <Icon
                     size={20}
                     className="mb-2"
                     style={{ color: wouldExceed ? "var(--red)" : "var(--accent)" }}
                   />
-                  <div
-                    className="text-sm font-semibold text-[var(--card-foreground)]"
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
+                  <div className="text-sm font-semibold text-[var(--card-foreground)] font-body-family">
                     {preset.name}
                   </div>
                   <div className="text-xs text-[var(--secondary)] mt-1">
@@ -157,17 +133,8 @@ export default function JourneyAddGoalModal({
             })}
           </div>
 
-          <div
-            className="space-y-3"
-            style={{
-              borderTop: "1px solid var(--border)",
-              paddingTop: "1rem",
-            }}
-          >
-            <div
-              className="text-sm font-semibold text-[var(--secondary)]"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
+          <div className="space-y-3 section-divider-top">
+            <div className="text-sm font-semibold text-[var(--secondary)] font-body-family">
               Or create custom
             </div>
             <input
@@ -175,12 +142,7 @@ export default function JourneyAddGoalModal({
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="Goal name"
-              className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)]"
-              style={{
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-                fontFamily: "var(--font-body)",
-              }}
+              className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)] input-surface"
             />
             <div className="grid grid-cols-2 gap-3">
               <input
@@ -188,24 +150,14 @@ export default function JourneyAddGoalModal({
                 value={customTarget}
                 onChange={(e) => setCustomTarget(e.target.value)}
                 placeholder="Target ₹"
-                className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)]"
-                style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                  fontFamily: "var(--font-body)",
-                }}
+                className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)] input-surface"
               />
               <input
                 type="number"
                 value={customMonths}
                 onChange={(e) => setCustomMonths(e.target.value)}
                 placeholder="Months"
-                className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)]"
-                style={{
-                  background: "var(--surface-tint)",
-                  border: "1px solid var(--border)",
-                  fontFamily: "var(--font-body)",
-                }}
+                className="w-full px-4 py-3 rounded-xl outline-none text-[var(--card-foreground)] input-surface"
               />
             </div>
             {customTarget && customMonths && (() => {
@@ -220,10 +172,7 @@ export default function JourneyAddGoalModal({
               if (impossible) {
                 const minMonths = available > 0 ? Math.ceil(cTarget / available) : 0;
                 return (
-                  <div
-                    className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                    style={{ background: "var(--red-subtle)", color: "var(--red-text)", border: "1px solid var(--red)" }}
-                  >
+                  <div className="flex items-start gap-2 p-3 rounded-xl text-xs error-banner">
                     <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                     <span>
                       This needs ₹{cMonthly.toLocaleString("en-IN")}/mo but you only have ₹{available.toLocaleString("en-IN")}/mo.
@@ -234,10 +183,7 @@ export default function JourneyAddGoalModal({
               }
               if (overBudget) {
                 return (
-                  <div
-                    className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                    style={{ background: "var(--red-subtle)", color: "var(--red-text)", border: "1px solid var(--red)" }}
-                  >
+                  <div className="flex items-start gap-2 p-3 rounded-xl text-xs error-banner">
                     <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                     <span>
                       Total goal commitments would be ₹{totalAfter.toLocaleString("en-IN")}/mo — over your ₹{available.toLocaleString("en-IN")}/mo budget. Remove an existing goal first.
@@ -256,10 +202,7 @@ export default function JourneyAddGoalModal({
             })()}
 
             {addGoalError && (
-              <div
-                className="flex items-start gap-2 p-3 rounded-xl text-xs"
-                style={{ background: "var(--red-subtle)", color: "var(--red-text)", border: "1px solid var(--red)" }}
-              >
+              <div className="flex items-start gap-2 p-3 rounded-xl text-xs error-banner">
                 <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                 <span>{addGoalError}</span>
               </div>
@@ -268,12 +211,7 @@ export default function JourneyAddGoalModal({
             <button
               onClick={onAddCustom}
               disabled={!customName.trim() || !customTarget.trim()}
-              className="w-full py-3 rounded-xl font-bold button-press disabled:opacity-40 disabled:hover:scale-100"
-              style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--on-secondary-accent)",
-                fontFamily: "var(--font-body)",
-              }}
+              className="w-full py-3 rounded-xl font-bold button-press disabled:opacity-40 disabled:hover:scale-100 btn-complete-goal"
             >
               Add Custom Goal
             </button>

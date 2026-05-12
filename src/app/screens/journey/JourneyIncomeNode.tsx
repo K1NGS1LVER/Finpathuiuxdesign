@@ -39,32 +39,16 @@ export default function JourneyIncomeNode({
           boxShadow: "0 0 20px var(--secondary-accent-glow), var(--shadow-md)",
         }}
       >
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-          style={{
-            background:
-              "color-mix(in srgb, var(--surface-hover) 80%, transparent)",
-            color: "var(--accent)",
-          }}
-        >
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 journey-node-icon">
           <Wallet size={24} className="icon-wireframe" />
         </div>
-        <div
-          className="font-bold mb-1 text-[var(--card-foreground)]"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
+        <div className="font-bold mb-1 text-[var(--card-foreground)] font-body-family">
           Income
         </div>
-        <div
-          className="text-2xl font-bold mb-2 text-[var(--card-foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+        <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)] font-display-family">
           {formatCurrency(incomeTotal)}
         </div>
-        <div
-          className="text-xs mb-2 text-[var(--secondary)]"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
+        <div className="text-xs mb-2 text-[var(--secondary)] font-body-family">
           100% — Source
         </div>
         <div

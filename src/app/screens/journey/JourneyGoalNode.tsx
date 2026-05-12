@@ -98,40 +98,28 @@ export default function JourneyGoalNode({
             : `0 0 20px ${statusGlow}, var(--shadow-md)`,
         }}
       >
+        {/* Icon container color is dynamic from statusColor — kept inline */}
         <div
           className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
           style={{
-            background:
-              "color-mix(in srgb, var(--surface-hover) 80%, transparent)",
+            background: "color-mix(in srgb, var(--surface-hover) 80%, transparent)",
             color: statusColor,
           }}
         >
           <Icon size={24} className="icon-wireframe" />
         </div>
-        <div
-          className="font-bold mb-1 text-[var(--card-foreground)]"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
+        <div className="font-bold mb-1 text-[var(--card-foreground)] font-body-family">
           {goal.name}
         </div>
         {isActiveGoal && (
-          <div
-            className="text-[10px] font-bold mb-1"
-            style={{ color: "var(--accent-text)" }}
-          >
+          <div className="text-[10px] font-bold mb-1 text-accent-color">
             Priority P{goal.priority}
           </div>
         )}
-        <div
-          className="text-2xl font-bold mb-2 text-[var(--card-foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+        <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)] font-display-family">
           {formatCurrency(goal.targetAmount)}
         </div>
-        <div
-          className="text-xs mb-2 text-[var(--secondary)]"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
+        <div className="text-xs mb-2 text-[var(--secondary)] font-body-family">
           {progress}% complete
         </div>
         <div

@@ -31,16 +31,12 @@ function StepUpToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
       }}
     >
       <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{
-          background: enabled ? "var(--accent)" : "var(--surface-hover)",
-          color: enabled ? "var(--on-accent)" : "var(--accent-text)",
-        }}
+        className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${enabled ? "step-up-icon-on" : "step-up-icon-off"}`}
       >
         <ArrowUpRight size={22} className="icon-wireframe" />
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-sm md:text-base text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-body)" }}>
+        <h4 className="font-bold text-sm md:text-base text-[var(--card-foreground)] font-body-family">
           Step-Up Plan
         </h4>
         <p className="text-xs md:text-sm text-[var(--secondary)] mt-0.5">
@@ -94,16 +90,17 @@ function StrategyCard({
         boxShadow: isSelected ? `0 0 28px ${accentGlow}` : "none",
       }}
     >
+      {/* Icon bg/color: accentSubtle/accentText are CSS var strings passed as props — kept inline */}
       <div
         className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
         style={{ background: accentSubtle, color: accentText }}
       >
         {icon}
       </div>
-      <div className="font-bold mb-1.5 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
+      <div className="font-bold mb-1.5 text-[var(--card-foreground)] font-display-family">
         {title}
       </div>
-      <div className="text-xs md:text-sm leading-relaxed" style={{ color: "var(--secondary)" }}>
+      <div className="text-xs md:text-sm leading-relaxed text-secondary-color">
         {description}
       </div>
     </button>
@@ -139,31 +136,28 @@ function SurplusReserveSection({
       }}
     >
       <div className="flex items-center gap-3">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: "var(--accent-glow)", color: "var(--accent-text)" }}
-        >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 surplus-icon">
           <Wallet size={18} />
         </div>
         <div>
-          <div className="text-sm md:text-base font-semibold text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-body)" }}>
+          <div className="text-sm md:text-base font-semibold text-[var(--card-foreground)] font-body-family">
             Monthly Surplus Reserve
           </div>
-          <div className="text-[10px] md:text-xs mt-0.5" style={{ color: "var(--secondary)" }}>
+          <div className="text-[10px] md:text-xs mt-0.5 text-secondary-color">
             Keep aside each month — remaining goes to your goals
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Input border is conditional on hasWarning (runtime boolean) — kept inline */}
         <input
           type="text"
           value={surplusAmount}
           onChange={(e) => onChangeSurplusAmount(e.target.value.replace(/[^0-9]/g, ""))}
           placeholder="0"
-          className="flex-1 px-5 py-3 text-lg md:text-xl font-bold rounded-xl outline-none slashed-zero text-[var(--card-foreground)]"
+          className="flex-1 px-5 py-3 text-lg md:text-xl font-bold rounded-xl outline-none slashed-zero text-[var(--card-foreground)] font-display-family"
           style={{
-            fontFamily: "var(--font-display)",
             background: "var(--card)",
             border: `2px solid ${inputBorderColor}`,
           }}
@@ -174,7 +168,7 @@ function SurplusReserveSection({
       </div>
 
       {surplusNum > 0 && (
-        <div className="flex items-center gap-2 text-xs md:text-sm py-1" style={{ fontFamily: "var(--font-body)", color: "var(--secondary)" }}>
+        <div className="flex items-center gap-2 text-xs md:text-sm py-1 label-secondary">
           <Calendar size={14} className="flex-shrink-0" />
           <span>
             <strong className="text-[var(--card-foreground)] slashed-zero">{remainingForGoals.toLocaleString("en-IN")}</strong> available for goals
@@ -195,19 +189,13 @@ function SurplusReserveSection({
 }
 
 function WarningBox({ type, text }: { type: "error" | "warning"; text: string }) {
-  const isError = type === "error";
   return (
     <div
-      className="flex items-start gap-2.5 p-3 rounded-xl text-xs md:text-sm"
-      style={{
-        background: isError ? "var(--red-subtle)" : "var(--amber-subtle)",
-        color: isError ? "var(--red-text)" : "var(--amber-text)",
-        border: `1px solid ${isError ? "var(--red)" : "var(--amber)"}`,
-      }}
+      className={`flex items-start gap-2.5 p-3 rounded-xl text-xs md:text-sm ${type === "error" ? "error-banner" : "warning-banner"}`}
       role="alert"
     >
       <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
-      <span style={{ fontFamily: "var(--font-body)" }}>{text}</span>
+      <span className="font-body-family">{text}</span>
     </div>
   );
 }
@@ -221,17 +209,14 @@ export default function OnboardingStepStrategy({
 }: OnboardingStepStrategyProps) {
   return (
     <div className="space-y-5 md:space-y-6">
-      <div
-        className="p-4 rounded-xl md:rounded-2xl text-xs md:text-sm"
-        style={{ background: "var(--surface-tint)", border: "1px solid var(--border)", color: "var(--secondary)" }}
-      >
+      <div className="p-4 rounded-xl md:rounded-2xl text-xs md:text-sm info-banner">
         You have <strong className="text-[var(--card-foreground)] slashed-zero">{availableForGoals.toLocaleString("en-IN")}</strong> available for goals after expenses and debt.
       </div>
 
       <StepUpToggle enabled={stepUpEnabled} onToggle={onToggleStepUp} />
 
       <div className="space-y-1.5">
-        <label className="text-xs md:text-sm font-semibold" style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}>
+        <label className="text-xs md:text-sm font-semibold label-secondary">
           Repayment Strategy
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
