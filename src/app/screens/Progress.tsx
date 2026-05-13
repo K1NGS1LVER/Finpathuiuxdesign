@@ -179,6 +179,9 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
   }, [savingsRate, milestones]);
 
   const [checkedIn, setCheckedIn] = useState(false);
+  const [nwTooltip, setNwTooltip] = useState<{
+    x: number; y: number; label: string; value: number; projected: boolean;
+  } | null>(null);
 
   const handleCheckIn = () => {
     setCheckedIn(true);
@@ -187,6 +190,17 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
 
   const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
   const fmtCompact = (n: number) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : fmt(n);
+
+  const handleNWMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (chart.pts.length < 2) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * SVG_W;
+    const idx = chart.pts.reduce((best, [px], i) =>
+      Math.abs(px - svgX) < Math.abs(chart.pts[best][0] - svgX) ? i : best, 0);
+    const [x, y] = chart.pts[idx];
+    const pt = chartData[idx];
+    setNwTooltip({ x, y, label: pt.label, value: pt.value, projected: !!pt.projected });
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
@@ -232,7 +246,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
       {/* SVG Net Worth Trajectory */}
       <div className="bento-card p-6 md:p-8 relative z-10">
         <p className="text-label mb-4">Net Worth Trajectory</p>
-        <svg viewBox={`0 0 ${SVG_W} ${SVG_H + 30}`} style={{ width: "100%", height: 260 }}>
+        <div style={{ position: 'relative' }}>
+        <svg viewBox={`0 0 ${SVG_W} ${SVG_H + 30}`} style={{ width: "100%", height: 260 }} onMouseMove={handleNWMouseMove} onMouseLeave={() => setNwTooltip(null)}>
           <defs>
             <linearGradient id="nwGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
@@ -305,7 +320,38 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
               </>
             );
           })()}
+          {nwTooltip && (
+            <line
+              x1={nwTooltip.x} y1={0}
+              x2={nwTooltip.x} y2={SVG_H}
+              stroke="var(--border)" strokeDasharray="4 2" opacity="0.7"
+            />
+          )}
         </svg>
+        {nwTooltip && (
+          <div style={{
+            position: 'absolute',
+            left: `${Math.min(85, Math.max(10, (nwTooltip.x / SVG_W) * 100))}%`,
+            top: `${Math.min(80, Math.max(5, (nwTooltip.y / (SVG_H + 30)) * 100))}%`,
+            transform: 'translate(-50%, -110%)',
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            fontFamily: 'var(--font-body)',
+            color: 'var(--card-foreground)',
+            padding: '10px 14px',
+            pointerEvents: 'none',
+            zIndex: 10,
+            minWidth: 130,
+          }}>
+            <p style={{ fontSize: 11, color: 'var(--tertiary)', marginBottom: 4 }}>{nwTooltip.label}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{fmtCompact(nwTooltip.value)}</p>
+            {nwTooltip.projected && (
+              <p style={{ fontSize: 10, color: 'var(--tertiary)', marginTop: 2 }}>Projected</p>
+            )}
+          </div>
+        )}
+        </div>
       </div>
 
       {/* Monthly Check-in */}

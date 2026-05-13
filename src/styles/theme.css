@@ -167,6 +167,7 @@
   --neutral-800: #050f1c;
 
   /* ─── Typography Scale ─── */
+  --text-2xs: 10px;
   --text-xs: 12px;
   --text-sm: 14px;
   --text-base: 15px;
@@ -187,6 +188,7 @@
   /* ─── Border Radius ─── */
   --radius-xs: 4px;
   --radius-sm: 8px;
+  --radius-base: 12px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-xl: 32px;
