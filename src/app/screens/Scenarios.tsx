@@ -1,18 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { GitCompare, Wallet, TrendingUp, Sparkles } from "lucide-react";
 import { useFinPathStore } from "@/lib/store";
-
-const fmtCompact = (n: number): string => {
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : "";
-  if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(1)}Cr`;
-  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(1)}L`;
-  if (abs >= 1_000) return `${sign}₹${(abs / 1_000).toFixed(0)}K`;
-  return `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
-};
-
-const fmt = (n: number): string =>
-  Math.abs(Math.round(n)).toLocaleString("en-IN");
+import { formatInr, formatInrCompact } from "@/lib/format";
 
 type RiskKey = "conservative" | "balanced" | "aggressive";
 
@@ -154,9 +143,9 @@ export default function Scenarios() {
       <div className="scenarios-kpi-grid">
         <div className="bento-card" style={{ padding: "var(--space-3)" }}>
           <p className="text-label">Projected in {horizon} yrs</p>
-          <p className="kpi-value slashed-zero">{fmtCompact(scenarioTotal)}</p>
+          <p className="kpi-value slashed-zero">{formatInrCompact(scenarioTotal)}</p>
           <p className="kpi-meta">
-            At ₹{fmt(monthlySavings)}/mo · {returnRate}% return
+            At {formatInr(monthlySavings)}/mo · {returnRate}% return
           </p>
         </div>
 
@@ -166,7 +155,7 @@ export default function Scenarios() {
             className={`kpi-value slashed-zero ${diff >= 0 ? "kpi-value--positive" : "kpi-value--negative"}`}
           >
             {diff >= 0 ? "+" : ""}
-            {fmtCompact(diff)}
+            {formatInrCompact(diff)}
           </p>
           <p className="kpi-meta">
             {diff >= 0 ? "Better than" : "Behind"} current trajectory
@@ -175,7 +164,7 @@ export default function Scenarios() {
 
         <div className="bento-card" style={{ padding: "var(--space-3)" }}>
           <p className="text-label">Required Monthly</p>
-          <p className="kpi-value slashed-zero">₹{fmt(monthlySavings)}</p>
+          <p className="kpi-value slashed-zero">{formatInr(monthlySavings)}</p>
           <p className="kpi-meta">
             {income.total > 0
               ? Math.round((monthlySavings / income.total) * 100)
@@ -242,7 +231,7 @@ export default function Scenarios() {
                   fill="var(--tertiary)"
                   fontFamily="var(--font-display)"
                 >
-                  {fmtCompact(maxY * p)}
+                  {formatInrCompact(maxY * p)}
                 </text>
               </g>
             ))}
@@ -319,9 +308,9 @@ export default function Scenarios() {
                 minWidth: 140,
               }}>
                 <p style={{ fontSize: 11, color: 'var(--tertiary)', marginBottom: 4 }}>{svgTooltip.yearLabel}</p>
-                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Scenario: {fmtCompact(svgTooltip.scenarioVal)}</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Scenario: {formatInrCompact(svgTooltip.scenarioVal)}</p>
                 {showCompare && (
-                  <p style={{ fontSize: 12, color: 'var(--tertiary)', marginTop: 2 }}>Baseline: {fmtCompact(svgTooltip.baseVal)}</p>
+                  <p style={{ fontSize: 12, color: 'var(--tertiary)', marginTop: 2 }}>Baseline: {formatInrCompact(svgTooltip.baseVal)}</p>
                 )}
               </div>
             )}
@@ -332,7 +321,7 @@ export default function Scenarios() {
         <div className="bento-card" style={{ padding: "var(--space-3)" }}>
           <p className="text-label controls-panel-header">Tune Your Plan</p>
 
-          <Knob label="Monthly Investment" value={`₹${fmt(monthlySavings)}`}>
+          <Knob label="Monthly Investment" value={formatInr(monthlySavings)}>
             <input
               type="range"
               min="10000"
@@ -420,9 +409,9 @@ export default function Scenarios() {
                 </div>
                 <span className="preset-name">{p.name}</span>
               </div>
-              <p className="preset-fv slashed-zero">{fmtCompact(fv)}</p>
+              <p className="preset-fv slashed-zero">{formatInrCompact(fv)}</p>
               <p className="preset-meta">
-                ₹{fmt(p.monthly)}/mo · {p.rate}% · {p.years}y
+                {formatInr(p.monthly)}/mo · {p.rate}% · {p.years}y
               </p>
             </button>
           );

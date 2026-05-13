@@ -24,14 +24,14 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useFinPathStore } from "@/lib/store";
+import { formatInr, formatInrCompact } from "@/lib/format";
+import confetti from "canvas-confetti";
 
-// ── Icon registry ──
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Bike, Home, Plane, BookOpen, Users, TrendingUp, Target,
   PiggyBank, AlertTriangle, Sparkles, Check, ArrowRight,
 };
 
-// ── Category → token mapping (all values are CSS vars from theme.css) ──
 const CATEGORY_STYLE: Record<string, { icon: string; color: string; subtle: string; text: string }> = {
   bike:       { icon: "Bike",          color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
   home:       { icon: "Home",          color: "var(--secondary-accent)", subtle: "var(--secondary-accent-subtle)", text: "var(--secondary-accent-text)" },
@@ -45,7 +45,6 @@ const CATEGORY_STYLE: Record<string, { icon: string; color: string; subtle: stri
   default:    { icon: "Target",        color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
 };
 
-// ── Animated count-up ──
 function useCountUp(target: number) {
   const [value, setValue] = useState(0);
   useEffect(() => {
@@ -55,25 +54,16 @@ function useCountUp(target: number) {
   return value;
 }
 
-function fmt(n: number): string {
-  return n.toLocaleString("en-IN");
-}
-
-function fmtCompact(n: number): string {
-  if (n >= 100_000) return `₹${(n / 100_000).toFixed(n >= 1_000_000 ? 0 : 1)}L`;
-  if (n >= 1_000)   return `₹${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}K`;
-  return `₹${fmt(n)}`;
-}
-
 export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }) {
-  const navigate    = useNavigate();
-  const income      = useFinPathStore((s) => s.income);
-  const expenses    = useFinPathStore((s) => s.expenses);
-  const debts       = useFinPathStore((s) => s.debts);
-  const goals       = useFinPathStore((s) => s.goals) || [];
-  const savings     = useFinPathStore((s) => s.savings);
-  const healthScore = useFinPathStore((s) => s.healthScore);
-  const updateGoal  = useFinPathStore((s) => s.updateGoal);
+  const navigate     = useNavigate();
+  const income       = useFinPathStore((s) => s.income);
+  const expenses     = useFinPathStore((s) => s.expenses);
+  const debts        = useFinPathStore((s) => s.debts);
+  const goals        = useFinPathStore((s) => s.goals) || [];
+  const savings      = useFinPathStore((s) => s.savings);
+  const healthScore  = useFinPathStore((s) => s.healthScore);
+  const updateGoal   = useFinPathStore((s) => s.updateGoal);
+  const investments  = useFinPathStore((s) => s.investments);
 
   const [period, setPeriod] = useState<"This month" | "Quarter" | "YTD">("This month");
 
@@ -87,19 +77,12 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
   const animIncome  = useCountUp(income.total * periodMonths);
   const animSurplus = useCountUp(surplus * periodMonths);
   const animSavings = useCountUp(savings + (periodMonths > 1 ? surplus * (periodMonths - 1) : 0));
-
-  const [healthAnim, setHealthAnim] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => setHealthAnim(health), 300);
-    return () => clearTimeout(t);
-  }, [health]);
+  const healthAnim  = useCountUp(health);
 
   const activeGoals = goals.filter((g) => g.currentAmount < g.targetAmount).slice(0, 3);
   const nextGoal    = goals.find((g) => !g.checkedThisMonth && g.status !== "complete");
 
-  // Badge logic (moved from Progress)
   const streakDays = Math.min(30, 7 + goals.filter((g) => g.status === "complete").length * 5);
-  const investments = useFinPathStore((s) => s.investments);
   const currentNetWorth = savings + investments + goals.reduce((sum, g) => sum + Math.max(0, g.currentAmount), 0);
 
   const badges = [
@@ -125,7 +108,6 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
     { icon: "Sparkles",      text: `You have ${activeGoals.length} active goal${activeGoals.length !== 1 ? "s" : ""} on track for this month.` },
   ];
 
-  // Health ring geometry
   const r = 78;
   const circum = 2 * Math.PI * r;
 
@@ -147,7 +129,13 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
         </div>
         <div className="dashboard-period-pills">
           {(["This month", "Quarter", "YTD"] as const).map((p) => (
-            <button key={p} className={`pill${period === p ? " active" : ""}`} onClick={() => setPeriod(p)}>{p}</button>
+            <button
+              key={p}
+              className={`pill${period === p ? " active" : ""}`}
+              onClick={() => setPeriod(p)}
+              aria-pressed={period === p}
+              aria-label={`Show ${p} period`}
+            >{p}</button>
           ))}
         </div>
       </div>
@@ -156,8 +144,9 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
       <div className="dashboard-grid">
 
         {/* ─ Active Goals (8 cols) ─ */}
-        <div className="bento-card" style={{ gridColumn: "span 8" }}>
-          <div style={{ position: "relative" }}>
+        <div className="bento-card col-span-8">
+          <h3 className="sr-only">Active Goals</h3>
+          <div className="relative">
             <div className="goals-header">
               <div>
                 <p className="text-label">Active Goals</p>
@@ -165,28 +154,32 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
                   {activeGoals.length} on track · {goals.filter((g) => g.status === "complete").length} completed
                 </p>
               </div>
-              <button className="pill" onClick={() => navigate("/journey")}>View All</button>
+              <button className="pill" onClick={() => navigate("/journey")} aria-label="View all goals">View All</button>
             </div>
 
             <div className="goals-list">
               {activeGoals.map((g) => {
                 const cat      = CATEGORY_STYLE[g.category] || CATEGORY_STYLE.default;
                 const GIcon    = ICONS[cat.icon] || Target;
-                const progress = Math.round((g.currentAmount / g.targetAmount) * 100);
+                const progress = g.targetAmount > 0 ? Math.round((g.currentAmount / g.targetAmount) * 100) : 0;
                 const monthly  = g.monthlyAllocation || Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths));
                 return (
                   <div
                     key={g.id}
                     className="card-hover goal-row"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View goal: ${g.name}`}
                     onClick={() => navigate("/journey")}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate("/journey"); }}
                   >
                     <div className="goal-icon" style={{ background: cat.subtle, color: cat.color }}>
-                      <GIcon size={18} />
+                      <GIcon size={18} className="icon-wireframe" />
                     </div>
 
                     <div className="goal-name-col">
                       <p className="goal-name">{g.name}</p>
-                      <p className="goal-sub">₹{fmt(monthly)}/mo · {g.timelineMonths} mo left</p>
+                      <p className="goal-sub">{formatInr(monthly)}/mo · {g.timelineMonths} mo left</p>
                     </div>
 
                     <div className="goal-bar">
@@ -197,8 +190,8 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
                     <p className="slashed-zero goal-pct">{progress}%</p>
 
                     <p className="slashed-zero goal-amounts">
-                      <span className="goal-amounts-current">{fmtCompact(g.currentAmount)}</span>
-                      <span className="goal-amounts-target"> / {fmtCompact(g.targetAmount)}</span>
+                      <span className="goal-amounts-current">{formatInrCompact(g.currentAmount)}</span>
+                      <span className="goal-amounts-target"> / {formatInrCompact(g.targetAmount)}</span>
                     </p>
                   </div>
                 );
@@ -207,7 +200,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               {activeGoals.length === 0 && (
                 <div className="goals-empty">
                   <div className="goals-empty-icon">
-                    <Target size={24} />
+                    <Target size={24} className="icon-wireframe" />
                   </div>
                   <p className="goals-empty-text">No active goals</p>
                   <button className="pill active" onClick={() => navigate("/journey")}>+ Add a goal</button>
@@ -218,8 +211,9 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
         </div>
 
         {/* ─ Next Step (4 cols) ─ */}
-        <div className="bento-card" style={{ gridColumn: "span 4", display: "flex", flexDirection: "column" }}>
-          <p className="text-label" style={{ marginBottom: "var(--space-2)" }}>Your Next Step</p>
+        <div className="bento-card col-span-4 flex flex-col">
+          <h3 className="sr-only">Your Next Step</h3>
+          <p className="text-label mb-4">Your Next Step</p>
 
           {nextGoal ? (() => {
             const cat     = CATEGORY_STYLE[nextGoal.category] || CATEGORY_STYLE.default;
@@ -229,39 +223,57 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               <>
                 <div className="next-step-header">
                   <div className="next-step-icon" style={{ background: cat.subtle, color: cat.color }}>
-                    <NIcon size={16} />
+                    <NIcon size={18} className="icon-wireframe" />
                   </div>
                   <span className="next-step-name">{nextGoal.name}</span>
                 </div>
 
-                <p className="text-label" style={{ marginBottom: 4 }}>Recommended this month</p>
+                <p className="text-label mb-1">Recommended this month</p>
 
                 <p className="slashed-zero next-step-amount">
-                  ₹{fmt(monthly)}
+                  {formatInr(monthly)}
                   <span className="next-step-period">/mo</span>
                 </p>
 
                 <p className="next-step-remaining">
-                  {fmtCompact(nextGoal.targetAmount - nextGoal.currentAmount)} left to save
+                  {formatInrCompact(nextGoal.targetAmount - nextGoal.currentAmount)} left to save
                 </p>
 
                 <button
-                  className="btn-primary"
-                  style={{ marginTop: "auto", justifyContent: "center", width: "100%", borderRadius: "var(--radius-full)" }}
+                  className="btn-primary mt-auto w-full justify-center"
+                  style={{ borderRadius: 'var(--radius-full)' }}
+                  aria-label={`Mark ${nextGoal.name} as done for this month`}
                   onClick={() => {
                     const m = nextGoal.monthlyAllocation || Math.round((nextGoal.targetAmount - nextGoal.currentAmount) / Math.max(1, nextGoal.timelineMonths));
                     const newAmt = Math.min(nextGoal.targetAmount, nextGoal.currentAmount + m);
-                    updateGoal(nextGoal.id, { currentAmount: newAmt, checkedThisMonth: true, status: newAmt >= nextGoal.targetAmount ? "complete" : "in-progress" });
+                    const justCompleted = newAmt >= nextGoal.targetAmount;
+                    updateGoal(nextGoal.id, { currentAmount: newAmt, checkedThisMonth: true, status: justCompleted ? "complete" : "in-progress" });
+                    const styles = getComputedStyle(document.documentElement);
+                    const accent = styles.getPropertyValue("--accent").trim() || "#495bff";
+                    const secondary = styles.getPropertyValue("--secondary-accent").trim() || "#ac49ff";
+                    const lime = styles.getPropertyValue("--tertiary-accent").trim() || "#b0ff09";
+                    const green = styles.getPropertyValue("--green").trim() || "#22c55e";
+                    if (justCompleted) {
+                      const end = Date.now() + 2000;
+                      const frame = () => {
+                        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: [accent, secondary, accent] });
+                        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: [accent, lime, green] });
+                        if (Date.now() < end) requestAnimationFrame(frame);
+                      };
+                      frame();
+                    } else {
+                      confetti({ particleCount: 60, spread: 70, origin: { y: 0.7 }, colors: [accent, secondary, lime] });
+                    }
                   }}
                 >
-                  <Check size={16} /> Done for this month
+                  <Check size={14} className="icon-wireframe" /> Done for this month
                 </button>
               </>
             );
           })() : (
             <div className="next-step-empty">
               <div className="next-step-empty-icon">
-                <Check size={20} />
+                <Check size={20} className="icon-wireframe" />
               </div>
               <p className="next-step-empty-title">All caught up!</p>
               <p className="next-step-empty-sub">Check back next month.</p>
@@ -270,7 +282,8 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
         </div>
 
         {/* ─ Health + Metrics (7 cols) ─ */}
-        <div className="bento-card" style={{ gridColumn: "span 7", display: "flex", gap: "var(--space-3)" }}>
+        <div className="bento-card col-span-7 flex gap-6">
+          <h3 className="sr-only">Health and Metrics</h3>
 
           {/* Metrics column */}
           <div className="metrics-col">
@@ -282,7 +295,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               <div key={label}>
                 <p className="text-label metric-label">{label}</p>
                 <p className="slashed-zero metric-value" style={{ color }}>
-                  {prefix}₹{fmt(value)}
+                  {prefix}{formatInr(value)}
                 </p>
               </div>
             ))}
@@ -292,7 +305,12 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
           <div className="health-ring-col">
             <p className="text-label">Health Meter</p>
             <div className="health-ring-wrap">
-              <svg viewBox="0 0 200 200" className="health-ring-svg">
+              <svg
+                viewBox="0 0 200 200"
+                className="health-ring-svg"
+                role="img"
+                aria-label={`Health score: ${healthAnim} out of 100`}
+              >
                 <defs>
                   <linearGradient id="health-grad" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%"   stopColor="var(--accent)" />
@@ -304,7 +322,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
                   strokeDasharray={circum}
                   strokeDashoffset={circum - (healthAnim / 100) * circum}
                   strokeLinecap="round"
-                  style={{ transition: "stroke-dashoffset 1500ms cubic-bezier(0.22,1,0.36,1)", filter: "drop-shadow(0 0 8px var(--accent-glow))" }}
+                  style={{ transition: "stroke-dashoffset 1500ms cubic-bezier(0.22,1,0.36,1)", filter: "drop-shadow(0 0 var(--space-1) var(--accent-glow))" }}
                 />
               </svg>
               <div className="health-score-overlay">
@@ -331,7 +349,8 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
         </div>
 
         {/* ─ Recent Activity (5 cols) ─ */}
-        <div className="bento-card" style={{ gridColumn: "span 5" }}>
+        <div className="bento-card col-span-5">
+          <h3 className="sr-only">Recent Activity</h3>
           <div className="activity-header">
             <p className="text-label">Recent Activity</p>
             <p className="activity-subtitle">{period === "This month" ? "This month's" : period === "Quarter" ? "Quarterly" : "YTD"} allocations</p>
@@ -351,7 +370,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
                     </div>
                   </div>
                   <span className="slashed-zero activity-amount">
-                    ₹{fmt(monthly)}<span className="activity-period">/mo</span>
+                    {formatInr(monthly)}<span className="activity-period">/mo</span>
                   </span>
                 </div>
               );
@@ -363,48 +382,40 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
         </div>
 
         {/* ─ Achievements (12 cols) ─ */}
-        <div className="bento-card p-6 md:p-8" style={{ gridColumn: "span 12" }}>
-          <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
-            Achievements
-          </h3>
+        <div className="bento-card col-span-12">
+          <h3 className="text-heading slashed-zero text-[var(--card-foreground)] mb-4">Achievements</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {badges.map((badge, i) => (
+            {badges.map((badge) => (
               <div
-                key={i}
-                className="p-4 rounded-xl flex flex-col items-center text-center transition-all"
-                style={{
-                  background: badge.earned ? "var(--surface-tint)" : "var(--surface-hover)",
-                  border: badge.earned ? "1px solid var(--accent)" : "1px solid var(--border)",
-                  opacity: badge.earned ? 1 : 0.4,
-                }}
+                key={badge.name}
+                className={`p-4 rounded-xl flex flex-col items-center text-center transition-all ${badge.earned ? "bg-[var(--surface-tint)] border border-[var(--accent)]" : "bg-[var(--surface-hover)] border border-[var(--border)] opacity-40"}`}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-2"
-                  style={{ background: badge.earned ? "var(--surface-tint)" : "var(--surface-hover)", border: "1px solid var(--border)" }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-2 bg-[var(--surface-tint)] border border-[var(--border)]"
                 >
-                  <badge.icon size={20} style={{ color: badge.earned ? badge.color : "var(--secondary)" }} />
+                  <badge.icon size={20} className="icon-wireframe" style={{ color: badge.earned ? badge.color : "var(--secondary)" }} />
                 </div>
-                <div className="text-xs font-bold text-[var(--card-foreground)] mb-1" style={{ fontFamily: "var(--font-body)" }}>{badge.name}</div>
-                <div className="text-[10px] text-[var(--secondary)]">{badge.desc}</div>
+                <div className="text-xs font-bold text-[var(--card-foreground)] mb-1 font-body-family">{badge.name}</div>
+                <div className="text-[var(--text-2xs)] text-[var(--secondary)]">{badge.desc}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* ─ Penny Insights (12 cols) ─ */}
-        <div className="bento-card penny-card" style={{ gridColumn: "span 12" }}>
+        <div className="bento-card penny-card col-span-12">
           <div className="penny-blob" />
 
           <div className="penny-insights-header">
             <div className="penny-insights-icon">
-              <Sparkles size={18} />
+              <Sparkles size={18} className="icon-wireframe" />
             </div>
             <div>
               <h3 className="penny-insights-title">Penny's Insights</h3>
               <p className="penny-insights-sub">Personalized for your current plan</p>
             </div>
-            <button className="pill" style={{ marginLeft: "auto" }} onClick={onPennyClick}>
-              Ask follow-up <ArrowRight size={12} />
+            <button className="pill ml-auto" onClick={onPennyClick} aria-label="Ask Penny a follow-up question">
+              Ask follow-up <ArrowRight size={14} className="icon-wireframe" />
             </button>
           </div>
 
@@ -412,9 +423,9 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
             {insights.map((tip, i) => {
               const TIcon = ICONS[tip.icon] || Sparkles;
               return (
-                <div key={i} className="penny-tile">
+                <div key={`insight-${i}`} className="penny-tile">
                   <div className="penny-tile-icon">
-                    <TIcon size={14} />
+                    <TIcon size={14} className="icon-wireframe" />
                   </div>
                   <p className="penny-tile-text">{tip.text}</p>
                 </div>

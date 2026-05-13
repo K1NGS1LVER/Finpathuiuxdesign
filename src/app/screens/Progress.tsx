@@ -7,6 +7,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useFinPathStore } from '@/lib/store';
+import { formatInr, formatInrCompact } from '@/lib/format';
 import confetti from "canvas-confetti";
 
 type ChartPoint = { label: string; value: number; projected?: boolean };
@@ -188,9 +189,6 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
   };
 
-  const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
-  const fmtCompact = (n: number) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : fmt(n);
-
   const handleNWMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (chart.pts.length < 2) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -216,8 +214,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
         {(reservedSurplus > 0 || pendingSurplus > 0) && (
           <p className="text-xs md:text-sm mt-2" style={{ color: "var(--secondary)", fontFamily: "var(--font-body)" }}>
             {pendingSurplus > 0
-              ? `₹${pendingSurplus.toLocaleString("en-IN")}/mo is waiting for your reinvest decision.`
-              : `₹${reservedSurplus.toLocaleString("en-IN")}/mo is being kept as net worth surplus.`}
+              ? `${formatInr(pendingSurplus)}/mo is waiting for your reinvest decision.`
+              : `${formatInr(reservedSurplus)}/mo is being kept as net worth surplus.`}
           </p>
         )}
       </div>
@@ -225,8 +223,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 relative z-10">
         {([
-          { label: "Net Worth Δ", value: fmtCompact(netWorthDelta), delta: `+${netWorthDeltaPct}%`, color: "var(--green-text)" },
-          { label: "Avg Monthly Save", value: fmtCompact(Math.max(0, surplus)), delta: `${savingsRate}% rate`, color: "var(--accent-text)" },
+          { label: "Net Worth Δ", value: formatInrCompact(netWorthDelta), delta: `+${netWorthDeltaPct}%`, color: "var(--green-text)" },
+          { label: "Avg Monthly Save", value: formatInrCompact(Math.max(0, surplus)), delta: `${savingsRate}% rate`, color: "var(--accent-text)" },
           { label: "Goals Hit", value: `${completedGoals}/${goals.length}`, delta: goals.length > 0 ? `${Math.round((completedGoals / goals.length) * 100)}%` : "0%", color: "var(--accent-text)" },
           { label: "Streak", value: `${streakDays} days`, delta: "🔥", color: "var(--amber-text)" },
         ] as const).map(({ label, value, delta, color }) => (
@@ -345,7 +343,7 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
             minWidth: 130,
           }}>
             <p style={{ fontSize: 11, color: 'var(--tertiary)', marginBottom: 4 }}>{nwTooltip.label}</p>
-            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{fmtCompact(nwTooltip.value)}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{formatInrCompact(nwTooltip.value)}</p>
             {nwTooltip.projected && (
               <p style={{ fontSize: 10, color: 'var(--tertiary)', marginTop: 2 }}>Projected</p>
             )}
