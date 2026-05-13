@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router';
-import { LayoutDashboard, Map, Calculator, Calendar, GitBranch, MessageCircle, ChevronLeft, ChevronRight, X, BarChart3, CreditCard, ArrowLeftRight } from 'lucide-react';
+import { LayoutDashboard, Map, Calendar, GitBranch, MessageCircle, ChevronLeft, ChevronRight, X, BarChart3, CreditCard, ArrowLeftRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
@@ -12,6 +12,7 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [showPennyToast, setShowPennyToast] = useState(true);
 
   useEffect(() => {
     const handleResize = () => {
@@ -31,14 +32,36 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
     }
   }, [mobileMenuOpen]);
 
-  const items = [
-    { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
-    { icon: GitBranch, label: 'Journey', path: '/journey' },
-    { icon: Calendar, label: 'Month', path: '/month' },
-    { icon: Map, label: 'Scenarios', path: '/scenarios' },
-    { icon: BarChart3, label: 'Progress', path: '/progress' },
-    { icon: ArrowLeftRight, label: 'Cashflow', path: '/cashflow' },
-    { icon: CreditCard, label: 'Debt', path: '/debt' },
+  useEffect(() => {
+    if (showPennyToast) {
+      const timer = setTimeout(() => setShowPennyToast(false), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [showPennyToast]);
+
+  const sections = [
+    {
+      title: 'Overview',
+      items: [
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+        { icon: GitBranch, label: 'Journey', path: '/journey' },
+        { icon: Calendar, label: 'Month', path: '/month' },
+      ],
+    },
+    {
+      title: 'Money',
+      items: [
+        { icon: ArrowLeftRight, label: 'Cashflow', path: '/cashflow' },
+        { icon: CreditCard, label: 'Debt', path: '/debt' },
+        { icon: Map, label: 'Scenarios', path: '/scenarios' },
+      ],
+    },
+    {
+      title: 'Wins',
+      items: [
+        { icon: BarChart3, label: 'Progress', path: '/progress' },
+      ],
+    },
   ];
 
   const handleNavigation = (path: string) => {
@@ -57,23 +80,48 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
       )}
       
       <aside
-        className={`h-full flex flex-col overflow-hidden z-50 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] bg-card border-r border-border fixed md:relative ${mobileMenuOpen ? 'left-0 shadow-[var(--shadow-lg)]' : '-left-[240px] md:left-0 shadow-none'} w-[240px] ${collapsed ? 'md:w-[80px]' : 'md:w-[240px]'}`}
+        className={`h-full flex flex-col overflow-hidden z-50 fixed md:relative ${mobileMenuOpen ? 'left-0 shadow-[var(--shadow-lg)]' : '-left-[240px] md:left-0 shadow-none'}`}
+        style={{
+          width: collapsed ? 76 : 232,
+          height: '100vh',
+          background: 'var(--card)',
+          backdropFilter: `blur(var(--blur-sidebar))`,
+          borderRight: '1px solid var(--border)',
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'width 400ms cubic-bezier(0.22, 1, 0.36, 1)',
+          position: 'relative',
+          zIndex: 10,
+          flexShrink: 0,
+        }}
       >
         {/* Header */}
-        <div className="relative p-6">
+        <div style={{ padding: 'var(--space-3) var(--space-2)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)', position: 'relative' }}>
           <button
             onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-            className="flex items-center gap-3 w-full hover:opacity-80 transition-all duration-300"
+            style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', padding: 0 }}
           >
             <div
-              className="w-3 h-3 rounded-full flex-shrink-0 bg-[var(--penny-accent)] shadow-[0_0_12px_var(--accent)]"
-            />
-            {/* opacity/maxWidth kept inline — driven by JS collapsed state */}
-            <span
-              className="font-bold text-xl overflow-hidden whitespace-nowrap slashed-zero text-card-foreground transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] font-display"
               style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: 'var(--accent)',
+                boxShadow: '0 0 14px var(--accent-glow)',
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 'var(--font-weight-bold)',
+                fontSize: 'var(--text-xl)',
+                letterSpacing: '-0.02em',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '200px',
+                transition: 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
               }}
             >
               finpath
@@ -83,7 +131,21 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           {/* Desktop Collapse */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full items-center justify-center transition-all duration-300 hover:scale-110 text-card-foreground bg-surface-hover"
+            className="hidden md:flex"
+            style={{
+              position: 'absolute',
+              right: 'var(--space-1)',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 24,
+              height: 24,
+              borderRadius: 'var(--radius-base)',
+              background: 'var(--surface-hover)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'transform 300ms ease',
+              color: 'var(--card-foreground)',
+            }}
           >
             {collapsed ? <ChevronRight size={16} className="icon-wireframe" /> : <ChevronLeft size={16} className="icon-wireframe" />}
           </button>
@@ -91,61 +153,209 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           {/* Mobile Close */}
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="md:hidden absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 text-card-foreground bg-surface-hover"
+            className="md:hidden"
+            style={{
+              position: 'absolute',
+              right: 'var(--space-1)',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 24,
+              height: 24,
+              borderRadius: 'var(--radius-base)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 300ms ease',
+              color: 'var(--card-foreground)',
+              background: 'var(--surface-hover)',
+            }}
           >
             <X size={16} className="icon-wireframe" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-2">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleNavigation(item.path)}
-                className={`w-full flex items-center py-3 rounded-2xl mb-2 relative overflow-hidden transition-all duration-300 font-body ${collapsed ? 'px-0 justify-center md:px-0 gap-0' : 'px-4 justify-start gap-3'} ${active ? 'nav-item-active text-card-foreground font-semibold' : 'bg-transparent text-secondary font-normal'}`}
-                title={collapsed ? item.label : undefined}
-              >
-                {active && (
-                  <div
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-[var(--penny-accent)] shadow-[0_0_12px_var(--accent)]"
-                  />
-                )}
-                <Icon
-                  size={20}
-                  className="icon-wireframe flex-shrink-0 icon-20"
-                />
-                {/* opacity/maxWidth kept inline — driven by JS collapsed state */}
-                <span
-                  className="font-medium overflow-hidden whitespace-nowrap slashed-zero"
-                  style={{
-                    opacity: collapsed ? 0 : 1,
-                    maxWidth: collapsed ? '0px' : '150px',
-                    transition: 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                >
-                  {item.label}
+        <nav style={{ flex: 1, padding: `0 var(--space-1)`, display: 'flex', flexDirection: 'column', gap: 0, overflowY: 'auto' }}>
+          {sections.map((section, idx) => (
+            <div key={section.title}>
+              {/* Divider between sections (not before first) */}
+              {idx > 0 && (
+                <div style={{
+                  height: 1,
+                  background: 'var(--border)',
+                  margin: `var(--space-1) 0`,
+                }} />
+              )}
+
+              {/* Section header — hides when collapsed */}
+              <div style={{
+                overflow: 'hidden',
+                opacity: collapsed ? 0 : 1,
+                maxHeight: collapsed ? 0 : '32px',
+                transition: 'all 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                paddingLeft: 'var(--space-2)',
+                paddingBottom: 'var(--space-1)',
+                paddingTop: idx === 0 ? 0 : 'var(--space-1)',
+              }}>
+                <span style={{
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--tertiary)',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {section.title}
                 </span>
-              </button>
-            );
-          })}
+              </div>
+
+              {/* Nav items */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = location.pathname === item.path;
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => handleNavigation(item.path)}
+                      title={collapsed ? item.label : undefined}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: collapsed ? 0 : 'var(--space-1)',
+                        padding: collapsed ? 'var(--space-1)' : `var(--space-1) var(--space-2)`,
+                        justifyContent: collapsed ? 'center' : 'flex-start',
+                        borderRadius: 'var(--radius-md)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: active ? 'var(--accent-subtle)' : 'transparent',
+                        color: active ? 'var(--accent-text)' : 'var(--secondary)',
+                        fontWeight: active ? 'var(--font-weight-semibold)' : 'var(--font-weight-medium)',
+                        fontSize: 'var(--text-base)',
+                        transition: 'all 250ms ease',
+                        width: '100%',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!active) e.currentTarget.style.background = 'var(--surface-hover)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      {active && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            width: 3,
+                            height: 24,
+                            borderRadius: `0 var(--radius-xs) var(--radius-xs) 0`,
+                            background: 'var(--accent)',
+                            boxShadow: '0 0 12px var(--accent-glow)',
+                          }}
+                        />
+                      )}
+                      <Icon
+                        size={20}
+                        className="icon-wireframe flex-shrink-0 icon-20"
+                      />
+                      <span
+                        style={{
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          opacity: collapsed ? 0 : 1,
+                          maxWidth: collapsed ? '0px' : '150px',
+                          transition: 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
+        {/* Penny Toast */}
+        {showPennyToast && (
+          <div style={{
+            padding: `var(--space-1) var(--space-2)`,
+            margin: `0 var(--space-1) var(--space-1)`,
+            background: 'var(--accent-subtle)',
+            border: '1px solid var(--accent)',
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 'var(--space-2)',
+          }}>
+            <span style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--accent-text)',
+              fontWeight: 'var(--font-weight-medium)',
+              lineHeight: 1.4,
+              flex: 1,
+            }}>
+              Hi, I'm Penny Your AI financial assistant
+            </span>
+            <button
+              onClick={() => setShowPennyToast(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--accent-text)',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
         {/* Ask Penny Button */}
-        <div className="p-4">
+        <div style={{ padding: 'var(--space-2)' }}>
           <button
-            className={`w-full flex items-center justify-center py-4 rounded-full font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] bg-[var(--penny-accent)] text-on-accent font-body shadow-[0_8px_24px_var(--penny-accent-glow)] ${collapsed ? 'gap-0' : 'gap-2'}`}
             title={collapsed ? 'Ask Penny' : undefined}
             onClick={() => { onPennyClick(); setMobileMenuOpen(false); }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: collapsed ? 0 : 'var(--space-1)',
+              padding: `var(--space-1) var(--space-2)`,
+              borderRadius: 'var(--radius-full)',
+              background: 'linear-gradient(135deg, var(--accent), var(--secondary-accent))',
+              color: 'var(--on-accent)',
+              fontWeight: 'var(--font-weight-bold)',
+              fontSize: 'var(--text-sm)',
+              boxShadow: '0 8px 24px var(--accent-glow)',
+              transition: 'transform 300ms ease',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px) scale(1.01)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'none';
+            }}
           >
             <MessageCircle size={20} className="flex-shrink-0 icon-20" />
-            {/* opacity/maxWidth kept inline — driven by JS collapsed state */}
             <span
-              className="overflow-hidden whitespace-nowrap slashed-zero"
               style={{
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '100px',
                 transition: 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)',

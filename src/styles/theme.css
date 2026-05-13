@@ -204,6 +204,7 @@
   --blur-sm: 24px;
   --blur-md: 48px;
   --blur-lg: 80px;
+  --blur-sidebar: 32px;
 
   /* ─── Progress Track ─── */
   --progress-inactive: rgba(5, 15, 28, 0.1);
@@ -1677,29 +1678,6 @@ a.bento-card:hover,
 }
 
 /* ─── Mission card ─── */
-.mission-card {
-  border: 2px solid var(--tertiary-accent);
-  box-shadow: 0 0 40px var(--tertiary-accent-glow);
-}
-
-.mission-blob {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
-  background: var(--tertiary-accent);
-  opacity: 0.2;
-  filter: blur(100px);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.dark .mission-blob {
-  opacity: 0.4;
-  mix-blend-mode: screen;
-}
 
 .mission-content {
   position: relative;
@@ -1724,7 +1702,7 @@ a.bento-card:hover,
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.07em;
-  color: var(--tertiary-accent-text);
+  color: var(--muted-foreground);
   text-transform: uppercase;
   font-family: var(--font-body);
   margin-bottom: var(--space-1);
