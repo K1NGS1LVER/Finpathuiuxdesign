@@ -1,16 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
-import {
-  Sparkles,
-  CreditCard,
-  Snowflake,
-  Zap,
-  AlertTriangle,
-} from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
 import { avalanche, snowball, compareStrategies } from '@/lib/debt-strategies';
 import {
   AreaChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
@@ -19,20 +14,18 @@ import {
 } from 'recharts';
 import { formatInr, usePalette } from '@/app/components/SankeyFlow';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  homeLoan: 'Home Loan',
-  carLoan: 'Car Loan',
-  personalLoan: 'Personal Loan',
-  creditCard: 'Credit Card',
-  educationLoan: 'Education Loan',
-  other: 'Debt',
+const fmtCompact = (n: number): string => {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(1)}Cr`;
+  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(1)}L`;
+  if (abs >= 1_000) return `${sign}₹${(abs / 1_000).toFixed(0)}K`;
+  return `${sign}₹${Math.round(abs).toLocaleString('en-IN')}`;
 };
 
 export default function Debt() {
   const debts = useFinPathStore(s => s.debts);
-  const income = useFinPathStore(s => s.income);
   const goals = useFinPathStore(s => s.goals);
-
   const pal = usePalette();
 
   const [extraPayment, setExtraPayment] = useState(0);
@@ -43,7 +36,6 @@ export default function Debt() {
   const debtItems = useMemo(() => {
     if (debts.items.length > 0) return debts.items;
     if (!debtGoal) return [];
-    // Reconstruct a single debt item from the goal when debts.items was wiped
     const monthlyPayment = debtGoal.monthlyAllocation || debts.totalMonthly || 0;
     const principal = debtGoal.targetAmount || debts.totalPrincipal || monthlyPayment * 12;
     if (monthlyPayment <= 0 && principal <= 0) return [];
@@ -58,7 +50,6 @@ export default function Debt() {
     }];
   }, [debts.items, debts.totalMonthly, debts.totalPrincipal, debtGoal]);
 
-  // Auto-repair: restore debts field from goal data on mount
   const setDebts = useFinPathStore(s => s.setDebts);
   useEffect(() => {
     if (debts.items.length === 0 && debtGoal && debtGoal.monthlyAllocation > 0) {
@@ -79,6 +70,13 @@ export default function Debt() {
     return timelineStrategy === 'avalanche'
       ? avalanche(debtItems, extraPayment)
       : snowball(debtItems, extraPayment);
+  }, [debtItems, extraPayment, timelineStrategy]);
+
+  const otherTimelineResult = useMemo(() => {
+    if (debtItems.length === 0) return null;
+    return timelineStrategy === 'avalanche'
+      ? snowball(debtItems, extraPayment)
+      : avalanche(debtItems, extraPayment);
   }, [debtItems, extraPayment, timelineStrategy]);
 
   const timelineChartData = useMemo(() => {
@@ -114,198 +112,110 @@ export default function Debt() {
         if (val === undefined || val === null) months[m][id] = months[m - 1]?.[id] ?? 0;
       }
     }
-    return months;
-  }, [timelineResult, debtItems]);
 
-  const dti = useMemo(() => {
-    if (!income.total) return 0;
-    return (debtItems.reduce((sum, d) => sum + d.monthlyPayment, 0) / income.total) * 100;
-  }, [debtItems, income.total]);
+    if (otherTimelineResult && debtItems.length > 1) {
+      const otherBal: Record<string, number> = {};
+      for (const d of debtItems) otherBal[d.id] = d.principal;
+      months[0]._otherTotal = Object.values(otherBal).reduce((s, v) => s + v, 0);
+      const byMonth = new Map<number, typeof otherTimelineResult.steps>();
+      for (const step of otherTimelineResult.steps) {
+        if (!byMonth.has(step.month)) byMonth.set(step.month, []);
+        byMonth.get(step.month)!.push(step);
+      }
+      for (let m = 1; m <= maxMonths; m++) {
+        const steps = byMonth.get(m);
+        if (steps) for (const s of steps) otherBal[s.debtId] = s.remainingBalance;
+        months[m]._otherTotal = Math.max(0, Object.values(otherBal).reduce((s, v) => s + v, 0));
+      }
+    }
+
+    return months;
+  }, [timelineResult, otherTimelineResult, debtItems]);
 
   const DEBT_COLORS = useMemo(() => [pal.blue, pal.lime, pal.red, pal.amber, pal.green, pal.purple], [pal]);
 
-  const extraPaymentImpact = useMemo(() => {
-    if (!comparison || extraPayment <= 0) return null;
-    const base = compareStrategies(debtItems, 0);
-    return {
-      savedMonths: Math.max(0, base.avalanche.totalMonths - comparison.avalanche.totalMonths),
-      savedInterest: Math.max(0, base.avalanche.totalInterestPaid - comparison.avalanche.totalInterestPaid),
-    };
-  }, [debtItems, comparison, extraPayment]);
+  const totalPrincipal = useMemo(() => debtItems.reduce((s, d) => s + d.principal, 0), [debtItems]);
+  const totalMonthlyEMI = useMemo(() => debtItems.reduce((s, d) => s + d.monthlyPayment, 0), [debtItems]);
+  const avgInterestRate = useMemo(() => {
+    if (totalPrincipal === 0) return 0;
+    return debtItems.reduce((s, d) => s + d.interestRate * d.principal, 0) / totalPrincipal;
+  }, [debtItems, totalPrincipal]);
 
-  const pennyInsights = useMemo(() => {
-    if (debtItems.length === 0) {
-      return ['No debts to analyze — you\'re debt-free! Track any future debts here.'];
-    }
-    const insights: string[] = [];
+  const sortedDebts = useMemo(() => {
+    if (timelineStrategy === 'avalanche') return [...debtItems].sort((a, b) => b.interestRate - a.interestRate);
+    return [...debtItems].sort((a, b) => a.principal - b.principal);
+  }, [debtItems, timelineStrategy]);
 
-    if (dti > 40) {
-      insights.push(`Your debt-to-income ratio is ${Math.round(dti)}%, which is high. Prioritise paying down high-interest debts first.`);
-    } else if (dti > 20) {
-      insights.push(`Your DTI is ${Math.round(dti)}% — manageable but worth watching. Keep debt payments under 30% of income.`);
-    } else {
-      insights.push(`Your DTI is a healthy ${Math.round(dti)}% — you're managing debt well relative to your income.`);
-    }
-
-    if (comparison) {
-      const saved = Math.abs(comparison.interestSaved);
-      if (saved > 0) insights.push(`The ${comparison.recommendation} strategy saves you ${formatInr(saved)} in total interest — use the strategy cards below to compare.`);
-    }
-
-    if (comparison) {
-      insights.push(`Over the full term, avalanche costs ${formatInr(comparison.avalanche.totalInterestPaid)} in interest vs snowball's ${formatInr(comparison.snowball.totalInterestPaid)}.`);
-    }
-
-    const smallest = [...debtItems].sort((a, b) => a.principal - b.principal)[0];
-    if (smallest) insights.push(`${smallest.name} is your smallest debt at ${formatInr(smallest.principal)} — knocking it out first builds momentum.`);
-
-    const highest = [...debtItems].sort((a, b) => b.interestRate - a.interestRate)[0];
-    if (highest && highest !== smallest) insights.push(`${highest.name} has the highest interest rate at ${highest.interestRate}% APR — paying it down aggressively saves the most interest.`);
-
-    if (extraPaymentImpact) {
-      insights.push(`With ${formatInr(extraPayment)} extra per month, you save ${extraPaymentImpact.savedMonths} month${extraPaymentImpact.savedMonths !== 1 ? 's' : ''} and ${formatInr(extraPaymentImpact.savedInterest)} in interest.`);
-    } else if (extraPayment <= 0 && debtItems.length > 0) {
-      insights.push('Use the extra payment slider below to see how much faster you can be debt-free.');
-    }
-
-    if (timelineResult) {
-      const payoffDate = new Date();
-      payoffDate.setMonth(payoffDate.getMonth() + timelineResult.totalMonths);
-      const dateStr = payoffDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
-      insights.push(`At your current pace, you'll be debt-free by ${dateStr}${extraPayment > 0 ? ' (with extra payments)' : ''}.`);
-    }
-
-    return insights;
-  }, [debtItems, dti, comparison, extraPayment, extraPaymentImpact, timelineResult]);
-
-  const isSingleDebt = debtItems.length === 1;
-  const totalDebtPayments = debtItems.reduce((sum, d) => sum + d.monthlyPayment, 0) + extraPayment;
+  const pennyInsight = useMemo(() => {
+    if (!comparison || debtItems.length === 0) return null;
+    const saving = Math.abs(comparison.interestSaved);
+    const months = Math.abs(comparison.monthsDifference);
+    const better = comparison.recommendation === 'avalanche' ? 'Avalanche' : 'Snowball';
+    return { better, saving, months };
+  }, [comparison, debtItems.length]);
 
   return (
-    <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
-        {debtItems.length > 0 && (
-          <div className="lg:col-span-3 bento-card p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Debt Overview</h3>
-              <span className="text-sm text-[var(--secondary)]">
-                {formatInr(totalDebtPayments)} / month
-              </span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'Total Debt', value: formatInr(debtItems.reduce((sum, d) => sum + d.principal, 0)), color: pal.red },
-                { label: 'Monthly Payments', value: formatInr(debtItems.reduce((sum, d) => sum + d.monthlyPayment, 0)), color: pal.amber },
-                { label: 'DTI Ratio', value: `${Math.round(dti)}%`, color: dti > 40 ? pal.red : pal.green },
-                { label: 'Debt Accounts', value: `${debtItems.length}`, color: pal.blue },
-              ].map(stat => (
-                <div key={stat.label} className="p-3 rounded-xl text-center" style={{ background: 'var(--surface-hover)' }}>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: stat.color }}>
-                    {stat.label}
-                  </div>
-                  <div className="text-sm font-bold slashed-zero text-[var(--card-foreground)]">
-                    {stat.value}
-                  </div>
-                </div>
-              ))}
-            </div>
+    <div className="page-animate" style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <p className="text-label">Liabilities</p>
+        <h2 style={{ fontSize: 'var(--text-4xl)', fontWeight: 700, letterSpacing: '-0.02em', marginTop: 'var(--space-1)', fontFamily: 'var(--font-display)', color: 'var(--card-foreground)' }}>
+          Debt
+        </h2>
+      </div>
+
+      {debtItems.length > 0 ? (
+        <>
+          {/* 3 Metric Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+            {([
+              { label: 'Total Outstanding', value: fmtCompact(totalPrincipal), color: 'var(--red-text)' },
+              { label: 'Monthly EMI', value: formatInr(totalMonthlyEMI), color: 'var(--card-foreground)' },
+              { label: 'Avg Interest Rate', value: `${avgInterestRate.toFixed(1)}%`, color: 'var(--amber-text)' },
+            ] as const).map(({ label, value, color }) => (
+              <div key={label} className="bento-card" style={{ padding: 'var(--space-4)' }}>
+                <p className="text-label">{label}</p>
+                <p className="slashed-zero" style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color, marginTop: 'var(--space-1)' }}>
+                  {value}
+                </p>
+              </div>
+            ))}
           </div>
-        )}
 
-        {comparison && (
-          <>
-            <div className={`bento-card flex flex-col ${!isSingleDebt && comparison.recommendation === 'avalanche' ? 'border-[var(--accent)] border-2 shadow-[0_0_24px_var(--secondary-accent-subtle)]' : ''}`}>
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Avalanche</h3>
-                  <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[240px]">Pay highest interest first. Minimises total interest paid.</p>
-                </div>
-                <Zap size={18} className="text-[var(--secondary-accent-text)]" />
+          {/* Main Card: Controls + Chart + Debt List */}
+          <div className="bento-card" style={{ marginBottom: 'var(--space-4)' }}>
+            {/* Strategy Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+              <div>
+                <p className="text-label">Payoff Strategy</p>
+                {debtItems.length === 1 && (
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--tertiary)', marginTop: 2 }}>
+                    Both strategies identical with one debt
+                  </p>
+                )}
               </div>
-              <div className="relative mb-4 flex-1 flex flex-col justify-center">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full radial-glow-lime pointer-events-none" />
-                <div className="relative text-center py-4">
-                  <div className="text-xl font-bold mb-1 slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-                    {comparison.avalanche.totalMonths} months
-                  </div>
-                  <div className="text-sm text-[var(--secondary)]">Total Interest: {formatInr(comparison.avalanche.totalInterestPaid)}</div>
-                </div>
-              </div>
-              <div className="space-y-2 mt-auto p-3 rounded-xl" style={{ background: 'var(--surface-tint)' }}>
-                <div className="text-xs font-semibold text-[var(--secondary)] uppercase tracking-wider mb-1">Payoff Order</div>
-                {debtItems.slice().sort((a, b) => b.interestRate - a.interestRate).map((d, i) => (
-                  <div key={d.id} className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--card-foreground)]">{i + 1}. {d.name}</span>
-                    <span className="text-[var(--secondary)]">{d.interestRate}% APR</span>
-                  </div>
-                ))}
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <button
+                  onClick={() => setTimelineStrategy('avalanche')}
+                  className={`pill${timelineStrategy === 'avalanche' ? ' active' : ''}`}
+                >
+                  Avalanche
+                </button>
+                <button
+                  onClick={() => setTimelineStrategy('snowball')}
+                  className={`pill${timelineStrategy === 'snowball' ? ' active' : ''}`}
+                >
+                  Snowball
+                </button>
               </div>
             </div>
 
-            <div className={`bento-card flex flex-col ${!isSingleDebt && comparison.recommendation === 'snowball' ? 'border-[var(--accent)] border-2 shadow-[0_0_24px_var(--secondary-accent-subtle)]' : ''}`}>
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Snowball</h3>
-                  <p className="text-[10px] text-[var(--secondary)] mt-1 max-w-[240px]">Pay smallest balance first. Psychologically motivating with quick wins.</p>
-                </div>
-                <Snowflake size={18} className="text-[var(--secondary-accent-text)]" />
-              </div>
-              <div className="relative mb-4 flex-1 flex flex-col justify-center">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full radial-glow-blue pointer-events-none" />
-                <div className="relative text-center py-4">
-                  <div className="text-xl font-bold mb-1 slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-                    {comparison.snowball.totalMonths} months
-                  </div>
-                  <div className="text-sm text-[var(--secondary)]">Total Interest: {formatInr(comparison.snowball.totalInterestPaid)}</div>
-                </div>
-              </div>
-              <div className="space-y-2 mt-auto p-3 rounded-xl" style={{ background: 'var(--surface-tint)' }}>
-                <div className="text-xs font-semibold text-[var(--secondary)] uppercase tracking-wider mb-1">Payoff Order</div>
-                {debtItems.slice().sort((a, b) => a.principal - b.principal).map((d, i) => (
-                  <div key={d.id} className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--card-foreground)]">{i + 1}. {d.name}</span>
-                    <span className="text-[var(--secondary)]">{formatInr(d.principal)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={`bento-card flex flex-col items-center justify-center gap-2 ${isSingleDebt ? 'text-center' : ''}`}>
-              {isSingleDebt ? (
-                <div className="text-center">
-                  <div className="text-sm font-medium text-[var(--secondary)] mb-1">Single Debt</div>
-                  <p className="text-xs text-[var(--secondary)] max-w-[240px]">With only one debt, both strategies behave the same.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="text-sm font-medium text-[var(--secondary)]">
-                    {comparison.interestSaved > 0
-                      ? `${comparison.recommendation === 'avalanche' ? 'Avalanche' : 'Snowball'} saves you`
-                      : comparison.interestSaved < 0
-                        ? `${comparison.recommendation === 'avalanche' ? 'Snowball' : 'Avalanche'} saves you`
-                        : 'No interest difference'}
-                  </div>
-                  {comparison.interestSaved !== 0 && (
-                    <div className="text-3xl font-bold slashed-zero text-[var(--secondary-accent-text)]" style={{ fontFamily: 'var(--font-display)' }}>
-                      {formatInr(Math.abs(comparison.interestSaved))}
-                    </div>
-                  )}
-                  {comparison.monthsDifference !== 0 && (
-                    <div className="text-xs text-[var(--secondary)]">
-                      {Math.abs(comparison.monthsDifference)} month{Math.abs(comparison.monthsDifference) > 1 ? 's' : ''} {comparison.monthsDifference > 0 ? 'faster' : 'slower'}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="lg:col-span-3 bento-card p-6">
-              <h3 className="text-title slashed-zero text-[var(--card-foreground)] mb-2">Extra Monthly Payment</h3>
-              <div className="flex items-baseline gap-4 mb-4">
-                <span className="text-3xl font-bold slashed-zero text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
+            {/* Extra Payment Slider */}
+            <div style={{ marginBottom: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 'var(--space-2)' }}>
+                <p className="text-label">Extra Monthly Payment</p>
+                <span className="slashed-zero" style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--card-foreground)' }}>
                   {formatInr(extraPayment)}
                 </span>
-                <span className="text-sm text-[var(--secondary)]">per month</span>
               </div>
               <input
                 type="range"
@@ -314,71 +224,18 @@ export default function Debt() {
                 step={500}
                 value={extraPayment}
                 onChange={e => setExtraPayment(Number(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${(extraPayment / 50000) * 100}%, var(--border) ${(extraPayment / 50000) * 100}%, var(--border) 100%)`,
-                  accentColor: 'var(--accent)',
-                }}
+                className="range"
               />
-              <div className="flex justify-between text-xs text-[var(--secondary)] mt-1">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'var(--tertiary)', marginTop: 'var(--space-1)' }}>
                 <span>₹0</span>
                 <span>₹50,000</span>
               </div>
-              {extraPaymentImpact && (
-                <div className="mt-3 p-3 rounded-xl text-sm" style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}>
-                  <span className="text-[var(--secondary-accent-text)] font-semibold">Impact: </span>
-                  <span className="text-[var(--card-foreground)]">
-                    {`Saves ${extraPaymentImpact.savedMonths} month${extraPaymentImpact.savedMonths !== 1 ? 's' : ''}, ${formatInr(extraPaymentImpact.savedInterest)} in interest`}
-                  </span>
-                </div>
-              )}
             </div>
 
+            {/* Payoff Timeline Chart */}
             {timelineChartData.length > 0 && (
-              <div className="lg:col-span-3 bento-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-title slashed-zero text-[var(--card-foreground)]">Payoff Timeline</h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setTimelineStrategy(timelineStrategy === 'avalanche' ? 'snowball' : 'avalanche')}
-                      className="relative flex items-center h-8 px-1 rounded-full transition-all cursor-pointer select-none"
-                      style={{
-                        width: "9rem",
-                        background: timelineStrategy === "avalanche" ? "var(--accent)" : "var(--accent)",
-                        border: "none",
-                      }}
-                    >
-                      <span
-                        className="absolute top-0.5 h-7 rounded-full transition-all duration-300 ease-out"
-                        style={{
-                          width: "calc(50% - 0.25rem)",
-                          left: timelineStrategy === "avalanche" ? "0.25rem" : "calc(50% + 0rem)",
-                          background: "var(--card)",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
-                        }}
-                      />
-                      <span
-                        className="relative z-10 flex-1 text-center text-[10px] font-bold transition-colors duration-200"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          color: timelineStrategy === "avalanche" ? "var(--on-secondary-accent)" : "var(--on-secondary-accent)",
-                        }}
-                      >
-                        Avalanche
-                      </span>
-                      <span
-                        className="relative z-10 flex-1 text-center text-[10px] font-bold transition-colors duration-200"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          color: timelineStrategy === "snowball" ? "var(--foreground)" : "var(--on-secondary-accent)",
-                        }}
-                      >
-                        Snowball
-                      </span>
-                    </button>
-                  </div>
-                </div>
-                <ResponsiveContainer width="100%" height={280}>
+              <div style={{ marginBottom: 'var(--space-5)' }}>
+                <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={timelineChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--secondary)' }} interval={Math.max(1, Math.floor(timelineChartData.length / 8))} />
@@ -391,93 +248,129 @@ export default function Debt() {
                       <Area key={d.id} type="monotone" dataKey={d.id} name={d.name} stackId="1"
                         stroke={DEBT_COLORS[i % DEBT_COLORS.length]} fill={DEBT_COLORS[i % DEBT_COLORS.length]} fillOpacity={0.3} strokeWidth={2} />
                     ))}
+                    {debtItems.length > 1 && (
+                      <Line
+                        type="monotone"
+                        dataKey="_otherTotal"
+                        stroke="var(--secondary)"
+                        strokeDasharray="6 3"
+                        strokeWidth={1.5}
+                        dot={false}
+                        opacity={0.45}
+                        name={timelineStrategy === 'avalanche' ? 'Snowball total' : 'Avalanche total'}
+                      />
+                    )}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             )}
 
-            <div className="lg:col-span-3 bento-card p-6">
-              <h3 className="text-title slashed-zero text-[var(--card-foreground)] mb-4">Your Debts</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {debtItems.map((d) => {
-                  const payoffMonth = timelineResult?.payoffDates?.[d.id];
-                  const payoffDate = payoffMonth
-                    ? (() => { const date = new Date(); date.setMonth(date.getMonth() + payoffMonth); return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); })()
-                    : null;
-                  const relatedGoal = goals.find(g => g.category === 'debt' && (g.name === d.name || g.name.includes(d.name)));
-                  const paidPct = d.principal > 0 && relatedGoal ? Math.min(100, (relatedGoal.currentAmount / relatedGoal.targetAmount) * 100) : 0;
+            {/* Ranked Debt List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              {sortedDebts.map((d, i) => {
+                const relatedGoal = goals.find(g => g.category === 'debt' && (g.name === d.name || g.name.includes(d.name)));
+                const originalAmount = relatedGoal?.targetAmount;
+                const paidPct = originalAmount && originalAmount > 0 && d.principal <= originalAmount
+                  ? Math.min(100, ((originalAmount - d.principal) / originalAmount) * 100)
+                  : null;
+                const payoffMonth = timelineResult?.payoffDates?.[d.id];
+                const payoffDate = payoffMonth
+                  ? (() => {
+                      const pd = new Date();
+                      pd.setMonth(pd.getMonth() + payoffMonth);
+                      return pd.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+                    })()
+                  : null;
 
-                  return (
-                    <div key={d.id} className="p-4 rounded-xl" style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold text-[var(--card-foreground)]">{d.name}</h4>
-                          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md" style={{ background: 'var(--surface-tint)', color: 'var(--secondary)' }}>
-                            {CATEGORY_LABELS[d.category] || d.category}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div><div className="text-[var(--secondary)] text-xs">Principal</div><div className="font-semibold slashed-zero text-[var(--card-foreground)]">{formatInr(d.principal)}</div></div>
-                        <div><div className="text-[var(--secondary)] text-xs">Interest Rate</div><div className="font-semibold slashed-zero text-[var(--card-foreground)]">{d.interestRate}% APR</div></div>
-                        <div><div className="text-[var(--secondary)] text-xs">Monthly Payment</div><div className="font-semibold slashed-zero text-[var(--card-foreground)]">{formatInr(d.monthlyPayment)}</div></div>
-                        <div><div className="text-[var(--secondary)] text-xs">Est. Payoff</div><div className="font-semibold slashed-zero text-[var(--card-foreground)]">{payoffDate || '—'}</div></div>
-                      </div>
-                      {paidPct > 0 && (
-                        <div className="mt-3">
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-[var(--secondary)]">Progress via goals</span>
-                            <span className="font-semibold text-[var(--card-foreground)]">{Math.round(paidPct)}%</span>
-                          </div>
-                          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--surface-tint)' }}>
-                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${paidPct}%`, background: 'var(--penny-accent)', boxShadow: '0 0 8px var(--secondary-accent-glow)' }} />
-                          </div>
-                        </div>
-                      )}
+                return (
+                  <div key={d.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    padding: 16,
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--surface-hover)',
+                    border: '1px solid var(--border)',
+                  }}>
+                    <div style={{
+                      width: 32, height: 32,
+                      borderRadius: 'var(--radius-md)',
+                      background: i === 0 ? 'var(--red-subtle)' : 'var(--surface-tint)',
+                      color: i === 0 ? 'var(--red-text)' : 'var(--tertiary)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      fontSize: 'var(--text-sm)',
+                      flexShrink: 0,
+                    }}>
+                      {i + 1}
                     </div>
-                  );
-                })}
-              </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--card-foreground)' }}>{d.name}</p>
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--tertiary)' }}>
+                        {d.interestRate}% APR · {formatInr(d.monthlyPayment)}/mo
+                        {payoffDate && <> · <span style={{ color: 'var(--accent-text)' }}>free {payoffDate}</span></>}
+                      </p>
+                    </div>
+                    {paidPct !== null && (
+                      <div style={{ width: 160, height: 8, background: 'var(--surface-tint)', borderRadius: 'var(--radius-full)', overflow: 'hidden', flexShrink: 0 }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${paidPct}%`,
+                          background: d.interestRate > 25 ? 'var(--red)' : 'var(--amber)',
+                          borderRadius: 'var(--radius-full)',
+                          transition: 'width 1s ease',
+                        }} />
+                      </div>
+                    )}
+                    <div className="slashed-zero" style={{
+                      minWidth: 100,
+                      textAlign: 'right',
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--text-lg)',
+                      fontWeight: 700,
+                      color: 'var(--card-foreground)',
+                    }}>
+                      {fmtCompact(d.principal)}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </>
-        )}
-
-        {debtItems.length === 0 && (
-          <div className="lg:col-span-3 flex flex-col items-center justify-center py-12 text-center" style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)', borderRadius: '16px' }}>
-            <CreditCard size={36} className="text-[var(--secondary)] mb-4" />
-            <p className="text-lg font-medium text-[var(--card-foreground)] mb-1">No Debts Tracked</p>
-            <p className="text-sm text-[var(--secondary)] max-w-md">
-              You don't have any debts on record. Add debts during onboarding to unlock strategy comparison and payoff timeline views.
-            </p>
           </div>
-        )}
 
-        <div className="lg:col-span-3 flex flex-col gap-4 penny-insight-card">
-          <div className="penny-insight-blob" />
-          <div className="relative z-10 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
-              <Sparkles size={16} />
-            </div>
-            <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">Penny's Insight</h3>
-          </div>
-          {debtItems.length > 0 && dti > 40 && (
-            <div className="relative z-10 flex items-start gap-3 p-3 rounded-xl text-sm" style={{ background: 'var(--surface-hover)', border: '1px solid var(--red)', color: 'var(--red-text)' }}>
-              <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
-              <span>High debt burden: DTI ratio is {Math.round(dti)}%. Consider reducing discretionary spending and prioritising high-interest debt payoff.</span>
+          {/* Penny Insight */}
+          {pennyInsight && (
+            <div style={{
+              padding: 'var(--space-4)',
+              borderRadius: 'var(--radius-lg)',
+              background: 'var(--penny-accent-subtle)',
+              border: '1px solid var(--penny-insight-border)',
+              display: 'flex',
+              gap: 'var(--space-2)',
+              alignItems: 'flex-start',
+            }}>
+              <Sparkles size={16} style={{ color: 'var(--penny-accent)', flexShrink: 0, marginTop: 2 }} />
+              <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.5, color: 'var(--secondary)' }}>
+                The <b>{pennyInsight.better}</b> method saves roughly{' '}
+                <b>{formatInr(pennyInsight.saving)}</b> in interest vs minimum payments
+                {pennyInsight.months > 0 && (
+                  <>, clearing debt <b>{pennyInsight.months} month{pennyInsight.months !== 1 ? 's' : ''}</b> faster</>
+                )}.
+              </p>
             </div>
           )}
-          <div className="relative z-10 space-y-3">
-            {pennyInsights.map((tip, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-xl text-sm"
-                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)', color: 'var(--card-foreground)' }}
-              >
-                <span className="text-[var(--penny-accent)] mt-0.5 font-bold">{i + 1}.</span>
-                <span>{tip}</span>
-              </div>
-            ))}
-          </div>
+        </>
+      ) : (
+        <div className="bento-card" style={{ padding: 'var(--space-12)', textAlign: 'center' }}>
+          <p style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--card-foreground)', marginBottom: 'var(--space-2)' }}>
+            No Debts Tracked
+          </p>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--secondary)' }}>
+            Add debts during onboarding to unlock strategy comparison and payoff timeline views.
+          </p>
         </div>
-      </div>
+      )}
     </div>
   );
 }

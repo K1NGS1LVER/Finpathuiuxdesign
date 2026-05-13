@@ -37,9 +37,24 @@ export interface CustomNodeProps {
   palette: Record<string, string>;
 }
 
-export function CustomNode({ x = 0, y = 0, width = 0, height = 0, index = 0, payload = { name: '' }, palette }: CustomNodeProps) {
-  const colors = [palette.blue, palette.amber, palette.red, palette.lime, palette.green, palette.purple, palette.slate];
-  const color = colors[index % colors.length];
+const NODE_COLOR_KEYS: Record<string, keyof ReturnType<typeof usePalette>> = {
+  'Income':              'blue',
+  'Essential Expenses':  'amber',
+  'Debt & Savings':      'red',
+  'Disposable':          'green',
+  'Housing & Utilities': 'amber',
+  'Food':                'amber',
+  'Transport':           'amber',
+  'Other Expenses':      'amber',
+  'Debt Payments':       'red',
+  'Goals Progress':      'lime',
+  'Surplus Reserve':     'purple',
+  'Free Cash':           'green',
+};
+
+export function CustomNode({ x = 0, y = 0, width = 0, height = 0, index: _index = 0, payload = { name: '' }, palette }: CustomNodeProps) {
+  const colorKey = NODE_COLOR_KEYS[payload.name] ?? 'slate';
+  const color = palette[colorKey];
   const isLeft = x < 280;
 
   return (
@@ -60,10 +75,7 @@ export function CustomNode({ x = 0, y = 0, width = 0, height = 0, index = 0, pay
         y={y + height / 2 - 7}
         textAnchor={isLeft ? 'end' : 'start'}
         dominantBaseline="middle"
-        fill="var(--card-foreground)"
-        fontSize={11}
-        fontWeight={600}
-        fontFamily="var(--font-body)"
+        style={{ fill: 'var(--card-foreground)', fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-body)' }}
       >
         {payload.name}
       </text>
@@ -72,9 +84,7 @@ export function CustomNode({ x = 0, y = 0, width = 0, height = 0, index = 0, pay
         y={y + height / 2 + 9}
         textAnchor={isLeft ? 'end' : 'start'}
         dominantBaseline="middle"
-        fill="var(--secondary)"
-        fontSize={10}
-        fontFamily="var(--font-body)"
+        style={{ fill: 'var(--secondary)', fontSize: 'var(--text-2xs)', fontFamily: 'var(--font-body)' }}
       >
         {formatInr(payload.value ?? 0)}
       </text>
@@ -122,13 +132,21 @@ export function CustomLink({
     strokeColor = palette.green;
   }
 
+  const hw = linkWidth / 2;
+  const bandPath = [
+    `M${sourceX},${sourceY - hw}`,
+    `C${sourceControlX},${sourceY - hw} ${targetControlX},${targetY - hw} ${targetX},${targetY - hw}`,
+    `L${targetX},${targetY + hw}`,
+    `C${targetControlX},${targetY + hw} ${sourceControlX},${sourceY + hw} ${sourceX},${sourceY + hw}`,
+    'Z',
+  ].join(' ');
+
   return (
     <path
-      d={`M${sourceX},${sourceY} C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
-      fill="none"
-      stroke={strokeColor}
-      strokeWidth={Math.max(1, linkWidth * 0.9)}
-      strokeOpacity={0.25}
+      d={bandPath}
+      fill={strokeColor}
+      fillOpacity={0.35}
+      stroke="none"
     />
   );
 }

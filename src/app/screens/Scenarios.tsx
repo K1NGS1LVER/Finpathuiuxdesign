@@ -74,6 +74,9 @@ export default function Scenarios() {
   const [horizon, setHorizon] = useState(10);
   const [returnRate, setReturnRate] = useState(10);
   const [showCompare, setShowCompare] = useState(true);
+  const [svgTooltip, setSvgTooltip] = useState<{
+    svgX: number; svgY: number; scenarioVal: number; baseVal: number; yearLabel: string;
+  } | null>(null);
 
   useEffect(() => {
     setReturnRate(riskCfg[risk].rate);
@@ -114,6 +117,20 @@ export default function Scenarios() {
       .join(" ");
 
   const endY = H - (curveS[curveS.length - 1] / maxY) * (H - 20) - 10;
+
+  const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (curveS.length < 2) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * W;
+    const idx = Math.max(0, Math.min(curveS.length - 1, Math.round((svgX / W) * (curveS.length - 1))));
+    setSvgTooltip({
+      svgX: (idx / (curveS.length - 1)) * W,
+      svgY: H - (curveS[idx] / maxY) * (H - 20) - 10,
+      scenarioVal: curveS[idx],
+      baseVal: curveB[idx],
+      yearLabel: `Year ${Math.round((idx / (curveS.length - 1)) * horizon)}`,
+    });
+  };
 
   return (
     <div className="page-animate scenarios-page">
@@ -193,10 +210,13 @@ export default function Scenarios() {
             </div>
           </div>
 
-          <svg
-            viewBox={`0 0 ${W} ${H + 30}`}
-            className="scenarios-svg"
-          >
+          <div style={{ position: 'relative' }}>
+            <svg
+              viewBox={`0 0 ${W} ${H + 30}`}
+              className="scenarios-svg"
+              onMouseMove={handleSvgMouseMove}
+              onMouseLeave={() => setSvgTooltip(null)}
+            >
             <defs>
               <linearGradient id="scenAreaGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.32" />
@@ -274,7 +294,38 @@ export default function Scenarios() {
                 {Math.round(p * horizon)}y
               </text>
             ))}
-          </svg>
+              {svgTooltip && (
+                <line
+                  x1={svgTooltip.svgX} y1={0}
+                  x2={svgTooltip.svgX} y2={H}
+                  stroke="var(--border)" strokeDasharray="4 2" opacity="0.7"
+                />
+              )}
+            </svg>
+            {svgTooltip && (
+              <div style={{
+                position: 'absolute',
+                left: `${Math.min(85, Math.max(10, (svgTooltip.svgX / W) * 100))}%`,
+                top: `${Math.min(80, Math.max(5, (svgTooltip.svgY / (H + 30)) * 100))}%`,
+                transform: 'translate(-50%, -110%)',
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+                borderRadius: 12,
+                fontFamily: 'var(--font-body)',
+                color: 'var(--card-foreground)',
+                padding: '10px 14px',
+                pointerEvents: 'none',
+                zIndex: 10,
+                minWidth: 140,
+              }}>
+                <p style={{ fontSize: 11, color: 'var(--tertiary)', marginBottom: 4 }}>{svgTooltip.yearLabel}</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Scenario: {fmtCompact(svgTooltip.scenarioVal)}</p>
+                {showCompare && (
+                  <p style={{ fontSize: 12, color: 'var(--tertiary)', marginTop: 2 }}>Baseline: {fmtCompact(svgTooltip.baseVal)}</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Controls */}
