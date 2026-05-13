@@ -199,7 +199,7 @@ function AppContent() {
                   path="/debt"
                   element={
                     <ErrorBoundary key={location.pathname}>
-                      <Debt />
+                      <Debt onPennyClick={() => setPennyOpen(true)} />
                     </ErrorBoundary>
                   }
                 />

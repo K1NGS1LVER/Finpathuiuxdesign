@@ -1,13 +1,17 @@
-import { Target, TrendingUp, Shield, Sparkles, Calendar, Lightbulb } from "lucide-react";
+import { Target, TrendingUp, Shield, Sparkles, Calendar, Lightbulb, Plus, X } from "lucide-react";
 import type { GoalSelection } from "./useOnboardingForm";
 
 interface OnboardingStepGoalsProps {
   selectedGoals: Record<string, GoalSelection>;
   sortedSelectedGoals: [string, GoalSelection][];
+  customGoals: [string, GoalSelection][];
   goalSelectionCaption: string;
   getPriorityGlow: (priority: number) => string;
   onToggleGoal: (goalName: string) => void;
   onUpdateGoalAmount: (goalName: string, amount: string) => void;
+  onAddCustomGoal: () => void;
+  onUpdateGoalName: (key: string, name: string) => void;
+  onRemoveCustomGoal: (key: string) => void;
 }
 
 interface GoalOptionDef {
@@ -160,7 +164,7 @@ function SelectedOrderChips({
               boxShadow: getPriorityGlow(data.priority),
             }}
           >
-            P{data.priority} · {name}
+            P{data.priority} · {name.startsWith("custom-") ? (data.customName || "Custom Goal") : name}
           </span>
         ))}
       </div>
@@ -172,38 +176,36 @@ function SelectedOrderChips({
 }
 
 function CustomGoalRow({
-  isSelected,
-  priority,
+  goalKey,
+  customName,
   targetAmount,
-  onToggle,
+  priority,
+  onUpdateName,
   onUpdateAmount,
+  onRemove,
   getPriorityGlow,
 }: {
-  isSelected: boolean;
-  priority: number;
+  goalKey: string;
+  customName: string;
   targetAmount: string;
-  onToggle: () => void;
+  priority: number;
+  onUpdateName: (name: string) => void;
   onUpdateAmount: (amount: string) => void;
+  onRemove: () => void;
   getPriorityGlow: (p: number) => string;
 }) {
   return (
     <div
-      className={`goal-option w-full rounded-xl md:rounded-2xl overflow-hidden transition-all flex flex-col ${isSelected ? "selected" : ""}`}
+      className="goal-option selected w-full rounded-xl md:rounded-2xl overflow-hidden transition-all flex flex-col"
       style={{
         background: "var(--card)",
-        border: isSelected ? "2px solid var(--accent)" : "2px solid var(--border)",
-        boxShadow: isSelected ? getPriorityGlow(priority) : "none",
+        border: "2px solid var(--accent)",
+        boxShadow: getPriorityGlow(priority),
       }}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full p-4 md:p-5 font-medium flex items-center justify-center gap-3 text-[var(--card-foreground)] font-body-family"
-        aria-pressed={isSelected}
-        aria-label={`Custom goal${isSelected ? ` — Priority ${priority}` : ""}`}
-      >
+      <div className="p-4 md:p-5 flex items-center gap-3">
         <div
-          className="w-11 h-11 md:w-14 md:h-14 rounded-xl flex items-center justify-center transition-transform duration-300"
+          className="w-11 h-11 md:w-14 md:h-14 rounded-xl flex items-center justify-center shrink-0"
           style={{
             backgroundColor: "var(--accent-glow)",
             color: "var(--accent-text)",
@@ -211,27 +213,44 @@ function CustomGoalRow({
         >
           <Target size={20} className="icon-wireframe md:w-6 md:h-6" />
         </div>
-        <span className="text-sm md:text-base slashed-zero font-semibold">Custom Goal</span>
-        {isSelected && (
-          <span className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full priority-chip">
-            Priority P{priority}
-          </span>
-        )}
-      </button>
-
-      {isSelected && (
-        <div className="px-4 pb-4 md:px-5 md:pb-5 w-full flex gap-2.5">
+        <div className="flex-1 min-w-0">
           <input
             type="text"
-            value={targetAmount}
-            onChange={(e) => onUpdateAmount(e.target.value)}
-            placeholder="Target Amount"
-            className="flex-1 px-4 py-2.5 text-sm md:text-base font-bold text-center rounded-lg outline-none slashed-zero breakdown-input"
-            inputMode="numeric"
-            aria-label="Custom goal target amount"
+            value={customName}
+            onChange={(e) => onUpdateName(e.target.value)}
+            placeholder="Goal name"
+            className="w-full py-2 px-3 text-sm md:text-base font-semibold rounded-lg outline-none breakdown-input"
+            aria-label="Custom goal name"
+            maxLength={40}
           />
         </div>
-      )}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full priority-chip">
+            P{priority}
+          </span>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+            style={{ background: "var(--surface-tint)", color: "var(--secondary)" }}
+            aria-label={`Remove ${customName || "custom goal"}`}
+          >
+            <X size={14} className="icon-wireframe" />
+          </button>
+        </div>
+      </div>
+
+      <div className="px-4 pb-4 md:px-5 md:pb-5 w-full">
+        <input
+          type="text"
+          value={targetAmount}
+          onChange={(e) => onUpdateAmount(e.target.value)}
+          placeholder="Target amount (₹)"
+          className="w-full py-2.5 px-3 text-sm md:text-base font-bold text-center rounded-lg outline-none slashed-zero breakdown-input"
+          inputMode="numeric"
+          aria-label={`Target amount for ${customName || "custom goal"}`}
+        />
+      </div>
     </div>
   );
 }
@@ -239,11 +258,17 @@ function CustomGoalRow({
 export default function OnboardingStepGoals({
   selectedGoals,
   sortedSelectedGoals,
+  customGoals,
   goalSelectionCaption,
   getPriorityGlow,
   onToggleGoal,
   onUpdateGoalAmount,
+  onAddCustomGoal,
+  onUpdateGoalName,
+  onRemoveCustomGoal,
 }: OnboardingStepGoalsProps) {
+  const totalSelected = Object.keys(selectedGoals).length;
+
   return (
     <div className="space-y-4 md:space-y-5">
       <div
@@ -276,14 +301,35 @@ export default function OnboardingStepGoals({
         })}
       </div>
 
-      <CustomGoalRow
-        isSelected={!!selectedGoals["Custom"]}
-        priority={selectedGoals["Custom"]?.priority || 0}
-        targetAmount={selectedGoals["Custom"]?.targetAmount || ""}
-        onToggle={() => onToggleGoal("Custom")}
-        onUpdateAmount={(amount) => onUpdateGoalAmount("Custom", amount)}
-        getPriorityGlow={getPriorityGlow}
-      />
+      {customGoals.map(([key, data]) => (
+        <CustomGoalRow
+          key={key}
+          goalKey={key}
+          customName={data.customName || ""}
+          targetAmount={data.targetAmount}
+          priority={data.priority}
+          onUpdateName={(name) => onUpdateGoalName(key, name)}
+          onUpdateAmount={(amount) => onUpdateGoalAmount(key, amount)}
+          onRemove={() => onRemoveCustomGoal(key)}
+          getPriorityGlow={getPriorityGlow}
+        />
+      ))}
+
+      {totalSelected < 3 && (
+        <button
+          type="button"
+          onClick={onAddCustomGoal}
+          className="w-full py-3.5 rounded-xl md:rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200"
+          style={{
+            background: "var(--card)",
+            border: "2px dashed var(--border)",
+            color: "var(--accent)",
+          }}
+        >
+          <Plus size={16} className="icon-wireframe" />
+          Add Custom Goal
+        </button>
+      )}
     </div>
   );
 }

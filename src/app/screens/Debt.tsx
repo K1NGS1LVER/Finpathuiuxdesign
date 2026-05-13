@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
 import { avalanche, snowball, compareStrategies } from '@/lib/debt-strategies';
 import {
@@ -23,7 +23,7 @@ const fmtCompact = (n: number): string => {
   return `${sign}₹${Math.round(abs).toLocaleString('en-IN')}`;
 };
 
-export default function Debt() {
+export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   const debts = useFinPathStore(s => s.debts);
   const goals = useFinPathStore(s => s.goals);
   const pal = usePalette();
@@ -341,16 +341,20 @@ export default function Debt() {
 
           {/* Penny Insight */}
           {pennyInsight && (
-            <div style={{
-              padding: 'var(--space-4)',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--penny-accent-subtle)',
-              border: '1px solid var(--penny-insight-border)',
-              display: 'flex',
-              gap: 'var(--space-2)',
-              alignItems: 'flex-start',
-            }}>
-              <Sparkles size={16} style={{ color: 'var(--penny-accent)', flexShrink: 0, marginTop: 2 }} />
+
+            <div className="penny-card bento-card">
+              <div className="penny-insights-header">
+                <div className="penny-insights-icon">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="penny-insights-title">Penny's Insights</h3>
+                  <p className="penny-insights-sub">Personalized for your current plan</p>
+                </div>
+                <button className="pill" style={{ marginLeft: 'auto' }} onClick={onPennyClick}>
+                  Ask follow-up <ArrowRight size={12} />
+                </button>
+              </div>
               <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.5, color: 'var(--secondary)' }}>
                 The <b>{pennyInsight.better}</b> method saves roughly{' '}
                 <b>{formatInr(pennyInsight.saving)}</b> in interest vs minimum payments

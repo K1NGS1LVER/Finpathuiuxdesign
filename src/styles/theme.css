@@ -130,6 +130,7 @@
   --penny-accent-subtle: rgba(107, 122, 255, 0.12);
   --penny-accent-glow: rgba(107, 122, 255, 0.22);
   --penny-insight-border: rgba(107, 122, 255, 0.4);
+  --penny-gradient: linear-gradient(135deg, var(--accent), var(--secondary-accent));
 
   /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Light Mode
@@ -784,7 +785,6 @@ body {
 ═══════════════════════════════════════════════ */
 
 .penny-insight-card {
-  background: var(--surface-tint);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
   border-radius: var(--radius-xl);
@@ -793,7 +793,10 @@ body {
   overflow: hidden;
   z-index: 10;
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--penny-insight-border);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--surface-tint) 0%, var(--surface-tint) 100%) padding-box,
+    var(--penny-gradient) border-box;
   color: var(--card-foreground);
 }
 
@@ -892,21 +895,10 @@ select option {
 ═══════════════════════════════════════════════ */
 
 .penny-card {
-  border: 1px solid rgba(176, 255, 9, 0.18);
-}
-
-.penny-card::before {
-  content: "";
-  position: absolute;
-  bottom: -30px;
-  right: -30px;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: var(--tertiary-accent);
-  opacity: 0.06;
-  filter: blur(var(--blur-lg));
-  pointer-events: none;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card) 0%, var(--card) 100%) padding-box,
+    var(--penny-gradient) border-box;
 }
 
 /* ═══════════════════════════════════════════════

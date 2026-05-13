@@ -63,19 +63,14 @@ function scoreEmergencyFund(emergencyFund: number, monthlyExpenses: number): num
  * Multiple sources = more stable
  */
 function scoreIncomeStability(income: IncomeProfile): number {
-  const sources = [income.salary, income.freelance, income.passive].filter(s => s > 0).length;
+  const sources = [income.primary, income.secondary, income.passive, income.variable].filter(s => s > 0).length;
   if (income.total <= 0) return 0;
-  
-  // Base score from having income
-  let score = 10;
-  
-  // Bonus for diversification
-  if (sources >= 3) score = 25;
-  else if (sources >= 2) score = 20;
-  else if (income.salary > 0) score = 15; // Stable salary
-  else score = 10; // Single non-salary source
-  
-  return score;
+
+  if (sources >= 4) return 25;
+  if (sources >= 3) return 25;
+  if (sources >= 2) return 20;
+  if (income.primary > 0) return 15;
+  return 10;
 }
 
 /**

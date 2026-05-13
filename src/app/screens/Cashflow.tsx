@@ -117,40 +117,96 @@ export default function Cashflow() {
   const sankeyData = useMemo(() => {
     if (totalIncome <= 0) return { nodes: [], links: [] };
 
+    const primaryInc = income.primary || 0;
+    const secondaryInc = income.secondary || 0;
+    const passiveInc = income.passive || 0;
+    const variableInc = income.variable || 0;
+    const activeSources = [primaryInc, secondaryInc, passiveInc, variableInc].filter(v => v > 0).length;
+    const hasMerger = activeSources > 1;
+
     const housing = (expenses.rent || 0) + (expenses.utilities || 0);
     const food = expenses.food || 0;
     const transport = expenses.transport || 0;
     const otherExp = Math.max(0, totalExpensesDeduped - housing - food - transport);
     const goalsProgress = Math.max(0, goalAllocationsTotal);
 
-    const allNodes = [
-      { name: 'Income' },
-      { name: 'Essential Expenses' },
-      { name: 'Debt & Savings' },
-      { name: 'Disposable' },
-      { name: 'Housing & Utilities' },
-      { name: 'Food' },
-      { name: 'Transport' },
-      { name: 'Other Expenses' },
-      { name: 'Debt Payments' },
-      { name: 'Goals Progress' },
-      { name: 'Surplus Reserve' },
-      { name: 'Free Cash' },
-    ];
+    // Node layout:
+    // Multi-source:  0=Primary, 1=Secondary, 2=Passive, 3=Variable, 4=Total Income,
+    //                5=Essential Expenses, 6=Debt & Savings, 7=Disposable,
+    //                8=Housing, 9=Food, 10=Transport, 11=Other,
+    //                12=Debt Pmts, 13=Goals, 14=Reserve, 15=Free Cash
+    // Single-source: 0=Primary Income, 1=Essential Expenses, 2=Debt & Savings, 3=Disposable,
+    //                4=Housing, 5=Food, 6=Transport, 7=Other,
+    //                8=Debt Pmts, 9=Goals, 10=Reserve, 11=Free Cash
 
-    const allLinks = [
-      { source: 0, target: 1, value: totalExpensesDeduped },
-      { source: 0, target: 2, value: debtAndSavings },
-      { source: 0, target: 3, value: disposable },
-      { source: 1, target: 4, value: housing },
-      { source: 1, target: 5, value: food },
-      { source: 1, target: 6, value: transport },
-      { source: 1, target: 7, value: otherExp },
-      { source: 2, target: 8, value: debtPayments },
-      { source: 2, target: 9, value: goalsProgress },
-      { source: 2, target: 10, value: surplusReserve },
-      { source: 3, target: 11, value: disposable },
-    ].filter(l => l.value > 0);
+    let allNodes: { name: string }[];
+    let allLinks: { source: number; target: number; value: number }[];
+
+    if (hasMerger) {
+      allNodes = [
+        { name: 'Primary Income' },    // 0
+        { name: 'Secondary Income' },  // 1
+        { name: 'Passive Income' },    // 2
+        { name: 'Variable Income' },   // 3
+        { name: 'Total Income' },      // 4
+        { name: 'Essential Expenses' },// 5
+        { name: 'Debt & Savings' },    // 6
+        { name: 'Disposable' },        // 7
+        { name: 'Housing & Utilities' },// 8
+        { name: 'Food' },              // 9
+        { name: 'Transport' },         // 10
+        { name: 'Other Expenses' },    // 11
+        { name: 'Debt Payments' },     // 12
+        { name: 'Goals Progress' },    // 13
+        { name: 'Surplus Reserve' },   // 14
+        { name: 'Free Cash' },         // 15
+      ];
+      allLinks = [
+        { source: 0, target: 4, value: primaryInc },
+        { source: 1, target: 4, value: secondaryInc },
+        { source: 2, target: 4, value: passiveInc },
+        { source: 3, target: 4, value: variableInc },
+        { source: 4, target: 5, value: totalExpensesDeduped },
+        { source: 4, target: 6, value: debtAndSavings },
+        { source: 4, target: 7, value: disposable },
+        { source: 5, target: 8, value: housing },
+        { source: 5, target: 9, value: food },
+        { source: 5, target: 10, value: transport },
+        { source: 5, target: 11, value: otherExp },
+        { source: 6, target: 12, value: debtPayments },
+        { source: 6, target: 13, value: goalsProgress },
+        { source: 6, target: 14, value: surplusReserve },
+        { source: 7, target: 15, value: disposable },
+      ].filter(l => l.value > 0);
+    } else {
+      allNodes = [
+        { name: 'Primary Income' },    // 0
+        { name: 'Essential Expenses' },// 1
+        { name: 'Debt & Savings' },    // 2
+        { name: 'Disposable' },        // 3
+        { name: 'Housing & Utilities' },// 4
+        { name: 'Food' },              // 5
+        { name: 'Transport' },         // 6
+        { name: 'Other Expenses' },    // 7
+        { name: 'Debt Payments' },     // 8
+        { name: 'Goals Progress' },    // 9
+        { name: 'Surplus Reserve' },   // 10
+        { name: 'Free Cash' },         // 11
+      ];
+      allLinks = [
+        { source: 0, target: 1, value: totalExpensesDeduped },
+        { source: 0, target: 2, value: debtAndSavings },
+        { source: 0, target: 3, value: disposable },
+        { source: 1, target: 4, value: housing },
+        { source: 1, target: 5, value: food },
+        { source: 1, target: 6, value: transport },
+        { source: 1, target: 7, value: otherExp },
+        { source: 2, target: 8, value: debtPayments },
+        { source: 2, target: 9, value: goalsProgress },
+        { source: 2, target: 10, value: surplusReserve },
+        { source: 3, target: 11, value: disposable },
+      ].filter(l => l.value > 0);
+    }
 
     const referenced = new Set<number>();
     for (const link of allLinks) {
@@ -172,7 +228,7 @@ export default function Cashflow() {
     }));
 
     return { nodes: filteredNodes, links: filteredLinks };
-  }, [totalIncome, totalExpenses, debtAndSavings, disposable, debtPayments, goalAllocationsTotal, surplusReserve, expenses]);
+  }, [totalIncome, totalExpenses, debtAndSavings, disposable, debtPayments, goalAllocationsTotal, surplusReserve, expenses, income]);
 
   const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
   const surplus = Math.max(0, totalIncome - totalExpenses);
@@ -236,9 +292,10 @@ export default function Cashflow() {
   const dti = totalIncome > 0 ? Math.round((debtPayments / totalIncome) * 100) : 0;
 
   const incomeItems: FlowItem[] = [
-    { label: 'Salary', v: income.salary || 0 },
-    { label: 'Freelance', v: income.freelance || 0 },
-    { label: 'Passive income', v: income.passive || 0 },
+    { label: 'Primary', v: income.primary || 0 },
+    { label: 'Secondary', v: income.secondary || 0 },
+    { label: 'Passive', v: income.passive || 0 },
+    { label: 'Variable', v: income.variable || 0 },
   ];
 
   const expenseItems: FlowItem[] = [
@@ -363,7 +420,7 @@ export default function Cashflow() {
         )}
 
         {/* Penny insights */}
-        <div className="flex flex-col gap-4 penny-insight-card">
+        <div className="flex flex-col gap-4 penny-card bento-card">
           <div className="penny-insight-blob" />
           <div className="relative z-10 flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>

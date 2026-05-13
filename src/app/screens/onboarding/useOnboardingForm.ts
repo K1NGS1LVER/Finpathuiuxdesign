@@ -8,6 +8,7 @@ import { extractFromDocument } from '@/lib/document-extractor';
 export interface GoalSelection {
   targetAmount: string;
   priority: number;
+  customName?: string;
 }
 
 export interface ExpenseBreakdown {
@@ -52,6 +53,15 @@ const EMPTY_DEBT_BREAKDOWN: DebtBreakdown = {
   otherEMI: "",
 };
 
+const GOAL_PRESET_AMOUNTS: Record<string, number> = {
+  "Dream Bike": 120000,
+  "Investment": 500000,
+  "Emergency Fund": 300000,
+  "Wedding": 500000,
+  "Vacation": 50000,
+  "Upskill Course": 100000,
+};
+
 const TOTAL_STEPS = 4;
 export const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED", "SGD", "AUD", "CAD"];
 
@@ -73,14 +83,22 @@ function calculateTotal(breakdown: Record<string, string>): string {
 // ── The Hook ─────────────────────────────────────────────
 export function useOnboardingForm() {
   const [step, setStep] = useState(0);
-  const [income, setIncome] = useState("");
+  // Income — hero total OR breakdown (mutually exclusive, mirrors expenses pattern)
   const [incomeCurrency, setIncomeCurrency] = useState("INR");
+  const [manualTotalIncome, setManualTotalIncome] = useState<string | null>(null);
+  const [showIncomeBreakdown, setShowIncomeBreakdown] = useState(false);
+  const [primaryIncome, setPrimaryIncome] = useState("");
+  const [secondaryIncome, setSecondaryIncome] = useState("");
+  const [passiveIncome, setPassiveIncome] = useState("");
+  const [variablePercent, setVariablePercent] = useState("");
+  const [primaryIncrement, setPrimaryIncrement] = useState("");
+  const [secondaryIncrement, setSecondaryIncrement] = useState("");
+  const [passiveIncrement, setPassiveIncrement] = useState("");
   const [expensesCurrency, setExpensesCurrency] = useState("INR");
   const [debtCurrency, setDebtCurrency] = useState("INR");
   const [selectedGoals, setSelectedGoals] = useState<Record<string, GoalSelection>>({});
   const [selectedStrategy, setSelectedStrategy] = useState<InvestmentStrategy>("avalanche");
   const [surplusAmount, setSurplusAmount] = useState("");
-  const [expectedAnnualIncrement, setExpectedAnnualIncrement] = useState("");
   const [stepUpEnabled, setStepUpEnabled] = useState(false);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
 
@@ -100,6 +118,16 @@ export function useOnboardingForm() {
   const completeOnboarding = useFinPathStore((s) => s.completeOnboarding);
 
   // ── Derived values ─────────────────────────────────────
+  // Income: manual total OR sum of breakdown (mirrors expenses pattern)
+  const calcPassiveVar = Math.round((parseFloat(passiveIncome) || 0) * (parseFloat(variablePercent) || 0) / 100);
+  const calculatedTotalIncome = (() => {
+    const s = (parseFloat(primaryIncome) || 0) + (parseFloat(secondaryIncome) || 0) + (parseFloat(passiveIncome) || 0) + calcPassiveVar;
+    return s > 0 ? s.toString() : "";
+  })();
+  const totalIncome = manualTotalIncome !== null ? manualTotalIncome
+    : calculatedTotalIncome === "0" ? ""
+    : calculatedTotalIncome;
+
   const calculatedTotalExpenses = calculateTotal(expenseBreakdown);
   const totalExpenses =
     manualTotalExpenses !== null ? manualTotalExpenses
@@ -165,7 +193,7 @@ export function useOnboardingForm() {
   // ── Step navigation + validation ───────────────────────
   const canAdvance = (): boolean => {
     if (step === 0) {
-      const incomeNum = parseFloat(income);
+      const incomeNum = parseFloat(totalIncome);
       return !isNaN(incomeNum) && incomeNum > 0;
     }
     if (step === 1) {
@@ -176,7 +204,7 @@ export function useOnboardingForm() {
       return Object.keys(selectedGoals).length > 0;
     }
     if (step === 3) {
-      const incINR = parseFloat(income) || 0;
+      const incINR = parseFloat(convertToINR(totalIncome, incomeCurrency)) || 0;
       const surplusNum = parseFloat(surplusAmount) || 0;
       if (surplusNum > incINR) return false;
       return true;
@@ -189,7 +217,13 @@ export function useOnboardingForm() {
   }, [step]);
 
   const submitOnboarding = useCallback(() => {
-    const incomeINR = parseFloat(convertToINR(income, incomeCurrency)) || 0;
+    const totalINR = parseFloat(convertToINR(totalIncome, incomeCurrency)) || 0;
+    const primaryINR = parseFloat(convertToINR(primaryIncome, incomeCurrency)) || 0;
+    const secondaryINR = parseFloat(convertToINR(secondaryIncome, incomeCurrency)) || 0;
+    const passiveINR = parseFloat(convertToINR(passiveIncome, incomeCurrency)) || 0;
+    const varPct = parseFloat(variablePercent) || 0;
+    // If user typed total directly without breakdown, attribute all to primary
+    const finalPrimary = primaryINR > 0 ? primaryINR : totalINR;
     const expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency)) || 0;
     const debtINR = parseFloat(convertToINR(totalDebt, debtCurrency)) || 0;
 
@@ -204,13 +238,19 @@ export function useOnboardingForm() {
     }
 
     const formattedGoals = sortedSelectedGoals.map(([name, data]) => ({
-      name,
+      name: data.customName?.trim() || name,
       targetAmount: parseFloat(data.targetAmount) || 0,
       priority: data.priority,
     }));
 
     completeOnboarding({
-      income: incomeINR,
+      primaryIncome: finalPrimary,
+      secondaryIncome: secondaryINR,
+      passiveIncome: passiveINR,
+      variablePercent: varPct,
+      primaryIncrement: parseFloat(primaryIncrement) || 0,
+      secondaryIncrement: parseFloat(secondaryIncrement) || 0,
+      passiveIncrement: parseFloat(passiveIncrement) || 0,
       expenses: expenseINR,
       debts: debtINR,
       totalDebtPrincipal: parseFloat(convertToINR(totalDebtPrincipal, debtCurrency)) || 0,
@@ -219,15 +259,16 @@ export function useOnboardingForm() {
       debtBreakdown: dbtBreakdown,
       strategy: selectedStrategy,
       surplus: parseFloat(surplusAmount) || 0,
-      expectedAnnualIncrement: parseFloat(expectedAnnualIncrement) || 0,
       stepUpEnabled,
     });
 
     navigate("/loading");
   }, [
-    income, incomeCurrency, totalExpenses, expensesCurrency, totalDebt, debtCurrency,
+    totalIncome, primaryIncome, secondaryIncome, passiveIncome, variablePercent,
+    primaryIncrement, secondaryIncrement, passiveIncrement,
+    incomeCurrency, totalExpenses, expensesCurrency, totalDebt, debtCurrency,
     expenseBreakdown, debtBreakdown, sortedSelectedGoals, selectedStrategy, surplusAmount,
-    expectedAnnualIncrement, stepUpEnabled, totalDebtPrincipal,
+    stepUpEnabled, totalDebtPrincipal,
     convertToINR, completeOnboarding, navigate,
   ]);
 
@@ -244,8 +285,9 @@ export function useOnboardingForm() {
           }
         }
       } else if (Object.keys(newGoals).length < 3) {
+        const preset = GOAL_PRESET_AMOUNTS[goalName];
         newGoals[goalName] = {
-          targetAmount: "",
+          targetAmount: preset ? String(preset) : "",
           priority: Object.keys(newGoals).length + 1,
         };
       }
@@ -257,9 +299,48 @@ export function useOnboardingForm() {
     setSelectedGoals((prev) => ({
       ...prev,
       [goalName]: {
+        ...prev[goalName],
         targetAmount: amount.replace(/[^0-9]/g, ""),
         priority: prev[goalName]?.priority || 1,
       },
+    }));
+  }, []);
+
+  const addCustomGoal = useCallback(() => {
+    setSelectedGoals((prev) => {
+      if (Object.keys(prev).length >= 3) return prev;
+      const key = `custom-${Date.now()}`;
+      return {
+        ...prev,
+        [key]: {
+          targetAmount: "",
+          priority: Object.keys(prev).length + 1,
+          customName: "",
+        },
+      };
+    });
+  }, []);
+
+  const removeCustomGoal = useCallback((key: string) => {
+    setSelectedGoals((prev) => {
+      const newGoals = { ...prev };
+      const removedPriority = newGoals[key]?.priority;
+      delete newGoals[key];
+      if (removedPriority !== undefined) {
+        for (const [name, data] of Object.entries(newGoals)) {
+          if (data.priority > removedPriority) {
+            newGoals[name] = { ...data, priority: data.priority - 1 };
+          }
+        }
+      }
+      return newGoals;
+    });
+  }, []);
+
+  const updateGoalName = useCallback((key: string, name: string) => {
+    setSelectedGoals((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], customName: name },
     }));
   }, []);
 
@@ -283,7 +364,7 @@ export function useOnboardingForm() {
 
         if (result.success) {
           if (result.type === "salary" && result.data.income) {
-            setIncome(String(result.data.income));
+            setManualTotalIncome(String(result.data.income));
             setIncomeCurrency("INR");
           } else if (result.type === "debt") {
             if (result.data.emi) {
@@ -321,7 +402,9 @@ export function useOnboardingForm() {
   );
 
   // ── Computed values for step 3 ─────────────────────────
-  const incomeINR = parseFloat(income) || 0;
+  const customGoals = Object.entries(selectedGoals).filter(([key]) => key.startsWith("custom-")) as [string, GoalSelection][];
+
+  const incomeINR = parseFloat(convertToINR(totalIncome, incomeCurrency)) || 0;
   const expenseINR = parseFloat(totalExpenses) || 0;
   const debtINR = parseFloat(totalDebt) || 0;
   const availableForGoals = Math.max(0, incomeINR - expenseINR - debtINR);
@@ -340,12 +423,28 @@ export function useOnboardingForm() {
     canAdvance,
     submitOnboarding,
     // Income
-    income,
-    setIncome,
+    totalIncome,
     incomeCurrency,
     setIncomeCurrency,
-    expectedAnnualIncrement,
-    setExpectedAnnualIncrement,
+    manualTotalIncome,
+    setManualTotalIncome,
+    showIncomeBreakdown,
+    setShowIncomeBreakdown,
+    primaryIncome,
+    setPrimaryIncome,
+    secondaryIncome,
+    setSecondaryIncome,
+    passiveIncome,
+    setPassiveIncome,
+    variablePercent,
+    setVariablePercent,
+    primaryIncrement,
+    setPrimaryIncrement,
+    secondaryIncrement,
+    setSecondaryIncrement,
+    passiveIncrement,
+    setPassiveIncrement,
+    calcPassiveVar,
     // Expenses
     expensesCurrency,
     setExpensesCurrency,
@@ -372,10 +471,14 @@ export function useOnboardingForm() {
     selectedGoals,
     selectedGoalCount,
     sortedSelectedGoals,
+    customGoals,
     goalSelectionCaption,
     getPriorityGlow,
     toggleGoal,
     updateGoalAmount,
+    addCustomGoal,
+    removeCustomGoal,
+    updateGoalName,
     // Strategy
     selectedStrategy,
     setSelectedStrategy,

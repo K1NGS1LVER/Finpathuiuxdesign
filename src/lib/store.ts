@@ -24,7 +24,7 @@ import { generatePlan } from "./plan-engine";
 /** Default empty profile */
 const defaultProfile: FinancialProfile = {
   onboarded: false,
-  income: { salary: 0, freelance: 0, passive: 0, total: 0 },
+  income: { primary: 0, secondary: 0, passive: 0, variablePercent: 0, variable: 0, total: 0, primaryIncrement: 0, secondaryIncrement: 0, passiveIncrement: 0 },
   expenses: {
     rent: 0,
     food: 0,
@@ -110,7 +110,13 @@ interface FinPathStore extends FinancialProfile {
 
   // ── Onboarding ───────────────────────────────────
   completeOnboarding: (data: {
-    income: number;
+    primaryIncome: number;
+    secondaryIncome?: number;
+    passiveIncome?: number;
+    variablePercent?: number;
+    primaryIncrement?: number;
+    secondaryIncrement?: number;
+    passiveIncrement?: number;
     expenses: number;
     debts: number;
     goals: { name: string; targetAmount?: number; priority?: number }[];
@@ -749,12 +755,21 @@ export const useFinPathStore = create<FinPathStore>()(
       clearChat: () => set({ chatHistory: [] }),
 
       completeOnboarding: (data) => {
+        const primaryIncome = data.primaryIncome || 0;
+        const secondaryIncome = data.secondaryIncome || 0;
+        const passiveIncome = data.passiveIncome || 0;
+        const variablePercent = data.variablePercent || 0;
+        const variable = Math.round(passiveIncome * variablePercent / 100);
         const income: IncomeProfile = {
-          salary: data.income,
-          freelance: 0,
-          passive: 0,
-          total: data.income,
-          expectedAnnualIncrement: data.expectedAnnualIncrement || 0,
+          primary: primaryIncome,
+          secondary: secondaryIncome,
+          passive: passiveIncome,
+          variablePercent,
+          variable,
+          total: primaryIncome + secondaryIncome + passiveIncome + variable,
+          primaryIncrement: data.primaryIncrement || 0,
+          secondaryIncrement: data.secondaryIncrement || 0,
+          passiveIncrement: data.passiveIncrement || 0,
         };
 
         const eb = data.expenseBreakdown || {};
@@ -824,18 +839,24 @@ export const useFinPathStore = create<FinPathStore>()(
         const updates: Partial<FinancialProfile> = { lastUpdated: Date.now() };
 
         if (data.income !== undefined) {
+          const newPrimary = data.income;
+          const newVariable = Math.round(state.income.passive * state.income.variablePercent / 100);
           updates.income = {
             ...state.income,
-            salary: data.income,
-            total: data.income + state.income.freelance + state.income.passive,
+            primary: newPrimary,
+            variable: newVariable,
+            total: newPrimary + state.income.secondary + state.income.passive + newVariable,
           };
         }
 
         if (data.salaryHike !== undefined) {
           const factor = 1 + data.salaryHike / 100;
+          const newPrimary = Math.round(state.income.primary * factor);
+          const newVariable = Math.round(state.income.passive * state.income.variablePercent / 100);
           updates.income = {
             ...state.income,
-            salary: Math.round(state.income.salary * factor),
+            primary: newPrimary,
+            variable: newVariable,
             total: Math.round(state.income.total * factor),
           };
         }
@@ -863,8 +884,29 @@ export const useFinPathStore = create<FinPathStore>()(
     }),
     {
       name: "finpath-store",
-      version: 1,
+      version: 3,
       storage: safeStorage,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2 && persistedState?.income) {
+          const inc = persistedState.income;
+          inc.primary = inc.salary ?? 0;
+          inc.secondary = inc.freelance ?? 0;
+          inc.variablePercent = 0;
+          inc.variable = 0;
+          delete inc.salary;
+          delete inc.freelance;
+        }
+        if (version < 3 && persistedState?.income) {
+          const inc = persistedState.income;
+          inc.primaryIncrement = inc.primaryIncrement ?? inc.expectedAnnualIncrement ?? 0;
+          inc.secondaryIncrement = inc.secondaryIncrement ?? 0;
+          inc.passiveIncrement = inc.passiveIncrement ?? 0;
+          // Fix variable base: recompute from passive
+          inc.variable = Math.round((inc.passive || 0) * (inc.variablePercent || 0) / 100);
+          inc.total = (inc.primary || 0) + (inc.secondary || 0) + (inc.passive || 0) + inc.variable;
+        }
+        return persistedState;
+      },
     },
   ),
 );

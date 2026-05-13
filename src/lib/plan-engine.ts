@@ -133,6 +133,9 @@ export function generatePlan(input: PlanInput): FinancialPlan {
   let cumulativeSavings = savings;
   let cumulativeInvestments = investments;
   let currentIncomeTotal = income.total;
+  let curPrimary = income.primary;
+  let curSecondary = income.secondary;
+  let curPassive = income.passive;
   const baseAllocatableSurplus = availableForGoals;
   const goalProgress: Record<string, number> = {};
 
@@ -163,10 +166,19 @@ export function generatePlan(input: PlanInput): FinancialPlan {
       milestones.push(`Warning: Your debt payments (₹${debts.totalMonthly.toLocaleString("en-IN")}/mo) exceed your available income. Consider restructuring.`);
     }
 
-    // Apply annual salary increment every 12 months
-    if (m > 0 && m % 12 === 0 && income.expectedAnnualIncrement) {
-      currentIncomeTotal *= (1 + income.expectedAnnualIncrement / 100);
-      milestones.push(`Annual salary increment applied (${income.expectedAnnualIncrement}%)`);
+    // Apply per-stream annual increments every 12 months
+    if (m > 0 && m % 12 === 0) {
+      const pInc = income.primaryIncrement || income.expectedAnnualIncrement || 0;
+      const sInc = income.secondaryIncrement || 0;
+      const paInc = income.passiveIncrement || 0;
+      if (pInc > 0) curPrimary *= (1 + pInc / 100);
+      if (sInc > 0) curSecondary *= (1 + sInc / 100);
+      if (paInc > 0) curPassive *= (1 + paInc / 100);
+      const curVariable = Math.round(curPassive * income.variablePercent / 100);
+      currentIncomeTotal = curPrimary + curSecondary + curPassive + curVariable;
+      if (pInc > 0 || sInc > 0 || paInc > 0) {
+        milestones.push(`Annual income increment applied`);
+      }
     }
 
     // Available surplus this month
@@ -276,11 +288,14 @@ export function generateScenarioPlan(
 
   if (modifications.incomeChange !== undefined) {
     const factor = 1 + modifications.incomeChange / 100;
+    const newPassive = Math.round(baseInput.income.passive * factor);
+    const newVariable = Math.round(newPassive * baseInput.income.variablePercent / 100);
     modifiedInput.income = {
       ...baseInput.income,
-      salary: Math.round(baseInput.income.salary * factor),
-      freelance: Math.round(baseInput.income.freelance * factor),
-      passive: Math.round(baseInput.income.passive * factor),
+      primary: Math.round(baseInput.income.primary * factor),
+      secondary: Math.round(baseInput.income.secondary * factor),
+      passive: newPassive,
+      variable: newVariable,
       total: Math.round(baseInput.income.total * factor),
     };
   }
