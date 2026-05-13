@@ -6,3 +6,5 @@ design.md
 .claude 
 CLAUDE.md       
 install.ps1
+.env
+.env.test
