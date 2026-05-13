@@ -483,7 +483,7 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
             })}
           </div>
           {healthScore.actions.length > 0 && (
-            <div className="mt-4 penny-insight-card">
+            <div className="mt-4 penny-card bento-card">
               <div className="penny-insight-blob" />
               <div className="relative z-10 flex items-center gap-2 mb-3">
                 <div

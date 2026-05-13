@@ -18,12 +18,25 @@ export interface GoalCompletionDecision {
 
 /** Income source breakdown */
 export interface IncomeProfile {
-  salary: number;
-  freelance: number;
+  /** Main job — fixed monthly */
+  primary: number;
+  /** Second job / gig — fixed monthly */
+  secondary: number;
+  /** Rental / base dividends — fixed monthly */
   passive: number;
+  /** Yield rate — % of passive (dividends, royalties) */
+  variablePercent: number;
+  /** Computed: passive × variablePercent / 100 */
+  variable: number;
   /** Total monthly income in INR */
   total: number;
-  /** Expected annual increment percentage (e.g. 5 for 5%) */
+  /** Annual % growth for primary income */
+  primaryIncrement: number;
+  /** Annual % growth for secondary income */
+  secondaryIncrement: number;
+  /** Annual % growth for passive income */
+  passiveIncrement: number;
+  /** @deprecated use primaryIncrement */
   expectedAnnualIncrement?: number;
 }
 

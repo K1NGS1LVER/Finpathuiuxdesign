@@ -81,7 +81,7 @@ export default function Journey() {
             x={canvas.incomePos.x + canvas.panOffset.x}
             y={canvas.incomePos.y + canvas.panOffset.y}
             dragging={canvas.dragging === "income"}
-            incomeTotal={income.total}
+            income={income}
             formatCurrency={formatCurrency}
             onPointerDown={canvas.handlePointerDown}
           />
