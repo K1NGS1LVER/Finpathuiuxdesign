@@ -259,8 +259,7 @@ export default function Month() {
       )}
 
       {/* Mission card */}
-      <div className="bento-card mission-card">
-        <div className="mission-blob" />
+      <div className="bento-card">
         <div className="mission-content">
           <div className="mission-left">
             <div className="mission-eyebrow">Mission</div>

@@ -108,9 +108,11 @@ export default function Cashflow() {
   const totalIncome = income.total || 0;
   const debtPayments = debts.totalMonthly || 0;
   const totalExpenses = expenses.total || 0;
+  // Mirror plan-engine deduplication: debt EMIs are often also entered in expenses
+  const totalExpensesDeduped = Math.max(0, totalExpenses - debtPayments);
   const surplusReserve = monthlySurplusReserve || 0;
   const debtAndSavings = debtPayments + goalAllocationsTotal + surplusReserve;
-  const disposable = Math.max(0, totalIncome - totalExpenses - debtAndSavings);
+  const disposable = Math.max(0, totalIncome - totalExpensesDeduped - debtAndSavings);
 
   const sankeyData = useMemo(() => {
     if (totalIncome <= 0) return { nodes: [], links: [] };
@@ -118,7 +120,7 @@ export default function Cashflow() {
     const housing = (expenses.rent || 0) + (expenses.utilities || 0);
     const food = expenses.food || 0;
     const transport = expenses.transport || 0;
-    const otherExp = Math.max(0, totalExpenses - housing - food - transport);
+    const otherExp = Math.max(0, totalExpensesDeduped - housing - food - transport);
     const goalsProgress = Math.max(0, goalAllocationsTotal);
 
     const allNodes = [
@@ -137,7 +139,7 @@ export default function Cashflow() {
     ];
 
     const allLinks = [
-      { source: 0, target: 1, value: totalExpenses },
+      { source: 0, target: 1, value: totalExpensesDeduped },
       { source: 0, target: 2, value: debtAndSavings },
       { source: 0, target: 3, value: disposable },
       { source: 1, target: 4, value: housing },
@@ -309,9 +311,10 @@ export default function Cashflow() {
           )}
           {totalIncome > 0 && (
             <div style={{ marginTop: 'var(--space-2)', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--border)' }}>
-              <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--neutral-400)', lineHeight: 1.6 }}>
-                <strong>Essential Expenses:</strong> Housing (rent + utilities), Food, Transport, Other.
-                <br/><strong>Debt & Savings:</strong> Debt Payments, Goal allocations, Surplus reserve.
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--card-foreground)', lineHeight: 1.8 }}>
+                <strong>Essential Expenses</strong> {formatInr(totalExpensesDeduped)} ({Math.round((totalExpensesDeduped / totalIncome) * 100)}% of income): Housing, Food, Transport, Other
+                <br/><strong>Debt & Savings</strong> {formatInr(debtAndSavings)} ({Math.round((debtAndSavings / totalIncome) * 100)}% of income): Debt Payments, Goals, Surplus Reserve
+                <br/><strong>Disposable</strong> {formatInr(disposable)} ({Math.round((disposable / totalIncome) * 100)}% of income): Unallocated free cash
               </p>
             </div>
           )}
