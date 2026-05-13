@@ -2,6 +2,8 @@ import { Check, AlertTriangle, Target, Sparkles } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useFinPathStore } from "@/lib/store";
+import { formatInr, formatInrCompact } from "@/lib/format";
+import confetti from "canvas-confetti";
 
 interface MonthTask {
   id: string;
@@ -13,8 +15,6 @@ interface MonthTask {
   prefix?: string;
   suffix?: string;
 }
-
-const fmt = (n: number) => n.toLocaleString("en-IN");
 
 const now = new Date();
 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -32,7 +32,6 @@ export default function Month() {
   const setStrategy = useFinPathStore((s) => s.setStrategy);
   const updateGoal = useFinPathStore((s) => s.updateGoal);
   const addLumpsum = useFinPathStore((s) => s.addLumpsum);
-  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
 
   const activeGoals = useMemo(
     () =>
@@ -54,7 +53,7 @@ export default function Month() {
     if (expenses.rent > 0) {
       taskList.push({
         id: `rent`,
-        text: `Pay rent ₹${expenses.rent.toLocaleString("en-IN")} by 5th`,
+        text: `Pay rent ${formatInr(expenses.rent)} by 5th`,
         done: false,
         isGoal: false,
       });
@@ -63,7 +62,7 @@ export default function Month() {
     if (debts.totalMonthly > 0 && debtGoal) {
       taskList.push({
         id: "debt-payment",
-        text: `Pay INR ${debts.totalMonthly.toLocaleString("en-IN")} toward debt`,
+        text: `Pay ${formatInr(debts.totalMonthly)} toward debt`,
         done: !!debtGoal.checkedThisMonth,
         isGoal: true,
         goalId: debtGoal.id,
@@ -79,13 +78,13 @@ export default function Month() {
       const monthly =
         goal.monthlyAllocation ||
         Math.round(
-          (goal.targetAmount - goal.currentAmount) /
+          Math.max(0, goal.targetAmount - goal.currentAmount) /
             Math.max(1, goal.timelineMonths),
         );
       if (monthly > 0) {
         taskList.push({
           id: goal.id,
-          text: `Add ₹${(monthly / 1000).toFixed(0)}K to ${goal.name} savings`,
+          text: `Add ${formatInrCompact(monthly)} to ${goal.name} savings`,
           done: !!goal.checkedThisMonth,
           isGoal: true,
           goalId: goal.id,
@@ -169,16 +168,36 @@ export default function Month() {
           newAmount = Math.max(0, goal.currentAmount - task.amount);
         }
 
+        const justCompleted = newAmount >= goal.targetAmount;
         updateGoal(goal.id, {
           currentAmount: newAmount,
           checkedThisMonth: newDoneState,
           status:
-            newAmount >= goal.targetAmount
+            justCompleted
               ? "complete"
               : newAmount > 0
                 ? "in-progress"
                 : "not-started",
         });
+
+        if (newDoneState) {
+          const styles = getComputedStyle(document.documentElement);
+          const accent = styles.getPropertyValue("--accent").trim();
+          const secondary = styles.getPropertyValue("--secondary-accent").trim();
+          const lime = styles.getPropertyValue("--tertiary-accent").trim();
+          const green = styles.getPropertyValue("--green").trim();
+          if (justCompleted) {
+            const end = Date.now() + 2000;
+            const frame = () => {
+              confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: [accent, secondary, accent] });
+              confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: [accent, lime, green] });
+              if (Date.now() < end) requestAnimationFrame(frame);
+            };
+            frame();
+          } else {
+            confetti({ particleCount: 60, spread: 70, origin: { y: 0.7 }, colors: [accent, secondary, lime] });
+          }
+        }
       }
     }
 
@@ -194,7 +213,7 @@ export default function Month() {
     setLumpsumAmount("");
     setLumpsumNotice(
       goal
-        ? `Added ₹${amount.toLocaleString("en-IN")} to ${goal.name}`
+        ? `Added ${formatInr(amount)} to ${goal.name}`
         : "Lumpsum applied",
     );
   };
@@ -239,7 +258,7 @@ export default function Month() {
     <div className="month-page page-animate">
       {/* Header */}
       <div className="month-header">
-        <p className="text-label">{monthLabel} · {daysLeft} days left</p>
+        <p className="text-label" style={{ color: 'var(--tertiary)' }}>{monthLabel} · {daysLeft} days left</p>
         <h2 className="month-title">This Month's Plan</h2>
       </div>
 
@@ -250,8 +269,8 @@ export default function Month() {
           <div>
             <div className="debt-warning-title">Debt payments exceed your surplus</div>
             <span>
-              Monthly debt/EMI of ₹{debts.totalMonthly.toLocaleString("en-IN")} exceeds
-              your surplus of ₹{Math.max(0, income.total - expenses.total).toLocaleString("en-IN")}.
+              Monthly debt/EMI of {formatInr(debts.totalMonthly)} exceeds
+              your surplus of {formatInr(Math.max(0, income.total - expenses.total))}.
               Consider negotiating lower payments or consolidating debt.
             </span>
           </div>
@@ -264,28 +283,28 @@ export default function Month() {
           <div className="mission-left">
             <div className="mission-eyebrow">Mission</div>
             <h2 className="mission-title slashed-zero">
-              Save ₹{Math.round(savingsTarget / 1000)}K
+              Save {formatInrCompact(savingsTarget)}
               {debts.totalMonthly > 0
-                ? ` & pay ₹${Math.round(debts.totalMonthly / 1000)}K debt`
+                ? ` & pay ${formatInrCompact(debts.totalMonthly)} debt`
                 : ""}
             </h2>
             <div className="mission-stats-row">
               <div>
                 <div className="mission-stat-label">Goals + Surplus Reserve</div>
                 <div className="mission-stat-value slashed-zero">
-                  ₹{savingsTarget.toLocaleString("en-IN")}
+                  {formatInr(savingsTarget)}
                 </div>
               </div>
               <div>
                 <div className="mission-stat-label">Debt Payments</div>
                 <div className="mission-stat-value slashed-zero">
-                  ₹{debts.totalMonthly.toLocaleString("en-IN")}
+                  {formatInr(debts.totalMonthly)}
                 </div>
               </div>
             </div>
             {pendingSurplus > 0 && (
               <div className="mission-pending-note">
-                ₹{pendingSurplus.toLocaleString("en-IN")} is waiting for your
+                {formatInr(pendingSurplus)} is waiting for your
                 reinvest/surplus decision.
               </div>
             )}
@@ -308,29 +327,33 @@ export default function Month() {
       {/* Main 2-col grid */}
       <div className="month-grid">
         {/* Left: Checklist */}
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card bento-card-sm">
           <div className="checklist-header">
             <div>
-              <p className="text-label">Allocation Checklist</p>
+              <p className="text-label">To-Dos This Month</p>
               <p className="checklist-count">
                 {doneTasks} of {tasks.length} complete
               </p>
             </div>
-            <div className="checklist-pct slashed-zero">{onTrackPct}%</div>
           </div>
 
-          <div className="checklist-list">
+          <ul className="checklist-list" role="list">
             {tasks.map((task) => (
-              <div
+              <li
                 key={task.id}
                 className={`checklist-item${task.done ? " done" : ""}`}
               >
-                <div
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={task.done}
+                  aria-label={`${task.done ? 'Uncheck' : 'Check'} ${task.isGoal && task.prefix ? task.prefix + task.suffix : task.text}`}
                   onClick={() => toggleTask(task.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTask(task.id); } }}
                   className={`checklist-check${task.done ? " done" : ""}`}
                 >
                   {task.done && <Check size={14} className="icon-wireframe" />}
-                </div>
+                </button>
 
                 <div className="checklist-content">
                   {task.isGoal && task.amount !== undefined ? (
@@ -342,12 +365,14 @@ export default function Month() {
                         {task.prefix}
                       </span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         value={task.amount === 0 ? "" : task.amount}
                         onChange={(e) =>
                           updateTaskAmount(task.id, parseInt(e.target.value) || 0)
                         }
                         disabled={task.done}
+                        aria-label={`Amount for ${task.prefix}${task.suffix}`}
                         className={`task-amount-input${task.done ? " done" : ""}`}
                       />
                       <span
@@ -358,27 +383,29 @@ export default function Month() {
                       </span>
                     </div>
                   ) : (
-                    <button
+                    <span
+                      role="button"
+                      tabIndex={0}
                       onClick={() => toggleTask(task.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTask(task.id); } }}
                       className={`checklist-label${task.done ? " done" : ""}`}
                     >
                       {task.text}
-                    </button>
+                    </span>
                   )}
                   <p className="checklist-meta">
                     {task.isGoal ? "Goal contribution" : "General task"}
                   </p>
                 </div>
 
-                {task.amount !== undefined && !task.isGoal && null}
                 {task.amount !== undefined && (
                   <div className="checklist-amount slashed-zero">
-                    ₹{fmt(task.amount)}
+                    {formatInr(task.amount)}
                   </div>
                 )}
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
           <div className="checklist-footer">
             {doneTasks} of {tasks.length} completed
@@ -388,7 +415,7 @@ export default function Month() {
         {/* Right column */}
         <div className="month-right-col">
           {/* Impact card */}
-          <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+          <div className="bento-card bento-card-sm">
             <p className="text-label">This Month's Impact</p>
             <p className="impact-subtitle">
               How your contributions move the needle.
@@ -429,7 +456,7 @@ export default function Month() {
                         <span className={`impact-goal-score${isDone ? " done" : " pending"}`}>
                           {isDone
                             ? goal.category === "debt" ? "Paid!" : "Funded!"
-                            : `+₹${(addition / 1000).toFixed(1)}K`}
+                            : `+${formatInrCompact(addition)}`}
                         </span>
                       </div>
                       <div className="progress-bar-outer">
@@ -442,9 +469,9 @@ export default function Month() {
                         )}
                       </div>
                       <div className="progress-bar-labels">
-                        <span>₹{(goal.currentAmount / 1000).toFixed(1)}K</span>
+                        <span>{formatInrCompact(goal.currentAmount)}</span>
                         <span>{Math.round(basePct + additionPct)}%</span>
-                        <span>₹{(goal.targetAmount / 1000).toFixed(1)}K</span>
+                        <span>{formatInrCompact(goal.targetAmount)}</span>
                       </div>
                     </div>
                   );
@@ -463,7 +490,7 @@ export default function Month() {
               </div>
               <p className="penny-suggest-text">
                 {surplus > 5000
-                  ? `You have ₹${fmt(Math.round(surplus - savingsTarget - debts.totalMonthly))} unallocated this month. Redirecting it to your top goal accelerates your plan.`
+                  ? `You have ${formatInr(Math.round(surplus - savingsTarget - debts.totalMonthly))} unallocated this month. Redirecting it to your top goal accelerates your plan.`
                   : debts.totalMonthly > 0
                     ? "Paying even ₹500 extra on your highest-rate debt each month compounds into significant savings over your timeline."
                     : "Consistency is the engine. Checking off all tasks this month keeps your streak alive and your goals on schedule."}
@@ -476,15 +503,17 @@ export default function Month() {
       {/* Strategy + Lumpsum */}
       <div className="month-lower-grid">
         {/* Investment Strategy */}
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card bento-card-sm">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
             <h3 className="text-heading">Investment Strategy</h3>
             <button
+              type="button"
               onClick={() =>
                 setStrategy(strategy === "avalanche" ? "snowball" : "avalanche")
               }
               className="strategy-toggle"
               aria-label={`Strategy: ${strategy}`}
+              aria-pressed={strategy === "avalanche"}
             >
               <span
                 className={`strategy-toggle-pill ${strategy === "avalanche" ? "left" : "right"}`}
@@ -514,7 +543,7 @@ export default function Month() {
                     <span>
                       Your <strong className="text-card-foreground">P1: {p1.name}</strong> receives{" "}
                       <strong className="text-card-foreground">
-                        ₹{(p1.monthlyAllocation || 0).toLocaleString("en-IN")}/mo
+                        {formatInr(p1.monthlyAllocation || 0)}/mo
                       </strong>.
                     </span>
                   ) : null;
@@ -535,7 +564,7 @@ export default function Month() {
                       Currently focused on{" "}
                       <strong className="text-card-foreground">{smallest.name}</strong> with{" "}
                       <strong className="text-card-foreground">
-                        ₹{(smallest.monthlyAllocation || 0).toLocaleString("en-IN")}/mo
+                        {formatInr(smallest.monthlyAllocation || 0)}/mo
                       </strong>.
                     </span>
                   ) : null;
@@ -577,7 +606,7 @@ export default function Month() {
         </div>
 
         {/* Lumpsum Fast-Track */}
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card bento-card-sm">
           <h3 className="text-heading mb-1">Lumpsum Fast-Track</h3>
           <p className="impact-subtitle">Add a one-time amount to accelerate a goal.</p>
           <div className="flex flex-col gap-3">
@@ -586,6 +615,7 @@ export default function Month() {
               onChange={(e) => setLumpsumGoalId(e.target.value)}
               className="input-surface w-full px-4 py-3 rounded-xl outline-none"
               disabled={activeGoals.length === 0}
+              aria-label="Select goal for lumpsum"
             >
               {activeGoals.length === 0 ? (
                 <option value="">No active goals available</option>
@@ -599,14 +629,17 @@ export default function Month() {
             </select>
             <input
               type="text"
+              inputMode="numeric"
               value={lumpsumAmount}
               onChange={(e) =>
                 setLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
               }
               placeholder="Lumpsum amount (₹)"
               className="input-surface w-full px-4 py-3 rounded-xl outline-none"
+              aria-label="Lumpsum amount in rupees"
             />
             <button
+              type="button"
               onClick={applyLumpsum}
               disabled={!lumpsumGoalId || !lumpsumAmount}
               className="btn-primary w-full justify-center py-3 disabled:opacity-50"

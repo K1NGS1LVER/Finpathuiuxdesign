@@ -14,72 +14,6 @@ import {
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-interface FlowItem {
-  label: string;
-  v: number;
-}
-
-interface FlowColProps {
-  title: string;
-  total: number;
-  items: FlowItem[];
-  accent: string;
-  center?: boolean;
-}
-
-function FlowCol({ title, total, items, accent }: FlowColProps) {
-  const visibleItems = items.filter(it => it.v > 0);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{
-        padding: 'var(--space-1)',
-        borderRadius: 'var(--radius-base)',
-        background: 'var(--surface-hover)',
-        border: '1px solid var(--border)',
-      }}>
-        <p className="text-label" style={{ fontSize: 'var(--text-2xs)' }}>{title}</p>
-        <p
-          style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-bold)', color: accent, marginTop: 2 }}
-          className="slashed-zero"
-        >
-          {formatInr(total)}
-        </p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {visibleItems.map((it, i) => {
-          const pct = total > 0 ? (it.v / total) * 100 : 0;
-          return (
-            <div
-              key={i}
-              style={{
-                position: 'relative',
-                height: 44,
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--surface-tint)',
-                border: '1px solid var(--border)',
-                padding: '0 var(--space-1) 0 var(--space-2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                overflow: 'hidden',
-              }}
-            >
-              <div style={{
-                position: 'absolute', left: 0, top: 0, bottom: 0,
-                width: `${pct}%`, background: accent, opacity: 0.07,
-                transition: 'width 0.6s ease',
-              }} />
-              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: accent, borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)', opacity: 0.6 }} />
-              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-semibold)', position: 'relative' }}>{it.label}</p>
-              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-semibold)', position: 'relative', color: 'var(--neutral-400)' }}>{pct.toFixed(0)}%</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export default function Cashflow() {
   const income = useFinPathStore(s => s.income);
   const expenses = useFinPathStore(s => s.expenses);
@@ -108,7 +42,6 @@ export default function Cashflow() {
   const totalIncome = income.total || 0;
   const debtPayments = debts.totalMonthly || 0;
   const totalExpenses = expenses.total || 0;
-  // Mirror plan-engine deduplication: debt EMIs are often also entered in expenses
   const totalExpensesDeduped = Math.max(0, totalExpenses - debtPayments);
   const surplusReserve = monthlySurplusReserve || 0;
   const debtAndSavings = debtPayments + goalAllocationsTotal + surplusReserve;
@@ -130,36 +63,27 @@ export default function Cashflow() {
     const otherExp = Math.max(0, totalExpensesDeduped - housing - food - transport);
     const goalsProgress = Math.max(0, goalAllocationsTotal);
 
-    // Node layout:
-    // Multi-source:  0=Primary, 1=Secondary, 2=Passive, 3=Variable, 4=Total Income,
-    //                5=Essential Expenses, 6=Debt & Savings, 7=Disposable,
-    //                8=Housing, 9=Food, 10=Transport, 11=Other,
-    //                12=Debt Pmts, 13=Goals, 14=Reserve, 15=Free Cash
-    // Single-source: 0=Primary Income, 1=Essential Expenses, 2=Debt & Savings, 3=Disposable,
-    //                4=Housing, 5=Food, 6=Transport, 7=Other,
-    //                8=Debt Pmts, 9=Goals, 10=Reserve, 11=Free Cash
-
     let allNodes: { name: string }[];
     let allLinks: { source: number; target: number; value: number }[];
 
     if (hasMerger) {
       allNodes = [
-        { name: 'Primary Income' },    // 0
-        { name: 'Secondary Income' },  // 1
-        { name: 'Passive Income' },    // 2
-        { name: 'Variable Income' },   // 3
-        { name: 'Total Income' },      // 4
-        { name: 'Essential Expenses' },// 5
-        { name: 'Debt & Savings' },    // 6
-        { name: 'Disposable' },        // 7
-        { name: 'Housing & Utilities' },// 8
-        { name: 'Food' },              // 9
-        { name: 'Transport' },         // 10
-        { name: 'Other Expenses' },    // 11
-        { name: 'Debt Payments' },     // 12
-        { name: 'Goals Progress' },    // 13
-        { name: 'Surplus Reserve' },   // 14
-        { name: 'Free Cash' },         // 15
+        { name: 'Primary Income' },
+        { name: 'Secondary Income' },
+        { name: 'Passive Income' },
+        { name: 'Variable Income' },
+        { name: 'Total Income' },
+        { name: 'Essential Expenses' },
+        { name: 'Debt & Savings' },
+        { name: 'Disposable' },
+        { name: 'Housing & Utilities' },
+        { name: 'Food' },
+        { name: 'Transport' },
+        { name: 'Other Expenses' },
+        { name: 'Debt Payments' },
+        { name: 'Goals Progress' },
+        { name: 'Surplus Reserve' },
+        { name: 'Free Cash' },
       ];
       allLinks = [
         { source: 0, target: 4, value: primaryInc },
@@ -180,18 +104,18 @@ export default function Cashflow() {
       ].filter(l => l.value > 0);
     } else {
       allNodes = [
-        { name: 'Primary Income' },    // 0
-        { name: 'Essential Expenses' },// 1
-        { name: 'Debt & Savings' },    // 2
-        { name: 'Disposable' },        // 3
-        { name: 'Housing & Utilities' },// 4
-        { name: 'Food' },              // 5
-        { name: 'Transport' },         // 6
-        { name: 'Other Expenses' },    // 7
-        { name: 'Debt Payments' },     // 8
-        { name: 'Goals Progress' },    // 9
-        { name: 'Surplus Reserve' },   // 10
-        { name: 'Free Cash' },         // 11
+        { name: 'Primary Income' },
+        { name: 'Essential Expenses' },
+        { name: 'Debt & Savings' },
+        { name: 'Disposable' },
+        { name: 'Housing & Utilities' },
+        { name: 'Food' },
+        { name: 'Transport' },
+        { name: 'Other Expenses' },
+        { name: 'Debt Payments' },
+        { name: 'Goals Progress' },
+        { name: 'Surplus Reserve' },
+        { name: 'Free Cash' },
       ];
       allLinks = [
         { source: 0, target: 1, value: totalExpensesDeduped },
@@ -231,8 +155,6 @@ export default function Cashflow() {
   }, [totalIncome, totalExpenses, debtAndSavings, disposable, debtPayments, goalAllocationsTotal, surplusReserve, expenses, income]);
 
   const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
-  const surplus = Math.max(0, totalIncome - totalExpenses);
-  const goalCoverage = surplus > 0 ? Math.round((goalAllocationsTotal / surplus) * 100) : 0;
 
   const efMonths = (totalExpenses + debtPayments) > 0
     ? Math.floor(emergencyFund / (totalExpenses + debtPayments))
@@ -291,32 +213,6 @@ export default function Cashflow() {
 
   const dti = totalIncome > 0 ? Math.round((debtPayments / totalIncome) * 100) : 0;
 
-  const incomeItems: FlowItem[] = [
-    { label: 'Primary', v: income.primary || 0 },
-    { label: 'Secondary', v: income.secondary || 0 },
-    { label: 'Passive', v: income.passive || 0 },
-    { label: 'Variable', v: income.variable || 0 },
-  ];
-
-  const expenseItems: FlowItem[] = [
-    { label: 'Rent', v: expenses.rent || 0 },
-    { label: 'Food', v: expenses.food || 0 },
-    { label: 'Transport', v: expenses.transport || 0 },
-    { label: 'Utilities', v: expenses.utilities || 0 },
-    { label: 'Entertainment', v: expenses.entertainment || 0 },
-    { label: 'Other', v: expenses.other || 0 },
-    { label: 'Goal allocations', v: goalAllocationsTotal },
-  ];
-
-  const outcomeItems: FlowItem[] = [
-    { label: 'Goal allocations', v: goalAllocationsTotal },
-    { label: 'Surplus reserve', v: surplusReserve },
-    { label: 'Free cash', v: disposable },
-  ];
-
-  const expenseTotal = totalExpenses + goalAllocationsTotal;
-  const outcomeTotal = goalAllocationsTotal + surplusReserve + disposable;
-
   const activeGoals = useMemo(() =>
     goals
       .filter(g => g.status !== 'complete')
@@ -337,29 +233,26 @@ export default function Cashflow() {
       </div>
 
       <div className="flex flex-col gap-4 md:gap-6 relative z-10">
-        {/* Sankey */}
-        <div className="bento-card p-6">
+        <div className="bento-card">
           <h3 className="text-heading slashed-zero text-[var(--card-foreground)] mb-4">Flow Diagram</h3>
           {sankeyData.links.length > 0 ? (
-            <ResponsiveContainer width="100%" height={480}>
-              <Sankey
-                data={sankeyData}
-                nodePadding={18}
-                nodeWidth={16}
-                iterations={64}
-                margin={{ top: 10, left: 120, right: 160, bottom: 10 }}
-                node={<CustomNode palette={pal} />}
-                link={<CustomLink palette={pal} />}
-              />
-            </ResponsiveContainer>
+            <div role="img" aria-label="Cashflow Sankey diagram showing income sources, essential expenses, debt and savings, and disposable income allocation">
+              <ResponsiveContainer width="100%" height={480}>
+                <Sankey
+                  data={sankeyData}
+                  nodePadding={18}
+                  nodeWidth={16}
+                  iterations={64}
+                  margin={{ top: 10, left: 120, right: 160, bottom: 10 }}
+                  node={<CustomNode palette={pal} />}
+                  link={<CustomLink palette={pal} />}
+                />
+              </ResponsiveContainer>
+            </div>
           ) : (
             <div
-              className="flex items-center justify-center h-48 text-sm text-[var(--secondary)]"
-              style={{
-                background: 'var(--surface-hover)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-base)',
-              }}
+              role="status"
+              className="flex items-center justify-center h-48 text-sm text-[var(--secondary)] rounded-xl bg-[var(--surface-hover)] border border-[var(--border)]"
             >
               {totalIncome <= 0
                 ? 'Income data not available. Complete onboarding to see your cashflow.'
@@ -367,50 +260,48 @@ export default function Cashflow() {
             </div>
           )}
           {totalIncome > 0 && (
-            <div style={{ marginTop: 'var(--space-2)', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--border)' }}>
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--card-foreground)', lineHeight: 1.8 }}>
+            <div className="mt-4 pt-4 border-t border-[var(--border)] flex flex-col gap-2">
+              <p className="text-xs text-[var(--card-foreground)]">
                 <strong>Essential Expenses</strong> {formatInr(totalExpensesDeduped)} ({Math.round((totalExpensesDeduped / totalIncome) * 100)}% of income): Housing, Food, Transport, Other
-                <br/><strong>Debt & Savings</strong> {formatInr(debtAndSavings)} ({Math.round((debtAndSavings / totalIncome) * 100)}% of income): Debt Payments, Goals, Surplus Reserve
-                <br/><strong>Disposable</strong> {formatInr(disposable)} ({Math.round((disposable / totalIncome) * 100)}% of income): Unallocated free cash
+              </p>
+              <p className="text-xs text-[var(--card-foreground)]">
+                <strong>Debt & Savings</strong> {formatInr(debtAndSavings)} ({Math.round((debtAndSavings / totalIncome) * 100)}% of income): Debt Payments, Goals, Surplus Reserve
+              </p>
+              <p className="text-xs text-[var(--card-foreground)]">
+                <strong>Disposable</strong> {formatInr(disposable)} ({Math.round((disposable / totalIncome) * 100)}% of income): Unallocated free cash
               </p>
             </div>
           )}
         </div>
 
-        {/* Goals */}
         {activeGoals.length > 0 && (
-          <div className="bento-card p-6">
+          <div className="bento-card">
             <h3 className="text-heading slashed-zero text-[var(--card-foreground)] mb-4">Goal Allocations</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+            <div className="flex flex-col gap-2">
               {activeGoals.map(g => (
                 <div
                   key={g.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
-                    padding: 'var(--space-1)', borderRadius: 'var(--radius-base)',
-                    background: 'var(--surface-hover)', border: '1px solid var(--border)',
-                  }}
+                  className="flex items-center gap-4 p-2 rounded-xl bg-[var(--surface-hover)] border border-[var(--border)]"
                 >
-                  <p style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-semibold)', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <p className="text-xs font-semibold flex-1 min-w-0 truncate">
                     {g.name}
                   </p>
 
-                  <div style={{ flex: 2, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ height: 6, borderRadius: 'var(--radius-full)', background: 'var(--surface-tint)', overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%', width: `${g.progressPct}%`,
-                        background: 'var(--accent)',
-                        borderRadius: 'var(--radius-full)', transition: 'width 0.6s ease',
-                      }} />
+                  <div className="flex-[2] flex flex-col">
+                    <div className="h-2 rounded-full bg-[var(--surface-tint)] overflow-hidden">
+                      <div
+                        className="h-full bg-[var(--accent)] rounded-full transition-[width] duration-600 ease"
+                        style={{ width: `${g.progressPct}%` }}
+                      />
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right', minWidth: 80 }}>
-                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-bold)', lineHeight: 1 }} className="slashed-zero">
-                      {formatInr(g.alloc)}<span style={{ fontFamily: 'var(--font-body)', fontWeight: 'var(--font-weight-regular)', fontSize: 'var(--text-2xs)', color: 'var(--neutral-400)' }}>/mo</span>
+                  <div className="text-right min-w-20">
+                    <p className="font-display text-xs font-bold leading-none slashed-zero">
+                      {formatInr(g.alloc)}<span className="font-body font-normal text-[var(--text-2xs)] text-[var(--neutral-400)]">/mo</span>
                     </p>
                     {g.completionDate && (
-                      <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--neutral-400)', marginTop: 2 }}>{g.completionDate}</p>
+                      <p className="text-[var(--text-2xs)] text-[var(--neutral-400)] mt-0.5">{g.completionDate}</p>
                     )}
                   </div>
                 </div>
@@ -419,31 +310,28 @@ export default function Cashflow() {
           </div>
         )}
 
-        {/* Penny insights */}
-        <div className="flex flex-col gap-4 penny-card bento-card">
+        <div className="bento-card penny-card flex flex-col gap-4">
           <div className="penny-insight-blob" />
           <div className="relative z-10 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--penny-accent-subtle)', color: 'var(--penny-accent)' }}>
-              <Sparkles size={16} />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--penny-accent-subtle)] text-[var(--penny-accent)]">
+              <Sparkles size={18} className="icon-wireframe" />
             </div>
             <h3 className="text-heading slashed-zero text-[var(--card-foreground)]">Penny's Insight</h3>
           </div>
           {dti > 40 && (
-            <div className="relative z-10 flex items-start gap-3 p-3 rounded-xl text-sm" style={{ background: 'var(--surface-hover)', border: '1px solid var(--red)', color: 'var(--red-text)' }}>
-              <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+            <div className="relative z-10 flex items-start gap-3 p-3 rounded-md text-sm bg-[var(--surface-hover)] border border-[var(--red)] text-[var(--red-text)]">
+              <AlertTriangle size={18} className="icon-wireframe flex-shrink-0 mt-0.5" />
               <span>High debt burden: DTI ratio is {dti}%. Consider reducing discretionary spending and prioritising high-interest debt payoff.</span>
             </div>
           )}
-          <div className="relative z-10 space-y-3">
+          <ul role="list" className="relative z-10 flex flex-col gap-3 list-none p-0 m-0">
             {cashflowInsights.map((tip, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-xl text-sm"
-                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)', color: 'var(--card-foreground)' }}
-              >
+              <li key={i} className="flex items-start gap-3 p-3 rounded-md text-sm bg-[var(--surface-hover)] border border-[var(--border)] font-body text-[var(--card-foreground)]">
                 <span className="text-[var(--penny-accent)] mt-0.5 font-bold">{i + 1}.</span>
                 <span>{tip}</span>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
     </div>

@@ -18,6 +18,8 @@ export function resolveCssVar(name: string): string {
 export function usePalette() {
   return useMemo(() => ({
     blue: resolveCssVar('--accent'),
+    'blue-mid': resolveCssVar('--accent-mid'),
+    'blue-soft': resolveCssVar('--accent-soft'),
     lime: resolveCssVar('--tertiary-accent'),
     red: resolveCssVar('--red'),
     amber: resolveCssVar('--amber'),
@@ -39,6 +41,11 @@ export interface CustomNodeProps {
 
 const NODE_COLOR_KEYS: Record<string, keyof ReturnType<typeof usePalette>> = {
   'Income':              'blue',
+  'Primary Income':      'blue',
+  'Secondary Income':    'blue-mid',
+  'Passive Income':      'blue-soft',
+  'Variable Income':     'blue-soft',
+  'Total Income':        'blue',
   'Essential Expenses':  'amber',
   'Debt & Savings':      'red',
   'Disposable':          'green',
@@ -120,10 +127,18 @@ export function CustomLink({
   let strokeColor = palette.slate;
   const srcName = payload.source?.name ?? '';
   const tgtName = payload.target?.name ?? '';
-  if (srcName === 'Income') {
-    if (tgtName === 'Essential Expenses') strokeColor = palette.amber;
-    else if (tgtName === 'Debt & Savings') strokeColor = palette.red;
-    else if (tgtName === 'Disposable') strokeColor = palette.green;
+  if (srcName.includes('Income')) {
+    const tgtAlsoIncome = tgtName.includes('Income');
+    if (tgtAlsoIncome) {
+      const srcKey = NODE_COLOR_KEYS[srcName] ?? 'blue';
+      strokeColor = palette[srcKey];
+    } else if (tgtName === 'Essential Expenses') {
+      strokeColor = palette.amber;
+    } else if (tgtName === 'Debt & Savings') {
+      strokeColor = palette.red;
+    } else if (tgtName === 'Disposable') {
+      strokeColor = palette.green;
+    }
   } else if (srcName === 'Essential Expenses') {
     strokeColor = palette.amber;
   } else if (srcName === 'Debt & Savings') {
