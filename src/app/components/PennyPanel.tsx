@@ -28,7 +28,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhrase, setLoadingPhrase] = useState(LOADING_PHRASES[0]);
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'welcome', role: 'penny', text: "Hi! I'm Penny, your AI finance companion. I can see your full financial profile — ask me anything about your goals, budget, savings strategy, or tax planning!" }
+    { id: 'welcome', role: 'penny', text: "Hi! I'm Penny, your AI finance companion. I can see your full financial profile — ask me anything about your goals, budget, or savings strategy!" }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);

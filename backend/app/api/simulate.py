@@ -15,11 +15,6 @@ from app.auth import CurrentUser, get_current_user
 from app.engines.debt_strategies import avalanche, compare_strategies, snowball
 from app.engines.health_score import calculate_health_score
 from app.engines.plan_engine import generate_plan, generate_scenario_plan
-from app.engines.tax_engine import (
-    calculate_new_regime,
-    calculate_old_regime,
-    compare_tax_regimes,
-)
 
 router = APIRouter(prefix="/api/simulate", dependencies=[Depends(get_current_user)])
 
@@ -65,31 +60,6 @@ async def simulate_snowball(req: DebtRequest) -> dict[str, Any]:
 @router.post("/debt/compare")
 async def simulate_debt_compare(req: DebtRequest) -> dict[str, Any]:
     return compare_strategies(req.debts, req.extra)
-
-
-# ── tax engine ──────────────────────────────────────────────────
-class TaxOldRequest(BaseModel):
-    grossIncome: float
-    deductions: float = 0
-
-
-class TaxNewRequest(BaseModel):
-    grossIncome: float
-
-
-@router.post("/tax/old")
-async def simulate_tax_old(req: TaxOldRequest) -> dict[str, Any]:
-    return calculate_old_regime(req.grossIncome, req.deductions)
-
-
-@router.post("/tax/new")
-async def simulate_tax_new(req: TaxNewRequest) -> dict[str, Any]:
-    return calculate_new_regime(req.grossIncome)
-
-
-@router.post("/tax/compare")
-async def simulate_tax_compare(req: TaxOldRequest) -> dict[str, Any]:
-    return compare_tax_regimes(req.grossIncome, req.deductions)
 
 
 # ── health score ────────────────────────────────────────────────

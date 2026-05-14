@@ -105,20 +105,17 @@ Gate: real sign-up → onboarding → dashboard. Existing local data preserved. 
 
 What landed:
 
-- `scripts/dump-fixtures.ts` — curated input set per engine; runs the TS engine and writes `{ input, expected }` JSON to `tests/fixtures/{tax,health,debt,plan}/*.json`. Added `pnpm fixtures` script. `tsx` added as devDep.
+- `scripts/dump-fixtures.ts` — curated input set per engine; runs the TS engine and writes `{ input, expected }` JSON to `tests/fixtures/{health,debt,plan}/*.json`. Added `pnpm fixtures` script. `tsx` added as devDep.
 - Python ports in `backend/app/engines/`:
   - `_helpers.py` — `js_round()` shim (JS half-up vs Python banker's rounding).
-  - `tax_engine.py` (FY 2025-26 old + new regime, 87A rebate, 4% cess, slab breakdown).
   - `health_score.py` (4-dim 0–100 score + 3 actionable recs).
   - `debt_strategies.py` (avalanche, snowball, compare; full amortization with extra-payment waterfall).
   - `plan_engine.py` (120-month sim, weighted allocation, per-stream increments, step-up modes, scenario plan).
-- Parity tests at `backend/tests/` (58 total):
-  - `test_tax_engine.py` — 30 exact-equal tests.
+- Parity tests at `backend/tests/` (28 total):
   - `test_health_score.py` — 6 exact-equal tests.
   - `test_debt_strategies.py` — 15 tests with `date` fields stripped.
   - `test_plan_engine.py` — 7 tests with `date` and `goalCompletionDates` values stripped.
-- REST endpoints in `backend/app/api/simulate.py` (auth-required): `/api/simulate/plan`, `/scenario`, `/debt/{avalanche,snowball,compare}`, `/tax/{old,new,compare}`, `/health`.
-- Drive-by fix: TS `src/lib/tax-engine.ts` had cp437 mojibake in slab range strings (`Γé╣` instead of `₹`, `ΓÇô` instead of `–`). Fixed to correct UTF-8 — was rendering as garbage in UI; now reads as `₹2.5L – ₹5.0L`.
+- REST endpoints in `backend/app/api/simulate.py` (auth-required): `/api/simulate/plan`, `/scenario`, `/debt/{avalanche,snowball,compare}`, `/health`.
 
 Verification gate: `pnpm build` 0 errors, `pnpm test` 83/83, `pytest` 58/58.
 
@@ -126,7 +123,7 @@ Verification gate: `pnpm build` 0 errors, `pnpm test` 83/83, `pytest` 58/58.
 
 1. Deps: `langgraph`, `langchain-core`, `langchain-groq` in `backend/pyproject.toml`.
 2. `backend/app/agents/penny.py` graph: `ROUTER → RESEARCH → PLAN → {CHAT | PROPOSE}`.
-3. Tools (`backend/app/agents/tools.py`): `simulate_plan`, `simulate_what_if`, `compare_debt_strategies`, `compare_tax_regimes`, `check_health`, `read_profile`, `propose_change`.
+3. Tools (`backend/app/agents/tools.py`): `simulate_plan`, `simulate_what_if`, `compare_debt_strategies`, `check_health`, `read_profile`, `propose_change`.
 4. SSE `/api/penny/stream`: events = `token | tool_call | tool_result | proposal | done | error`. Persist user msg + assistant msg + tool calls to `chat_history`.
 5. Frontend `PennyPanel.tsx`: replace `fetch` with SSE (POST + ReadableStream, or `EventSource` for GET). New `src/app/components/ProposalCard.tsx` for Approve/Reject. Approve = apply Zustand setter + `PATCH /api/proposals/:id`.
 6. Chat history hydration on mount: `GET /api/chat/history?limit=50`.
@@ -160,5 +157,5 @@ Dockerfile, CORS allowlist, per-user rate limits, structured logging, error moni
 
 ## Do not touch
 
-- `src/lib/{plan-engine,health-score,debt-strategies,tax-engine}.ts` — TS remains source of truth on frontend. Python is a port, not a replacement.
+- `src/lib/{plan-engine,health-score,debt-strategies}.ts` — TS remains source of truth on frontend. Python is a port, not a replacement.
 - `src/lib/__tests__/*.test.ts` semantics — fixture extraction is additive, must not change expectations.

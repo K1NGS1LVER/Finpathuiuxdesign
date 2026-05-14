@@ -139,19 +139,6 @@ export interface FinancialPlan {
   recommendedAllocations: Record<string, number>;
 }
 
-/** Tax calculation result for a single regime */
-export interface TaxResult {
-  regime: 'old' | 'new';
-  grossIncome: number;
-  deductions: number;
-  taxableIncome: number;
-  tax: number;
-  cess: number;
-  totalTax: number;
-  effectiveRate: number;
-  slabs: { range: string; rate: number; tax: number }[];
-}
-
 /** Health score breakdown */
 export interface HealthScore {
   overall: number; // 0–100
