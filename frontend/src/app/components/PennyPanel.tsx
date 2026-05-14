@@ -1,6 +1,7 @@
 import { X, Send, Loader2, Wrench } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useFinPathStore } from '@/lib/store';
+import { useAuthStore } from '@/lib/auth-store';
 import { apiFetch } from '@/lib/api';
 import { parseSse } from '@/lib/sse';
 import ProposalCard, { type Proposal } from './ProposalCard';
@@ -38,9 +39,11 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhrase, setLoadingPhrase] = useState(LOADING_PHRASES[0]);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
-  const [hydrated, setHydrated] = useState(false);
+  const [hydratedForUser, setHydratedForUser] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const userId = useAuthStore(s => s.user?.id ?? null);
 
   const onboarded = useFinPathStore(s => s.onboarded);
   const income = useFinPathStore(s => s.income);
@@ -68,10 +71,14 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
     return () => clearInterval(interval);
   }, [isLoading]);
 
-  // Hydrate chat history on first open.
+  // Hydrate chat history on first open per user. Re-runs after sign-out → sign-in.
   useEffect(() => {
-    if (!open || hydrated) return;
-    setHydrated(true);
+    if (!open) return;
+    if (hydratedForUser === (userId ?? '__anon__')) return;
+    setHydratedForUser(userId ?? '__anon__');
+    // Reset to just the welcome on user change so prior user's chat doesn't bleed through.
+    setMessages([WELCOME]);
+    if (!userId) return;
     (async () => {
       try {
         const r = await apiFetch('/api/chat/history?limit=50');
@@ -88,7 +95,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         // ignore — chat history is best-effort.
       }
     })();
-  }, [open, hydrated]);
+  }, [open, userId, hydratedForUser]);
 
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
@@ -118,7 +125,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
 
     const controller = new AbortController();
     abortRef.current = controller;
-    const timeout = setTimeout(() => controller.abort(), 60_000);
+    const timeout = setTimeout(() => controller.abort(), 120_000);
 
     try {
       const response = await apiFetch('/api/penny/stream', {
@@ -132,7 +139,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             strategy, monthlySurplusReserve,
           },
           history: messages
-            .filter(m => m.id !== 'welcome' && m.id !== assistantId)
+            .filter(m => m.id !== 'welcome' && m.id !== assistantId && !m.proposal && m.text.trim().length > 0)
             .map(m => ({ role: m.role === 'penny' ? 'assistant' : 'user', content: m.text })),
         }),
       });
@@ -148,23 +155,20 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       for await (const ev of parseSse(response)) {
+        let data: any;
+        try { data = JSON.parse(ev.data); } catch { continue; }
         if (ev.event === 'token') {
-          // Token payload is a raw JSON string from the server.
-          let chunk: string;
-          try { chunk = JSON.parse(ev.data); } catch { chunk = ev.data; }
+          const chunk = String(data);
           setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: m.text + chunk } : m)));
         } else if (ev.event === 'tool_call') {
-          const data = JSON.parse(ev.data);
           setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls || []), { name: data.name, input: data.input }] } : m)));
         } else if (ev.event === 'proposal') {
-          const data = JSON.parse(ev.data) as Proposal;
-          setMessages(prev => [...prev, { id: `proposal-${data.id}`, role: 'penny', text: '', proposal: data }]);
+          const prop = data as Proposal;
+          setMessages(prev => [...prev, { id: `proposal-${prop.id}`, role: 'penny', text: '', proposal: prop }]);
         } else if (ev.event === 'error') {
-          let err: string;
-          try { err = JSON.parse(ev.data); } catch { err = ev.data; }
+          const err = String(data);
           setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: m.text || `Error: ${err}` } : m)));
         } else if (ev.event === 'done') {
-          const data = JSON.parse(ev.data);
           if (data?.reply) {
             setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: data.reply } : m)));
           }

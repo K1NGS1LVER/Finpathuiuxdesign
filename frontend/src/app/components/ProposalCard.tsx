@@ -113,38 +113,53 @@ export default function ProposalCard({ proposal, onResolved }: Props) {
 
   const label = ACTION_LABEL[proposal.action] ?? proposal.action;
 
-  async function patch(next: 'approved' | 'rejected') {
-    setBusy(true);
-    setErrMsg(null);
+  // Returns true on success (server says we own the transition), false on hard fail.
+  async function patch(next: 'approved' | 'rejected'): Promise<boolean> {
     try {
       const r = await apiFetch(`/api/proposals/${encodeURIComponent(proposal.id)}`, {
         method: 'PATCH',
         body: JSON.stringify({ status: next }),
       });
-      if (!r.ok && r.status !== 409) {
-        setErrMsg(`Could not ${next === 'approved' ? 'approve' : 'reject'} (HTTP ${r.status}).`);
-        setBusy(false);
-        return;
+      if (r.ok) return true;
+      if (r.status === 409) {
+        setErrMsg('Proposal already resolved.');
+        return false;
       }
+      setErrMsg(`Could not ${next === 'approved' ? 'approve' : 'reject'} (HTTP ${r.status}).`);
+      return false;
     } catch {
-      // Ephemeral / offline — still resolve locally.
+      // Network failure — treat as success only when Supabase isn't configured
+      // (ephemeral proposals). Server-side patch endpoint already echos in that case,
+      // so a thrown error here is a real network problem.
+      setErrMsg('Network error.');
+      return false;
     }
-    setStatus(next);
-    onResolved?.(next);
-    setBusy(false);
   }
 
   async function handleApprove() {
+    setBusy(true);
+    setErrMsg(null);
+    const ok = await patch('approved');
+    if (!ok) { setBusy(false); return; }
     const result = applyProposal(proposal.action, proposal.payload);
     if (!result.ok) {
-      setErrMsg(`Couldn't apply: ${result.reason}`);
+      setErrMsg(`Approved but couldn't apply: ${result.reason}`);
+      setBusy(false);
       return;
     }
-    await patch('approved');
+    setStatus('approved');
+    onResolved?.('approved');
+    setBusy(false);
   }
 
   async function handleReject() {
-    await patch('rejected');
+    setBusy(true);
+    setErrMsg(null);
+    const ok = await patch('rejected');
+    if (!ok) { setBusy(false); return; }
+    setStatus('rejected');
+    onResolved?.('rejected');
+    setBusy(false);
   }
 
   if (status === 'approved' || status === 'rejected' || status === 'expired') {
