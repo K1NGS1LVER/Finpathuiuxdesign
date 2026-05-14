@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, TrendingUp, PiggyBank, AlertTriangle } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
 import { avalanche, snowball, compareStrategies } from '@/lib/debt-strategies';
 import { formatInr, formatInrCompact } from '@/lib/format';
@@ -16,6 +16,10 @@ import {
 import { usePalette } from '@/app/components/SankeyFlow';
 
 type ChartEntry = Record<string, string | number>;
+
+const PENNY_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  TrendingUp, PiggyBank, AlertTriangle, Sparkles,
+};
 
 export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   const debts = useFinPathStore(s => s.debts);
@@ -72,6 +76,11 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
       ? snowball(debtItems, extraPayment)
       : avalanche(debtItems, extraPayment);
   }, [debtItems, extraPayment, timelineStrategy]);
+
+  const zeroExtraResult = useMemo(() => {
+    if (debtItems.length === 0) return null;
+    return avalanche(debtItems, 0);
+  }, [debtItems]);
 
   const timelineChartData = useMemo(() => {
     if (!timelineResult) return [];
@@ -140,13 +149,59 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
     return [...debtItems].sort((a, b) => a.principal - b.principal);
   }, [debtItems, timelineStrategy]);
 
-  const pennyInsight = useMemo(() => {
-    if (!comparison || debtItems.length === 0) return null;
-    const saving = Math.abs(comparison.interestSaved);
-    const months = Math.abs(comparison.monthsDifference);
-    const better = comparison.recommendation === 'avalanche' ? 'Avalanche' : 'Snowball';
-    return { better, saving, months };
-  }, [comparison, debtItems.length]);
+  const pennyInsights = useMemo(() => {
+    if (debtItems.length === 0) return [];
+
+    const tips: Array<{ icon: string; text: string }> = [];
+
+    if (comparison) {
+      const saving = Math.abs(comparison.interestSaved);
+      const monthsDiff = Math.abs(comparison.monthsDifference);
+      const better = comparison.recommendation === 'avalanche' ? 'Avalanche' : 'Snowball';
+
+      if (debtItems.length === 1) {
+        tips.push({
+          icon: 'TrendingUp',
+          text: 'With a single debt, both strategies produce the same result. Focus on paying more each month to save on interest.',
+        });
+      } else {
+        const suffix = monthsDiff > 0
+          ? `, clearing debt ${monthsDiff} month${monthsDiff !== 1 ? 's' : ''} faster`
+          : '';
+        tips.push({
+          icon: 'TrendingUp',
+          text: `The ${better} method saves ${formatInr(saving)} in interest vs minimum payments${suffix}.`,
+        });
+      }
+    }
+
+    if (extraPayment > 0 && zeroExtraResult && timelineResult) {
+      const monthsSaved = zeroExtraResult.totalMonths - timelineResult.totalMonths;
+      const interestDiff = zeroExtraResult.totalInterest - timelineResult.totalInterest;
+      if (monthsSaved > 0 || interestDiff > 0) {
+        tips.push({
+          icon: 'PiggyBank',
+          text: `Adding ${formatInr(extraPayment)}/mo extra pays off all debt ${monthsSaved > 0 ? `${monthsSaved} month${monthsSaved !== 1 ? 's' : ''} sooner` : 'on schedule'}, saving ${formatInr(interestDiff)} in interest.`,
+        });
+      }
+    } else if (extraPayment === 0) {
+      tips.push({
+        icon: 'PiggyBank',
+        text: 'Even ₹500/mo extra can shave months off your payoff timeline and save significant interest.',
+      });
+    }
+
+    const topDebt = [...debtItems].sort((a, b) => b.interestRate - a.interestRate)[0];
+    if (topDebt) {
+      const monthlyInterest = Math.round(topDebt.principal * (topDebt.interestRate / 100) / 12);
+      tips.push({
+        icon: 'AlertTriangle',
+        text: `Your highest-rate debt (${topDebt.name} at ${topDebt.interestRate}%) is costing ${formatInr(monthlyInterest)}/mo in interest alone. Prioritizing it saves the most.`,
+      });
+    }
+
+    return tips;
+  }, [debtItems, comparison, extraPayment, zeroExtraResult, timelineResult]);
 
   return (
     <div className="page-animate debt-page">
@@ -303,7 +358,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
             </ul>
           </div>
 
-          {pennyInsight && (
+          {pennyInsights.length > 0 && (
             <div className="bento-card penny-card">
               <div className="penny-blob" />
               <div className="penny-insights-header">
@@ -315,16 +370,22 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                   <p className="penny-insights-sub">Personalized for your current plan</p>
                 </div>
                 <button className="pill ml-auto" aria-label="Ask Penny a follow-up question" onClick={onPennyClick}>
-                  Ask follow-up <ArrowRight size={12} className="icon-wireframe" />
+                  Ask follow-up <ArrowRight size={14} className="icon-wireframe" />
                 </button>
               </div>
-              <p className="penny-suggest-text">
-                The <b>{pennyInsight.better}</b> method saves roughly{' '}
-                <b>{formatInr(pennyInsight.saving)}</b> in interest vs minimum payments
-                {pennyInsight.months > 0 && (
-                  <>, clearing debt <b>{pennyInsight.months} month{pennyInsight.months !== 1 ? 's' : ''}</b> faster</>
-                )}.
-              </p>
+              <div className="penny-insights-grid">
+                {pennyInsights.map((tip, i) => {
+                  const TIcon = PENNY_ICONS[tip.icon] || Sparkles;
+                  return (
+                    <div key={`insight-${i}`} className="penny-tile">
+                      <div className="penny-tile-icon">
+                        <TIcon size={14} className="icon-wireframe" />
+                      </div>
+                      <p className="penny-tile-text">{tip.text}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </>

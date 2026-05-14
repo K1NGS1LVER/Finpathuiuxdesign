@@ -1,9 +1,13 @@
-import { useState, useEffect, type ReactNode } from "react";
-import { GitCompare, Wallet, TrendingUp, Sparkles } from "lucide-react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { GitCompare, Wallet, TrendingUp, Sparkles, PiggyBank, ArrowRight } from "lucide-react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
 
 type RiskKey = "conservative" | "balanced" | "aggressive";
+
+const PENNY_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  TrendingUp, PiggyBank, Sparkles,
+};
 
 const riskCfg: Record<
   RiskKey,
@@ -35,19 +39,41 @@ const presets = [
   { name: "Plan C · Aggressive", monthly: 80000, rate: 14, years: 15, Icon: Sparkles },
 ] as const;
 
+function project(monthly: number, rate: number, years: number): number {
+  const r = rate / 100 / 12;
+  const n = years * 12;
+  if (r === 0) return Math.round(monthly * n);
+  return Math.round((monthly * (Math.pow(1 + r, n) - 1)) / r);
+}
+
+function buildCurvePoints(monthly: number, rate: number, horizon: number): number[] {
+  const r = rate / 100 / 12;
+  const points: number[] = [];
+  for (let m = 0; m <= horizon * 12; m += 6) {
+    if (r === 0) {
+      points.push(monthly * m);
+    } else {
+      points.push((monthly * (Math.pow(1 + r, m) - 1)) / r);
+    }
+  }
+  return points;
+}
+
 function Knob({
   label,
   value,
+  inputId,
   children,
 }: {
   label: string;
   value: string;
+  inputId: string;
   children: ReactNode;
 }) {
   return (
     <div className="knob">
       <div className="knob-header">
-        <span className="text-label">{label}</span>
+        <label htmlFor={inputId} className="text-label">{label}</label>
         <span className="knob-value slashed-zero">{value}</span>
       </div>
       {children}
@@ -55,8 +81,10 @@ function Knob({
   );
 }
 
-export default function Scenarios() {
+export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void }) {
   const income = useFinPathStore((s) => s.income);
+  const goals = useFinPathStore((s) => s.goals);
+  const plan = useFinPathStore((s) => s.plan);
 
   const [monthlySavings, setMonthlySavings] = useState(60000);
   const [risk, setRisk] = useState<RiskKey>("balanced");
@@ -71,41 +99,30 @@ export default function Scenarios() {
     setReturnRate(riskCfg[risk].rate);
   }, [risk]);
 
-  const project = (monthly: number, rate: number, years: number): number => {
-    const r = rate / 100 / 12;
-    const n = years * 12;
-    return Math.round((monthly * (Math.pow(1 + r, n) - 1)) / r);
-  };
-
   const baselineMonthly = Math.max(20000, Math.round(income.total * 0.2));
   const scenarioTotal = project(monthlySavings, returnRate, horizon);
   const baselineTotal = project(baselineMonthly, 9, horizon);
   const diff = scenarioTotal - baselineTotal;
 
-  const buildCurve = (monthly: number, rate: number): number[] => {
-    const r = rate / 100 / 12;
-    const points: number[] = [];
-    for (let m = 0; m <= horizon * 12; m += 6) {
-      points.push((monthly * (Math.pow(1 + r, m) - 1)) / r);
-    }
-    return points;
-  };
+  const { curveS, curveB, maxY, toPathFn, endY } = useMemo(() => {
+    const s = buildCurvePoints(monthlySavings, returnRate, horizon);
+    const b = buildCurvePoints(baselineMonthly, 9, horizon);
+    const my = Math.max(...s, ...b, 1);
+    const W = 760;
+    const H = 280;
+    const tp = (pts: number[]): string =>
+      pts
+        .map(
+          (v, i) =>
+            `${i === 0 ? "M" : "L"} ${(i / (pts.length - 1)) * W} ${H - (v / my) * (H - 20) - 10}`,
+        )
+        .join(" ");
+    const ey = H - (s[s.length - 1] / my) * (H - 20) - 10;
+    return { curveS: s, curveB: b, maxY: my, toPathFn: tp, endY: ey };
+  }, [monthlySavings, returnRate, horizon, baselineMonthly]);
 
-  const curveS = buildCurve(monthlySavings, returnRate);
-  const curveB = buildCurve(baselineMonthly, 9);
-  const maxY = Math.max(...curveS, ...curveB, 1);
   const W = 760;
   const H = 280;
-
-  const toPath = (pts: number[]): string =>
-    pts
-      .map(
-        (v, i) =>
-          `${i === 0 ? "M" : "L"} ${(i / (pts.length - 1)) * W} ${H - (v / maxY) * (H - 20) - 10}`,
-      )
-      .join(" ");
-
-  const endY = H - (curveS[curveS.length - 1] / maxY) * (H - 20) - 10;
 
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (curveS.length < 2) return;
@@ -121,27 +138,87 @@ export default function Scenarios() {
     });
   };
 
+  const pennyInsights = useMemo(() => {
+    const tips: Array<{ icon: string; text: string }> = [];
+
+    const savingsPct = income.total > 0 ? Math.round((monthlySavings / income.total) * 100) : 0;
+    const baselinePct = 20;
+    if (savingsPct >= baselinePct) {
+      tips.push({
+        icon: 'PiggyBank',
+        text: `You're investing ${savingsPct}% of income — that's ${savingsPct - baselinePct}% above the recommended 20% baseline. Higher contributions accelerate your goals significantly.`,
+      });
+    } else {
+      tips.push({
+        icon: 'PiggyBank',
+        text: `You're investing ${savingsPct}% of income — below the recommended 20% baseline. Increasing by even ${formatInr(Math.max(1000, baselineMonthly - monthlySavings))}/mo could add ${formatInrCompact(Math.abs(diff))} over ${horizon} years.`,
+      });
+    }
+
+    const conservativeTotal = project(monthlySavings, riskCfg.conservative.rate, horizon);
+    const aggressiveTotal = project(monthlySavings, riskCfg.aggressive.rate, horizon);
+    const riskDelta = aggressiveTotal - conservativeTotal;
+    if (Math.abs(riskDelta) > 0 && risk !== 'aggressive') {
+      tips.push({
+        icon: 'TrendingUp',
+        text: `Switching from ${riskCfg[risk].label} to Aggressive could yield +${formatInrCompact(riskDelta)} more over ${horizon} years — but with higher volatility.`,
+      });
+    } else if (risk === 'aggressive') {
+      tips.push({
+        icon: 'TrendingUp',
+        text: `You're at the highest risk profile. Your aggressive allocation could yield ${formatInrCompact(scenarioTotal)} over ${horizon} years, but expect higher drawdowns.`,
+      });
+    }
+
+    const activeGoals = goals.filter(g => g.status !== 'complete');
+    if (activeGoals.length > 0 && plan?.months?.length) {
+      const nearestGoal = activeGoals.sort((a, b) => a.priority - b.priority)[0];
+      const goalMonth = plan.months.findIndex(m => m.netWorth >= scenarioTotal);
+      if (goalMonth >= 0) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + goalMonth);
+        tips.push({
+          icon: 'Sparkles',
+          text: `At this rate, you'd reach your scenario's ${formatInrCompact(scenarioTotal)} target by ${d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })} — helping fund "${nearestGoal.name}".`,
+        });
+      }
+    }
+
+    if (tips.length === 0) {
+      tips.push({
+        icon: 'Sparkles',
+        text: `Your scenario projects ${formatInrCompact(scenarioTotal)} over ${horizon} years at ${returnRate}% return. Adjust the dials to explore alternatives.`,
+      });
+    }
+
+    return tips;
+  }, [monthlySavings, income.total, risk, returnRate, horizon, diff, baselineMonthly, scenarioTotal, goals, plan]);
+
   return (
     <div className="page-animate scenarios-page">
-      {/* Header */}
       <div className="scenarios-header">
         <div>
           <p className="text-label">What-if Engine</p>
-          <h2 className="scenarios-title">Scenarios</h2>
+          <h2 className="scenarios-title slashed-zero">Scenarios</h2>
           <p className="scenarios-subtitle">
             Model your future with confidence. Adjust the dials below — the
             projection updates in real time.
           </p>
         </div>
-        <button onClick={() => setShowCompare((v) => !v)} className="pill">
+        <button
+          type="button"
+          onClick={() => setShowCompare((v) => !v)}
+          className="pill"
+          aria-pressed={showCompare}
+          aria-label="Toggle baseline comparison"
+        >
           <GitCompare size={14} className="icon-wireframe" />
           {showCompare ? "Hide" : "Show"} baseline
         </button>
       </div>
 
-      {/* KPI row */}
       <div className="scenarios-kpi-grid">
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card bento-card-sm">
           <p className="text-label">Projected in {horizon} yrs</p>
           <p className="kpi-value slashed-zero">{formatInrCompact(scenarioTotal)}</p>
           <p className="kpi-meta">
@@ -149,7 +226,7 @@ export default function Scenarios() {
           </p>
         </div>
 
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card bento-card-sm">
           <p className="text-label">vs. Baseline</p>
           <p
             className={`kpi-value slashed-zero ${diff >= 0 ? "kpi-value--positive" : "kpi-value--negative"}`}
@@ -162,7 +239,7 @@ export default function Scenarios() {
           </p>
         </div>
 
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card bento-card-sm">
           <p className="text-label">Required Monthly</p>
           <p className="kpi-value slashed-zero">{formatInr(monthlySavings)}</p>
           <p className="kpi-meta">
@@ -174,10 +251,8 @@ export default function Scenarios() {
         </div>
       </div>
 
-      {/* Chart + Controls */}
       <div className="scenarios-main-grid">
-        {/* Chart */}
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card">
           <div className="chart-header">
             <div>
               <p className="text-label">Wealth Projection</p>
@@ -199,10 +274,12 @@ export default function Scenarios() {
             </div>
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             <svg
               viewBox={`0 0 ${W} ${H + 30}`}
               className="scenarios-svg"
+              role="img"
+              aria-label={`Wealth projection chart: ${horizon}-year compounded growth from ${formatInr(monthlySavings)} per month at ${returnRate}% return`}
               onMouseMove={handleSvgMouseMove}
               onMouseLeave={() => setSvgTooltip(null)}
             >
@@ -237,11 +314,11 @@ export default function Scenarios() {
             ))}
 
             <path
-              d={`${toPath(curveS)} L ${W} ${H - 10} L 0 ${H - 10} Z`}
+              d={`${toPathFn(curveS)} L ${W} ${H - 10} L 0 ${H - 10} Z`}
               fill="url(#scenAreaGrad)"
             />
             <path
-              d={toPath(curveS)}
+              d={toPathFn(curveS)}
               fill="none"
               stroke="var(--accent)"
               strokeWidth="3"
@@ -250,7 +327,7 @@ export default function Scenarios() {
             />
             {showCompare && (
               <path
-                d={toPath(curveB)}
+                d={toPathFn(curveB)}
                 fill="none"
                 stroke="var(--tertiary)"
                 strokeWidth="2"
@@ -292,37 +369,30 @@ export default function Scenarios() {
               )}
             </svg>
             {svgTooltip && (
-              <div style={{
-                position: 'absolute',
-                left: `${Math.min(85, Math.max(10, (svgTooltip.svgX / W) * 100))}%`,
-                top: `${Math.min(80, Math.max(5, (svgTooltip.svgY / (H + 30)) * 100))}%`,
-                transform: 'translate(-50%, -110%)',
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
-                borderRadius: 12,
-                fontFamily: 'var(--font-body)',
-                color: 'var(--card-foreground)',
-                padding: '10px 14px',
-                pointerEvents: 'none',
-                zIndex: 10,
-                minWidth: 140,
-              }}>
-                <p style={{ fontSize: 11, color: 'var(--tertiary)', marginBottom: 4 }}>{svgTooltip.yearLabel}</p>
-                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Scenario: {formatInrCompact(svgTooltip.scenarioVal)}</p>
+              <div
+                className="chart-tooltip"
+                aria-live="polite"
+                style={{
+                  left: `${Math.min(85, Math.max(10, (svgTooltip.svgX / W) * 100))}%`,
+                  top: `${Math.min(80, Math.max(5, (svgTooltip.svgY / (H + 30)) * 100))}%`,
+                }}
+              >
+                <p className="chart-tooltip-label">{svgTooltip.yearLabel}</p>
+                <p className="chart-tooltip-value">Scenario: {formatInrCompact(svgTooltip.scenarioVal)}</p>
                 {showCompare && (
-                  <p style={{ fontSize: 12, color: 'var(--tertiary)', marginTop: 2 }}>Baseline: {formatInrCompact(svgTooltip.baseVal)}</p>
+                  <p className="chart-tooltip-sub">Baseline: {formatInrCompact(svgTooltip.baseVal)}</p>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="bento-card" style={{ padding: "var(--space-3)" }}>
+        <div className="bento-card">
           <p className="text-label controls-panel-header">Tune Your Plan</p>
 
-          <Knob label="Monthly Investment" value={formatInr(monthlySavings)}>
+          <Knob label="Monthly Investment" value={formatInr(monthlySavings)} inputId="knob-monthly-investment">
             <input
+              id="knob-monthly-investment"
               type="range"
               min="10000"
               max="200000"
@@ -330,63 +400,71 @@ export default function Scenarios() {
               value={monthlySavings}
               onChange={(e) => setMonthlySavings(+e.target.value)}
               className="range"
+              aria-label="Monthly investment"
+              aria-valuetext={formatInr(monthlySavings)}
             />
           </Knob>
 
-          <Knob label="Time Horizon" value={`${horizon} years`}>
+          <Knob label="Time Horizon" value={`${horizon} years`} inputId="knob-time-horizon">
             <input
+              id="knob-time-horizon"
               type="range"
               min="3"
               max="30"
               value={horizon}
               onChange={(e) => setHorizon(+e.target.value)}
               className="range"
+              aria-label="Time horizon in years"
+              aria-valuetext={`${horizon} years`}
             />
           </Knob>
 
           <div className="risk-section">
             <p className="text-label risk-section-heading">Risk Profile</p>
-            <div className="risk-list">
+            <ul role="list" className="risk-list">
               {(
                 Object.entries(riskCfg) as [
                   RiskKey,
                   (typeof riskCfg)[RiskKey],
                 ][]
               ).map(([k, v]) => (
-                <button
-                  key={k}
-                  onClick={() => setRisk(k)}
-                  className={`risk-btn${risk === k ? " active" : ""}`}
-                  style={{
-                    border: `1.5px solid ${risk === k ? v.colorVar : "transparent"}`,
-                  }}
-                >
-                  <span
-                    className="risk-dot"
+                <li key={k}>
+                  <button
+                    type="button"
+                    onClick={() => setRisk(k)}
+                    className={`risk-btn${risk === k ? " active" : ""}`}
+                    aria-pressed={risk === k}
+                    aria-label={v.label}
                     style={{
-                      background: v.colorVar,
-                      boxShadow: risk === k ? `0 0 8px ${v.colorVar}` : "none",
+                      border: `1.5px solid ${risk === k ? v.colorVar : "transparent"}`,
                     }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <p className="risk-label">{v.label}</p>
-                    <p className="risk-desc">{v.desc}</p>
-                  </div>
-                  <span
-                    className="risk-rate slashed-zero"
-                    style={{ color: v.colorVar }}
                   >
-                    {v.rate}%
-                  </span>
-                </button>
+                    <span
+                      className="risk-dot"
+                      style={{
+                        background: v.colorVar,
+                        boxShadow: risk === k ? `0 0 8px ${v.colorVar}` : "none",
+                      }}
+                    />
+                    <div className="flex-1">
+                      <p className="risk-label">{v.label}</p>
+                      <p className="risk-desc">{v.desc}</p>
+                    </div>
+                    <span
+                      className="risk-rate slashed-zero"
+                      style={{ color: v.colorVar }}
+                    >
+                      {v.rate}%
+                    </span>
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* Quick preset scenarios */}
-      <div className="scenarios-presets-grid">
+      <ul role="list" className="scenarios-presets-grid">
         {presets.map((p, i) => {
           const fv = project(p.monthly, p.rate, p.years);
           const isActive =
@@ -394,29 +472,63 @@ export default function Scenarios() {
             returnRate === p.rate &&
             horizon === p.years;
           return (
-            <button
-              key={i}
-              onClick={() => {
-                setMonthlySavings(p.monthly);
-                setReturnRate(p.rate);
-                setHorizon(p.years);
-              }}
-              className={`preset-btn card-hover${isActive ? " active" : ""}`}
-            >
-              <div className="preset-btn-header">
-                <div className="preset-icon">
-                  <p.Icon size={16} className="icon-wireframe" />
+            <li key={i}>
+              <button
+                type="button"
+                onClick={() => {
+                  setMonthlySavings(p.monthly);
+                  setReturnRate(p.rate);
+                  setHorizon(p.years);
+                }}
+                className={`preset-btn card-hover${isActive ? " active" : ""}`}
+                aria-pressed={isActive}
+              >
+                <div className="preset-btn-header">
+                  <div className="preset-icon">
+                    <p.Icon size={16} className="icon-wireframe" />
+                  </div>
+                  <span className="preset-name">{p.name}</span>
                 </div>
-                <span className="preset-name">{p.name}</span>
-              </div>
-              <p className="preset-fv slashed-zero">{formatInrCompact(fv)}</p>
-              <p className="preset-meta">
-                {formatInr(p.monthly)}/mo · {p.rate}% · {p.years}y
-              </p>
-            </button>
+                <p className="preset-fv slashed-zero">{formatInrCompact(fv)}</p>
+                <p className="preset-meta">
+                  {formatInr(p.monthly)}/mo · {p.rate}% · {p.years}y
+                </p>
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
+
+      {pennyInsights.length > 0 && (
+        <div className="bento-card penny-card" style={{ marginTop: 'var(--space-2)' }}>
+          <div className="penny-blob" />
+          <div className="penny-insights-header">
+            <div className="penny-insights-icon">
+              <Sparkles size={18} className="icon-wireframe" />
+            </div>
+            <div>
+              <h3 className="penny-insights-title">Penny's Insights</h3>
+              <p className="penny-insights-sub">Personalized for your scenario</p>
+            </div>
+            <button type="button" className="pill ml-auto" aria-label="Ask Penny a follow-up question" onClick={onPennyClick}>
+              Ask follow-up <ArrowRight size={14} className="icon-wireframe" />
+            </button>
+          </div>
+          <div className="penny-insights-grid">
+            {pennyInsights.map((tip, i) => {
+              const TIcon = PENNY_ICONS[tip.icon] || Sparkles;
+              return (
+                <div key={`insight-${i}`} className="penny-tile">
+                  <div className="penny-tile-icon">
+                    <TIcon size={14} className="icon-wireframe" />
+                  </div>
+                  <p className="penny-tile-text">{tip.text}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

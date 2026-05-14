@@ -183,7 +183,7 @@ function AppContent() {
                   path="/scenarios"
                   element={
                     <ErrorBoundary key={location.pathname}>
-                      <Scenarios />
+                      <Scenarios onPennyClick={() => setPennyOpen(true)} />
                     </ErrorBoundary>
                   }
                 />

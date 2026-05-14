@@ -1408,29 +1408,45 @@ a.bento-card:hover,
 .scenarios-header {
   margin-bottom: var(--space-3);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .scenarios-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
 }
 
 .scenarios-title {
-  font-size: var(--text-3xl);
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.02em;
-  margin-top: var(--space-1);
+  letter-spacing: -0.03em;
+  margin-top: 4px;
+  color: var(--foreground);
 }
 
 .scenarios-subtitle {
   font-size: var(--text-sm);
   color: var(--secondary);
-  margin-top: 6px;
+  margin-top: var(--space-0.5);
   max-width: 560px;
 }
 
 .scenarios-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--space-2);
   margin-bottom: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .scenarios-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .kpi-value {
@@ -1453,8 +1469,14 @@ a.bento-card:hover,
 
 .scenarios-main-grid {
   display: grid;
-  grid-template-columns: 1.7fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--space-2);
+}
+
+@media (min-width: 1024px) {
+  .scenarios-main-grid {
+    grid-template-columns: 1.7fr 1fr;
+  }
 }
 
 .chart-header {
@@ -1507,6 +1529,38 @@ a.bento-card:hover,
   filter: drop-shadow(0 4px 8px var(--accent-glow));
 }
 
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -110%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+  font-family: var(--font-body);
+  color: var(--card-foreground);
+  padding: var(--space-2) var(--space-3);
+  pointer-events: none;
+  z-index: 10;
+  min-width: 140px;
+}
+
+.chart-tooltip-label {
+  font-size: var(--text-xs);
+  color: var(--tertiary);
+  margin-bottom: var(--space-0.5);
+}
+
+.chart-tooltip-value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--accent);
+}
+
+.chart-tooltip-sub {
+  font-size: var(--text-xs);
+  color: var(--tertiary);
+  margin-top: 2px;
+}
+
 .knob {
   margin-bottom: var(--space-2);
 }
@@ -1536,6 +1590,9 @@ a.bento-card:hover,
   display: flex;
   flex-direction: column;
   gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .risk-btn {
@@ -1585,8 +1642,19 @@ a.bento-card:hover,
 .scenarios-presets-grid {
   margin-top: var(--space-2);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .scenarios-presets-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .preset-btn {
