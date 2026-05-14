@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sun, Moon, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
+import FinPathLogo from '@/app/components/FinPathLogo';
 
 interface AuthScreenProps {
   isDark: boolean;
@@ -83,17 +84,8 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
       <div className="max-w-md w-full m-auto relative z-10 py-2 md:py-4 flex flex-col justify-center h-full">
         {/* Logo + Title */}
         <div className="text-center mb-6 md:mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{
-                backgroundColor: 'var(--accent)',
-                boxShadow: '0 0 12px var(--accent)',
-              }}
-            />
-            <span className="font-bold text-2xl slashed-zero text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-              finpath
-            </span>
+          <div className="flex items-center justify-center mb-4">
+            <FinPathLogo size={40} showWordmark wordmarkSize="24px" wordmarkGap={12} />
           </div>
           <h2 className="text-2xl md:text-4xl font-bold slashed-zero leading-tight text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
             {confirmSent ? 'Check your email!' : isSignUp ? 'Create your account' : 'Welcome back'}

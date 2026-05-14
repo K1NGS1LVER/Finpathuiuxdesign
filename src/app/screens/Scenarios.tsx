@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { GitCompare, Wallet, TrendingUp, Sparkles, PiggyBank, ArrowRight } from "lucide-react";
+import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
+import { pageContainer, pageSection } from "../components/motion-variants";
 
 type RiskKey = "conservative" | "balanced" | "aggressive";
 
@@ -195,8 +197,8 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
   }, [monthlySavings, income.total, risk, returnRate, horizon, diff, baselineMonthly, scenarioTotal, goals, plan]);
 
   return (
-    <div className="page-animate scenarios-page">
-      <div className="scenarios-header">
+    <motion.div className="scenarios-page" variants={pageContainer} initial="hidden" animate="visible">
+      <motion.div className="scenarios-header" variants={pageSection}>
         <div>
           <p className="text-label">What-if Engine</p>
           <h2 className="scenarios-title slashed-zero">Scenarios</h2>
@@ -215,9 +217,9 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
           <GitCompare size={14} className="icon-wireframe" />
           {showCompare ? "Hide" : "Show"} baseline
         </button>
-      </div>
+      </motion.div>
 
-      <div className="scenarios-kpi-grid">
+      <motion.div className="scenarios-kpi-grid" variants={pageSection}>
         <div className="bento-card bento-card-sm">
           <p className="text-label">Projected in {horizon} yrs</p>
           <p className="kpi-value slashed-zero">{formatInrCompact(scenarioTotal)}</p>
@@ -249,9 +251,9 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
             % of monthly income
           </p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="scenarios-main-grid">
+      <motion.div className="scenarios-main-grid" variants={pageSection}>
         <div className="bento-card">
           <div className="chart-header">
             <div>
@@ -462,9 +464,9 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
             </ul>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <ul role="list" className="scenarios-presets-grid">
+      <motion.ul role="list" className="scenarios-presets-grid" variants={pageSection}>
         {presets.map((p, i) => {
           const fv = project(p.monthly, p.rate, p.years);
           const isActive =
@@ -497,10 +499,10 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
             </li>
           );
         })}
-      </ul>
+      </motion.ul>
 
       {pennyInsights.length > 0 && (
-        <div className="bento-card penny-card" style={{ marginTop: 'var(--space-2)' }}>
+        <motion.div className="bento-card penny-card" style={{ marginTop: 'var(--space-2)' }} variants={pageSection}>
           <div className="penny-blob" />
           <div className="penny-insights-header">
             <div className="penny-insights-icon">
@@ -527,8 +529,8 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
               );
             })}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

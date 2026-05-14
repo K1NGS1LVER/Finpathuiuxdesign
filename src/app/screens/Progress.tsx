@@ -5,8 +5,10 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { motion } from "motion/react";
 import { useFinPathStore } from '@/lib/store';
 import { formatInr, formatInrCompact } from '@/lib/format';
+import { pageContainer, pageSection } from "@/app/components/motion-variants";
 
 type ChartPoint = { label: string; value: number; projected?: boolean };
 
@@ -193,14 +195,14 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative">
+    <motion.div className="max-w-5xl mx-auto space-y-4 md:space-y-6 relative" variants={pageContainer} initial="hidden" animate="visible">
       <div
         className="absolute -top-20 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl pointer-events-none"
         style={{ backgroundColor: "var(--accent)" }}
       />
 
       {/* Header */}
-      <div className="mb-8 relative z-10">
+      <motion.div className="mb-8 relative z-10" variants={pageSection}>
         <p className="text-label">Last 6 months</p>
         <h1 className="text-title text-secondary tracking-[0.15em] mb-1">Progress</h1>
         {(reservedSurplus > 0 || pendingSurplus > 0) && (
@@ -210,10 +212,10 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
               : `${formatInr(reservedSurplus)}/mo is being kept as net worth surplus.`}
           </p>
         )}
-      </div>
+      </motion.div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 relative z-10">
+      <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 relative z-10" variants={pageSection}>
         {([
           { label: "Net Worth Δ", value: formatInrCompact(netWorthDelta), delta: `+${netWorthDeltaPct}%`, color: "var(--green-text)" },
           { label: "Avg Monthly Save", value: formatInrCompact(Math.max(0, surplus)), delta: `${savingsRate}% rate`, color: "var(--accent-text)" },
@@ -231,10 +233,10 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
             <p className="mt-1" style={{ fontSize: 12, color: "var(--tertiary)" }}>{delta}</p>
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* SVG Net Worth Trajectory */}
-      <div className="bento-card p-6 md:p-8 relative z-10">
+      <motion.div className="bento-card p-6 md:p-8 relative z-10" variants={pageSection}>
         <p className="text-label mb-4">Net Worth Trajectory</p>
         <div style={{ position: 'relative' }}>
         <svg viewBox={`0 0 ${SVG_W} ${SVG_H + 30}`} style={{ width: "100%", height: 260 }} onMouseMove={handleNWMouseMove} onMouseLeave={() => setNwTooltip(null)}>
@@ -342,10 +344,10 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
           </div>
         )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Milestones + Penny Quarterly Review */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
+      <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10" variants={pageSection}>
         <div className="bento-card p-6 md:p-8">
           <p className="text-label mb-4">Milestones Unlocked</p>
           <div>
@@ -394,11 +396,11 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Health Score Strip */}
       {healthScore && (
-        <div className="bento-card p-6 md:p-8 relative z-10">
+        <motion.div className="bento-card p-6 md:p-8 relative z-10" variants={pageSection}>
           <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
             Health Score
           </h3>
@@ -458,8 +460,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Target, TrendingUp, Sparkles, GitBranch, ArrowRight, Sun, Moon } from 'lucide-react';
+import FinPathLogo from '@/app/components/FinPathLogo';
 
 interface LandingProps {
   isDark: boolean;
@@ -31,10 +32,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
 
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4 md:px-8 bg-card/80 backdrop-blur-xl border-b border-border">
-        <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-foreground font-display">
-          <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_12px_var(--accent-glow)]" />
-          finpath
-        </div>
+        <FinPathLogo size={32} showWordmark wordmarkSize="20px" wordmarkGap={10} />
         <div className="hidden md:flex items-center gap-8">
           <a href="#features" className="text-sm font-medium text-secondary hover:text-foreground transition-colors">Features</a>
           <a href="#testimonials" className="text-sm font-medium text-secondary hover:text-foreground transition-colors">Testimonials</a>

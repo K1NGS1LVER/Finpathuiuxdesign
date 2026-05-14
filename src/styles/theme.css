@@ -94,6 +94,7 @@
   --accent-subtle: rgba(73, 91, 255, 0.08);
   --accent-glow: rgba(73, 91, 255, 0.18);
   --on-accent: #ffffff;
+  --logo-dot-inner: #ffffff;
 
   /* ═══════════════════════════════════════════════
      SECONDARY ACCENT — Violet / Purple #ac49ff
@@ -312,6 +313,7 @@
   --accent-subtle: rgba(123, 140, 255, 0.14);
   --accent-glow: rgba(123, 140, 255, 0.24);
   --on-accent: #ffffff;
+  --logo-dot-inner: #0f1422;
 
   /* ═══════════════════════════════════════════════
      SECONDARY ACCENT — Violet (dark mode)

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
+import FinPathLogo from '@/app/components/FinPathLogo';
 
 export default function Loading() {
   const navigate = useNavigate();
@@ -48,11 +49,14 @@ export default function Loading() {
       </div>
       <div className="max-w-md w-full space-y-6 md:space-y-8 relative z-10">
         <div className="text-center space-y-3 md:space-y-4">
+          <div className="flex justify-center mb-6">
+            <FinPathLogo size={64} showWordmark wordmarkSize="28px" wordmarkGap={16} />
+          </div>
           <div className="w-14 h-14 md:w-16 md:h-16 mx-auto rounded-full flex items-center justify-center animate-float relative" style={{ backgroundColor: 'var(--accent)20', color: 'var(--accent)' }}>
             <div className="w-10 h-10 md:w-12 md:h-12 border-4 border-current border-t-transparent rounded-full animate-spin relative z-10" />
             <div className="absolute inset-0 rounded-full animate-pulse blur-md" style={{ backgroundColor: 'var(--accent)', opacity: 0.3 }} />
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold px-4" style={{ fontFamily: 'var(--font-display)' }}>Creating your FinPath...</h2>
+          <h2 className="text-lg md:text-xl font-medium px-4" style={{ fontFamily: 'var(--font-display)', color: 'var(--secondary)' }}>Creating your FinPath...</h2>
         </div>
 
         <div className="space-y-3">

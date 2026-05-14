@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router';
 import { LayoutDashboard, Map, Calendar, GitBranch, MessageCircle, ChevronLeft, ChevronRight, X, BarChart3, CreditCard, ArrowLeftRight } from 'lucide-react';
+import FinPathLogo from './FinPathLogo';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
@@ -101,30 +102,22 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
             style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', padding: 0 }}
           >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                background: 'var(--accent)',
-                boxShadow: '0 0 14px var(--accent-glow)',
-                flexShrink: 0,
-              }}
-            />
+            <FinPathLogo size={32} />
             <span
               style={{
                 fontFamily: 'var(--font-display)',
-                fontWeight: 'var(--font-weight-bold)',
-                fontSize: 'var(--text-xl)',
-                letterSpacing: '-0.02em',
+                fontWeight: 'var(--font-weight-semibold)',
+                fontSize: 'var(--text-lg)',
+                letterSpacing: '-0.025em',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '200px',
                 transition: 'all 500ms cubic-bezier(0.4, 0, 0.2, 1)',
                 overflow: 'hidden',
                 whiteSpace: 'nowrap',
+                color: 'var(--foreground)',
               }}
             >
-              finpath
+              fin<span style={{ color: 'var(--accent)' }}>path</span>
             </span>
           </button>
 

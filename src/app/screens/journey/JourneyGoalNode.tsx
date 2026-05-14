@@ -1,4 +1,5 @@
 import { Target, Bike, Plane, CreditCard, Home, Heart, TrendingUp, Shield, GraduationCap, Wallet } from "lucide-react";
+import { motion } from "motion/react";
 import type { Goal } from '@/lib/types';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
@@ -12,6 +13,12 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   Shield,
   GraduationCap,
   Wallet,
+};
+
+const nodeVariants = {
+  hidden: { opacity: 0, scale: 0.6 },
+  visible: { opacity: 1, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 22 } },
+  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.18 } },
 };
 
 function getIcon(name: string) {
@@ -75,14 +82,18 @@ export default function JourneyGoalNode({
   const Icon = getIcon(goal.icon);
 
   return (
-    <div
-      className="absolute cursor-pointer hover:scale-105 pointer-events-auto"
+    <motion.div
+      className="absolute cursor-pointer pointer-events-auto"
       style={{
         left: x,
         top: y,
         width: 160,
-        transition: isDragging ? "none" : "transform 0.2s ease",
       }}
+      variants={nodeVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      whileHover={isDragging ? undefined : { scale: 1.05 }}
       onMouseDown={(e) => onPointerDown(e, goal.id)}
       onTouchStart={(e) => onPointerDown(e, goal.id)}
       onClick={() => {
@@ -135,6 +146,6 @@ export default function JourneyGoalNode({
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
