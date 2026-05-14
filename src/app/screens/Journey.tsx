@@ -1,4 +1,5 @@
 import { Target, Plus } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useFinPathStore } from '@/lib/store';
 import { useJourneyCanvas } from "./journey/useJourneyCanvas";
 import { useJourneyGoals } from "./journey/useJourneyGoals";
@@ -86,21 +87,23 @@ export default function Journey() {
             onPointerDown={canvas.handlePointerDown}
           />
 
-          {goals.sortedGoals.map((goal, i) => {
-            const pos = canvas.getNodePos(goal.id, i);
-            return (
-              <JourneyGoalNode
-                key={goal.id}
-                goal={goal}
-                x={pos.x + canvas.panOffset.x}
-                y={pos.y + canvas.panOffset.y}
-                isDragging={canvas.dragging === goal.id}
-                onPointerDown={canvas.handlePointerDown}
-                onClick={() => goals.setSelectedGoalId(goal.id)}
-                formatCurrency={formatCurrency}
-              />
-            );
-          })}
+          <AnimatePresence>
+            {goals.sortedGoals.map((goal, i) => {
+              const pos = canvas.getNodePos(goal.id, i);
+              return (
+                <JourneyGoalNode
+                  key={goal.id}
+                  goal={goal}
+                  x={pos.x + canvas.panOffset.x}
+                  y={pos.y + canvas.panOffset.y}
+                  isDragging={canvas.dragging === goal.id}
+                  onPointerDown={canvas.handlePointerDown}
+                  onClick={() => goals.setSelectedGoalId(goal.id)}
+                  formatCurrency={formatCurrency}
+                />
+              );
+            })}
+          </AnimatePresence>
         </div>
 
         {goals.sortedGoals.length === 0 && (

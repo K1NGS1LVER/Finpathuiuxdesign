@@ -3,7 +3,9 @@ import {
   Sparkles,
   AlertTriangle,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
+import { pageContainer, pageSection } from '@/app/components/motion-variants';
 import { Sankey, ResponsiveContainer } from 'recharts';
 import {
   CustomNode,
@@ -226,13 +228,13 @@ export default function Cashflow() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto relative text-[var(--foreground)]">
-      <div className="mb-6">
+    <motion.div className="max-w-7xl mx-auto relative text-[var(--foreground)]" variants={pageContainer} initial="hidden" animate="visible">
+      <motion.div className="mb-6" variants={pageSection}>
         <p className="text-label">Money Flow · {monthLabel}</p>
         <h2 className="text-title slashed-zero text-[var(--card-foreground)] mt-1">Cashflow</h2>
-      </div>
+      </motion.div>
 
-      <div className="flex flex-col gap-4 md:gap-6 relative z-10">
+      <motion.div className="flex flex-col gap-4 md:gap-6 relative z-10" variants={pageSection}>
         <div className="bento-card">
           <h3 className="text-heading slashed-zero text-[var(--card-foreground)] mb-4">Flow Diagram</h3>
           {sankeyData.links.length > 0 ? (
@@ -333,7 +335,7 @@ export default function Cashflow() {
             ))}
           </ul>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

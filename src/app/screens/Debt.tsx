@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Sparkles, ArrowRight, TrendingUp, PiggyBank, AlertTriangle } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
+import { pageContainer, pageSection } from '@/app/components/motion-variants';
 import { avalanche, snowball, compareStrategies } from '@/lib/debt-strategies';
 import { formatInr, formatInrCompact } from '@/lib/format';
 import {
@@ -204,15 +206,15 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   }, [debtItems, comparison, extraPayment, zeroExtraResult, timelineResult]);
 
   return (
-    <div className="page-animate debt-page">
-      <div style={{ marginBottom: 'var(--space-3)' }}>
+    <motion.div className="debt-page" variants={pageContainer} initial="hidden" animate="visible">
+      <motion.div style={{ marginBottom: 'var(--space-3)' }} variants={pageSection}>
         <p className="text-label">Liabilities</p>
         <h2 className="debt-page-title">Debt</h2>
-      </div>
+      </motion.div>
 
       {debtItems.length > 0 ? (
         <>
-          <div className="debt-kpi-grid">
+          <motion.div className="debt-kpi-grid" variants={pageSection}>
             {([
               { label: 'Total Outstanding', value: formatInrCompact(totalPrincipal), color: 'var(--red-text)' },
               { label: 'Monthly EMI', value: formatInr(totalMonthlyEMI), color: 'var(--card-foreground)' },
@@ -225,9 +227,9 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                 </p>
               </div>
             ))}
-          </div>
+          </motion.div>
 
-          <div className="bento-card" style={{ marginBottom: 'var(--space-4)' }}>
+          <motion.div className="bento-card" style={{ marginBottom: 'var(--space-4)' }} variants={pageSection}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
               <div>
                 <p className="text-label">Payoff Strategy</p>
@@ -356,10 +358,10 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                 );
               })}
             </ul>
-          </div>
+          </motion.div>
 
           {pennyInsights.length > 0 && (
-            <div className="bento-card penny-card">
+            <motion.div className="bento-card penny-card" variants={pageSection}>
               <div className="penny-blob" />
               <div className="penny-insights-header">
                 <div className="penny-insights-icon">
@@ -386,19 +388,19 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           )}
         </>
       ) : (
-        <div className="bento-card" style={{ padding: 'var(--space-12)', textAlign: 'center' }}>
+        <motion.div className="bento-card" style={{ padding: 'var(--space-12)', textAlign: 'center' }} variants={pageSection}>
           <p style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--card-foreground)', marginBottom: 'var(--space-2)' }}>
             No Debts Tracked
           </p>
           <p className="penny-suggest-text">
             Add debts during onboarding to unlock strategy comparison and payoff timeline views.
           </p>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

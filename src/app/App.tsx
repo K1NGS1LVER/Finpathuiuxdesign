@@ -25,6 +25,7 @@ import PennyPanel from "./components/PennyPanel";
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import ErrorBoundary from './components/ErrorBoundary';
+import PageTransition from './components/PageTransition';
 import ScrollToTop from "./components/ScrollToTop";
 
 function AppContent() {
@@ -157,16 +158,20 @@ function AppContent() {
                 <Route
                   path="/dashboard"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Dashboard onPennyClick={() => setPennyOpen(true)} />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Dashboard onPennyClick={() => setPennyOpen(true)} />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
                 <Route
                   path="/journey"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Journey />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Journey />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
@@ -174,48 +179,60 @@ function AppContent() {
                 <Route
                   path="/month"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Month />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Month />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
                 <Route
                   path="/scenarios"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Scenarios onPennyClick={() => setPennyOpen(true)} />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Scenarios onPennyClick={() => setPennyOpen(true)} />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
                 <Route
                   path="/progress"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Progress onPennyClick={() => setPennyOpen(true)} />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Progress onPennyClick={() => setPennyOpen(true)} />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
                 <Route
                   path="/debt"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Debt onPennyClick={() => setPennyOpen(true)} />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Debt onPennyClick={() => setPennyOpen(true)} />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
                 <Route
                   path="/cashflow"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Cashflow />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Cashflow />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
                 <Route
                   path="/celebrate"
                   element={
-                    <ErrorBoundary key={location.pathname}>
-                      <Celebrate />
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Celebrate />
+                      </PageTransition>
                     </ErrorBoundary>
                   }
                 />
@@ -298,32 +315,40 @@ function AppContent() {
           <Route
             path="/"
             element={
-              <ErrorBoundary key={location.pathname}>
-                <Landing isDark={isDark} setIsDark={setIsDark} />
+              <ErrorBoundary key={location.pathname} animate={false}>
+                <PageTransition>
+                  <Landing isDark={isDark} setIsDark={setIsDark} />
+                </PageTransition>
               </ErrorBoundary>
             }
           />
           <Route
             path="/auth"
             element={
-              <ErrorBoundary key={location.pathname}>
-                <Auth isDark={isDark} setIsDark={setIsDark} />
+              <ErrorBoundary key={location.pathname} animate={false}>
+                <PageTransition>
+                  <Auth isDark={isDark} setIsDark={setIsDark} />
+                </PageTransition>
               </ErrorBoundary>
             }
           />
           <Route
             path="/onboarding"
             element={
-              <ErrorBoundary key={location.pathname}>
-                <Onboarding isDark={isDark} setIsDark={setIsDark} />
+              <ErrorBoundary key={location.pathname} animate={false}>
+                <PageTransition>
+                  <Onboarding isDark={isDark} setIsDark={setIsDark} />
+                </PageTransition>
               </ErrorBoundary>
             }
           />
           <Route
             path="/loading"
             element={
-              <ErrorBoundary key={location.pathname}>
-                <Loading />
+              <ErrorBoundary key={location.pathname} animate={false}>
+                <PageTransition>
+                  <Loading />
+                </PageTransition>
               </ErrorBoundary>
             }
           />

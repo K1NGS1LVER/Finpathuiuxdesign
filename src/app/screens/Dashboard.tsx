@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
 import confetti from "canvas-confetti";
@@ -43,6 +44,15 @@ const CATEGORY_STYLE: Record<string, { icon: string; color: string; subtle: stri
   investment: { icon: "TrendingUp",    color: "var(--amber)",            subtle: "var(--amber-subtle)",            text: "var(--amber-text)" },
   custom:     { icon: "Target",        color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
   default:    { icon: "Target",        color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
+};
+
+const gridVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+};
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] } },
 };
 
 function useCountUp(target: number) {
@@ -119,7 +129,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
   ];
 
   return (
-    <div className="page-animate dashboard-page">
+    <div className="dashboard-page">
 
       {/* ── Header ── */}
       <div className="dashboard-header">
@@ -141,10 +151,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
       </div>
 
       {/* ── Bento grid ── */}
-      <div className="dashboard-grid">
+      <motion.div className="dashboard-grid" variants={gridVariants} initial="hidden" animate="visible">
 
         {/* ─ Active Goals (8 cols) ─ */}
-        <div className="bento-card col-span-8">
+        <motion.div className="bento-card col-span-8" variants={cardVariants}>
           <h3 className="sr-only">Active Goals</h3>
           <div className="relative">
             <div className="goals-header">
@@ -208,10 +218,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* ─ Next Step (4 cols) ─ */}
-        <div className="bento-card col-span-4 flex flex-col">
+        <motion.div className="bento-card col-span-4 flex flex-col" variants={cardVariants}>
           <h3 className="sr-only">Your Next Step</h3>
           <p className="text-label mb-4">Your Next Step</p>
 
@@ -279,10 +289,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               <p className="next-step-empty-sub">Check back next month.</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* ─ Health + Metrics (7 cols) ─ */}
-        <div className="bento-card col-span-7 flex gap-6">
+        <motion.div className="bento-card col-span-7 flex gap-6" variants={cardVariants}>
           <h3 className="sr-only">Health and Metrics</h3>
 
           {/* Metrics column */}
@@ -346,10 +356,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* ─ Recent Activity (5 cols) ─ */}
-        <div className="bento-card col-span-5">
+        <motion.div className="bento-card col-span-5" variants={cardVariants}>
           <h3 className="sr-only">Recent Activity</h3>
           <div className="activity-header">
             <p className="text-label">Recent Activity</p>
@@ -379,10 +389,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               <p className="activity-empty">No goals yet.</p>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* ─ Achievements (12 cols) ─ */}
-        <div className="bento-card col-span-12">
+        <motion.div className="bento-card col-span-12" variants={cardVariants}>
           <h3 className="text-heading slashed-zero text-[var(--card-foreground)] mb-4">Achievements</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {badges.map((badge) => (
@@ -400,10 +410,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* ─ Penny Insights (12 cols) ─ */}
-        <div className="bento-card penny-card col-span-12">
+        <motion.div className="bento-card penny-card col-span-12" variants={cardVariants}>
           <div className="penny-blob" />
 
           <div className="penny-insights-header">
@@ -432,9 +442,9 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               );
             })}
           </div>
-        </div>
+        </motion.div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import { Check, AlertTriangle, Target, Sparkles } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
+import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
 import confetti from "canvas-confetti";
+import { pageContainer, pageSection } from "@/app/components/motion-variants";
 
 interface MonthTask {
   id: string;
@@ -236,7 +238,7 @@ export default function Month() {
 
   if (!plan || !plan.months || plan.months.length === 0) {
     return (
-      <div className="month-page page-animate">
+      <div className="month-page">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 icon-accent-subtle">
             <AlertTriangle size={32} className="icon-wireframe" />
@@ -255,16 +257,16 @@ export default function Month() {
   }
 
   return (
-    <div className="month-page page-animate">
+    <motion.div className="month-page" variants={pageContainer} initial="hidden" animate="visible">
       {/* Header */}
-      <div className="month-header">
+      <motion.div className="month-header" variants={pageSection}>
         <p className="text-label" style={{ color: 'var(--tertiary)' }}>{monthLabel} · {daysLeft} days left</p>
         <h2 className="month-title">This Month's Plan</h2>
-      </div>
+      </motion.div>
 
       {/* Debt warning */}
       {debts.totalMonthly > surplus && surplus >= 0 && (
-        <div className="debt-warning">
+        <motion.div className="debt-warning" variants={pageSection}>
           <AlertTriangle size={18} className="flex-shrink-0 mt-0.5 icon-wireframe" />
           <div>
             <div className="debt-warning-title">Debt payments exceed your surplus</div>
@@ -274,11 +276,11 @@ export default function Month() {
               Consider negotiating lower payments or consolidating debt.
             </span>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Mission card */}
-      <div className="bento-card">
+      <motion.div className="bento-card" variants={pageSection}>
         <div className="mission-content">
           <div className="mission-left">
             <div className="mission-eyebrow">Mission</div>
@@ -322,10 +324,10 @@ export default function Month() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main 2-col grid */}
-      <div className="month-grid">
+      <motion.div className="month-grid" variants={pageSection}>
         {/* Left: Checklist */}
         <div className="bento-card bento-card-sm">
           <div className="checklist-header">
@@ -498,10 +500,10 @@ export default function Month() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Strategy + Lumpsum */}
-      <div className="month-lower-grid">
+      <motion.div className="month-lower-grid" variants={pageSection}>
         {/* Investment Strategy */}
         <div className="bento-card bento-card-sm">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
@@ -651,7 +653,7 @@ export default function Month() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
