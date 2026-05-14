@@ -1,0 +1,41 @@
+{
+  "input": {
+    "income": {
+      "primary": 100000,
+      "secondary": 0,
+      "passive": 0,
+      "variablePercent": 0,
+      "variable": 0,
+      "total": 100000,
+      "primaryIncrement": 0,
+      "secondaryIncrement": 0,
+      "passiveIncrement": 0
+    },
+    "expenses": {
+      "rent": 20000,
+      "food": 10000,
+      "transport": 5000,
+      "utilities": 3000,
+      "entertainment": 4000,
+      "other": 3000,
+      "total": 40000
+    },
+    "debts": {
+      "items": [],
+      "totalMonthly": 0
+    },
+    "savings": 100000,
+    "investments": 200000,
+    "emergencyFund": 300000
+  },
+  "expected": {
+    "overall": 90,
+    "incomeStability": 15,
+    "debtLoad": 25,
+    "savingsRate": 25,
+    "emergencyFund": 25,
+    "actions": [
+      "Explore a side income source to diversify — freelancing or passive income can boost stability"
+    ]
+  }
+}

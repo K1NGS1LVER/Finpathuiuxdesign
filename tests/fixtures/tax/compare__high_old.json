@@ -1,0 +1,79 @@
+{
+  "input": {
+    "grossIncome": 2000000,
+    "deductions": 0
+  },
+  "expected": {
+    "old": {
+      "regime": "old",
+      "grossIncome": 2000000,
+      "deductions": 50000,
+      "taxableIncome": 1950000,
+      "tax": 397500,
+      "cess": 15900,
+      "totalTax": 413400,
+      "effectiveRate": 20.67,
+      "slabs": [
+        {
+          "range": "₹0.0L – ₹2.5L",
+          "rate": 0,
+          "tax": 0
+        },
+        {
+          "range": "₹2.5L – ₹5.0L",
+          "rate": 5,
+          "tax": 12500
+        },
+        {
+          "range": "₹5.0L – ₹10.0L",
+          "rate": 20,
+          "tax": 100000
+        },
+        {
+          "range": "Above ₹10.0L",
+          "rate": 30,
+          "tax": 285000
+        }
+      ]
+    },
+    "new": {
+      "regime": "new",
+      "grossIncome": 2000000,
+      "deductions": 75000,
+      "taxableIncome": 1925000,
+      "tax": 185000,
+      "cess": 7400,
+      "totalTax": 192400,
+      "effectiveRate": 9.62,
+      "slabs": [
+        {
+          "range": "₹0.0L – ₹4.0L",
+          "rate": 0,
+          "tax": 0
+        },
+        {
+          "range": "₹4.0L – ₹8.0L",
+          "rate": 5,
+          "tax": 20000
+        },
+        {
+          "range": "₹8.0L – ₹12.0L",
+          "rate": 10,
+          "tax": 40000
+        },
+        {
+          "range": "₹12.0L – ₹16.0L",
+          "rate": 15,
+          "tax": 60000
+        },
+        {
+          "range": "₹16.0L – ₹20.0L",
+          "rate": 20,
+          "tax": 65000
+        }
+      ]
+    },
+    "savings": 221000,
+    "betterRegime": "new"
+  }
+}

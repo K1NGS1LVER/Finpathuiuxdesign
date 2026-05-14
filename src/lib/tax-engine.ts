@@ -52,8 +52,8 @@ function calculateSlabTax(
 
     slabBreakdown.push({
       range: slab.max === Infinity
-        ? `Above Γé╣${(slab.min / 100000).toFixed(1)}L`
-        : `Γé╣${(slab.min / 100000).toFixed(1)}L ΓÇô Γé╣${(slab.max / 100000).toFixed(1)}L`,
+        ? `Above ₹${(slab.min / 100000).toFixed(1)}L`
+        : `₹${(slab.min / 100000).toFixed(1)}L – ₹${(slab.max / 100000).toFixed(1)}L`,
       rate: slab.rate,
       tax: Math.round(taxForSlab),
     });

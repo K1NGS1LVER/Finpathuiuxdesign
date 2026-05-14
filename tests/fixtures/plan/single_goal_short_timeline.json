@@ -1,0 +1,133 @@
+{
+  "input": {
+    "income": {
+      "primary": 100000,
+      "secondary": 0,
+      "passive": 0,
+      "variablePercent": 0,
+      "variable": 0,
+      "total": 100000,
+      "primaryIncrement": 0,
+      "secondaryIncrement": 0,
+      "passiveIncrement": 0
+    },
+    "expenses": {
+      "rent": 20000,
+      "food": 10000,
+      "transport": 5000,
+      "utilities": 3000,
+      "entertainment": 4000,
+      "other": 3000,
+      "total": 50000
+    },
+    "debts": {
+      "items": [],
+      "totalMonthly": 0
+    },
+    "goals": [
+      {
+        "id": "bike",
+        "name": "Bike",
+        "icon": "Target",
+        "category": "savings",
+        "targetAmount": 100000,
+        "currentAmount": 0,
+        "timelineMonths": 6,
+        "priority": 1,
+        "status": "in-progress",
+        "monthlyAllocation": 0,
+        "color": "#3b82f6"
+      }
+    ],
+    "savings": 0,
+    "investments": 0,
+    "strategy": "avalanche"
+  },
+  "expected": {
+    "months": [
+      {
+        "month": 0,
+        "date": "Jun 2026",
+        "income": 100000,
+        "expenses": 50000,
+        "debtPayments": 0,
+        "surplus": 50000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {
+          "bike": 50000
+        },
+        "milestones": [],
+        "cumulativeSavings": 0,
+        "netWorth": 50000
+      },
+      {
+        "month": 1,
+        "date": "Jul 2026",
+        "income": 100000,
+        "expenses": 50000,
+        "debtPayments": 0,
+        "surplus": 50000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {
+          "bike": 50000
+        },
+        "milestones": [
+          "Bike completed!"
+        ],
+        "cumulativeSavings": 0,
+        "netWorth": 100000
+      },
+      {
+        "month": 2,
+        "date": "Aug 2026",
+        "income": 100000,
+        "expenses": 50000,
+        "debtPayments": 0,
+        "surplus": 50000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {},
+        "milestones": [],
+        "cumulativeSavings": 50000,
+        "netWorth": 150000
+      },
+      {
+        "month": 3,
+        "date": "Sept 2026",
+        "income": 100000,
+        "expenses": 50000,
+        "debtPayments": 0,
+        "surplus": 50000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {},
+        "milestones": [],
+        "cumulativeSavings": 100000,
+        "netWorth": 200000
+      },
+      {
+        "month": 4,
+        "date": "Oct 2026",
+        "income": 100000,
+        "expenses": 50000,
+        "debtPayments": 0,
+        "surplus": 50000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {},
+        "milestones": [],
+        "cumulativeSavings": 150000,
+        "netWorth": 250000
+      }
+    ],
+    "totalMonths": 5,
+    "goalCompletionDates": {
+      "bike": "Jul 2026"
+    },
+    "recommendedAllocations": {
+      "bike": 50000
+    }
+  }
+}

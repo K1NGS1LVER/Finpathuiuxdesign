@@ -1,0 +1,95 @@
+{
+  "input": {
+    "income": {
+      "primary": 80000,
+      "secondary": 0,
+      "passive": 0,
+      "variablePercent": 0,
+      "variable": 0,
+      "total": 80000,
+      "primaryIncrement": 0,
+      "secondaryIncrement": 0,
+      "passiveIncrement": 0
+    },
+    "expenses": {
+      "rent": 20000,
+      "food": 10000,
+      "transport": 5000,
+      "utilities": 3000,
+      "entertainment": 4000,
+      "other": 3000,
+      "total": 40000
+    },
+    "debts": {
+      "items": [],
+      "totalMonthly": 0
+    },
+    "goals": [],
+    "savings": 50000,
+    "investments": 100000,
+    "strategy": "avalanche"
+  },
+  "expected": {
+    "months": [
+      {
+        "month": 0,
+        "date": "Jun 2026",
+        "income": 80000,
+        "expenses": 40000,
+        "debtPayments": 0,
+        "surplus": 40000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {},
+        "milestones": [],
+        "cumulativeSavings": 90000,
+        "netWorth": 190000
+      },
+      {
+        "month": 1,
+        "date": "Jul 2026",
+        "income": 80000,
+        "expenses": 40000,
+        "debtPayments": 0,
+        "surplus": 40000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {},
+        "milestones": [],
+        "cumulativeSavings": 130000,
+        "netWorth": 231000
+      },
+      {
+        "month": 2,
+        "date": "Aug 2026",
+        "income": 80000,
+        "expenses": 40000,
+        "debtPayments": 0,
+        "surplus": 40000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {},
+        "milestones": [],
+        "cumulativeSavings": 170000,
+        "netWorth": 272010
+      },
+      {
+        "month": 3,
+        "date": "Sept 2026",
+        "income": 80000,
+        "expenses": 40000,
+        "debtPayments": 0,
+        "surplus": 40000,
+        "reservedSurplus": 0,
+        "pendingSurplus": 0,
+        "goalAllocations": {},
+        "milestones": [],
+        "cumulativeSavings": 210000,
+        "netWorth": 313030
+      }
+    ],
+    "totalMonths": 4,
+    "goalCompletionDates": {},
+    "recommendedAllocations": {}
+  }
+}

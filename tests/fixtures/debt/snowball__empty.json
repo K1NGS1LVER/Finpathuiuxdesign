@@ -1,0 +1,14 @@
+{
+  "input": {
+    "debts": [],
+    "extra": 0
+  },
+  "expected": {
+    "strategy": "snowball",
+    "totalMonths": 0,
+    "totalInterestPaid": 0,
+    "totalPaid": 0,
+    "steps": [],
+    "payoffDates": {}
+  }
+}

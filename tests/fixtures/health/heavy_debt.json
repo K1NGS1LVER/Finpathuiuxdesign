@@ -1,0 +1,43 @@
+{
+  "input": {
+    "income": {
+      "primary": 60000,
+      "secondary": 0,
+      "passive": 0,
+      "variablePercent": 0,
+      "variable": 0,
+      "total": 60000,
+      "primaryIncrement": 0,
+      "secondaryIncrement": 0,
+      "passiveIncrement": 0
+    },
+    "expenses": {
+      "rent": 20000,
+      "food": 10000,
+      "transport": 5000,
+      "utilities": 3000,
+      "entertainment": 4000,
+      "other": 3000,
+      "total": 25000
+    },
+    "debts": {
+      "items": [],
+      "totalMonthly": 35000
+    },
+    "savings": 10000,
+    "investments": 0,
+    "emergencyFund": 5000
+  },
+  "expected": {
+    "overall": 46,
+    "incomeStability": 15,
+    "debtLoad": 3,
+    "savingsRate": 25,
+    "emergencyFund": 3,
+    "actions": [
+      "Build your emergency fund — save ₹100K more to reach 3 months' expenses",
+      "Reduce debt payments below 35% of income — consider the avalanche method to save on interest",
+      "Explore a side income source to diversify — freelancing or passive income can boost stability"
+    ]
+  }
+}

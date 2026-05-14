@@ -1,0 +1,137 @@
+{
+  "input": {
+    "debts": [
+      {
+        "id": "a",
+        "name": "Loan",
+        "category": "personalLoan",
+        "principal": 100000,
+        "interestRate": 15,
+        "monthlyPayment": 5000,
+        "remainingMonths": 24
+      }
+    ],
+    "extra": 5000
+  },
+  "expected": {
+    "strategy": "avalanche",
+    "totalMonths": 11,
+    "totalInterestPaid": 7503,
+    "totalPaid": 107503,
+    "steps": [
+      {
+        "month": 1,
+        "date": "Jun 2026",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 91250,
+        "interestPaid": 1250,
+        "isPaidOff": false
+      },
+      {
+        "month": 2,
+        "date": "Jul 2026",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 82390.625,
+        "interestPaid": 1140.625,
+        "isPaidOff": false
+      },
+      {
+        "month": 3,
+        "date": "Aug 2026",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 73420.5078125,
+        "interestPaid": 1029.8828125,
+        "isPaidOff": false
+      },
+      {
+        "month": 4,
+        "date": "Sept 2026",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 64338.26416015625,
+        "interestPaid": 917.7563476562499,
+        "isPaidOff": false
+      },
+      {
+        "month": 5,
+        "date": "Oct 2026",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 55142.4924621582,
+        "interestPaid": 804.228302001953,
+        "isPaidOff": false
+      },
+      {
+        "month": 6,
+        "date": "Nov 2026",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 45831.77361793518,
+        "interestPaid": 689.2811557769775,
+        "isPaidOff": false
+      },
+      {
+        "month": 7,
+        "date": "Dec 2026",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 36404.67078815937,
+        "interestPaid": 572.8971702241897,
+        "isPaidOff": false
+      },
+      {
+        "month": 8,
+        "date": "Jan 2027",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 26859.729173011357,
+        "interestPaid": 455.05838485199206,
+        "isPaidOff": false
+      },
+      {
+        "month": 9,
+        "date": "Feb 2027",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 17195.475787674,
+        "interestPaid": 335.74661466264195,
+        "isPaidOff": false
+      },
+      {
+        "month": 10,
+        "date": "Mar 2027",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 10000,
+        "remainingBalance": 7410.419235019926,
+        "interestPaid": 214.943447345925,
+        "isPaidOff": false
+      },
+      {
+        "month": 11,
+        "date": "Apr 2027",
+        "debtId": "a",
+        "debtName": "Loan",
+        "payment": 7503.049475457676,
+        "remainingBalance": 0,
+        "interestPaid": 92.63024043774907,
+        "isPaidOff": true
+      }
+    ],
+    "payoffDates": {
+      "a": 11
+    }
+  }
+}
