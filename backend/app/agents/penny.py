@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from typing import Any, AsyncIterator, Callable
 
 from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
@@ -31,6 +32,13 @@ from app.services.prompt import build_system_prompt
 log = logging.getLogger(__name__)
 
 
+# Llama-3.3 sometimes leaks its function-calling fine-tune syntax into the
+# user-visible reply (e.g. `<function=propose_change>{...}</function>`).
+# We strip both the closed and open variants from streamed tokens.
+_FUNCTION_TAG_RE = re.compile(r"<function=[^>]*>(.*?</function>)?", re.DOTALL)
+_FUNCTION_OPEN_RE = re.compile(r"<function=[^>]*$")
+
+
 SYSTEM_SUFFIX = """
 
 TOOLS AVAILABLE:
@@ -42,11 +50,21 @@ TOOLS AVAILABLE:
 - propose_change(action, payload, rationale) — propose a single store mutation for user Approve/Reject.
 
 TOOL USAGE RULES:
-1. NEVER answer a numeric what-if question (e.g. "what if I raise EMI by 5k?") without first calling simulate_what_if. Don't guess outcomes.
-2. NEVER call propose_change unless the math from a simulate_* / check_health tool actually supports the change.
-3. Allowed propose_change actions: setStrategy, setEmergencyFund, setSavings, setInvestments, updateGoal, addGoal, removeGoal, addLumpsum.
-4. propose_change.payload must be valid for the corresponding Zustand setter (e.g. updateGoal -> {"id": "...", "updates": {...}}).
-5. Keep your final reply 3-5 sentences. Reference the numbers the tool returned.
+1. NEVER answer a numeric what-if question without first calling simulate_what_if. Don't guess outcomes.
+2. Call each tool AT MOST ONCE per turn. If you already called simulate_what_if, do not call it again with the same args.
+3. NEVER call propose_change unless tool math actually supports the change.
+4. Allowed propose_change actions: setStrategy, setEmergencyFund, setSavings, setInvestments, updateGoal, addGoal, removeGoal, addLumpsum.
+5. propose_change.payload must match the Zustand setter shape (e.g. updateGoal -> {"id": "...", "updates": {...}}).
+6. Tool calls happen via the API only. NEVER write `<function=...>`, `</function>`, JSON tool-call blocks, or any literal tool-invocation syntax in your reply text. Use the function-calling API to invoke tools; the reply is plain prose for the user.
+7. Do NOT instruct the user to call a function or suggest "calling X". Either call the tool yourself via the API, or omit the suggestion. The user does not see tool names.
+
+FINAL REPLY FORMAT — STRICT:
+- Two short paragraphs separated by a blank line. 4-6 sentences total.
+- Paragraph 1 (TL;DR): 2-3 sentences. Lead with the answer + the key number from the tool result.
+- Paragraph 2 (Why + next step): 2-3 sentences. Brief reasoning + one concrete action in plain English (no tool names, no code).
+- Every ₹ amount, % and month count wrapped in markdown bold: **₹12,500**, **8 months**, **+15%**.
+- Do NOT repeat the same scenario twice. Do NOT restate the user's question. No greetings, no filler.
+- Plain prose only. No XML, no JSON, no `<function=...>` tags.
 """
 
 
@@ -56,8 +74,8 @@ def _llm() -> ChatGroq:
     return ChatGroq(
         api_key=settings.groq_api_key,
         model="llama-3.3-70b-versatile",
-        temperature=0.4,
-        max_tokens=700,
+        temperature=0.3,
+        max_tokens=350,
     )
 
 
@@ -98,6 +116,7 @@ async def stream_agent(
     final_text_parts: list[str] = []
     tool_calls_log: list[dict[str, Any]] = []
     tool_results_log: list[dict[str, Any]] = []
+    token_buffer = ""  # holds tail across chunks so we can detect split tags
 
     try:
         async for event in graph.astream_events({"messages": messages}, version="v2"):
@@ -108,8 +127,20 @@ async def stream_agent(
                 if isinstance(chunk, AIMessageChunk):
                     text = chunk.content
                     if isinstance(text, str) and text:
-                        final_text_parts.append(text)
-                        yield {"event": "token", "data": text}
+                        token_buffer += text
+                        cleaned = _FUNCTION_TAG_RE.sub("", token_buffer)
+                        # If a `<function=` tag opens but hasn't closed yet, hold the
+                        # tail back until the next chunk so we don't leak partial markup.
+                        open_match = _FUNCTION_OPEN_RE.search(cleaned)
+                        if open_match:
+                            emit = cleaned[: open_match.start()]
+                            token_buffer = cleaned[open_match.start() :]
+                        else:
+                            emit = cleaned
+                            token_buffer = ""
+                        if emit:
+                            final_text_parts.append(emit)
+                            yield {"event": "token", "data": emit}
 
             elif kind == "on_tool_start":
                 name = event.get("name") or ""
@@ -150,6 +181,15 @@ async def stream_agent(
     while not proposal_queue.empty():
         prop = proposal_queue.get_nowait()
         yield {"event": "proposal", "data": prop}
+
+    # If the stream ended while we were holding back text behind an unclosed
+    # `<function=` tag, strip and emit what's left so the user isn't left mid-sentence.
+    if token_buffer:
+        leftover = _FUNCTION_TAG_RE.sub("", token_buffer)
+        leftover = _FUNCTION_OPEN_RE.sub("", leftover)
+        if leftover:
+            final_text_parts.append(leftover)
+            yield {"event": "token", "data": leftover}
 
     final_text = "".join(final_text_parts).strip()
     yield {
