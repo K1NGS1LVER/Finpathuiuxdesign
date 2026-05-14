@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     supabase_jwt_aud: str = "authenticated"
     supabase_jwt_algorithm: str = "HS256"
 
+    # Supabase REST (Phase 3 — DB writes via PostgREST under user JWT)
+    supabase_anon_key: str = ""
+    supabase_service_role_key: str = ""  # only used by proposal-expiry job
+
     # Dev escape hatch — bypass JWT verification entirely. Mirror of the
     # frontend's VITE_AUTH_MOCK toggle. Never enable in production.
     auth_mock: bool = False

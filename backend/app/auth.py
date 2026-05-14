@@ -40,6 +40,7 @@ class CurrentUser:
     user_id: str
     email: str | None
     role: str | None
+    access_token: str | None = None  # raw JWT, for PostgREST proxying
 
 
 @lru_cache(maxsize=1)
@@ -150,4 +151,5 @@ async def get_current_user(
         user_id=user_id,
         email=payload.get("email") if isinstance(payload.get("email"), str) else None,
         role=payload.get("role") if isinstance(payload.get("role"), str) else None,
+        access_token=token,
     )
