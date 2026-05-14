@@ -68,7 +68,13 @@ Verification done in Phase 0:
 2. From `backend/`: `py -m venv .venv && .\.venv\Scripts\Activate.ps1 && pip install -e ".[dev]"` (already done on the workstation Phase 0 ran on, but new clones must repeat).
 3. `pnpm dev:all` — chat with Penny in `/dashboard`. Should behave identically to the old dev middleware.
 
-## Phase 1 — Real Supabase auth + migration — **NEXT**
+## Phase 1 — Real Supabase auth + migration — **DONE (code)**
+
+Live test still pending Supabase project setup. See `CLAUDE.md` → "Auth requires Supabase setup" gotcha.
+
+`feat(auth): VITE_AUTH_MOCK + AUTH_MOCK dev escape hatches` (commit 193c6a4): both halves of the stack honor a mock toggle so dev work doesn't burn Supabase free-tier auth quotas.
+
+Originally planned sub-tasks:
 
 Goal: replace mocked `auth-store.ts` with real Supabase auth, add DB schema (profiles/chat_history/proposals tables + RLS), backend JWT verification, and auto-migrate existing localStorage data on first sign-in.
 
@@ -95,21 +101,28 @@ Sub-tasks:
 
 Gate: real sign-up → onboarding → dashboard. Existing local data preserved. Backend rejects unauthenticated `/api/penny` with 401.
 
-## Phase 2 — Port engines + parity tests
+## Phase 2 — Port engines + parity tests — **DONE**
 
-1. Add `scripts/dump-fixtures.ts` that, for each `describe` block in `src/lib/__tests__/*.test.ts`, serializes constructed input + expected output to `tests/fixtures/{engine}/{case}.json`. Existing tests already use inline factory helpers (`makeIncome`, `makeExpenses`, …) so this is mechanical.
-2. Port to `backend/app/engines/`:
-   - `plan_engine.py` ← `src/lib/plan-engine.ts` (`generatePlan`, `generateScenarioPlan`)
-   - `health_score.py` ← `src/lib/health-score.ts` (`calculateHealthScore`)
-   - `debt_strategies.py` ← `src/lib/debt-strategies.ts` (`avalanche`, `snowball`, `compareStrategies`)
-   - `tax_engine.py` ← `src/lib/tax-engine.ts` (`calculateOldRegime`, `calculateNewRegime`, `compareTaxRegimes`)
-   - Pydantic models in `backend/app/models/` mirror `src/lib/types.ts`.
-3. `backend/tests/test_engines.py` — load each JSON fixture, run Python engine, assert deep-equality (exact ints; `pytest.approx` for floats).
-4. REST endpoints `POST /api/simulate/plan`, `/debt`, `/tax`, `/health` — thin wrappers around the engines. Used later by LangGraph tools.
+What landed:
 
-Gate: 83 vitest still pass; Python parity tests all green.
+- `scripts/dump-fixtures.ts` — curated input set per engine; runs the TS engine and writes `{ input, expected }` JSON to `tests/fixtures/{tax,health,debt,plan}/*.json`. Added `pnpm fixtures` script. `tsx` added as devDep.
+- Python ports in `backend/app/engines/`:
+  - `_helpers.py` — `js_round()` shim (JS half-up vs Python banker's rounding).
+  - `tax_engine.py` (FY 2025-26 old + new regime, 87A rebate, 4% cess, slab breakdown).
+  - `health_score.py` (4-dim 0–100 score + 3 actionable recs).
+  - `debt_strategies.py` (avalanche, snowball, compare; full amortization with extra-payment waterfall).
+  - `plan_engine.py` (120-month sim, weighted allocation, per-stream increments, step-up modes, scenario plan).
+- Parity tests at `backend/tests/` (58 total):
+  - `test_tax_engine.py` — 30 exact-equal tests.
+  - `test_health_score.py` — 6 exact-equal tests.
+  - `test_debt_strategies.py` — 15 tests with `date` fields stripped.
+  - `test_plan_engine.py` — 7 tests with `date` and `goalCompletionDates` values stripped.
+- REST endpoints in `backend/app/api/simulate.py` (auth-required): `/api/simulate/plan`, `/scenario`, `/debt/{avalanche,snowball,compare}`, `/tax/{old,new,compare}`, `/health`.
+- Drive-by fix: TS `src/lib/tax-engine.ts` had cp437 mojibake in slab range strings (`Γé╣` instead of `₹`, `ΓÇô` instead of `–`). Fixed to correct UTF-8 — was rendering as garbage in UI; now reads as `₹2.5L – ₹5.0L`.
 
-## Phase 3 — LangGraph autonomous Penny + Proposals
+Verification gate: `pnpm build` 0 errors, `pnpm test` 83/83, `pytest` 58/58.
+
+## Phase 3 — LangGraph autonomous Penny + Proposals — **NEXT**
 
 1. Deps: `langgraph`, `langchain-core`, `langchain-groq` in `backend/pyproject.toml`.
 2. `backend/app/agents/penny.py` graph: `ROUTER → RESEARCH → PLAN → {CHAT | PROPOSE}`.
