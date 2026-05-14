@@ -1,248 +1,151 @@
-Yes, build a backend — but for the right reasons
-What's currently "backend" (it's not really)
-Your only server-side code is src/server/penny-api.ts — a Vite dev middleware plugin. It only runs during pnpm run dev. It disappears in production builds. Penny AI literally won't work in production right now.
-The 4 engines: keep them on the frontend AND expose on backend
-Engine Pure computation? Security risk on frontend?
-plan-engine.ts Yes, deterministic None
-health-score.ts Yes, deterministic None
-debt-strategies.ts Yes, deterministic None
-tax-engine.ts Yes, deterministic None
-These are pure math. No secrets, no I/O, same inputs = same outputs. Keep them on the frontend for instant UI updates. But also port them to the backend so Penny AI / LangGraph agents can call them as tools.
-The real reasons you need a backend
+# FinPath Backend + Autonomous Penny — Status
 
-1. Penny AI doesn't work in production — Vite middleware is dev-only. You need a real server.
-2. LangGraph is Python — it can't run in a browser. You need a Python backend (FastAPI is the standard pairing).
-3. Penny needs engine access — for LangGraph agents, the plan engine and health score become tools the agent can call to reason about the user's finances. Currently Penny gets a flattened text summary of the profile in the system prompt — with LangGraph, it could actually run simulations on behalf of the user.
-4. Data sync — the Supabase dual-storage feature we planned needs server-side validation.
-5. Production auth — your auth store is fully mocked right now.
-   Recommended architecture
-   ┌─────────────────────────────────────────────┐
-   │ Frontend (React SPA) │
-   │ - Engines stay here for instant UI │
-   │ - Zustand + localStorage (local-first) │
-   │ - Calls backend for Penny AI │
-   └──────────────┬──────────────────────────────┘
-   │ REST/WebSocket
-   ┌──────────────▼──────────────────────────────┐
-   │ Python Backend (FastAPI) │
-   │ - Penny AI (LangGraph agent) │
-   │ - Ported engines as LangGraph tools │
-   │ - /api/penny, /api/plan, /api/simulate │
-   │ - Data sync with Supabase │
-   │ - Auth validation (verify Supabase JWTs) │
-   └──────────────┬──────────────────────────────┘
-   │
-   ┌──────────────▼──────────────────────────────┐
-   │ Supabase (BaaS) │
-   │ - Auth (real, replace mock store) │
-   │ - PostgreSQL: profiles table (RLS) │
-   │ - Optional: pgvector for future RAG │
-   └─────────────────────────────────────────────┘
-   Key decisions you'd need to make
+**Approved plan**: `~/.claude/plans/i-have-plan-in-parallel-fiddle.md` (full execution detail; don't re-derive).
+**High-level summary**: also in `CLAUDE.md` → "Backend + Penny Roadmap".
 
-# Questions
+## Architecture (locked)
 
-What should the backend be built in? Since you mentioned LangGraph, Python is the natural choice for the AI layer. But do you want the whole backend in Python, or a split?
-Python + FastAPI (Recommended)
-The plan engine, health score, debt strategies, and tax engine are pure TypeScript functions. Should they be ported to Python for the backend, or stay as TypeScript only?
-Port to Python, keep TS on frontend (Recommended)
-How ambitious should Penny AI be with LangGraph? This determines how much the backend needs to do.
-Autonomous financial planner
-Thinking: The user chose:
+```
+Frontend (React, existing)
+  - TS engines stay (instant UI)
+  - Zustand + localStorage (local-first)
+  - EventSource (SSE) → Penny           [Phase 3]
+  - ProposalCard approve/reject UI       [Phase 3]
+       │
+       │ /api/* (Vite dev proxy → 127.0.0.1:8000)
+       ▼
+Python FastAPI (backend/)
+  - Penny Groq proxy                     [DONE — Phase 0]
+  - LangGraph agent + tools              [Phase 3]
+  - Ported engines                       [Phase 2]
+  - SSE /api/penny/stream                [Phase 3]
+  - Supabase JWT verification            [Phase 1]
+       │
+       ▼
+Supabase: Auth + Postgres (RLS)          [Phase 1]
+```
 
-1. Python + FastAPI for the entire backend
-2. Port engines to Python, keep TS on frontend
-3. Autonomous financial planner (most ambitious option)
-   This is a significant architecture decision. Let me lay out a comprehensive plan for this. Given that the user wants an autonomous Penny AI, the LangGraph agent needs to be able to:
+## Locked decisions (don't re-debate)
 
-- Read the user's financial profile
-- Run simulations (plan engine, debt strategies, tax comparison)
-- Suggest actions (new goals, allocation changes, debt strategy switches)
-- Execute changes (with user approval) — write back to the store/data
-  This is a big undertaking. Let me create a phased plan that's practical.
-  Let me also think about the structure of the Python backend, what LangGraph tools would be needed, and how the autonomous agent would interact with the frontend.
-  Key considerations:
-- The autonomous agent needs to be able to propose changes to the user's financial profile
-- The frontend needs a way to display proposals and get user approval
-- The agent needs access to all 4 engines as tools
-- The agent needs to persist conversation history
-- WebSocket would be ideal for real-time agent streaming
-  Let me create a detailed but concise plan.
-  Ambitious choice. Here's the full architecture plan:
+- Backend = **Python + FastAPI**. (LangGraph is Python-first.)
+- TS engines remain the source of truth on the frontend for instant UI. Python ports are for Penny's tools and are kept in parity via shared JSON fixtures.
+- Streaming = **SSE** (not WebSocket). Proposals are named SSE events on the same `/api/penny/stream` stream.
+- localStorage → cloud migration is **automatic** on first real sign-in. If both local and remote exist, keep cloud and archive local under `finpath-store.local-backup-{date}`.
+- **No deploy** yet. `vite.config.ts` proxies `/api/*` → `http://127.0.0.1:8000`. Run both halves via `pnpm dev:all`.
+- Penny **proposes, never writes directly**. Every change goes through the `proposals` table + SSE event + user Approve/Reject in `<ProposalCard>`.
 
----
+## Phase 0 — Ship prod Penny — **DONE**
 
-FinPath Backend + Autonomous Penny AI — Complete Plan
-Architecture Overview
-┌──────────────────────────────────────────────────┐
-│ Frontend (React SPA — existing) │
-│ - TS engines for instant UI recalculation │
-│ - Zustand + localStorage (local-first) │
-│ - WebSocket connection for Penny streaming │
-│ - Proposal cards: Penny suggests, user approves │
-└──────────┬──────────────────┬────────────────────┘
-│ REST │ WebSocket
-┌──────────▼──────────────────▼────────────────────┐
-│ Python Backend (FastAPI) │
-│ ┌─────────────────────────────────────────────┐ │
-│ │ LangGraph Agent (Penny) │ │
-│ │ - Conversational memory (Postgres/Supa) │ │
-│ │ - Tools: simulate_plan, compare_debt, │ │
-│ │ compare_tax, health_check, propose_change │ │
-│ │ - Can propose store mutations │ │
-│ │ - Streams thoughts + actions via WebSocket │ │
-│ └─────────────────────────────────────────────┘ │
-│ - /api/penny (WebSocket) │
-│ - /api/profile (REST CRUD) │
-│ - /api/simulate (REST — what-if engine calls) │
-│ - Auth: verifies Supabase JWTs │
-│ - Python-ported engines as modules │
-└──────────┬───────────────────────────────────────┘
-│
-┌──────────▼───────────────────────────────────────┐
-│ Supabase │
-│ - Auth (replace mock) │
-│ - PostgreSQL: profiles, chat_history, proposals │
-│ - RLS on all tables │
-└──────────────────────────────────────────────────┘
-Phase 1: Foundation (Week 1-2)
-1.1 FastAPI project scaffold
-backend/
-├── app/
-│ ├── main.py # FastAPI app, CORS, lifespan
-│ ├── config.py # Settings from env vars
-│ ├── auth.py # Supabase JWT verification middleware
-│ ├── models/
-│ │ ├── profile.py # FinancialProfile Pydantic models
-│ │ ├── chat.py # ChatMessage, Proposal models
-│ │ └── goals.py # Goal, DebtItem Pydantic models
-│ ├── engines/
-│ │ ├── plan_engine.py # Ported from plan-engine.ts
-│ │ ├── health_score.py # Ported from health-score.ts
-│ │ ├── debt_strategies.py # Ported from debt-strategies.ts
-│ │ └── tax_engine.py # Ported from tax-engine.ts
-│ ├── api/
-│ │ ├── profile.py # CRUD /api/profile
-│ │ ├── simulate.py # /api/simulate endpoints
-│ │ └── penny.py # WebSocket + REST for Penny
-│ └── db/
-│ └── supabase.py # Supabase client (service_role key)
-├── requirements.txt
-├── .env.example
-└── Dockerfile
-1.2 Port the 4 engines to Python
-Each engine is a direct translation — same logic, same inputs/outputs, but as Python functions with Pydantic models. Write shared test fixtures (JSON snapshots of FinancialProfile) that both TS and Python tests use, so you can verify parity.
-1.3 Real Supabase auth in frontend
-Replace the mocked auth-store.ts with real supabase.auth.\* calls. This is a prerequisite for everything else — the backend validates JWTs, so the frontend must produce real ones.
-1.4 Supabase DB schema
--- profiles: full FinancialProfile as JSONB
-create table profiles (
-user_id uuid primary key references auth.users(id) on delete cascade,
-data jsonb not null default '{}',
-storage_mode text not null default 'local',
-schema_version integer not null default 3,
-updated_at timestamptz default now()
-);
--- chat_history: persistent Penny conversations
-create table chat_history (
-id uuid primary key default gen_random_uuid(),
-user_id uuid not null references auth.users(id) on delete cascade,
-role text not null check (role in ('user', 'assistant', 'system', 'tool')),
-content text not null,
-tool_calls jsonb,
-tool_results jsonb,
-created_at timestamptz default now()
-);
--- proposals: Penny's suggested store mutations (pending user approval)
-create table proposals (
-id uuid primary key default gen_random_uuid(),
-user_id uuid not null references auth.users(id) on delete cascade,
-action text not null, -- e.g. "update_goal", "set_strategy"
-payload jsonb not null, -- the store mutation args
-rationale text, -- why Penny suggests this
-status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'expired')),
-created_at timestamptz default now(),
-resolved_at timestamptz
-);
--- RLS policies for all three tables
-alter table profiles enable row level security;
-alter table chat_history enable row level security;
-alter table proposals enable row level security;
-create policy "Users can CRUD own profile" on profiles for all using (auth.uid() = user_id);
-create policy "Users can CRUD own chat" on chat_history for all using (auth.uid() = user_id);
-create policy "Users can CRUD own proposals" on proposals for all using (auth.uid() = user_id);
-Phase 2: Autonomous Penny with LangGraph (Week 3-5)
-2.1 LangGraph agent definition
+What landed:
 
-# Penny's LangGraph state graph
+- `backend/` scaffold: `pyproject.toml`, `.env.example`, `README.md`, `app/{main,config}.py`, `app/api/penny.py`, `app/services/{anonymize,cache,groq_client,prompt,rate_limit}.py`.
+- Python port of `src/server/penny-api.ts`:
+  - `POST /api/penny` request shape unchanged: `{ message, profile, context? } → { reply }`.
+  - PII anonymization (`services/anonymize.py`): only aggregate numbers + goal names sent to Groq.
+  - Rate limit (`services/rate_limit.py`): 15 req / 60s / IP, in-process, thread-safe.
+  - Response cache (`services/cache.py`): 5-min TTL keyed on `message[:200].lower() | income.total - expenses.total - debts.totalMonthly - savings - goals.length`.
+  - Groq call (`services/groq_client.py`): `llama-3.3-70b-versatile`, temp 0.7, max_tokens 500, stream false.
+- `vite.config.ts` — removed `pennyApiPlugin` import + plugin registration; added `server.proxy { '/api': process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000' }`.
+- `src/server/penny-api.ts` and `src/server/` directory deleted.
+- `package.json`:
+  - Added `dev:backend` (`cd backend && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`).
+  - Added `dev:all` using `concurrently` to run uvicorn + vite together.
+  - New devDep: `concurrently@9.x`.
+- `CLAUDE.md` updated: commands, directory tree, Penny section, testing section, Tech Stack, new Roadmap section.
 
-#
+Verification done in Phase 0:
 
-# ┌──────────┐ ┌──────────┐ ┌──────────┐
+- `pnpm build` → 0 errors.
+- `pnpm test` → 83/83 vitest pass.
+- `python -m uvicorn app.main:app` boots; `GET /health` → `{"status":"ok"}`.
+- `POST /api/penny` with empty message → 422 (Pydantic validation).
+- 16th rapid `POST /api/penny` → 429 (rate limiter works).
+- Without a Groq key set, valid POST → 500 with `"Connection error."` (expected; user must set `backend/.env`).
 
-# │ ROUTER │───►│ RESEARCH │───►│ PLAN │───┐
+**User action to finish Phase 0 in browser** (one-time setup):
 
-# │ (intent) │ │ (tools) │ │ (reason) │ │
+1. `cp backend/.env.example backend/.env` and paste `GROQ_API_KEY=...`.
+2. From `backend/`: `py -m venv .venv && .\.venv\Scripts\Activate.ps1 && pip install -e ".[dev]"` (already done on the workstation Phase 0 ran on, but new clones must repeat).
+3. `pnpm dev:all` — chat with Penny in `/dashboard`. Should behave identically to the old dev middleware.
 
-# └────┬─────┘ └──────────┘ └──────────┘ │
+## Phase 1 — Real Supabase auth + migration — **NEXT**
 
-# │ │
+Goal: replace mocked `auth-store.ts` with real Supabase auth, add DB schema (profiles/chat_history/proposals tables + RLS), backend JWT verification, and auto-migrate existing localStorage data on first sign-in.
 
-# ▼ ▼
+Sub-tasks:
 
-# ┌──────────┐ ┌──────────┐
+1. Create Supabase project → capture `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Add to root `.env` + extend `backend/.env.example` with `SUPABASE_URL`, `SUPABASE_JWT_SECRET` (or JWKS URL).
+2. SQL migration `backend/db/migrations/001_init.sql`:
+   - `profiles(user_id uuid PK references auth.users, data jsonb, storage_mode text default 'local', schema_version int default 3, updated_at timestamptz)`
+   - `chat_history(id, user_id, role, content, tool_calls jsonb, tool_results jsonb, created_at)`
+   - `proposals(id, user_id, action, payload jsonb, rationale, status, created_at, resolved_at)`
+   - RLS: `auth.uid() = user_id` on all three.
+3. Replace mock body of `src/lib/auth-store.ts`:
+   - `signUp`, `signIn`, `signOut`, `initialize` use `supabase.auth.*` from `src/lib/supabase.ts`.
+   - Subscribe to `onAuthStateChange` in `initialize`.
+   - On sign-in success, run `migrateLocalToCloud()`:
+     - Read `localStorage["finpath-store"]`.
+     - If local onboarded AND remote `profiles.data` empty → upload local, set `storage_mode = 'cloud'`.
+     - If both non-empty → keep cloud, archive local under `finpath-store.local-backup-{YYYY-MM-DD}`.
+4. Backend `app/auth.py`:
+   - `Depends(get_current_user)` parses `Authorization: Bearer …`, verifies via Supabase JWKS, returns `user_id`.
+   - Apply to `/api/penny` (and all future endpoints).
+5. Frontend: create `src/lib/api.ts` with `apiFetch()` that attaches `Authorization: Bearer <access_token>` from Supabase session. Replace raw `fetch('/api/penny')` in `PennyPanel.tsx`.
+6. Update `CLAUDE.md` "Mocked Auth" gotcha → removed once landed.
 
-# │ CHAT │ │ PROPOSE │
+Gate: real sign-up → onboarding → dashboard. Existing local data preserved. Backend rejects unauthenticated `/api/penny` with 401.
 
-# │ (answer) │ │ (action) │
+## Phase 2 — Port engines + parity tests
 
-# └──────────┘ └──────────┘
+1. Add `scripts/dump-fixtures.ts` that, for each `describe` block in `src/lib/__tests__/*.test.ts`, serializes constructed input + expected output to `tests/fixtures/{engine}/{case}.json`. Existing tests already use inline factory helpers (`makeIncome`, `makeExpenses`, …) so this is mechanical.
+2. Port to `backend/app/engines/`:
+   - `plan_engine.py` ← `src/lib/plan-engine.ts` (`generatePlan`, `generateScenarioPlan`)
+   - `health_score.py` ← `src/lib/health-score.ts` (`calculateHealthScore`)
+   - `debt_strategies.py` ← `src/lib/debt-strategies.ts` (`avalanche`, `snowball`, `compareStrategies`)
+   - `tax_engine.py` ← `src/lib/tax-engine.ts` (`calculateOldRegime`, `calculateNewRegime`, `compareTaxRegimes`)
+   - Pydantic models in `backend/app/models/` mirror `src/lib/types.ts`.
+3. `backend/tests/test_engines.py` — load each JSON fixture, run Python engine, assert deep-equality (exact ints; `pytest.approx` for floats).
+4. REST endpoints `POST /api/simulate/plan`, `/debt`, `/tax`, `/health` — thin wrappers around the engines. Used later by LangGraph tools.
 
-2.2 Penny's tools (LangGraph tool-calling)
-Tool What it does
-simulate_plan Runs generatePlan() with current profile, returns month-by-month projections
-simulate_what_if Runs generateScenarioPlan() with modifications (income bump, new goal, etc.)
-compare_debt_strategies Runs compareStrategies()
-compare_tax_regimes Runs compareTaxRegimes()
-check_health Runs calculateHealthScore()
-propose_change Creates a Proposal row in DB — a suggested mutation to the user's store
-read_profile Reads current profile from Supabase
-2.3 The propose_change tool — this is the autonomous part
-When Penny determines the user would benefit from a change (e.g., "your emergency fund is only 1 month of expenses, I recommend allocating ₹5,000/month more to it"), it calls propose_change which:
+Gate: 83 vitest still pass; Python parity tests all green.
 
-1. Creates a Proposal row: { action: "update_goal", payload: { goalId: "goal-emergency-fund", field: "monthlyAllocation", value: 5000 }, rationale: "..." }
-2. Sends the proposal to the frontend via WebSocket
-3. Frontend renders a proposal card in the PennyPanel: "Penny suggests increasing your Emergency Fund allocation by ₹5,000/mo. Approve Reject"
-4. If approved → frontend applies the mutation to Zustand store + syncs to Supabase
-5. Penny gets the approval/rejection as a tool result and responds accordingly
-   2.4 Frontend: WebSocket connection + Proposal cards
+## Phase 3 — LangGraph autonomous Penny + Proposals
 
-- PennyPanel.tsx switches from fetch('/api/penny') to a WebSocket connection
-- New ProposalCard component renders pending proposals with Approve/Reject buttons
-- On approve: call the relevant store setter (updateGoal, setStrategy, etc.) and mark proposal as approved via API
-- On reject: mark proposal as rejected, Penny gets feedback
-  Phase 3: Data Sync + Privacy (Week 5-6)
-  This is the dual-storage feature from our earlier plan, now integrated with the real backend:
-- storageMode: "local" | "cloud" in the store
-- Privacy toggle on sign-up form + settings
-- Custom Zustand persist adapter: local-first writes, cloud sync when storageMode === "cloud"
-- Export/import JSON for local-only users
-- Last-write-wins conflict resolution using lastUpdated
-  Phase 4: Production Hardening (Week 6-7)
-- Dockerize the FastAPI backend
-- Deploy: Vercel (frontend) + Railway/Fly.io (backend) + Supabase (auth + DB)
-- Add auth middleware to all backend endpoints (verify Supabase JWT)
-- Rate limiting on Penny AI (per-user, not just per-IP)
-- Proposal expiry (auto-reject after 24h)
-- Monitoring / error tracking
-  Key design decisions to lock in
+1. Deps: `langgraph`, `langchain-core`, `langchain-groq` in `backend/pyproject.toml`.
+2. `backend/app/agents/penny.py` graph: `ROUTER → RESEARCH → PLAN → {CHAT | PROPOSE}`.
+3. Tools (`backend/app/agents/tools.py`): `simulate_plan`, `simulate_what_if`, `compare_debt_strategies`, `compare_tax_regimes`, `check_health`, `read_profile`, `propose_change`.
+4. SSE `/api/penny/stream`: events = `token | tool_call | tool_result | proposal | done | error`. Persist user msg + assistant msg + tool calls to `chat_history`.
+5. Frontend `PennyPanel.tsx`: replace `fetch` with SSE (POST + ReadableStream, or `EventSource` for GET). New `src/app/components/ProposalCard.tsx` for Approve/Reject. Approve = apply Zustand setter + `PATCH /api/proposals/:id`.
+6. Chat history hydration on mount: `GET /api/chat/history?limit=50`.
+7. Proposal expiry: backend `asyncio` startup task marks 24h-old proposals as `expired`.
 
-1. Frontend engines stay — instant UI, works offline. Backend engines are for Penny's tools only.
-2. Proposals, not direct writes — Penny never mutates user data directly. It proposes, user approves. This is critical for trust.
-3. WebSocket for Penny — enables streaming tokens, real-time proposals, and tool-call visibility.
-4. Chat history in Supabase — persistent across sessions, per-user, RLS-protected.
-5. Shared test fixtures — same JSON profiles tested against both TS and Python engines to ensure parity.
-   What to build first?
-   The dependency chain is:
-   Real Supabase auth → Backend scaffold + engine ports → LangGraph agent → Proposal system → Data sync
-   Start with auth. Everything else depends on real user IDs and JWTs.
+Gate: Penny can answer "what if I increase EMI by ₹5k?" using `simulate_what_if`, and can `propose_change` (e.g. raise Emergency Fund allocation) that user approves in the panel and sees applied.
+
+## Phase 4 — Dual storage
+
+1. Add `storageMode: 'local' | 'cloud'` to Zustand store.
+2. Custom persist adapter: always write local; if `cloud`, debounced `PUT /api/profile` with `lastUpdated`.
+3. Settings panel toggle. Default `local` for new users.
+4. Export / import JSON for local-only users; import merges by `lastUpdated`.
+5. Last-write-wins on `lastUpdated`; warn on hydrate if remote newer.
+
+Gate: toggle storage mode, sign out, sign in on another browser → profile syncs.
+
+## Phase 5 — Hardening (defer until deploying)
+
+Dockerfile, CORS allowlist, per-user rate limits, structured logging, error monitoring, `.env` audit.
+
+## Critical file map
+
+| Touched by | Files |
+|---|---|
+| Phase 0 (done) | `vite.config.ts`, `package.json`, `CLAUDE.md`, `backend/**` |
+| Phase 1 | `src/lib/auth-store.ts`, `src/lib/supabase.ts`, `src/lib/api.ts` (new), `backend/app/auth.py` (new), `backend/db/migrations/001_init.sql` (new), `src/app/components/PennyPanel.tsx` |
+| Phase 2 | `scripts/dump-fixtures.ts` (new), `tests/fixtures/**` (new), `backend/app/engines/**` (new), `backend/app/models/**` (new), `backend/tests/test_engines.py` (new) |
+| Phase 3 | `backend/app/agents/**` (new), `backend/app/api/penny.py` (extend to SSE), `src/app/components/PennyPanel.tsx`, `src/app/components/ProposalCard.tsx` (new) |
+| Phase 4 | `src/lib/store.ts` (persist adapter), `src/app/screens/Settings.tsx` (new or existing) |
+
+## Do not touch
+
+- `src/lib/{plan-engine,health-score,debt-strategies,tax-engine}.ts` — TS remains source of truth on frontend. Python is a port, not a replacement.
+- `src/lib/__tests__/*.test.ts` semantics — fixture extraction is additive, must not change expectations.
