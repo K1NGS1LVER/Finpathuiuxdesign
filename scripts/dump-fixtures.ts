@@ -11,7 +11,6 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { calculateOldRegime, calculateNewRegime, compareTaxRegimes } from '../src/lib/tax-engine';
 import { calculateHealthScore } from '../src/lib/health-score';
 import { avalanche, snowball, compareStrategies } from '../src/lib/debt-strategies';
 import { generatePlan, generateScenarioPlan } from '../src/lib/plan-engine';
@@ -32,29 +31,6 @@ function writeFixture(engine: string, name: string, input: unknown, expected: un
   const file = resolve(dir, `${name}.json`);
   writeFileSync(file, JSON.stringify({ input, expected }, null, 2), 'utf8');
   console.log(`  wrote ${engine}/${name}.json`);
-}
-
-// ── Tax engine ─────────────────────────────────────────────────
-function dumpTax() {
-  console.log('[tax]');
-  const cases: { name: string; gross: number; deductions: number }[] = [
-    { name: 'zero_income', gross: 0, deductions: 0 },
-    { name: 'below_old_threshold', gross: 250000, deductions: 0 },
-    { name: 'low_old_with_std_ded', gross: 500000, deductions: 0 },
-    { name: 'mid_old_with_claimed', gross: 1000000, deductions: 150000 },
-    { name: 'high_old', gross: 2000000, deductions: 0 },
-    { name: 'old_negative_taxable', gross: 10000, deductions: 0 },
-    { name: 'new_at_400k', gross: 400000, deductions: 0 },
-    { name: 'new_full_rebate_1_2L', gross: 1200000, deductions: 0 },
-    { name: 'new_high_20L', gross: 2000000, deductions: 0 },
-    { name: 'compare_15L_50k', gross: 1500000, deductions: 50000 },
-  ];
-
-  for (const c of cases) {
-    writeFixture('tax', `old__${c.name}`, { grossIncome: c.gross, deductions: c.deductions }, calculateOldRegime(c.gross, c.deductions));
-    writeFixture('tax', `new__${c.name}`, { grossIncome: c.gross }, calculateNewRegime(c.gross));
-    writeFixture('tax', `compare__${c.name}`, { grossIncome: c.gross, deductions: c.deductions }, compareTaxRegimes(c.gross, c.deductions));
-  }
 }
 
 // ── Health score ───────────────────────────────────────────────
@@ -298,7 +274,6 @@ function dumpPlan() {
 
 // ── Entrypoint ─────────────────────────────────────────────────
 mkdirSync(FIXTURE_ROOT, { recursive: true });
-dumpTax();
 dumpHealth();
 dumpDebt();
 dumpPlan();

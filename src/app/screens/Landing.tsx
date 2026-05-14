@@ -239,7 +239,7 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
               <h3 className="text-xl font-bold text-foreground mb-3 relative z-10 font-display">What-if scenario engine</h3>
               <p className="text-secondary leading-relaxed mb-6 relative z-10 text-sm md:text-base">
                 What if you get a 30% raise? Buy a house? Start a family? Model any life change
-                and see its impact on every goal, your emergency buffer, and your tax liability
+                and see its impact on every goal and your emergency buffer
                 — before you make the move.
               </p>
               <button onClick={() => navigate('/auth')} className="inline-flex items-center gap-1.5 text-[var(--accent-text)] font-semibold text-sm group-hover:gap-2.5 transition-all relative z-10">
