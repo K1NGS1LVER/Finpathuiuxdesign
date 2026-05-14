@@ -1,8 +1,6 @@
 @import 'tailwindcss' source(none);
 @source '../**/*.{js,ts,jsx,tsx}';
 
-@import 'tw-animate-css';
-
 @theme {
   --font-display: var(--font-display);
   --font-body: var(--font-body);
