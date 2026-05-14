@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.penny import router as penny_router
+from app.api.simulate import router as simulate_router
 from app.config import settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -22,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(penny_router)
+app.include_router(simulate_router)
 
 
 @app.get("/health")

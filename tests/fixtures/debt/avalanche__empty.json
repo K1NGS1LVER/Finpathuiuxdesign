@@ -1,0 +1,14 @@
+{
+  "input": {
+    "debts": [],
+    "extra": 0
+  },
+  "expected": {
+    "strategy": "avalanche",
+    "totalMonths": 0,
+    "totalInterestPaid": 0,
+    "totalPaid": 0,
+    "steps": [],
+    "payoffDates": {}
+  }
+}

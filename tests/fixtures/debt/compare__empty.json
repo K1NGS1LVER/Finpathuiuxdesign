@@ -1,0 +1,27 @@
+{
+  "input": {
+    "debts": [],
+    "extra": 0
+  },
+  "expected": {
+    "avalanche": {
+      "strategy": "avalanche",
+      "totalMonths": 0,
+      "totalInterestPaid": 0,
+      "totalPaid": 0,
+      "steps": [],
+      "payoffDates": {}
+    },
+    "snowball": {
+      "strategy": "snowball",
+      "totalMonths": 0,
+      "totalInterestPaid": 0,
+      "totalPaid": 0,
+      "steps": [],
+      "payoffDates": {}
+    },
+    "interestSaved": 0,
+    "monthsDifference": 0,
+    "recommendation": "snowball"
+  }
+}

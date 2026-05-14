@@ -1,0 +1,17 @@
+{
+  "input": {
+    "grossIncome": 10000,
+    "deductions": 0
+  },
+  "expected": {
+    "regime": "old",
+    "grossIncome": 10000,
+    "deductions": 50000,
+    "taxableIncome": 0,
+    "tax": 0,
+    "cess": 0,
+    "totalTax": 0,
+    "effectiveRate": 0,
+    "slabs": []
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "input": {
+    "grossIncome": 10000,
+    "deductions": 0
+  },
+  "expected": {
+    "old": {
+      "regime": "old",
+      "grossIncome": 10000,
+      "deductions": 50000,
+      "taxableIncome": 0,
+      "tax": 0,
+      "cess": 0,
+      "totalTax": 0,
+      "effectiveRate": 0,
+      "slabs": []
+    },
+    "new": {
+      "regime": "new",
+      "grossIncome": 10000,
+      "deductions": 75000,
+      "taxableIncome": 0,
+      "tax": 0,
+      "cess": 0,
+      "totalTax": 0,
+      "effectiveRate": 0,
+      "slabs": []
+    },
+    "savings": 0,
+    "betterRegime": "old"
+  }
+}

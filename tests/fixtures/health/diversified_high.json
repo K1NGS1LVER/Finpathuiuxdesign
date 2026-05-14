@@ -1,0 +1,41 @@
+{
+  "input": {
+    "income": {
+      "primary": 80000,
+      "secondary": 20000,
+      "passive": 10000,
+      "variablePercent": 0,
+      "variable": 5000,
+      "total": 115000,
+      "primaryIncrement": 0,
+      "secondaryIncrement": 0,
+      "passiveIncrement": 0
+    },
+    "expenses": {
+      "rent": 20000,
+      "food": 10000,
+      "transport": 5000,
+      "utilities": 3000,
+      "entertainment": 4000,
+      "other": 3000,
+      "total": 50000
+    },
+    "debts": {
+      "items": [],
+      "totalMonthly": 10000
+    },
+    "savings": 50000,
+    "investments": 100000,
+    "emergencyFund": 600000
+  },
+  "expected": {
+    "overall": 97,
+    "incomeStability": 25,
+    "debtLoad": 22,
+    "savingsRate": 25,
+    "emergencyFund": 25,
+    "actions": [
+      "You're in great shape! Consider increasing SIP contributions for long-term wealth building"
+    ]
+  }
+}

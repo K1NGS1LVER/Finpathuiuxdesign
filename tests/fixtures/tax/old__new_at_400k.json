@@ -1,0 +1,28 @@
+{
+  "input": {
+    "grossIncome": 400000,
+    "deductions": 0
+  },
+  "expected": {
+    "regime": "old",
+    "grossIncome": 400000,
+    "deductions": 50000,
+    "taxableIncome": 350000,
+    "tax": 0,
+    "cess": 0,
+    "totalTax": 0,
+    "effectiveRate": 0,
+    "slabs": [
+      {
+        "range": "₹0.0L – ₹2.5L",
+        "rate": 0,
+        "tax": 0
+      },
+      {
+        "range": "₹2.5L – ₹5.0L",
+        "rate": 5,
+        "tax": 5000
+      }
+    ]
+  }
+}
