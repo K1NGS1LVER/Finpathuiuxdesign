@@ -38,11 +38,19 @@ pnpm dev:all
 
 ## Endpoints
 
-- `GET /health` — liveness check.
+- `GET /health` — liveness check (no auth).
 - `POST /api/penny` — Penny chat. Body: `{ message, profile, context? }` → `{ reply }`.
-  - Rate-limited 15 req / 60s per client IP.
+  - **Requires** `Authorization: Bearer <Supabase access token>` (Phase 1).
+  - Rate-limited 15 req / 60s, keyed on user id when authenticated.
   - 5-minute response cache keyed on message + financial summary.
   - PII-anonymized profile before hitting Groq.
+
+## Supabase setup (Phase 1)
+
+1. Create a Supabase project. Note the project URL and anon key for the frontend.
+2. In Supabase SQL editor, run `backend/db/migrations/001_init.sql` to create the `profiles`, `chat_history`, and `proposals` tables with RLS.
+3. Copy the project JWT secret from **Settings → API → JWT Settings → "JWT Secret"** and put it in `backend/.env` as `SUPABASE_JWT_SECRET`. This is what the backend uses to verify Bearer tokens.
+4. Frontend: copy root `.env.example` to `.env` at the project root and fill in `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`.
 
 ## Layout
 

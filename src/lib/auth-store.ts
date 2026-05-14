@@ -1,11 +1,14 @@
 // ============================================================
-// FinPath — Auth Store (Supabase JWT Auth)
-// Manages login, signup, logout, and session state
+// FinPath — Auth Store (Supabase JWT auth, Phase 1)
+// Manages login, signup, logout, session, and the one-time
+// localStorage → Supabase profile migration on first sign-in.
 // ============================================================
 
 import { create } from 'zustand';
-import { supabase } from './supabase';
 import type { User, Session } from '@supabase/supabase-js';
+import { supabase, isSupabaseConfigured } from './supabase';
+
+const LOCAL_STORE_KEY = 'finpath-store';
 
 interface AuthState {
   user: User | null;
@@ -13,62 +16,158 @@ interface AuthState {
   loading: boolean;
   error: string | null;
 
-  /** Initialize: check existing session and listen for changes */
   initialize: () => Promise<void>;
-
-  /** Sign up with email and password */
   signUp: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
-
-  /** Sign in with email and password */
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-
-  /** Sign out */
   signOut: () => Promise<void>;
-
-  /** Clear any error */
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: { id: 'fake-user-id', email: 'test@finpath.app', user_metadata: { full_name: 'Test User' } } as unknown as User,
-  session: { access_token: 'fake-token', user: { id: 'fake-user-id' } } as unknown as Session,
-  loading: false,
+let authListenerInitialized = false;
+
+/**
+ * If localStorage has an onboarded FinPath store and Supabase has no profile
+ * row yet for this user, push the local profile up. If both exist, archive
+ * local under `finpath-store.local-backup-{YYYY-MM-DD}` and keep cloud.
+ */
+async function migrateLocalToCloud(userId: string): Promise<void> {
+  if (!isSupabaseConfigured) return;
+
+  let local: any = null;
+  try {
+    const raw = localStorage.getItem(LOCAL_STORE_KEY);
+    if (!raw) return;
+    local = JSON.parse(raw);
+  } catch {
+    return;
+  }
+
+  // Only migrate genuine onboarded local data.
+  const profileData = local?.state ?? local;
+  if (!profileData || !profileData.onboarded) return;
+
+  const { data: existing, error: fetchErr } = await supabase
+    .from('profiles')
+    .select('data')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (fetchErr) {
+    console.error('[auth] migrate fetch error:', fetchErr.message);
+    return;
+  }
+
+  const remoteEmpty = !existing || !existing.data || Object.keys(existing.data).length === 0;
+
+  if (remoteEmpty) {
+    const { error: upsertErr } = await supabase
+      .from('profiles')
+      .upsert({
+        user_id: userId,
+        data: profileData,
+        storage_mode: 'local',
+        schema_version: 3,
+      });
+    if (upsertErr) {
+      console.error('[auth] migrate upsert error:', upsertErr.message);
+    }
+    return;
+  }
+
+  // Both sides have data — keep cloud, archive local.
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    localStorage.setItem(`${LOCAL_STORE_KEY}.local-backup-${today}`, localStorage.getItem(LOCAL_STORE_KEY) ?? '');
+  } catch {
+    // ignore quota errors; cloud is authoritative
+  }
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  session: null,
+  loading: true,
   error: null,
 
   initialize: async () => {
-    // Mocked to instantly complete
-    set({ loading: false });
+    if (!isSupabaseConfigured) {
+      console.warn('[auth] Supabase not configured — auth disabled.');
+      set({ user: null, session: null, loading: false });
+      return;
+    }
+
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('[auth] getSession error:', error.message);
+    }
+    set({
+      user: data.session?.user ?? null,
+      session: data.session ?? null,
+      loading: false,
+    });
+
+    if (!authListenerInitialized) {
+      authListenerInitialized = true;
+      supabase.auth.onAuthStateChange((event, session) => {
+        set({ user: session?.user ?? null, session: session ?? null });
+        if (event === 'SIGNED_IN' && session?.user) {
+          void migrateLocalToCloud(session.user.id);
+        }
+      });
+    }
   },
 
   signUp: async (email, password, name) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.' };
+    }
     set({ loading: true, error: null });
-    setTimeout(() => {
-      set({
-        user: { id: 'fake-user-id', email, user_metadata: { full_name: name || 'Test User' } } as unknown as User,
-        session: { access_token: 'fake-token', user: { id: 'fake-user-id' } } as unknown as Session,
-        loading: false,
-      });
-    }, 500);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } },
+    });
+    if (error) {
+      set({ loading: false, error: error.message });
+      return { success: false, error: error.message };
+    }
+    set({
+      user: data.user ?? null,
+      session: data.session ?? null,
+      loading: false,
+    });
     return { success: true };
   },
 
   signIn: async (email, password) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.' };
+    }
     set({ loading: true, error: null });
-    setTimeout(() => {
-      set({
-        user: { id: 'fake-user-id', email, user_metadata: { full_name: 'Test User' } } as unknown as User,
-        session: { access_token: 'fake-token', user: { id: 'fake-user-id' } } as unknown as Session,
-        loading: false,
-      });
-    }, 500);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      set({ loading: false, error: error.message });
+      return { success: false, error: error.message };
+    }
+    set({
+      user: data.user ?? null,
+      session: data.session ?? null,
+      loading: false,
+    });
     return { success: true };
   },
 
   signOut: async () => {
+    if (!isSupabaseConfigured) {
+      set({ user: null, session: null });
+      return;
+    }
     set({ loading: true });
-    setTimeout(() => {
-      set({ user: null, session: null, loading: false, error: null });
-    }, 500);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('[auth] signOut error:', error.message);
+    }
+    set({ user: null, session: null, loading: false, error: null });
   },
 
   clearError: () => set({ error: null }),
