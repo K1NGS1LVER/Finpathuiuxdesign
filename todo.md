@@ -123,17 +123,40 @@ What landed:
 
 Verification gate: `pnpm build` 0 errors, `pnpm test` 83/83, `pytest` 58/58.
 
-## Phase 3 — LangGraph autonomous Penny + Proposals — **NEXT**
+## Phase 3 — LangGraph autonomous Penny + Proposals — **DONE (code)**
 
-1. Deps: `langgraph`, `langchain-core`, `langchain-groq` in `backend/pyproject.toml`.
-2. `backend/app/agents/penny.py` graph: `ROUTER → RESEARCH → PLAN → {CHAT | PROPOSE}`.
-3. Tools (`backend/app/agents/tools.py`): `simulate_plan`, `simulate_what_if`, `compare_debt_strategies`, `check_health`, `read_profile`, `propose_change`.
-4. SSE `/api/penny/stream`: events = `token | tool_call | tool_result | proposal | done | error`. Persist user msg + assistant msg + tool calls to `chat_history`.
-5. Frontend `PennyPanel.tsx`: replace `fetch` with SSE (POST + ReadableStream, or `EventSource` for GET). New `frontend/src/app/components/ProposalCard.tsx` for Approve/Reject. Approve = apply Zustand setter + `PATCH /api/proposals/:id`.
-6. Chat history hydration on mount: `GET /api/chat/history?limit=50`.
-7. Proposal expiry: backend `asyncio` startup task marks 24h-old proposals as `expired`.
+What landed:
 
-Gate: Penny can answer "what if I increase EMI by ₹5k?" using `simulate_what_if`, and can `propose_change` (e.g. raise Emergency Fund allocation) that user approves in the panel and sees applied.
+- `backend/pyproject.toml`: added `langgraph`, `langchain-core`, `langchain-groq`, `httpx`. (Did **not** add `supabase>=2.9` — it pulls `storage3==2.30` → `pyiceberg` which has no wheel for Python 3.14 on Windows. Talking to PostgREST directly via `httpx` instead.)
+- `backend/app/agents/tools.py`: `StructuredTool` instances bound per-request to the user's profile + a `propose` callback. Tools: `read_profile`, `simulate_plan`, `simulate_what_if`, `compare_debt_strategies`, `check_health`, `propose_change`. All Python-side, no HTTP back to FastAPI — calls into the ported engines directly.
+- `backend/app/agents/penny.py`: `create_react_agent` ReAct graph from `langgraph.prebuilt` driven by `ChatGroq(llama-3.3-70b-versatile)`. `stream_agent()` wraps `graph.astream_events` and yields normalized `{event, data}` dicts for the SSE endpoint.
+- `backend/app/services/supabase_db.py`: PostgREST helpers using user JWT (RLS enforced). Service-role helper for the expiry job. Becomes no-op when Supabase isn't configured or in `AUTH_MOCK` mode — agent still works locally.
+- `backend/app/auth.py`: `CurrentUser.access_token` exposes the raw bearer for PostgREST proxying.
+- `backend/app/config.py` + `backend/.env.example`: added `SUPABASE_ANON_KEY` + `SUPABASE_SERVICE_ROLE_KEY`.
+- `backend/app/api/penny.py`:
+  - `POST /api/penny/stream` — SSE (`token | tool_call | tool_result | proposal | done | error`). Rate-limited, persists user + assistant messages to `chat_history`. Proposal IDs minted client-side (uuid4) so the LLM, the SSE event, and the eventual DB row all share the same id.
+  - `GET /api/chat/history?limit=50` — hydration endpoint.
+  - `PATCH /api/proposals/{id}` — body `{status: 'approved' | 'rejected'}`. Falls back to ephemeral echo when Supabase isn't configured.
+- `backend/app/main.py`: `lifespan` context starts a background expiry loop (hourly, marks `pending` proposals older than 24h as `expired`) — only runs when `SUPABASE_SERVICE_ROLE_KEY` is set.
+- `frontend/src/lib/sse.ts` — minimal fetch-based SSE parser (EventSource is GET-only; we POST).
+- `frontend/src/app/components/ProposalCard.tsx` — Approve/Reject. Approve dispatches to the matching Zustand setter then `PATCH`es; Reject just `PATCH`es. Handles all 8 actions (`setStrategy`, `setEmergencyFund`, `setSavings`, `setInvestments`, `updateGoal`, `addGoal`, `removeGoal`, `addLumpsum`).
+- `frontend/src/app/components/PennyPanel.tsx` — replaced `fetch('/api/penny')` with SSE consumption of `/api/penny/stream`. Renders streaming tokens, tool-call chips, and inline `<ProposalCard>` messages. Hydrates chat history on first open.
+
+Locked decisions made along the way:
+- `ALLOWED_PROPOSAL_ACTIONS` is restricted to setters that already exist in `frontend/src/lib/store.ts`. Adding `setMonthlySurplusReserve` was deferred — store has no setter for it yet.
+- `simulate_what_if` takes **percentage** deltas (`income_change_pct`, `expense_change_pct`, `timeline_change_months`), not INR — matches `generate_scenario_plan(modifications)` semantics on both sides.
+- Proposal persistence is fire-and-forget (`asyncio.run_coroutine_threadsafe`) so the LLM's tool call returns immediately. Client-supplied uuid keeps the row id stable across SSE event ↔ DB row ↔ PATCH endpoint.
+
+Verification:
+- `pnpm build` → 0 errors (1.6 MB bundle warning expected).
+- `pnpm test` → 61/61.
+- `pytest` → 28/28.
+- Agent tool surface manually invoked (`read_profile`, `simulate_what_if`, `compare_debt_strategies`, `check_health`, `propose_change`) — all return expected shapes; disallowed action rejected.
+
+**User actions to finish Phase 3 in browser** (smoke test against a real Supabase + Groq):
+1. Set `SUPABASE_ANON_KEY` (Settings → API → "anon" key) in `backend/.env`. Without it, chat history + proposal persistence stay in-memory but Penny still answers and proposes.
+2. Optional: set `SUPABASE_SERVICE_ROLE_KEY` to enable the proposal-expiry background job.
+3. `pnpm dev:all`. Ask Penny: "what if I get a 10% raise?" — should call `simulate_what_if` and reference the new numbers. Then: "propose moving my strategy to snowball" — should `propose_change` and render an Approve/Reject card.
 
 ## Phase 4 — Dual storage
 
