@@ -1,4 +1,9 @@
-"""Anonymize FinancialProfile. Mirrors anonymizeProfile() in src/server/penny-api.ts."""
+"""Anonymize FinancialProfile.
+
+Returns only aggregate numbers + goal metadata for the Groq system prompt.
+Mirrors the v3 IncomeProfile shape on the frontend store (primary/secondary/
+passive/variable). Legacy `salary`/`freelance` keys removed.
+"""
 from __future__ import annotations
 
 from typing import Any
@@ -13,9 +18,10 @@ def anonymize_profile(profile: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "income": {
-            "salary": income.get("salary", 0),
-            "freelance": income.get("freelance", 0),
+            "primary": income.get("primary", 0),
+            "secondary": income.get("secondary", 0),
             "passive": income.get("passive", 0),
+            "variable": income.get("variable", 0),
             "total": income.get("total", 0),
         },
         "expenses": {

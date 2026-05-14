@@ -43,7 +43,7 @@
         "goalAllocations": {},
         "milestones": [],
         "cumulativeSavings": 90000,
-        "netWorth": 190000
+        "netWorth": 191000
       },
       {
         "month": 1,
@@ -57,7 +57,7 @@
         "goalAllocations": {},
         "milestones": [],
         "cumulativeSavings": 130000,
-        "netWorth": 231000
+        "netWorth": 232010
       },
       {
         "month": 2,
@@ -71,7 +71,7 @@
         "goalAllocations": {},
         "milestones": [],
         "cumulativeSavings": 170000,
-        "netWorth": 272010
+        "netWorth": 273030
       },
       {
         "month": 3,
@@ -85,7 +85,7 @@
         "goalAllocations": {},
         "milestones": [],
         "cumulativeSavings": 210000,
-        "netWorth": 313030
+        "netWorth": 314060
       }
     ],
     "totalMonths": 4,

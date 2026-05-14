@@ -53,7 +53,7 @@ async def chat(
             detail="Too many requests. Please wait a moment before asking again.",
         )
 
-    key = cache_key(req.message, req.profile)
+    key = cache_key(req.message, req.profile, user.user_id)
     cached = response_cache.get(key)
     if cached is not None:
         return PennyChatResponse(reply=cached)
@@ -71,8 +71,8 @@ async def chat(
         completion = get_groq_client().chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=messages,
-            temperature=0.7,
-            max_tokens=500,
+            temperature=0.3,
+            max_tokens=350,
             stream=False,
         )
     except Exception as exc:

@@ -1,4 +1,4 @@
-"""In-process response cache. Mirrors src/server/penny-api.ts: 5-min TTL."""
+"""In-process response cache for Penny replies. 5-min TTL, scoped per user."""
 from __future__ import annotations
 
 import threading
@@ -42,7 +42,7 @@ class ResponseCache:
                     self._entries.pop(k, None)
 
 
-def cache_key(message: str, profile: dict[str, Any]) -> str:
+def cache_key(message: str, profile: dict[str, Any], user_id: str | None = None) -> str:
     income_total = (profile.get("income") or {}).get("total", 0)
     expenses_total = (profile.get("expenses") or {}).get("total", 0)
     debts_total = (profile.get("debts") or {}).get("totalMonthly", 0)
@@ -50,7 +50,10 @@ def cache_key(message: str, profile: dict[str, Any]) -> str:
     goals_len = len(profile.get("goals") or [])
     financial_key = f"{income_total}-{expenses_total}-{debts_total}-{savings}-{goals_len}"
     msg_part = message.strip().lower()[:200]
-    return f"{msg_part}|{financial_key}"
+    # Scope cache entries per user so two users with matching aggregate numbers
+    # never share a Penny reply (replies reference user-specific framing).
+    uid = user_id or "anon"
+    return f"{uid}|{msg_part}|{financial_key}"
 
 
 response_cache = ResponseCache()

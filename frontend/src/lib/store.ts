@@ -47,6 +47,7 @@ const defaultProfile: FinancialProfile = {
   monthlySurplusReserve: 0,
   pendingGoalDecisions: [],
   lastUpdated: Date.now(),
+  investmentReturnRate: 12,
 };
 
 const safeStorage = createJSONStorage(() => ({
@@ -87,6 +88,7 @@ interface FinPathStore extends FinancialProfile {
 
   // ── Strategy ──────────────────────────────────────
   setStrategy: (strategy: InvestmentStrategy) => void;
+  setInvestmentReturnRate: (rate: number) => void;
 
   // ── Goal management ──────────────────────────────────
   setGoals: (goals: Goal[]) => void;
@@ -138,7 +140,6 @@ interface FinPathStore extends FinancialProfile {
 
   // ── Reset ────────────────────────────────────────
   resetProfile: () => void;
-  reset: () => void;
 }
 
 /** Map goal name from onboarding to a Goal object */
@@ -681,6 +682,13 @@ export const useFinPathStore = create<FinPathStore>()(
         store.generatePlan();
       },
 
+      setInvestmentReturnRate: (rate) => {
+        // Clamp to a sane band — UI picker maxes at 14, but allow some headroom.
+        const clamped = Math.max(0, Math.min(30, rate));
+        set({ investmentReturnRate: clamped, lastUpdated: Date.now() });
+        get().generatePlan();
+      },
+
       computeHealthScore: () => {
         const state = get();
         const score = calculateHealthScore({
@@ -715,6 +723,7 @@ export const useFinPathStore = create<FinPathStore>()(
             0,
           ),
           stepUpEnabled: state.stepUpEnabled,
+          investmentReturnRate: state.investmentReturnRate,
         });
 
         // Update goal monthly allocations
@@ -880,11 +889,10 @@ export const useFinPathStore = create<FinPathStore>()(
       },
 
       resetProfile: () => set({ ...defaultProfile }),
-      reset: () => set({ ...defaultProfile }),
     }),
     {
       name: "finpath-store",
-      version: 3,
+      version: 4,
       storage: safeStorage,
       migrate: (persistedState: any, version: number) => {
         if (version < 2 && persistedState?.income) {
@@ -904,6 +912,11 @@ export const useFinPathStore = create<FinPathStore>()(
           // Fix variable base: recompute from passive
           inc.variable = Math.round((inc.passive || 0) * (inc.variablePercent || 0) / 100);
           inc.total = (inc.primary || 0) + (inc.secondary || 0) + (inc.passive || 0) + inc.variable;
+        }
+        if (version < 4 && persistedState) {
+          // Seed default 12% to preserve pre-existing plan output for
+          // already-onboarded users who never saw the Scenarios picker.
+          persistedState.investmentReturnRate = persistedState.investmentReturnRate ?? 12;
         }
         return persistedState;
       },

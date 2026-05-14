@@ -24,6 +24,8 @@ interface PlanInput {
   monthlySurplusReserve?: number;
   pendingReallocationReserve?: number;
   stepUpEnabled?: boolean;
+  /** Annual % return on `investments` (driven by Scenarios risk profile). */
+  investmentReturnRate?: number;
 }
 
 /**
@@ -114,7 +116,11 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     monthlySurplusReserve = 0,
     pendingReallocationReserve = 0,
     stepUpEnabled = false,
+    investmentReturnRate = 12,
   } = input;
+
+  // Compound monthly. Default 12% annual ≈ 1% monthly preserves prior output.
+  const monthlyInvestmentFactor = 1 + (investmentReturnRate / 100) / 12;
 
   // Deduplicate debt payments if they were included in expenses.total
   const monthlyExpensesDeduplicated = Math.max(0, expenses.total - debts.totalMonthly);
@@ -232,16 +238,25 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     cumulativeSavings += Math.max(0, unallocatedSurplus);
     cumulativeSavings += monthlyReservedSurplus;
 
-    // Rough net worth estimate (savings + investments + goal progress)
-    const totalGoalProgress = Object.values(goalProgress).reduce(
-      (a, b) => a + b,
-      0,
-    );
-    const netWorth =
-      cumulativeSavings + cumulativeInvestments + totalGoalProgress;
+    // Grow investments BEFORE computing net worth so the month's closing
+    // value reflects this month's compounded return. Rate from risk profile.
+    cumulativeInvestments *= monthlyInvestmentFactor;
 
-    // Simple investment growth (assumed 12% annual)
-    cumulativeInvestments *= 1.01; // ~1% monthly
+    // Net worth = cash savings + investments + non-debt goal progress
+    //           − outstanding debt principal.
+    // Debt-goal currentAmount tracks principal paid down; subtracting the
+    // *remaining* balance prevents counting debt repayment as net positive.
+    let nonDebtGoalProgress = 0;
+    let outstandingDebt = 0;
+    for (const goal of goals) {
+      if (goal.category === "debt") {
+        outstandingDebt += Math.max(0, goal.targetAmount - goalProgress[goal.id]);
+      } else {
+        nonDebtGoalProgress += goalProgress[goal.id];
+      }
+    }
+    const netWorth =
+      cumulativeSavings + cumulativeInvestments + nonDebtGoalProgress - outstandingDebt;
 
     months.push({
       month: m,

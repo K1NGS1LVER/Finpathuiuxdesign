@@ -83,23 +83,37 @@ function Knob({
   );
 }
 
+function rateToRiskKey(rate: number): RiskKey {
+  if (rate <= 8) return "conservative";
+  if (rate >= 13) return "aggressive";
+  return "balanced";
+}
+
 export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void }) {
   const income = useFinPathStore((s) => s.income);
   const goals = useFinPathStore((s) => s.goals);
   const plan = useFinPathStore((s) => s.plan);
+  const investmentReturnRate = useFinPathStore((s) => s.investmentReturnRate);
+  const setInvestmentReturnRate = useFinPathStore((s) => s.setInvestmentReturnRate);
 
   const [monthlySavings, setMonthlySavings] = useState(60000);
-  const [risk, setRisk] = useState<RiskKey>("balanced");
+  const [risk, setRisk] = useState<RiskKey>(rateToRiskKey(investmentReturnRate));
   const [horizon, setHorizon] = useState(10);
-  const [returnRate, setReturnRate] = useState(10);
+  const [returnRate, setReturnRate] = useState(investmentReturnRate);
   const [showCompare, setShowCompare] = useState(true);
   const [svgTooltip, setSvgTooltip] = useState<{
     svgX: number; svgY: number; scenarioVal: number; baseVal: number; yearLabel: string;
   } | null>(null);
 
+  // When the risk picker changes, push the new rate into the global store so
+  // the plan engine recomputes with the same assumption the user sees here.
   useEffect(() => {
-    setReturnRate(riskCfg[risk].rate);
-  }, [risk]);
+    const nextRate = riskCfg[risk].rate;
+    setReturnRate(nextRate);
+    if (nextRate !== investmentReturnRate) {
+      setInvestmentReturnRate(nextRate);
+    }
+  }, [risk, investmentReturnRate, setInvestmentReturnRate]);
 
   const baselineMonthly = Math.max(20000, Math.round(income.total * 0.2));
   const scenarioTotal = project(monthlySavings, returnRate, horizon);
