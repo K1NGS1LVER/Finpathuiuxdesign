@@ -10,6 +10,29 @@ import { supabase, isSupabaseConfigured } from './supabase';
 
 const LOCAL_STORE_KEY = 'finpath-store';
 
+/**
+ * Dev escape hatch: set VITE_AUTH_MOCK=true in .env to bypass Supabase
+ * entirely and use an in-memory fake user. Avoids burning the free-tier
+ * auth quota during local development.
+ */
+const isAuthMockMode = import.meta.env.VITE_AUTH_MOCK === 'true';
+
+const MOCK_USER = {
+  id: '00000000-0000-0000-0000-000000000001',
+  email: 'dev@finpath.local',
+  user_metadata: { full_name: 'Dev User' },
+  app_metadata: { provider: 'mock' },
+} as unknown as User;
+
+const MOCK_SESSION = {
+  access_token: 'mock-access-token',
+  refresh_token: 'mock-refresh-token',
+  expires_in: 3600,
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
+  token_type: 'bearer',
+  user: MOCK_USER,
+} as unknown as Session;
+
 interface AuthState {
   user: User | null;
   session: Session | null;
@@ -90,6 +113,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
 
   initialize: async () => {
+    if (isAuthMockMode) {
+      console.info('[auth] VITE_AUTH_MOCK=true — using mock user');
+      set({ user: MOCK_USER, session: MOCK_SESSION, loading: false });
+      return;
+    }
+
     if (!isSupabaseConfigured) {
       console.warn('[auth] Supabase not configured — auth disabled.');
       set({ user: null, session: null, loading: false });
@@ -118,6 +147,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signUp: async (email, password, name) => {
+    if (isAuthMockMode) {
+      set({
+        user: { ...MOCK_USER, email, user_metadata: { full_name: name ?? 'Dev User' } } as User,
+        session: MOCK_SESSION,
+        loading: false,
+      });
+      return { success: true };
+    }
     if (!isSupabaseConfigured) {
       return { success: false, error: 'Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.' };
     }
@@ -140,6 +177,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signIn: async (email, password) => {
+    if (isAuthMockMode) {
+      set({
+        user: { ...MOCK_USER, email } as User,
+        session: MOCK_SESSION,
+        loading: false,
+      });
+      return { success: true };
+    }
     if (!isSupabaseConfigured) {
       return { success: false, error: 'Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.' };
     }
@@ -158,7 +203,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
-    if (!isSupabaseConfigured) {
+    if (isAuthMockMode || !isSupabaseConfigured) {
       set({ user: null, session: null });
       return;
     }

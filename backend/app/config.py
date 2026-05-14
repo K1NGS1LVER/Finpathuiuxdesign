@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     supabase_jwt_aud: str = "authenticated"
     supabase_jwt_algorithm: str = "HS256"
 
+    # Dev escape hatch — bypass JWT verification entirely. Mirror of the
+    # frontend's VITE_AUTH_MOCK toggle. Never enable in production.
+    auth_mock: bool = False
+
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
