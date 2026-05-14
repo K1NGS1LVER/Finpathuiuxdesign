@@ -51,10 +51,10 @@ function AppContent() {
   const authLoading = useAuthStore((s) => s.loading);
   const initialize = useAuthStore((s) => s.initialize);
 
-  // Initialize auth on mount
+  // Initialize auth on mount.
   useEffect(() => {
     initialize();
-  }, []);
+  }, [initialize]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);

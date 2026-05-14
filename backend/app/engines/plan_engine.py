@@ -83,6 +83,10 @@ def generate_plan(input_: dict[str, Any]) -> dict[str, Any]:
     monthly_surplus_reserve = input_.get("monthlySurplusReserve", 0)
     pending_reallocation_reserve = input_.get("pendingReallocationReserve", 0)
     step_up_enabled = input_.get("stepUpEnabled", False)
+    investment_return_rate = input_.get("investmentReturnRate", 12)
+
+    # Compound monthly. Default 12% annual ≈ 1% monthly preserves prior output.
+    monthly_investment_factor = 1 + (investment_return_rate / 100) / 12
 
     expenses_total = expenses.get("total") or 0
     debts_total_monthly = debts.get("totalMonthly") or 0
@@ -181,10 +185,22 @@ def generate_plan(input_: dict[str, Any]) -> dict[str, Any]:
         cumulative_savings += max(0, unallocated_surplus)
         cumulative_savings += monthly_reserved_surplus
 
-        total_goal_progress = sum(goal_progress.values())
-        net_worth = cumulative_savings + cumulative_investments + total_goal_progress
+        # Grow investments before computing net worth so closing balance
+        # reflects this month's compounded return.
+        cumulative_investments *= monthly_investment_factor
 
-        cumulative_investments *= 1.01
+        # Net worth = cash + investments + non-debt goal progress − outstanding debt.
+        non_debt_goal_progress = 0.0
+        outstanding_debt = 0.0
+        for goal in goals:
+            target = goal.get("targetAmount") or 0
+            if goal.get("category") == "debt":
+                outstanding_debt += max(0, target - goal_progress[goal["id"]])
+            else:
+                non_debt_goal_progress += goal_progress[goal["id"]]
+        net_worth = (
+            cumulative_savings + cumulative_investments + non_debt_goal_progress - outstanding_debt
+        )
 
         months.append({
             "month": m,

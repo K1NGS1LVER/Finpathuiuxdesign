@@ -1,7 +1,9 @@
 // ============================================================
 // ProposalCard — renders a Penny-proposed store mutation with
-// Approve / Reject buttons. Approve applies the Zustand setter
-// locally then PATCHes the proposal status; Reject just PATCHes.
+// Approve / Reject buttons.
+// Approve flow: validate payload → PATCH server → apply local
+// Zustand mutation. Local state changes only on PATCH success.
+// Reject flow: PATCH server only.
 // ============================================================
 
 import { useState } from 'react';
@@ -44,65 +46,63 @@ const ACTION_LABEL: Record<string, string> = {
   addLumpsum: 'Add lump-sum to goal',
 };
 
-function applyProposal(action: string, payload: Record<string, unknown>): { ok: boolean; reason?: string } {
+type PreparedApply =
+  | { ok: true; apply: () => void }
+  | { ok: false; reason: string };
+
+/**
+ * Validate the proposal payload and return a thunk that performs the mutation.
+ * Returning the thunk separately lets the caller PATCH the server first and
+ * only mutate the local store on PATCH success — so a failed PATCH never
+ * leaves the client out of sync.
+ */
+function prepareApply(action: string, payload: Record<string, unknown>): PreparedApply {
   const store = useFinPathStore.getState();
-  try {
-    switch (action) {
-      case 'setStrategy': {
-        const s = payload.strategy as InvestmentStrategy;
-        if (s !== 'avalanche' && s !== 'snowball') return { ok: false, reason: 'invalid strategy' };
-        store.setStrategy(s);
-        return { ok: true };
-      }
-      case 'setEmergencyFund': {
-        const v = Number(payload.amount ?? payload.value);
-        if (!Number.isFinite(v) || v < 0) return { ok: false, reason: 'invalid amount' };
-        store.setEmergencyFund(v);
-        return { ok: true };
-      }
-      case 'setSavings': {
-        const v = Number(payload.amount ?? payload.value);
-        if (!Number.isFinite(v) || v < 0) return { ok: false, reason: 'invalid amount' };
-        store.setSavings(v);
-        return { ok: true };
-      }
-      case 'setInvestments': {
-        const v = Number(payload.amount ?? payload.value);
-        if (!Number.isFinite(v) || v < 0) return { ok: false, reason: 'invalid amount' };
-        store.setInvestments(v);
-        return { ok: true };
-      }
-      case 'updateGoal': {
-        const id = String(payload.id ?? '');
-        const updates = (payload.updates ?? {}) as Partial<Goal>;
-        if (!id) return { ok: false, reason: 'missing goal id' };
-        store.updateGoal(id, updates);
-        return { ok: true };
-      }
-      case 'addGoal': {
-        const g = payload.goal as Goal | undefined;
-        if (!g || !g.name) return { ok: false, reason: 'missing goal' };
-        store.addGoal(g);
-        return { ok: true };
-      }
-      case 'removeGoal': {
-        const id = String(payload.id ?? '');
-        if (!id) return { ok: false, reason: 'missing goal id' };
-        store.removeGoal(id);
-        return { ok: true };
-      }
-      case 'addLumpsum': {
-        const id = String(payload.goalId ?? payload.id ?? '');
-        const amount = Number(payload.amount);
-        if (!id || !Number.isFinite(amount) || amount <= 0) return { ok: false, reason: 'invalid lumpsum' };
-        store.addLumpsum(id, amount);
-        return { ok: true };
-      }
-      default:
-        return { ok: false, reason: `unknown action: ${action}` };
+  switch (action) {
+    case 'setStrategy': {
+      const s = payload.strategy as InvestmentStrategy;
+      if (s !== 'avalanche' && s !== 'snowball') return { ok: false, reason: 'invalid strategy' };
+      return { ok: true, apply: () => store.setStrategy(s) };
     }
-  } catch (e: any) {
-    return { ok: false, reason: e?.message || 'apply failed' };
+    case 'setEmergencyFund': {
+      const v = Number(payload.amount ?? payload.value);
+      if (!Number.isFinite(v) || v < 0) return { ok: false, reason: 'invalid amount' };
+      return { ok: true, apply: () => store.setEmergencyFund(v) };
+    }
+    case 'setSavings': {
+      const v = Number(payload.amount ?? payload.value);
+      if (!Number.isFinite(v) || v < 0) return { ok: false, reason: 'invalid amount' };
+      return { ok: true, apply: () => store.setSavings(v) };
+    }
+    case 'setInvestments': {
+      const v = Number(payload.amount ?? payload.value);
+      if (!Number.isFinite(v) || v < 0) return { ok: false, reason: 'invalid amount' };
+      return { ok: true, apply: () => store.setInvestments(v) };
+    }
+    case 'updateGoal': {
+      const id = String(payload.id ?? '');
+      const updates = (payload.updates ?? {}) as Partial<Goal>;
+      if (!id) return { ok: false, reason: 'missing goal id' };
+      return { ok: true, apply: () => store.updateGoal(id, updates) };
+    }
+    case 'addGoal': {
+      const g = payload.goal as Goal | undefined;
+      if (!g || !g.name) return { ok: false, reason: 'missing goal' };
+      return { ok: true, apply: () => store.addGoal(g) };
+    }
+    case 'removeGoal': {
+      const id = String(payload.id ?? '');
+      if (!id) return { ok: false, reason: 'missing goal id' };
+      return { ok: true, apply: () => store.removeGoal(id) };
+    }
+    case 'addLumpsum': {
+      const id = String(payload.goalId ?? payload.id ?? '');
+      const amount = Number(payload.amount);
+      if (!id || !Number.isFinite(amount) || amount <= 0) return { ok: false, reason: 'invalid lumpsum' };
+      return { ok: true, apply: () => store.addLumpsum(id, amount) };
+    }
+    default:
+      return { ok: false, reason: `unknown action: ${action}` };
   }
 }
 
@@ -139,14 +139,17 @@ export default function ProposalCard({ proposal, onResolved }: Props) {
   async function handleApprove() {
     setBusy(true);
     setErrMsg(null);
-    const ok = await patch('approved');
-    if (!ok) { setBusy(false); return; }
-    const result = applyProposal(proposal.action, proposal.payload);
-    if (!result.ok) {
-      setErrMsg(`Approved but couldn't apply: ${result.reason}`);
+    // Validate payload BEFORE touching the server so a bad payload can't leave
+    // the row marked `approved` with no matching local mutation.
+    const prepared = prepareApply(proposal.action, proposal.payload);
+    if (!prepared.ok) {
+      setErrMsg(`Can't apply: ${prepared.reason}`);
       setBusy(false);
       return;
     }
+    const ok = await patch('approved');
+    if (!ok) { setBusy(false); return; }
+    prepared.apply();
     setStatus('approved');
     onResolved?.('approved');
     setBusy(false);

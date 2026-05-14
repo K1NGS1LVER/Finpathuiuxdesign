@@ -81,6 +81,7 @@ def make_tools(
         "strategy": profile.get("strategy", "avalanche"),
         "monthlySurplusReserve": profile.get("monthlySurplusReserve", 0),
         "stepUpEnabled": profile.get("stepUpEnabled", False),
+        "investmentReturnRate": profile.get("investmentReturnRate", 12),
     }
 
     # ── tool implementations ────────────────────────────────────

@@ -194,4 +194,11 @@ export interface FinancialProfile {
   lastUpdated: number;
   /** Whether to increment monthly payments with salary growth */
   stepUpEnabled?: boolean;
+  /**
+   * Expected annual % return on `investments` (compounded monthly inside the
+   * plan engine). Driven by the Scenarios risk profile picker:
+   * Conservative 7, Balanced 10, Aggressive 14. Defaults to 12 to preserve
+   * pre-Phase-3 plan behavior for already-onboarded users.
+   */
+  investmentReturnRate: number;
 }

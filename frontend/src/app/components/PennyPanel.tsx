@@ -34,6 +34,27 @@ const WELCOME: Message = {
     "Hi! I'm Penny, your AI finance companion. I can run scenarios on your real numbers and propose changes you approve before anything moves. Ask me anything!",
 };
 
+/**
+ * Render `**bold**` markdown spans as <strong>. Penny's prompt requires every
+ * ₹ amount, %, and month count to be wrapped in bold — this surfaces them
+ * visually instead of leaving raw asterisks in the chat.
+ * Leaves all other text + line breaks alone (`whitespace-pre-line` handles \n).
+ */
+function renderBoldMd(text: string): React.ReactNode {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*\n]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={i} style={{ color: 'var(--accent-text, var(--accent))' }}>
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -243,7 +264,9 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
                       ))}
                     </div>
                   )}
-                  {msg.text || (msg.toolCalls && msg.toolCalls.length > 0 ? '' : null)}
+                  {msg.role === 'penny'
+                    ? renderBoldMd(msg.text)
+                    : msg.text || (msg.toolCalls && msg.toolCalls.length > 0 ? '' : null)}
                 </div>
               )}
             </div>
