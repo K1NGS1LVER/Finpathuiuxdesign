@@ -3,11 +3,13 @@
 ## Commands
 
 ```bash
-pnpm run build    # Production build (vite build) — only verification step, no lint/typecheck/test scripts
+pnpm run build    # Production build (vite build)
 pnpm run dev      # Dev server (vite)
+pnpm test         # Run unit tests (vitest run)
+pnpm run test:watch  # Run tests in watch mode
 ```
 
-There is no `lint`, `typecheck`, or `test` script. `build` is the sole verification gate. Build must pass with 0 errors before considering changes complete.
+Build must pass with 0 errors before considering changes complete. Run `pnpm test` to verify pure-function modules.
 
 ## Architecture
 
@@ -25,7 +27,8 @@ There is no `lint`, `typecheck`, or `test` script. `build` is the sole verificat
 | `src/lib/plan-engine.ts` | Goal allocation engine — generates the `FinancialPlan` (month-by-month projections) |
 | `src/lib/health-score.ts` | Health score calculator — produces 0–100 composite score across 4 dimensions |
 | `src/lib/debt-strategies.ts` | Debt payoff simulators: `avalanche()`, `snowball()`, `compareStrategies()` |
-| `src/lib/tax-engine.ts` | Tax regime comparison (FY 2024-25 old vs new) |
+| `src/lib/tax-engine.ts` | Tax regime comparison (FY 2025-26 old vs new) |
+| `src/lib/__tests__/` | Unit tests for pure-function modules (vitest) |
 | `src/styles/` | CSS cascade: `index.css` → `fonts.css` → `tailwind.css` → `theme.css` |
 
 ### State management
@@ -93,6 +96,7 @@ Layout (Sidebar + Header) only renders for non-public routes (not `/`, `/auth`, 
 ## Libraries & toolchain
 
 - **Vite 6.3.5** with `@vitejs/plugin-react` — no special config needed
+- **vitest 4.x** — unit tests for pure-function modules (`src/lib/__tests__/`)
 - **React 18.3.1** — not React 19, use React 18 APIs
 - **recharts 2.15.2** — used for Sankey, AreaChart, LineChart across screens
 - **lucide-react 0.487.0** — all icons, stroke-width 1.5px via `.icon-wireframe` class
