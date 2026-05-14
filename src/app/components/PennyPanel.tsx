@@ -1,6 +1,7 @@
 import { X, Send, Loader2, Clock, WifiOff } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useFinPathStore } from '@/lib/store';
+import { apiFetch } from '@/lib/api';
 
 interface PennyPanelProps {
   open: boolean;
@@ -88,9 +89,8 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
     const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
     try {
-      const response = await fetch('/api/penny', {
+      const response = await apiFetch('/api/penny', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
           message: trimmed,
@@ -109,6 +109,15 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           id: `penny-${Date.now()}`,
           role: 'penny',
           text: "I'm getting a lot of questions right now! Please wait a moment and try again.",
+        }]);
+        return;
+      }
+
+      if (response.status === 401) {
+        setMessages(prev => [...prev, {
+          id: `penny-${Date.now()}`,
+          role: 'penny',
+          text: "Your session expired. Please sign in again to continue.",
         }]);
         return;
       }

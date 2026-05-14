@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     port: int = 8000
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # Supabase auth (Phase 1)
+    supabase_url: str = ""
+    supabase_jwt_secret: str = ""
+    supabase_jwt_aud: str = "authenticated"
+    supabase_jwt_algorithm: str = "HS256"
+
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]

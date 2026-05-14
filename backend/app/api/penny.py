@@ -1,12 +1,13 @@
-"""POST /api/penny — Groq proxy with PII anonymization, rate limit, response cache."""
+"""POST /api/penny — Groq proxy with auth, PII anonymization, rate limit, response cache."""
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
+from app.auth import CurrentUser, get_current_user
 from app.services.cache import cache_key, response_cache
 from app.services.groq_client import get_groq_client
 from app.services.prompt import build_system_prompt
@@ -27,9 +28,14 @@ class PennyChatResponse(BaseModel):
 
 
 @router.post("/api/penny", response_model=PennyChatResponse)
-async def chat(req: PennyChatRequest, request: Request) -> PennyChatResponse:
-    client_ip = request.client.host if request.client else "unknown"
-    if not rate_limiter.check(client_ip):
+async def chat(
+    req: PennyChatRequest,
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+) -> PennyChatResponse:
+    # Rate-limit per authenticated user (falls back to IP only if uid unknown).
+    rl_key = user.user_id or (request.client.host if request.client else "unknown")
+    if not rate_limiter.check(rl_key):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many requests. Please wait a moment before asking again.",
