@@ -22,8 +22,9 @@ import type {
   Goal,
 } from '../src/lib/types';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const FIXTURE_ROOT = resolve(ROOT, 'tests/fixtures');
+// scripts/ is at frontend/scripts/; repo root is two levels up.
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const FIXTURE_ROOT = resolve(REPO_ROOT, 'tests/fixtures');
 
 function writeFixture(engine: string, name: string, input: unknown, expected: unknown) {
   const dir = resolve(FIXTURE_ROOT, engine);

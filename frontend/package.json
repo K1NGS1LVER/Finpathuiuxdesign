@@ -1,12 +1,12 @@
 {
-  "name": "@figma/my-make-file",
+  "name": "finpath-frontend",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "dev:backend": "cd backend && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+    "dev:backend": "node scripts/run-backend.mjs",
     "dev:all": "concurrently -n backend,frontend -c yellow,cyan \"pnpm dev:backend\" \"pnpm dev\"",
     "test": "vitest run",
     "test:watch": "vitest",

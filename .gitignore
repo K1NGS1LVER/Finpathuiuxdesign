@@ -1,11 +1,9 @@
 node_modules
 dist/
-.kilo/
-css_audit.md
-design.md
-.claude 
-CLAUDE.md       
-install.ps1
 .env
 .env.test
-half_done/
+CLAUDE.md
+.claude
+.kilo/
+install.ps1
+css_audit.md
