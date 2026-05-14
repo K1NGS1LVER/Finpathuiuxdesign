@@ -84,7 +84,7 @@ Goal: replace mocked `auth-store.ts` with real Supabase auth, add DB schema (pro
 
 Sub-tasks:
 
-1. Create Supabase project → capture `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Add to root `.env` + extend `backend/.env.example` with `SUPABASE_URL`, `SUPABASE_JWT_SECRET` (or JWKS URL).
+1. Create Supabase project → capture `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Add to root `.env` + `SUPABASE_URL` to `backend/.env`. `SUPABASE_JWT_SECRET` only matters for legacy HS256 projects; newer Supabase projects use ES256/RS256 and backend resolves keys via JWKS automatically.
 2. SQL migration `backend/db/migrations/001_init.sql`:
    - `profiles(user_id uuid PK references auth.users, data jsonb, storage_mode text default 'local', schema_version int default 3, updated_at timestamptz)`
    - `chat_history(id, user_id, role, content, tool_calls jsonb, tool_results jsonb, created_at)`
