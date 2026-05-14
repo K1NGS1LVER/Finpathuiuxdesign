@@ -44,6 +44,21 @@ export default defineConfig(() => {
     // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
     assetsInclude: ['**/*.svg', '**/*.csv'],
 
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Heavy third-party libs kept in their own long-cacheable chunks.
+            react: ['react', 'react-dom', 'react-router'],
+            charts: ['recharts'],
+            motion: ['motion'],
+            pdf: ['pdfjs-dist'],
+            supabase: ['@supabase/supabase-js'],
+          },
+        },
+      },
+    },
+
     test: {
       globals: true,
       include: ['src/**/*.test.ts'],
