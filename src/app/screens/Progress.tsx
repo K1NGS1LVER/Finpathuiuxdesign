@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {
-  CheckCircle2,
   Sparkles,
   Check,
   Clock,
@@ -8,7 +7,6 @@ import {
 } from "lucide-react";
 import { useFinPathStore } from '@/lib/store';
 import { formatInr, formatInrCompact } from '@/lib/format';
-import confetti from "canvas-confetti";
 
 type ChartPoint = { label: string; value: number; projected?: boolean };
 
@@ -179,15 +177,9 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
     return `Your savings rate is ${savingsRate}%. All major milestones achieved — you're ahead of the curve.`;
   }, [savingsRate, milestones]);
 
-  const [checkedIn, setCheckedIn] = useState(false);
   const [nwTooltip, setNwTooltip] = useState<{
     x: number; y: number; label: string; value: number; projected: boolean;
   } | null>(null);
-
-  const handleCheckIn = () => {
-    setCheckedIn(true);
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
-  };
 
   const handleNWMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (chart.pts.length < 2) return;
@@ -350,48 +342,6 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
           </div>
         )}
         </div>
-      </div>
-
-      {/* Monthly Check-in */}
-      <div className="bento-card p-6 md:p-8 relative z-10">
-        <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
-          Monthly Check-in
-        </h3>
-        <div className="space-y-4">
-          {goals.map((goal) => {
-            const progress = goal.targetAmount > 0 ? Math.round((goal.currentAmount / goal.targetAmount) * 100) : 0;
-            return (
-              <div key={goal.id}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-[var(--card-foreground)]">{goal.name}</span>
-                  <span className="text-xs font-bold slashed-zero" style={{ color: goal.status === "complete" ? "var(--accent-text)" : "var(--secondary)" }}>
-                    {progress}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--progress-inactive)" }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%`, backgroundColor: goal.status === "complete" ? "var(--accent)" : "var(--tertiary-accent)" }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {!checkedIn ? (
-          <button
-            onClick={handleCheckIn}
-            className="w-full mt-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
-            style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)", fontFamily: "var(--font-body)", boxShadow: "0 8px 24px var(--accent-glow)" }}
-          >
-            <CheckCircle2 size={18} />
-            Complete Monthly Check-in
-          </button>
-        ) : (
-          <div className="mt-6 py-3 rounded-xl font-bold text-center" style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)", fontFamily: "var(--font-body)", opacity: 0.7 }}>
-            Checked in for this month!
-          </div>
-        )}
       </div>
 
       {/* Milestones + Penny Quarterly Review */}
