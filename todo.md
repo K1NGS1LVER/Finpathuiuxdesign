@@ -68,11 +68,15 @@ Verification done in Phase 0:
 2. From `backend/`: `py -m venv .venv && .\.venv\Scripts\Activate.ps1 && pip install -e ".[dev]"` (already done on the workstation Phase 0 ran on, but new clones must repeat).
 3. `pnpm dev:all` — chat with Penny in `/dashboard`. Should behave identically to the old dev middleware.
 
-## Phase 1 — Real Supabase auth + migration — **DONE (code)**
+## Phase 1 — Real Supabase auth + migration — **DONE**
 
-Live test still pending Supabase project setup. See `CLAUDE.md` → "Auth requires Supabase setup" gotcha.
+Verified live: real sign-up / sign-in works, Penny accepts authed requests.
 
-`feat(auth): VITE_AUTH_MOCK + AUTH_MOCK dev escape hatches` (commit 193c6a4): both halves of the stack honor a mock toggle so dev work doesn't burn Supabase free-tier auth quotas.
+Follow-up commits:
+- `feat(auth): VITE_AUTH_MOCK + AUTH_MOCK dev escape hatches` (193c6a4) — both halves of the stack honor a mock toggle for dev (avoids Supabase free-tier signup email quota).
+- `fix(auth): support ES256/RS256 Supabase JWTs via JWKS` — newer Supabase projects sign with ES256 (asymmetric P-256), not HS256. Backend now parses the token's `alg` header and either uses `SUPABASE_JWT_SECRET` (HS256) or fetches the project's JWKS at `${SUPABASE_URL}/auth/v1/.well-known/jwks.json` and looks up the signing key by `kid` (RS/ES). Added `pyjwt[crypto]` dep.
+
+Dev gotcha if email rate-limited: disable email confirmation in Supabase → Auth → Providers → Email, or use the mock toggles.
 
 Originally planned sub-tasks:
 
