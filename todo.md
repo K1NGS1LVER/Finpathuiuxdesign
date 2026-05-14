@@ -31,7 +31,7 @@ Supabase: Auth + Postgres (RLS)          [Phase 1]
 - TS engines remain the source of truth on the frontend for instant UI. Python ports are for Penny's tools and are kept in parity via shared JSON fixtures.
 - Streaming = **SSE** (not WebSocket). Proposals are named SSE events on the same `/api/penny/stream` stream.
 - localStorage → cloud migration is **automatic** on first real sign-in. If both local and remote exist, keep cloud and archive local under `finpath-store.local-backup-{date}`.
-- **No deploy** yet. `vite.config.ts` proxies `/api/*` → `http://127.0.0.1:8000`. Run both halves via `pnpm dev:all`.
+- **No deploy** yet. `frontend/vite.config.ts` proxies `/api/*` → `http://127.0.0.1:8000`. Run both halves via `pnpm dev:all` (from `frontend/`).
 - Penny **proposes, never writes directly**. Every change goes through the `proposals` table + SSE event + user Approve/Reject in `<ProposalCard>`.
 
 ## Phase 0 — Ship prod Penny — **DONE**
@@ -84,14 +84,14 @@ Goal: replace mocked `auth-store.ts` with real Supabase auth, add DB schema (pro
 
 Sub-tasks:
 
-1. Create Supabase project → capture `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Add to root `.env` + `SUPABASE_URL` to `backend/.env`. `SUPABASE_JWT_SECRET` only matters for legacy HS256 projects; newer Supabase projects use ES256/RS256 and backend resolves keys via JWKS automatically.
+1. Create Supabase project → capture `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Add to `frontend/.env` + `SUPABASE_URL` to `backend/.env`. `SUPABASE_JWT_SECRET` only matters for legacy HS256 projects; newer Supabase projects use ES256/RS256 and backend resolves keys via JWKS automatically.
 2. SQL migration `backend/db/migrations/001_init.sql`:
    - `profiles(user_id uuid PK references auth.users, data jsonb, storage_mode text default 'local', schema_version int default 3, updated_at timestamptz)`
    - `chat_history(id, user_id, role, content, tool_calls jsonb, tool_results jsonb, created_at)`
    - `proposals(id, user_id, action, payload jsonb, rationale, status, created_at, resolved_at)`
    - RLS: `auth.uid() = user_id` on all three.
-3. Replace mock body of `src/lib/auth-store.ts`:
-   - `signUp`, `signIn`, `signOut`, `initialize` use `supabase.auth.*` from `src/lib/supabase.ts`.
+3. Replace mock body of `frontend/src/lib/auth-store.ts`:
+   - `signUp`, `signIn`, `signOut`, `initialize` use `supabase.auth.*` from `frontend/src/lib/supabase.ts`.
    - Subscribe to `onAuthStateChange` in `initialize`.
    - On sign-in success, run `migrateLocalToCloud()`:
      - Read `localStorage["finpath-store"]`.
@@ -100,7 +100,7 @@ Sub-tasks:
 4. Backend `app/auth.py`:
    - `Depends(get_current_user)` parses `Authorization: Bearer …`, verifies via Supabase JWKS, returns `user_id`.
    - Apply to `/api/penny` (and all future endpoints).
-5. Frontend: create `src/lib/api.ts` with `apiFetch()` that attaches `Authorization: Bearer <access_token>` from Supabase session. Replace raw `fetch('/api/penny')` in `PennyPanel.tsx`.
+5. Frontend: create `frontend/src/lib/api.ts` with `apiFetch()` that attaches `Authorization: Bearer <access_token>` from Supabase session. Replace raw `fetch('/api/penny')` in `PennyPanel.tsx`.
 6. Update `CLAUDE.md` "Mocked Auth" gotcha → removed once landed.
 
 Gate: real sign-up → onboarding → dashboard. Existing local data preserved. Backend rejects unauthenticated `/api/penny` with 401.
@@ -109,7 +109,7 @@ Gate: real sign-up → onboarding → dashboard. Existing local data preserved. 
 
 What landed:
 
-- `scripts/dump-fixtures.ts` — curated input set per engine; runs the TS engine and writes `{ input, expected }` JSON to `tests/fixtures/{health,debt,plan}/*.json`. Added `pnpm fixtures` script. `tsx` added as devDep.
+- `frontend/scripts/dump-fixtures.ts` — curated input set per engine; runs the TS engine and writes `{ input, expected }` JSON to `tests/fixtures/{health,debt,plan}/*.json`. Added `pnpm fixtures` script. `tsx` added as devDep.
 - Python ports in `backend/app/engines/`:
   - `_helpers.py` — `js_round()` shim (JS half-up vs Python banker's rounding).
   - `health_score.py` (4-dim 0–100 score + 3 actionable recs).
@@ -129,7 +129,7 @@ Verification gate: `pnpm build` 0 errors, `pnpm test` 83/83, `pytest` 58/58.
 2. `backend/app/agents/penny.py` graph: `ROUTER → RESEARCH → PLAN → {CHAT | PROPOSE}`.
 3. Tools (`backend/app/agents/tools.py`): `simulate_plan`, `simulate_what_if`, `compare_debt_strategies`, `check_health`, `read_profile`, `propose_change`.
 4. SSE `/api/penny/stream`: events = `token | tool_call | tool_result | proposal | done | error`. Persist user msg + assistant msg + tool calls to `chat_history`.
-5. Frontend `PennyPanel.tsx`: replace `fetch` with SSE (POST + ReadableStream, or `EventSource` for GET). New `src/app/components/ProposalCard.tsx` for Approve/Reject. Approve = apply Zustand setter + `PATCH /api/proposals/:id`.
+5. Frontend `PennyPanel.tsx`: replace `fetch` with SSE (POST + ReadableStream, or `EventSource` for GET). New `frontend/src/app/components/ProposalCard.tsx` for Approve/Reject. Approve = apply Zustand setter + `PATCH /api/proposals/:id`.
 6. Chat history hydration on mount: `GET /api/chat/history?limit=50`.
 7. Proposal expiry: backend `asyncio` startup task marks 24h-old proposals as `expired`.
 
@@ -153,13 +153,13 @@ Dockerfile, CORS allowlist, per-user rate limits, structured logging, error moni
 
 | Touched by | Files |
 |---|---|
-| Phase 0 (done) | `vite.config.ts`, `package.json`, `CLAUDE.md`, `backend/**` |
-| Phase 1 | `src/lib/auth-store.ts`, `src/lib/supabase.ts`, `src/lib/api.ts` (new), `backend/app/auth.py` (new), `backend/db/migrations/001_init.sql` (new), `src/app/components/PennyPanel.tsx` |
-| Phase 2 | `scripts/dump-fixtures.ts` (new), `tests/fixtures/**` (new), `backend/app/engines/**` (new), `backend/app/models/**` (new), `backend/tests/test_engines.py` (new) |
-| Phase 3 | `backend/app/agents/**` (new), `backend/app/api/penny.py` (extend to SSE), `src/app/components/PennyPanel.tsx`, `src/app/components/ProposalCard.tsx` (new) |
-| Phase 4 | `src/lib/store.ts` (persist adapter), `src/app/screens/Settings.tsx` (new or existing) |
+| Phase 0 (done) | `frontend/vite.config.ts`, `frontend/package.json`, `CLAUDE.md`, `backend/**` |
+| Phase 1 | `frontend/src/lib/auth-store.ts`, `frontend/src/lib/supabase.ts`, `frontend/src/lib/api.ts` (new), `backend/app/auth.py` (new), `backend/db/migrations/001_init.sql` (new), `frontend/src/app/components/PennyPanel.tsx` |
+| Phase 2 | `frontend/scripts/dump-fixtures.ts` (new), `tests/fixtures/**` (new), `backend/app/engines/**` (new), `backend/app/models/**` (new), `backend/tests/test_engines.py` (new) |
+| Phase 3 | `backend/app/agents/**` (new), `backend/app/api/penny.py` (extend to SSE), `frontend/src/app/components/PennyPanel.tsx`, `frontend/src/app/components/ProposalCard.tsx` (new) |
+| Phase 4 | `frontend/src/lib/store.ts` (persist adapter), `frontend/src/app/screens/Settings.tsx` (new or existing) |
 
 ## Do not touch
 
-- `src/lib/{plan-engine,health-score,debt-strategies}.ts` — TS remains source of truth on frontend. Python is a port, not a replacement.
-- `src/lib/__tests__/*.test.ts` semantics — fixture extraction is additive, must not change expectations.
+- `frontend/src/lib/{plan-engine,health-score,debt-strategies}.ts` — TS remains source of truth on frontend. Python is a port, not a replacement.
+- `frontend/src/lib/__tests__/*.test.ts` semantics — fixture extraction is additive, must not change expectations.

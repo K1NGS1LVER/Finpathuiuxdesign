@@ -28,11 +28,12 @@ cp .env.example .env
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The Vite dev server proxies `/api/*` to `http://localhost:8000` (see root `vite.config.ts`).
+The Vite dev server (in `frontend/`) proxies `/api/*` to `http://localhost:8000` (see `frontend/vite.config.ts`).
 
-From the project root you can run both at once:
+From `frontend/` you can run both halves at once:
 
 ```bash
+cd ../frontend
 pnpm dev:all
 ```
 
@@ -50,7 +51,7 @@ pnpm dev:all
 1. Create a Supabase project. Note the project URL and anon key for the frontend.
 2. In Supabase SQL editor, run `backend/db/migrations/001_init.sql` to create the `profiles`, `chat_history`, and `proposals` tables with RLS.
 3. Copy the project JWT secret from **Settings → API → JWT Settings → "JWT Secret"** and put it in `backend/.env` as `SUPABASE_JWT_SECRET`. This is what the backend uses to verify Bearer tokens.
-4. Frontend: copy root `.env.example` to `.env` at the project root and fill in `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`.
+4. Frontend: from `frontend/`, copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`.
 
 ## Layout
 
