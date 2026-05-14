@@ -74,7 +74,7 @@ async def insert_chat_message(
                 json=body,
             )
             if r.status_code >= 400:
-                log.warning("insert_chat_message failed %s %s", r.status_code, r.text)
+                log.warning("insert_chat_message failed %s %s", r.status_code, r.text[:200])
     except Exception:
         log.exception("insert_chat_message error")
 
@@ -100,7 +100,7 @@ async def list_chat_history(
                 },
             )
             if r.status_code >= 400:
-                log.warning("list_chat_history failed %s %s", r.status_code, r.text)
+                log.warning("list_chat_history failed %s %s", r.status_code, r.text[:200])
                 return []
             rows = r.json() or []
             rows.reverse()  # oldest → newest for UI replay
@@ -139,7 +139,7 @@ async def insert_proposal(
                 json=body,
             )
             if r.status_code >= 400:
-                log.warning("insert_proposal failed %s %s", r.status_code, r.text)
+                log.warning("insert_proposal failed %s %s", r.status_code, r.text[:200])
                 return None
             rows = r.json()
             return rows[0] if isinstance(rows, list) and rows else None
@@ -191,7 +191,7 @@ async def update_proposal_status(
                 json=body,
             )
             if r.status_code >= 400:
-                log.warning("update_proposal_status failed %s %s", r.status_code, r.text)
+                log.warning("update_proposal_status failed %s %s", r.status_code, r.text[:200])
                 return None
             rows = r.json() or []
             return rows[0] if rows else None
@@ -222,7 +222,7 @@ async def expire_stale_proposals(max_age_hours: int = 24) -> int:
                 json=body,
             )
             if r.status_code >= 400:
-                log.warning("expire_stale_proposals failed %s %s", r.status_code, r.text)
+                log.warning("expire_stale_proposals failed %s %s", r.status_code, r.text[:200])
                 return 0
             rows = r.json() or []
             return len(rows)

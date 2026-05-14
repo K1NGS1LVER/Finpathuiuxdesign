@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import uuid
 from typing import Any, AsyncIterator
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
@@ -96,9 +97,9 @@ class PennyStreamRequest(BaseModel):
 
 
 def _sse_format(event: str, data: Any) -> str:
-    payload = data if isinstance(data, str) else json.dumps(data, default=str)
-    # SSE: each `data:` line followed by blank line; multiline data must be
-    # split per spec — JSON has no raw newlines so single-line is fine.
+    # Always JSON-encode so strings with embedded newlines (LLM tokens) can't
+    # split the SSE block. Client `JSON.parse`s every payload uniformly.
+    payload = json.dumps(data, default=str)
     return f"event: {event}\ndata: {payload}\n\n"
 
 
@@ -114,8 +115,6 @@ async def chat_stream(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many requests. Please wait a moment before asking again.",
         )
-
-    import uuid
 
     proposal_queue: asyncio.Queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
@@ -149,13 +148,15 @@ async def chat_stream(
         return row
 
     async def event_source() -> AsyncIterator[bytes]:
-        # Persist the incoming user message up-front so chat history is correct
-        # even if the agent fails mid-stream.
-        await insert_chat_message(
-            user_jwt=user.access_token,
-            user_id=user.user_id,
-            role="user",
-            content=req.message,
+        # Persist the incoming user message in the background so TTFT isn't
+        # gated on Supabase RTT. Errors are logged inside the helper.
+        asyncio.create_task(
+            insert_chat_message(
+                user_jwt=user.access_token,
+                user_id=user.user_id,
+                role="user",
+                content=req.message,
+            )
         )
 
         assistant_reply = ""

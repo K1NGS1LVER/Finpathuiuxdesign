@@ -21,6 +21,7 @@ _PROPOSAL_MAX_AGE_HOURS = 24
 
 
 async def _proposal_expiry_loop() -> None:
+    # First tick immediately so stale rows from a previous run clear on boot.
     while True:
         try:
             expired = await expire_stale_proposals(_PROPOSAL_MAX_AGE_HOURS)
