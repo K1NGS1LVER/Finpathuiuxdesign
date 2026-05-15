@@ -17,6 +17,7 @@ import type {
   InvestmentStrategy,
   GoalCompletionAction,
   GoalCompletionDecision,
+  StorageMode,
 } from "./types";
 import { calculateHealthScore } from "./health-score";
 import { generatePlan } from "./plan-engine";
@@ -48,6 +49,7 @@ const defaultProfile: FinancialProfile = {
   pendingGoalDecisions: [],
   lastUpdated: Date.now(),
   investmentReturnRate: 12,
+  storageMode: "local",
 };
 
 const safeStorage = createJSONStorage(() => ({
@@ -89,6 +91,17 @@ interface FinPathStore extends FinancialProfile {
   // ── Strategy ──────────────────────────────────────
   setStrategy: (strategy: InvestmentStrategy) => void;
   setInvestmentReturnRate: (rate: number) => void;
+
+  // ── Storage mode (Phase 4 — dual storage) ─────────
+  setStorageMode: (mode: StorageMode) => void;
+  /**
+   * Replace the financial profile wholesale (used by remote hydration
+   * and JSON import). Skips recompute when `recompute=false`.
+   */
+  replaceProfile: (
+    next: Partial<FinancialProfile>,
+    opts?: { recompute?: boolean },
+  ) => void;
 
   // ── Goal management ──────────────────────────────────
   setGoals: (goals: Goal[]) => void;
@@ -689,6 +702,26 @@ export const useFinPathStore = create<FinPathStore>()(
         get().generatePlan();
       },
 
+      setStorageMode: (mode) => {
+        set({ storageMode: mode, lastUpdated: Date.now() });
+      },
+
+      replaceProfile: (next, opts) => {
+        // Wholesale replace — used by remote hydration + JSON import.
+        // Preserves any fields the caller didn't include by merging onto the
+        // current state, then bumps lastUpdated only if the caller didn't.
+        const incoming: Partial<FinancialProfile> = { ...next };
+        if (incoming.lastUpdated === undefined) {
+          incoming.lastUpdated = Date.now();
+        }
+        set(incoming as any);
+        if (opts?.recompute !== false) {
+          const store = get();
+          store.computeHealthScore();
+          store.generatePlan();
+        }
+      },
+
       computeHealthScore: () => {
         const state = get();
         const score = calculateHealthScore({
@@ -892,7 +925,7 @@ export const useFinPathStore = create<FinPathStore>()(
     }),
     {
       name: "finpath-store",
-      version: 4,
+      version: 5,
       storage: safeStorage,
       migrate: (persistedState: any, version: number) => {
         if (version < 2 && persistedState?.income) {
@@ -917,6 +950,10 @@ export const useFinPathStore = create<FinPathStore>()(
           // Seed default 12% to preserve pre-existing plan output for
           // already-onboarded users who never saw the Scenarios picker.
           persistedState.investmentReturnRate = persistedState.investmentReturnRate ?? 12;
+        }
+        if (version < 5 && persistedState) {
+          // Existing users default to 'local' — cloud sync is opt-in.
+          persistedState.storageMode = persistedState.storageMode ?? "local";
         }
         return persistedState;
       },

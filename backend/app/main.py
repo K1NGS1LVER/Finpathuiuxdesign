@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.penny import router as penny_router
+from app.api.profile import router as profile_router
 from app.api.simulate import router as simulate_router
 from app.config import settings
 from app.services.supabase_db import expire_stale_proposals
@@ -59,6 +60,7 @@ app.add_middleware(
 )
 
 app.include_router(penny_router)
+app.include_router(profile_router)
 app.include_router(simulate_router)
 
 

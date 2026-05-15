@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Sun, Moon, Menu, LogOut, User } from "lucide-react";
+import { Sun, Moon, Menu, LogOut, User, Settings as SettingsIcon } from "lucide-react";
 import { useAuthStore } from '@/lib/auth-store';
 import { useFinPathStore } from '@/lib/store';
 import { useNavigate } from "react-router";
@@ -154,6 +154,16 @@ export default function Header({
 
               {/* Actions */}
               <div className="p-2">
+                <button
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate("/settings");
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all text-card-foreground font-body hover:bg-surface-hover"
+                >
+                  <SettingsIcon size={18} className="icon-wireframe" />
+                  <span className="text-sm font-medium">Settings</span>
+                </button>
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all text-red-text font-body hover:bg-red-subtle"
