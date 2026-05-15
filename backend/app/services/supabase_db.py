@@ -200,6 +200,68 @@ async def update_proposal_status(
         return None
 
 
+# ── profiles (Phase 4 — dual storage) ───────────────────────────
+async def get_profile(user_jwt: str | None, user_id: str) -> dict[str, Any] | None:
+    base = _rest_base()
+    if base is None or not user_jwt:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.get(
+                f"{base}/profiles",
+                headers=_user_headers(user_jwt),
+                params={
+                    "user_id": f"eq.{user_id}",
+                    "select": "user_id,data,storage_mode,schema_version,updated_at",
+                },
+            )
+            if r.status_code >= 400:
+                log.warning("get_profile failed %s %s", r.status_code, r.text[:200])
+                return None
+            rows = r.json() or []
+            return rows[0] if rows else None
+    except Exception:
+        log.exception("get_profile error")
+        return None
+
+
+async def upsert_profile(
+    user_jwt: str | None,
+    user_id: str,
+    data: dict[str, Any],
+    storage_mode: str,
+    schema_version: int = 3,
+) -> dict[str, Any] | None:
+    base = _rest_base()
+    if base is None or not user_jwt:
+        return None
+    body = {
+        "user_id": user_id,
+        "data": data,
+        "storage_mode": storage_mode,
+        "schema_version": schema_version,
+    }
+    headers = {
+        **_user_headers(user_jwt),
+        "Prefer": "return=representation,resolution=merge-duplicates",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(
+                f"{base}/profiles",
+                headers=headers,
+                json=body,
+            )
+            if r.status_code >= 400:
+                log.warning("upsert_profile failed %s %s", r.status_code, r.text[:200])
+                return None
+            rows = r.json() or []
+            return rows[0] if rows else None
+    except Exception:
+        log.exception("upsert_profile error")
+        return None
+
+
 async def expire_stale_proposals(max_age_hours: int = 24) -> int:
     """Service-role job — marks any pending proposal older than `max_age_hours` as expired."""
     base = _rest_base()

@@ -5,6 +5,9 @@
 /** Investment/debt payoff strategy */
 export type InvestmentStrategy = "avalanche" | "snowball";
 
+/** Where the user's FinancialProfile is persisted */
+export type StorageMode = "local" | "cloud";
+
 /** How to handle freed allocation when a goal completes */
 export type GoalCompletionAction = "reinvest" | "surplus";
 
@@ -201,4 +204,10 @@ export interface FinancialProfile {
    * pre-Phase-3 plan behavior for already-onboarded users.
    */
   investmentReturnRate: number;
+  /**
+   * Where the profile is persisted. 'local' (default) keeps everything in
+   * localStorage. 'cloud' additionally syncs to Supabase via /api/profile
+   * so the user can sign in from another browser/device.
+   */
+  storageMode: StorageMode;
 }

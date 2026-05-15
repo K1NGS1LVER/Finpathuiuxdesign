@@ -7,6 +7,8 @@
 import { create } from 'zustand';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { hydrateFromRemote, flushCloudSync, resetCloudSyncCache } from './cloud-sync';
+import { useFinPathStore } from './store';
 
 const LOCAL_STORE_KEY = 'finpath-store';
 
@@ -140,9 +142,23 @@ export const useAuthStore = create<AuthState>((set) => ({
       supabase.auth.onAuthStateChange((event, session) => {
         set({ user: session?.user ?? null, session: session ?? null });
         if (event === 'SIGNED_IN' && session?.user) {
-          void migrateLocalToCloud(session.user.id);
+          void (async () => {
+            await migrateLocalToCloud(session.user.id);
+            // Phase 4: if user already opted into cloud, pull latest from remote.
+            if (useFinPathStore.getState().storageMode === 'cloud') {
+              await hydrateFromRemote();
+            }
+          })();
+        }
+        if (event === 'SIGNED_OUT') {
+          resetCloudSyncCache();
         }
       });
+    }
+
+    // Phase 4: if we already have a session at boot, kick a hydrate.
+    if (data.session?.user && useFinPathStore.getState().storageMode === 'cloud') {
+      void hydrateFromRemote();
     }
   },
 
@@ -203,6 +219,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
+    // Flush any pending cloud sync before tearing down the session.
+    if (useFinPathStore.getState().storageMode === 'cloud') {
+      await flushCloudSync().catch(() => undefined);
+    }
+    resetCloudSyncCache();
+
     if (isAuthMockMode || !isSupabaseConfigured) {
       set({ user: null, session: null });
       return;

@@ -18,21 +18,22 @@ import Month from "./screens/Month";
 import Scenarios from "./screens/Scenarios";
 import Progress from "./screens/Progress";
 import Celebrate from "./screens/Celebrate";
+import Settings from "./screens/Settings";
 import Auth from "./screens/Auth";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import PennyPanel from "./components/PennyPanel";
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
+import { initCloudSync } from '@/lib/cloud-sync';
+import { useTheme } from '@/lib/theme';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageTransition from './components/PageTransition';
 import ScrollToTop from "./components/ScrollToTop";
 
 function AppContent() {
-  const [isDark, setIsDark] = useState(() => {
-    const stored = localStorage.getItem("finpath-mode");
-    return stored === "light" ? false : true;
-  });
+  const { isDark, setMode } = useTheme();
+  const setIsDark = (next: boolean) => setMode(next ? "dark" : "light");
   const [pennyOpen, setPennyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -54,12 +55,8 @@ function AppContent() {
   // Initialize auth on mount.
   useEffect(() => {
     initialize();
+    initCloudSync();
   }, [initialize]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-    localStorage.setItem("finpath-mode", isDark ? "dark" : "light");
-  }, [isDark]);
 
   useEffect(() => {
     if (!onboarded) return;
@@ -232,6 +229,16 @@ function AppContent() {
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
                         <Celebrate />
+                      </PageTransition>
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Settings />
                       </PageTransition>
                     </ErrorBoundary>
                   }
