@@ -17,8 +17,10 @@ export async function mockPenny(page: Page): Promise<void> {
 /** Mock POST /api/penny/stream — returns a minimal SSE sequence. */
 export async function mockPennyStream(page: Page): Promise<void> {
   await page.route('**/api/penny/stream', (route) => {
+    // Backend _sse_format JSON-encodes data; for a token the payload is a JSON string.
+    // PennyPanel: data = JSON.parse(ev.data) → string, then String(data) = the string.
     const body = [
-      'event: token\ndata: {"token":"Your savings rate looks healthy."}\n\n',
+      'event: token\ndata: "Your savings rate looks healthy."\n\n',
       'event: done\ndata: {}\n\n',
     ].join('');
     route.fulfill({
