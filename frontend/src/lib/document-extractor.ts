@@ -106,13 +106,15 @@ function extractAmounts(text: string): { label: string; amount: number }[] {
   const results: { label: string; amount: number }[] = [];
   
   // Pattern: "Label ... ₹XX,XXX" or "Label ... Rs. XX,XXX" or "Label: XX,XXX"
+  // Label class is anchored on a leading letter and bounded to 60 chars to
+  // prevent catastrophic backtracking (ReDoS) on adversarial inputs.
   const patterns = [
     // ₹ or Rs followed by number
-    /([A-Za-z\s\/\-().]+?)[\s:]*[₹]\s*([\d,]+(?:\.\d{1,2})?)/g,
-    /([A-Za-z\s\/\-().]+?)[\s:]*Rs\.?\s*([\d,]+(?:\.\d{1,2})?)/gi,
-    /([A-Za-z\s\/\-().]+?)[\s:]*INR\s*([\d,]+(?:\.\d{1,2})?)/gi,
+    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]*[₹]\s*([\d,]+(?:\.\d{1,2})?)/g,
+    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]*Rs\.?\s*([\d,]+(?:\.\d{1,2})?)/gi,
+    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]*INR\s*([\d,]+(?:\.\d{1,2})?)/gi,
     // Label followed by number (common in tables)
-    /([A-Za-z\s\/\-().]+?)[\s:]+(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)\b/g,
+    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]+(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)\b/g,
   ];
   
   for (const pattern of patterns) {
@@ -301,9 +303,6 @@ export async function extractFromDocument(
         summary: 'Could not extract any readable text from this document. The file may be scanned poorly or empty.',
       };
     }
-    
-    console.log('[DocumentExtractor] Extracted text length:', rawText.length);
-    console.log('[DocumentExtractor] First 500 chars:', rawText.substring(0, 500));
     
     // Step 3: Try to identify document type and extract data
     if (context === 'income') {

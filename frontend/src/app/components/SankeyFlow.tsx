@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import { Rectangle, Layer } from 'recharts';
+import { formatInr } from '@/lib/format';
 
 export type SankeyNodePayload = {
   name: string;
   value?: number;
 };
-
-export const formatInr = (value: number) =>
-  `₹${Math.round(Math.max(0, value)).toLocaleString('en-IN')}`;
 
 export function resolveCssVar(name: string): string {
   if (typeof document === 'undefined') return '#6366f1';

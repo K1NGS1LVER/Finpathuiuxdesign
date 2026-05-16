@@ -495,6 +495,7 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
                   setMonthlySavings(p.monthly);
                   setReturnRate(p.rate);
                   setHorizon(p.years);
+                  setRisk(rateToRiskKey(p.rate));
                 }}
                 className={`preset-btn card-hover${isActive ? " active" : ""}`}
                 aria-pressed={isActive}

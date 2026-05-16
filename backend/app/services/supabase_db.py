@@ -9,6 +9,7 @@ without a real Supabase project.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -18,6 +19,30 @@ import httpx
 from app.config import settings
 
 log = logging.getLogger(__name__)
+
+_client: httpx.AsyncClient | None = None
+_client_lock = asyncio.Lock()
+
+
+async def get_client() -> httpx.AsyncClient:
+    """Return a process-wide pooled AsyncClient. Lazily created."""
+    global _client
+    if _client is not None and not _client.is_closed:
+        return _client
+    async with _client_lock:
+        if _client is None or _client.is_closed:
+            _client = httpx.AsyncClient(
+                timeout=15,
+                limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
+            )
+    return _client
+
+
+async def close_client() -> None:
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+    _client = None
 
 
 def _rest_base() -> str | None:
@@ -67,14 +92,14 @@ async def insert_chat_message(
         "tool_results": tool_results,
     }
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.post(
-                f"{base}/chat_history",
-                headers=_user_headers(user_jwt),
-                json=body,
-            )
-            if r.status_code >= 400:
-                log.warning("insert_chat_message failed %s %s", r.status_code, r.text[:200])
+        client = await get_client()
+        r = await client.post(
+            f"{base}/chat_history",
+            headers=_user_headers(user_jwt),
+            json=body,
+        )
+        if r.status_code >= 400:
+            log.warning("insert_chat_message failed %s %s", r.status_code, r.text[:200])
     except Exception:
         log.exception("insert_chat_message error")
 
@@ -88,23 +113,23 @@ async def list_chat_history(
     if base is None or not user_jwt:
         return []
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(
-                f"{base}/chat_history",
-                headers=_user_headers(user_jwt),
-                params={
-                    "user_id": f"eq.{user_id}",
-                    "order": "created_at.desc",
-                    "limit": str(limit),
-                    "select": "id,role,content,tool_calls,tool_results,created_at",
-                },
-            )
-            if r.status_code >= 400:
-                log.warning("list_chat_history failed %s %s", r.status_code, r.text[:200])
-                return []
-            rows = r.json() or []
-            rows.reverse()  # oldest → newest for UI replay
-            return rows
+        client = await get_client()
+        r = await client.get(
+            f"{base}/chat_history",
+            headers=_user_headers(user_jwt),
+            params={
+                "user_id": f"eq.{user_id}",
+                "order": "created_at.desc",
+                "limit": str(limit),
+                "select": "id,role,content,tool_calls,tool_results,created_at",
+            },
+        )
+        if r.status_code >= 400:
+            log.warning("list_chat_history failed %s %s", r.status_code, r.text[:200])
+            return []
+        rows = r.json() or []
+        rows.reverse()  # oldest → newest for UI replay
+        return rows
     except Exception:
         log.exception("list_chat_history error")
         return []
@@ -132,17 +157,17 @@ async def insert_proposal(
     if proposal_id:
         body["id"] = proposal_id
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.post(
-                f"{base}/proposals",
-                headers=_user_headers(user_jwt),
-                json=body,
-            )
-            if r.status_code >= 400:
-                log.warning("insert_proposal failed %s %s", r.status_code, r.text[:200])
-                return None
-            rows = r.json()
-            return rows[0] if isinstance(rows, list) and rows else None
+        client = await get_client()
+        r = await client.post(
+            f"{base}/proposals",
+            headers=_user_headers(user_jwt),
+            json=body,
+        )
+        if r.status_code >= 400:
+            log.warning("insert_proposal failed %s %s", r.status_code, r.text[:200])
+            return None
+        rows = r.json()
+        return rows[0] if isinstance(rows, list) and rows else None
     except Exception:
         log.exception("insert_proposal error")
         return None
@@ -153,16 +178,16 @@ async def get_proposal(user_jwt: str | None, proposal_id: str) -> dict[str, Any]
     if base is None or not user_jwt:
         return None
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(
-                f"{base}/proposals",
-                headers=_user_headers(user_jwt),
-                params={"id": f"eq.{proposal_id}", "select": "*"},
-            )
-            if r.status_code >= 400:
-                return None
-            rows = r.json() or []
-            return rows[0] if rows else None
+        client = await get_client()
+        r = await client.get(
+            f"{base}/proposals",
+            headers=_user_headers(user_jwt),
+            params={"id": f"eq.{proposal_id}", "select": "*"},
+        )
+        if r.status_code >= 400:
+            return None
+        rows = r.json() or []
+        return rows[0] if rows else None
     except Exception:
         log.exception("get_proposal error")
         return None
@@ -183,18 +208,18 @@ async def update_proposal_status(
         "resolved_at": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.patch(
-                f"{base}/proposals",
-                headers=_user_headers(user_jwt),
-                params={"id": f"eq.{proposal_id}", "status": "eq.pending"},
-                json=body,
-            )
-            if r.status_code >= 400:
-                log.warning("update_proposal_status failed %s %s", r.status_code, r.text[:200])
-                return None
-            rows = r.json() or []
-            return rows[0] if rows else None
+        client = await get_client()
+        r = await client.patch(
+            f"{base}/proposals",
+            headers=_user_headers(user_jwt),
+            params={"id": f"eq.{proposal_id}", "status": "eq.pending"},
+            json=body,
+        )
+        if r.status_code >= 400:
+            log.warning("update_proposal_status failed %s %s", r.status_code, r.text[:200])
+            return None
+        rows = r.json() or []
+        return rows[0] if rows else None
     except Exception:
         log.exception("update_proposal_status error")
         return None
@@ -206,20 +231,20 @@ async def get_profile(user_jwt: str | None, user_id: str) -> dict[str, Any] | No
     if base is None or not user_jwt:
         return None
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(
-                f"{base}/profiles",
-                headers=_user_headers(user_jwt),
-                params={
-                    "user_id": f"eq.{user_id}",
-                    "select": "user_id,data,storage_mode,schema_version,updated_at",
-                },
-            )
-            if r.status_code >= 400:
-                log.warning("get_profile failed %s %s", r.status_code, r.text[:200])
-                return None
-            rows = r.json() or []
-            return rows[0] if rows else None
+        client = await get_client()
+        r = await client.get(
+            f"{base}/profiles",
+            headers=_user_headers(user_jwt),
+            params={
+                "user_id": f"eq.{user_id}",
+                "select": "user_id,data,storage_mode,schema_version,updated_at",
+            },
+        )
+        if r.status_code >= 400:
+            log.warning("get_profile failed %s %s", r.status_code, r.text[:200])
+            return None
+        rows = r.json() or []
+        return rows[0] if rows else None
     except Exception:
         log.exception("get_profile error")
         return None
@@ -246,17 +271,17 @@ async def upsert_profile(
         "Prefer": "return=representation,resolution=merge-duplicates",
     }
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.post(
-                f"{base}/profiles",
-                headers=headers,
-                json=body,
-            )
-            if r.status_code >= 400:
-                log.warning("upsert_profile failed %s %s", r.status_code, r.text[:200])
-                return None
-            rows = r.json() or []
-            return rows[0] if rows else None
+        client = await get_client()
+        r = await client.post(
+            f"{base}/profiles",
+            headers=headers,
+            json=body,
+        )
+        if r.status_code >= 400:
+            log.warning("upsert_profile failed %s %s", r.status_code, r.text[:200])
+            return None
+        rows = r.json() or []
+        return rows[0] if rows else None
     except Exception:
         log.exception("upsert_profile error")
         return None
@@ -273,21 +298,21 @@ async def expire_stale_proposals(max_age_hours: int = 24) -> int:
         "resolved_at": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.patch(
-                f"{base}/proposals",
-                headers=_service_headers(),
-                params={
-                    "status": "eq.pending",
-                    "created_at": f"lt.{cutoff}",
-                },
-                json=body,
-            )
-            if r.status_code >= 400:
-                log.warning("expire_stale_proposals failed %s %s", r.status_code, r.text[:200])
-                return 0
-            rows = r.json() or []
-            return len(rows)
+        client = await get_client()
+        r = await client.patch(
+            f"{base}/proposals",
+            headers=_service_headers(),
+            params={
+                "status": "eq.pending",
+                "created_at": f"lt.{cutoff}",
+            },
+            json=body,
+        )
+        if r.status_code >= 400:
+            log.warning("expire_stale_proposals failed %s %s", r.status_code, r.text[:200])
+            return 0
+        rows = r.json() or []
+        return len(rows)
     except Exception:
         log.exception("expire_stale_proposals error")
         return 0

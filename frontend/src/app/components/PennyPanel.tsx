@@ -11,6 +11,8 @@ interface PennyPanelProps {
   onClose: () => void;
 }
 
+const MAX_MESSAGE_CHARS = 4000;
+
 interface Message {
   id: string;
   role: 'user' | 'penny';
@@ -119,7 +121,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   }, [open, userId, hydratedForUser]);
 
   const handleSend = useCallback(async () => {
-    const trimmed = input.trim();
+    const trimmed = input.trim().slice(0, MAX_MESSAGE_CHARS);
     if (!trimmed || isLoading) return;
 
     if (!onboarded && income.total === 0) {
@@ -300,10 +302,11 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           <div className="flex gap-2">
             <input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => setInput(e.target.value.slice(0, MAX_MESSAGE_CHARS))}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder="Ask Penny anything..."
               disabled={isLoading}
+              maxLength={MAX_MESSAGE_CHARS}
               className="flex-1 px-4 py-2.5 rounded-xl outline-none border border-[var(--border)] focus:border-[var(--accent)] transition-colors disabled:opacity-50 input-surface"
             />
             <button

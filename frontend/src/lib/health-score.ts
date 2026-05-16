@@ -66,7 +66,6 @@ function scoreIncomeStability(income: IncomeProfile): number {
   const sources = [income.primary, income.secondary, income.passive, income.variable].filter(s => s > 0).length;
   if (income.total <= 0) return 0;
 
-  if (sources >= 4) return 25;
   if (sources >= 3) return 25;
   if (sources >= 2) return 20;
   if (income.primary > 0) return 15;

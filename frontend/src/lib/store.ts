@@ -714,7 +714,7 @@ export const useFinPathStore = create<FinPathStore>()(
         if (incoming.lastUpdated === undefined) {
           incoming.lastUpdated = Date.now();
         }
-        set(incoming as any);
+        set((state) => ({ ...state, ...incoming }));
         if (opts?.recompute !== false) {
           const store = get();
           store.computeHealthScore();

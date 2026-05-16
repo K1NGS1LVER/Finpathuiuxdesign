@@ -13,7 +13,12 @@ const EVENT_NAME = "finpath:theme-change";
 
 export function getTheme(): ThemeMode {
   try {
-    return localStorage.getItem(STORAGE_KEY) === "light" ? "light" : "dark";
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+    if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+      return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+    return "dark";
   } catch {
     return "dark";
   }

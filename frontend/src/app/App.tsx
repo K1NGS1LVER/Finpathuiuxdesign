@@ -27,6 +27,7 @@ import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import { initCloudSync } from '@/lib/cloud-sync';
 import { useTheme } from '@/lib/theme';
+import { formatInr } from '@/lib/format';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageTransition from './components/PageTransition';
 import ScrollToTop from "./components/ScrollToTop";
@@ -106,8 +107,6 @@ function AppContent() {
   const showLayout = !isPublicPage;
   const activeDecision = pendingGoalDecisions[0];
   const hasRemainingGoals = goals.some((goal) => goal.status !== "complete");
-  const formatInr = (value: number) =>
-    `₹${Math.round(Math.max(0, value)).toLocaleString("en-IN")}`;
 
   // If authenticated + onboarded user visits landing or auth, redirect to dashboard
   if (

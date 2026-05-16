@@ -1,4 +1,5 @@
-export { formatInr } from '@/app/components/SankeyFlow';
+export const formatInr = (value: number): string =>
+  `₹${Math.round(Math.max(0, value)).toLocaleString('en-IN')}`;
 
 export function formatInrCompact(n: number): string {
   const abs = Math.abs(n);
