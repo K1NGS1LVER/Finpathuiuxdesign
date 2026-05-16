@@ -6,6 +6,8 @@ __pycache__/
 .env
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+pyrightconfig.json
 tests/
 dist/
 build/
