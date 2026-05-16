@@ -2,10 +2,12 @@
 
 Phase 2 endpoint surface used by the future LangGraph agent (Phase 3) as
 tool implementations. All routes require auth via Supabase JWT
-(or AUTH_MOCK during dev).
+(or AUTH_MOCK during dev). Engine calls are CPU-bound so they run in
+the default threadpool to avoid blocking the event loop.
 """
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -33,12 +35,12 @@ class ScenarioPlanRequest(BaseModel):
 
 @router.post("/plan")
 async def simulate_plan(req: PlanRequest) -> dict[str, Any]:
-    return generate_plan(req.input)
+    return await asyncio.to_thread(generate_plan, req.input)
 
 
 @router.post("/scenario")
 async def simulate_scenario(req: ScenarioPlanRequest) -> dict[str, Any]:
-    return generate_scenario_plan(req.base, req.modifications)
+    return await asyncio.to_thread(generate_scenario_plan, req.base, req.modifications)
 
 
 # ── debt strategies ─────────────────────────────────────────────
@@ -49,17 +51,17 @@ class DebtRequest(BaseModel):
 
 @router.post("/debt/avalanche")
 async def simulate_avalanche(req: DebtRequest) -> dict[str, Any]:
-    return avalanche(req.debts, req.extra)
+    return await asyncio.to_thread(avalanche, req.debts, req.extra)
 
 
 @router.post("/debt/snowball")
 async def simulate_snowball(req: DebtRequest) -> dict[str, Any]:
-    return snowball(req.debts, req.extra)
+    return await asyncio.to_thread(snowball, req.debts, req.extra)
 
 
 @router.post("/debt/compare")
 async def simulate_debt_compare(req: DebtRequest) -> dict[str, Any]:
-    return compare_strategies(req.debts, req.extra)
+    return await asyncio.to_thread(compare_strategies, req.debts, req.extra)
 
 
 # ── health score ────────────────────────────────────────────────
@@ -71,4 +73,4 @@ class HealthRequest(BaseModel):
 
 @router.post("/health")
 async def simulate_health(req: HealthRequest) -> dict[str, Any]:
-    return calculate_health_score(req.input)
+    return await asyncio.to_thread(calculate_health_score, req.input)

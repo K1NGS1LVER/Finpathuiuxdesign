@@ -29,10 +29,13 @@ log = logging.getLogger(__name__)
 router = APIRouter()
 
 
+MAX_MESSAGE_CHARS = 4000
+
+
 class PennyChatRequest(BaseModel):
-    message: str = Field(min_length=1)
+    message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     profile: dict[str, Any]
-    context: str | None = None
+    context: str | None = Field(default=None, max_length=200)
 
 
 class PennyChatResponse(BaseModel):
@@ -77,7 +80,7 @@ async def chat(
         )
     except Exception as exc:
         log.exception("Groq API error")
-        raise HTTPException(status_code=500, detail=str(exc) or "Failed to get response from Penny") from exc
+        raise HTTPException(status_code=502, detail="Penny is temporarily unavailable. Try again shortly.") from exc
 
     reply = ""
     if completion.choices and completion.choices[0].message:
@@ -91,7 +94,7 @@ async def chat(
 
 # ── Phase 3: SSE streaming agent ─────────────────────────────────
 class PennyStreamRequest(BaseModel):
-    message: str = Field(min_length=1)
+    message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     profile: dict[str, Any]
     history: list[dict[str, str]] | None = None
 

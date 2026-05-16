@@ -26,6 +26,7 @@ import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
+import { compareStrategies } from "@/lib/debt-strategies";
 import confetti from "canvas-confetti";
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -92,8 +93,10 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
   const activeGoals = goals.filter((g) => g.currentAmount < g.targetAmount).slice(0, 3);
   const nextGoal    = goals.find((g) => !g.checkedThisMonth && g.status !== "complete");
 
-  const streakDays = Math.min(30, 7 + goals.filter((g) => g.status === "complete").length * 5);
   const currentNetWorth = savings + investments + goals.reduce((sum, g) => sum + Math.max(0, g.currentAmount), 0);
+
+  const debtComparison = debts.items.length > 0 ? compareStrategies(debts.items, 0) : null;
+  const interestSaved = debtComparison?.interestSaved ?? 0;
 
   const badges = [
     { name: "First Step", icon: Rocket as LucideIcon, color: "var(--accent)", desc: "Completed onboarding", earned: income.total > 0 },
@@ -102,7 +105,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
     { name: "In the Green", icon: Leaf as LucideIcon, color: "var(--tertiary-accent)", desc: "Positive monthly surplus", earned: surplus > 0 },
     { name: "Debt Crusher", icon: Zap as LucideIcon, color: "var(--amber)", desc: "Pay off first debt", earned: debts.items.some((d) => d.remainingMonths <= 0) },
     { name: "Goal Achiever", icon: Trophy as LucideIcon, color: "var(--amber)", desc: "Complete first goal", earned: goals.some((g) => g.status === "complete") },
-    { name: "Streak Master", icon: Flame as LucideIcon, color: "var(--red)", desc: "30-day check-in streak", earned: streakDays >= 30 },
+    { name: "Streak Master", icon: Flame as LucideIcon, color: "var(--red)", desc: "All goals checked this month", earned: goals.length > 0 && goals.every((g) => g.checkedThisMonth || g.status === "complete") },
     { name: "Wealth Builder", icon: Gem as LucideIcon, color: "var(--tertiary-accent)", desc: "Net worth above ₹5L", earned: currentNetWorth >= 500000 },
   ];
 
@@ -112,9 +115,13 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
     health >= 40 ? { t: "Steady foundation",            c: "var(--secondary)" }            :
                    { t: "Let's build momentum",         c: "var(--amber-text)" };
 
+  const debtPct = income.total > 0 ? Math.round((totalDebt / income.total) * 100) : 0;
+  const debtInsight = interestSaved > 0
+    ? `Debt takes ${debtPct}% of income. Switching to avalanche could save ${formatInr(interestSaved)} in interest.`
+    : `Debt takes ${debtPct}% of income. Add interest rates to debt items to see strategy comparisons.`;
   const insights = [
     { icon: "PiggyBank",     text: `You're saving ${income.total > 0 ? Math.round((surplus / income.total) * 100) : 0}% of income — try moving ₹5,000 from lifestyle to hit 25%.` },
-    { icon: "AlertTriangle", text: `Debt takes ${income.total > 0 ? Math.round((totalDebt / income.total) * 100) : 0}% of income. Switching to avalanche could save ₹18,400 in interest.` },
+    { icon: "AlertTriangle", text: debtInsight },
     { icon: "Sparkles",      text: `You have ${activeGoals.length} active goal${activeGoals.length !== 1 ? "s" : ""} on track for this month.` },
   ];
 

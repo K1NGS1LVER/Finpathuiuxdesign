@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Sun, Moon, Menu, LogOut, User, Settings as SettingsIcon } from "lucide-react";
 import { useAuthStore } from '@/lib/auth-store';
 import { useFinPathStore } from '@/lib/store';
+import { formatInr } from '@/lib/format';
 import { useNavigate } from "react-router";
 
 interface HeaderProps {
@@ -17,7 +18,7 @@ export default function Header({
 }: HeaderProps) {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
-  const resetStore = useFinPathStore((s) => s.reset);
+  const resetStore = useFinPathStore((s) => s.resetProfile);
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
   const navigate = useNavigate();
@@ -41,8 +42,7 @@ export default function Header({
   const handleSignOut = async () => {
     setDropdownOpen(false);
     await signOut();
-    // Clear financial data on logout
-    if (resetStore) resetStore();
+    resetStore();
     navigate("/");
   };
 
@@ -53,8 +53,6 @@ export default function Header({
     (sum, decision) => sum + Math.max(0, decision.freedMonthlyAmount || 0),
     0,
   );
-  const formatInr = (value: number) =>
-    `₹${Math.round(Math.max(0, value)).toLocaleString("en-IN")}`;
 
   return (
     <header

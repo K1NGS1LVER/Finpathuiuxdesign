@@ -11,8 +11,8 @@ import {
   CustomNode,
   CustomLink,
   usePalette,
-  formatInr,
 } from '@/app/components/SankeyFlow';
+import { formatInr } from '@/lib/format';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 

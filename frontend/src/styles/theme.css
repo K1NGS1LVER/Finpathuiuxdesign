@@ -1320,14 +1320,6 @@ a.bento-card:hover,
   font-family: var(--font-body);
 }
 
-/* ── Warning banner ── */
-.warning-banner {
-  background: var(--amber-subtle);
-  color: var(--amber-text);
-  border: 1px solid var(--amber);
-  font-family: var(--font-body);
-}
-
 /* ── Breakdown panel container ── */
 .breakdown-panel {
   background: var(--surface-tint);

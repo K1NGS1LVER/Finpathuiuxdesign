@@ -40,9 +40,11 @@ def anonymize_profile(profile: dict[str, Any]) -> dict[str, Any]:
         "savings": profile.get("savings", 0),
         "investments": profile.get("investments", 0),
         "emergencyFund": profile.get("emergencyFund", 0),
+        # Goal name is dropped — it may contain PII ("Rahul's wedding").
+        # Penny gets category + priority + index as identifier instead.
         "goals": [
             {
-                "name": g.get("name"),
+                "id": f"goal-{i + 1}",
                 "targetAmount": g.get("targetAmount", 0),
                 "currentAmount": g.get("currentAmount", 0),
                 "timelineMonths": g.get("timelineMonths", 0),
@@ -50,7 +52,7 @@ def anonymize_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 "status": g.get("status"),
                 "category": g.get("category"),
             }
-            for g in goals
+            for i, g in enumerate(goals)
         ],
         "healthScore": (
             {

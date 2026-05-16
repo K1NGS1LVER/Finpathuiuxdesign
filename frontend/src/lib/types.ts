@@ -161,16 +161,6 @@ export interface ChatMessage {
   timestamp: number;
 }
 
-/** Scenario for what-if analysis */
-export interface Scenario {
-  id: string;
-  name: string;
-  type: "salary" | "expense" | "bonus" | "market";
-  /** Percentage change or absolute amount */
-  value: number;
-  isPercentage: boolean;
-}
-
 /** Complete user financial profile stored in Zustand */
 export interface FinancialProfile {
   /** Has the user completed onboarding? */
