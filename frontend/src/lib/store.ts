@@ -300,13 +300,8 @@ function isDebtGoalComplete(goal: Goal | undefined): boolean {
   return !!(goal && goal.category === "debt" && goal.status === "complete");
 }
 
-function resolveDebtsFromGoals(debts: DebtProfile, goals: Goal[]): DebtProfile {
-  const normalizedDebts = normalizeDebtProfile(debts);
-  const debtGoal = goals.find((goal) => goal.category === "debt");
-  if (isDebtGoalComplete(debtGoal) && !hasDebt(normalizedDebts)) {
-    return emptyDebtProfile();
-  }
-  return normalizedDebts;
+function resolveDebtsFromGoals(debts: DebtProfile, _goals: Goal[]): DebtProfile {
+  return normalizeDebtProfile(debts);
 }
 
 function makeDebtGoal(
