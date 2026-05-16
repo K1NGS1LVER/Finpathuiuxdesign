@@ -15,7 +15,7 @@ test.describe('navigation', () => {
   });
 
   test('sidebar Scenarios link navigates to /scenarios', async ({ page }) => {
-    await page.getByRole('button', { name: 'Scenarios' }).click();
+    await page.getByRole('button', { name: 'Scenarios', exact: true }).click();
     await expect(page).toHaveURL(/\/scenarios/);
     await expect(page.getByRole('heading', { name: 'Scenarios' })).toBeVisible();
   });
