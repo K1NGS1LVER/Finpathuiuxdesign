@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 
+/** Available for specs that call the non-streaming /api/penny endpoint. */
 /** Mock POST /api/penny — returns a fixed non-streaming reply. */
 export async function mockPenny(page: Page): Promise<void> {
   await page.route('**/api/penny', (route) => {
@@ -31,6 +32,7 @@ export async function mockPennyStream(page: Page): Promise<void> {
   });
 }
 
+/** Available for specs that call /api/simulate/* endpoints. */
 /** Mock all /api/simulate/* endpoints — return empty-but-valid shapes. */
 export async function mockSimulate(page: Page): Promise<void> {
   await page.route('**/api/simulate/**', (route) => {

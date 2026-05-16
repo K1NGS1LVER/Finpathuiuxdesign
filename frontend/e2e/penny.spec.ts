@@ -27,9 +27,6 @@ test.describe('penny panel', () => {
     await expect(input).toBeEnabled();
     // Send button should also be present (disabled until text entered)
     // Just verify it exists in the DOM — aria-label not set, but it has Send icon
-    await expect(input).toBeFocused().catch(() => {
-      // focus is best-effort; the visible+enabled check above is sufficient
-    });
   });
 
   test('sending a message shows a reply', async ({ page }) => {

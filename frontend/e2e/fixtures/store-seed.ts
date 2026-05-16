@@ -104,6 +104,7 @@ export const SEEDED_STORE = {
     plan: null,
     lastUpdated: 1747400000000,
   },
+  // Must match STORE_PERSIST_VERSION in frontend/src/lib/store.ts — bump both together.
   version: 5,
 };
 
