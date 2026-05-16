@@ -9,3 +9,5 @@ install.ps1
 css_audit.md
 .vscode/
 todo.md
+playwright-report/
+test-results/
