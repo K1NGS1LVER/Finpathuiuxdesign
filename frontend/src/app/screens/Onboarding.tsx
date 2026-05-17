@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Sun, Moon, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useOnboardingForm } from "./onboarding/useOnboardingForm";
@@ -26,15 +27,15 @@ const topFade = {
     "linear-gradient(to bottom, var(--background-solid) 0%, var(--background-solid) 20%, color-mix(in srgb, var(--background-solid) 80%, transparent) 40%, color-mix(in srgb, var(--background-solid) 40%, transparent) 65%, transparent 100%)",
 } as React.CSSProperties;
 
-const bottomFade = {
-  background:
-    "linear-gradient(to top, var(--background-solid) 0%, var(--background-solid) 20%, color-mix(in srgb, var(--background-solid) 80%, transparent) 40%, color-mix(in srgb, var(--background-solid) 40%, transparent) 65%, transparent 100%)",
-} as React.CSSProperties;
-
 export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
   const navigate = useNavigate();
   const form = useOnboardingForm();
   const currentMeta = STEP_META[form.step];
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [form.step]);
 
   const handleFileForIncome = (e: React.ChangeEvent<HTMLInputElement>) => {
     form.handleFileUpload(e, "income");
@@ -68,9 +69,10 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       </div>
 
       {/* Scrollable form — full viewport, scrolls behind glass overlays */}
-      <div className="absolute inset-0 overflow-y-auto z-10">
-        <div className="min-h-full max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pt-36 md:pt-40 pb-36 md:pb-40 flex flex-col">
-          <div className="bento-card !p-5 md:!p-7 my-auto">
+      <div ref={scrollRef} className="absolute inset-0 overflow-y-auto z-10">
+        <div className="min-h-full max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pt-36 md:pt-40 pb-12 md:pb-16 flex flex-col">
+          <div className="my-auto">
+          <div className="bento-card !p-5 md:!p-7">
             <div className="text-center mb-5 md:mb-6">
               <h2 className="text-2xl md:text-4xl font-bold slashed-zero leading-tight text-card-foreground font-display">
                 {currentMeta.title}
@@ -149,6 +151,16 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               />
             )}
           </div>
+
+          {/* Nav buttons — in-flow with the form, scroll with content */}
+          <div className="mt-6 md:mt-8">
+            <OnboardingNavigation
+              step={form.step} totalSteps={form.TOTAL_STEPS} canAdvance={form.canAdvance()}
+              onNext={() => { form.step < form.TOTAL_STEPS - 1 ? form.setStep(form.step + 1) : form.submitOnboarding(); }}
+              onBack={form.goBack}
+            />
+          </div>
+          </div>
         </div>
       </div>
 
@@ -158,18 +170,6 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
       {/* Progress bar — sits above glass, interactable */}
       <div className="absolute top-0 inset-x-0 z-30 max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pt-6 md:pt-8 pb-2">
         <OnboardingProgressBar currentStep={form.step} totalSteps={form.TOTAL_STEPS} />
-      </div>
-
-      {/* Bottom fade overlay — content dissolves into background near nav buttons */}
-      <div className="absolute bottom-0 inset-x-0 z-20 h-36 md:h-40 pointer-events-none" style={bottomFade} />
-
-      {/* Nav buttons — sits above glass, interactable */}
-      <div className="absolute bottom-0 inset-x-0 z-30 max-w-xl md:max-w-2xl w-full mx-auto px-4 md:px-0 pb-4 md:pb-6 pt-2">
-        <OnboardingNavigation
-          step={form.step} totalSteps={form.TOTAL_STEPS} canAdvance={form.canAdvance()}
-          onNext={() => { form.step < form.TOTAL_STEPS - 1 ? form.setStep(form.step + 1) : form.submitOnboarding(); }}
-          onBack={form.goBack}
-        />
       </div>
 
       {/* Back to home + dark mode — above glass panels */}
