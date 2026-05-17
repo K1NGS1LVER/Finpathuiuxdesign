@@ -23,6 +23,9 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
+    /* TODO(strict): re-enable noUncheckedIndexedAccess + exactOptionalPropertyTypes
+       once the 125 pre-existing violations are addressed in store/onboarding-hook
+       decomposition phases. Tracked in plans/onboarding-loading-screen-needs-merry-wozniak.md */
   },
   "include": ["src"]
 }

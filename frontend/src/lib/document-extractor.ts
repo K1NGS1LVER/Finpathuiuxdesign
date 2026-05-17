@@ -110,11 +110,11 @@ function extractAmounts(text: string): { label: string; amount: number }[] {
   // prevent catastrophic backtracking (ReDoS) on adversarial inputs.
   const patterns = [
     // ₹ or Rs followed by number
-    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]*[₹]\s*([\d,]+(?:\.\d{1,2})?)/g,
-    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]*Rs\.?\s*([\d,]+(?:\.\d{1,2})?)/gi,
-    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]*INR\s*([\d,]+(?:\.\d{1,2})?)/gi,
+    /([A-Za-z][A-Za-z\s/\-().]{0,58})[\s:]*[₹]\s*([\d,]+(?:\.\d{1,2})?)/g,
+    /([A-Za-z][A-Za-z\s/\-().]{0,58})[\s:]*Rs\.?\s*([\d,]+(?:\.\d{1,2})?)/gi,
+    /([A-Za-z][A-Za-z\s/\-().]{0,58})[\s:]*INR\s*([\d,]+(?:\.\d{1,2})?)/gi,
     // Label followed by number (common in tables)
-    /([A-Za-z][A-Za-z\s\/\-().]{0,58})[\s:]+(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)\b/g,
+    /([A-Za-z][A-Za-z\s/\-().]{0,58})[\s:]+(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)\b/g,
   ];
   
   for (const pattern of patterns) {
