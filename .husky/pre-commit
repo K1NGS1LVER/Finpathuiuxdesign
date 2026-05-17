@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+# Husky-style pre-commit hook. Runs lint-staged in the frontend workspace
+# so only staged TS/JS/CSS/MD files get linted+formatted.
+
+cd "$(dirname -- "$0")/../frontend" || exit 1
+pnpm exec lint-staged
