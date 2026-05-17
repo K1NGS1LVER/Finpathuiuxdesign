@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useFinPathStore } from '@/lib/store';
-import confetti from "canvas-confetti";
+import { COMPLETION_HOLD_MS } from "./constants";
 
 export const GOAL_PRESETS = [
   { name: "Dream Bike", icon: "Bike", target: 120000, months: 18 },
@@ -30,6 +30,10 @@ export function useJourneyGoals() {
   const [customTarget, setCustomTarget] = useState("");
   const [customMonths, setCustomMonths] = useState("12");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [completingIds, setCompletingIds] = useState<string[]>([]);
+  const completionTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => () => { completionTimers.current.forEach(clearTimeout); }, []);
 
   const sortedGoals = useMemo(
     () =>
@@ -46,17 +50,41 @@ export function useJourneyGoals() {
     [sortedGoals],
   );
 
-  const monthlySurplus = income.total - expenses.total - debts.totalMonthly - monthlySurplusReserve;
-  const existingMonthlyNeed = activeGoals
-    .filter((g) => g.category !== "debt")
-    .reduce((sum, g) => sum + Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths)), 0);
+  const completedGoals = useMemo(
+    () => sortedGoals.filter((goal) => goal.status === "complete"),
+    [sortedGoals],
+  );
+
+  const handleRemoveCompleted = useCallback(() => {
+    for (const g of completedGoals) {
+      removeGoal(g.id);
+    }
+  }, [completedGoals, removeGoal]);
+
+  const monthlySurplus = useMemo(
+    () => income.total - expenses.total - debts.totalMonthly - monthlySurplusReserve,
+    [income.total, expenses.total, debts.totalMonthly, monthlySurplusReserve],
+  );
+  const existingMonthlyNeed = useMemo(
+    () => activeGoals
+      .filter((g) => g.category !== "debt")
+      .reduce((sum, g) => sum + Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths)), 0),
+    [activeGoals],
+  );
   const budgetRemaining = monthlySurplus - existingMonthlyNeed;
 
+  // Data-only: mutates store and schedules the completion-ring auto-clear.
+  // Visual side effects (confetti) are fired by the caller in Journey.tsx.
   const handleComplete = useCallback(
     (goalId: string) => {
       completeGoal(goalId);
       setSelectedGoalId(null);
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      setCompletingIds((prev) => [...prev, goalId]);
+      const t = setTimeout(
+        () => setCompletingIds((prev) => prev.filter((id) => id !== goalId)),
+        COMPLETION_HOLD_MS,
+      );
+      completionTimers.current.push(t);
     },
     [completeGoal],
   );
@@ -194,12 +222,15 @@ export function useJourneyGoals() {
     storeGoals,
     sortedGoals,
     activeGoals,
+    completedGoals,
+    handleRemoveCompleted,
     monthlySurplus,
     existingMonthlyNeed,
     budgetRemaining,
     selectedGoalId,
     setSelectedGoalId,
     selectedGoal,
+    completingIds,
     handleComplete,
     handleDelete,
     handlePriorityChange,

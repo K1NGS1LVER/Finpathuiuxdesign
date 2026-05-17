@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Wallet, ChevronDown, ChevronUp } from "lucide-react";
+import { useRef } from "react";
+import { Wallet } from "lucide-react";
 import type { IncomeProfile } from "@/lib/types";
+import { DRAG_CLICK_THRESHOLD } from "./constants";
 
 interface JourneyIncomeNodeProps {
   x: number;
@@ -8,10 +9,8 @@ interface JourneyIncomeNodeProps {
   dragging: boolean;
   income: IncomeProfile;
   formatCurrency: (amount: number) => string;
-  onPointerDown: (
-    e: React.MouseEvent | React.TouchEvent,
-    nodeId: string,
-  ) => void;
+  onPointerDown: (e: React.MouseEvent | React.TouchEvent, nodeId: string) => void;
+  onClick: () => void;
 }
 
 export default function JourneyIncomeNode({
@@ -21,30 +20,21 @@ export default function JourneyIncomeNode({
   income,
   formatCurrency,
   onPointerDown,
+  onClick,
 }: JourneyIncomeNodeProps) {
-  const [expanded, setExpanded] = useState(false);
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
   const sources = [
     { label: "Primary", value: income.primary || 0 },
     { label: "Secondary", value: income.secondary || 0 },
     { label: "Passive", value: income.passive || 0 },
     {
-      label: income.variablePercent > 0
-        ? `Variable (${income.variablePercent}%)`
-        : "Variable",
+      label: income.variablePercent > 0 ? `Variable (${income.variablePercent}%)` : "Variable",
       value: income.variable || 0,
     },
   ].filter((s) => s.value > 0);
 
-  const hasMultiple = sources.length > 1;
   const total = income.total || 0;
-
-  const handleToggle = (e: React.MouseEvent) => {
-    if (!dragging && hasMultiple) {
-      e.stopPropagation();
-      setExpanded((prev) => !prev);
-    }
-  };
 
   return (
     <div
@@ -55,94 +45,52 @@ export default function JourneyIncomeNode({
         width: 220,
         transition: dragging ? "none" : "transform 0.2s ease",
       }}
-      onMouseDown={(e) => onPointerDown(e, "income")}
-      onTouchStart={(e) => onPointerDown(e, "income")}
+      onMouseDown={(e) => {
+        dragStartPos.current = { x: e.clientX, y: e.clientY };
+        onPointerDown(e, "income");
+      }}
+      onTouchStart={(e) => {
+        if (e.touches.length > 0) {
+          dragStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        onPointerDown(e, "income");
+      }}
+      onMouseUp={(e) => {
+        if (dragStartPos.current) {
+          const moved = Math.hypot(e.clientX - dragStartPos.current.x, e.clientY - dragStartPos.current.y);
+          dragStartPos.current = null;
+          if (moved <= DRAG_CLICK_THRESHOLD) onClick();
+        }
+      }}
+      onTouchEnd={(e) => {
+        if (dragStartPos.current && e.changedTouches.length > 0) {
+          const t = e.changedTouches[0];
+          const moved = Math.hypot(t.clientX - dragStartPos.current.x, t.clientY - dragStartPos.current.y);
+          dragStartPos.current = null;
+          if (moved <= DRAG_CLICK_THRESHOLD) onClick();
+        }
+      }}
     >
       <div
         className="p-4 rounded-2xl bento-card"
         style={{
           border: "2px solid var(--accent)",
           boxShadow: "0 0 20px var(--secondary-accent-glow), var(--shadow-md)",
-          cursor: hasMultiple ? "pointer" : "grab",
+          cursor: "pointer",
         }}
-        onClick={handleToggle}
       >
-        <div className="flex items-start justify-between mb-3">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center journey-node-icon">
-            <Wallet size={24} className="icon-wireframe" />
-          </div>
-          {hasMultiple && (
-            <button
-              onClick={handleToggle}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--secondary)] hover:text-[var(--card-foreground)] hover:bg-[var(--surface-hover)] transition-colors"
-              aria-label={expanded ? "Collapse income breakdown" : "Expand income breakdown"}
-            >
-              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-          )}
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 journey-node-icon">
+          <Wallet size={24} className="icon-wireframe" />
         </div>
-
         <div className="font-bold mb-1 text-[var(--card-foreground)] font-body-family">
           Income
         </div>
         <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)] font-display-family slashed-zero">
           {formatCurrency(total)}
         </div>
-
-        {!expanded && (
-          <>
-            <div className="text-xs mb-2 text-[var(--secondary)] font-body-family">
-              {hasMultiple ? `${sources.length} streams` : "100% — Source"}
-            </div>
-            <div
-              className="h-1.5 rounded-full overflow-hidden"
-              style={{ backgroundColor: "var(--progress-inactive)" }}
-            >
-              <div
-                className="h-full rounded-full"
-                style={{ width: "100%", backgroundColor: "var(--accent)" }}
-              />
-            </div>
-          </>
-        )}
-
-        {expanded && hasMultiple && (
-          <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
-            {sources.map((s) => {
-              const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
-              return (
-                <div key={s.label}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                    <span style={{ fontSize: "var(--text-2xs)", color: "var(--secondary)", fontWeight: "var(--font-weight-semibold)" }}>
-                      {s.label}
-                    </span>
-                    <span style={{ fontSize: "var(--text-2xs)", color: "var(--card-foreground)", fontWeight: "var(--font-weight-semibold)" }} className="slashed-zero">
-                      {formatCurrency(s.value)} <span style={{ color: "var(--secondary)" }}>({pct}%)</span>
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      height: 4,
-                      borderRadius: "var(--radius-full)",
-                      background: "var(--progress-inactive)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${pct}%`,
-                        background: "var(--accent)",
-                        borderRadius: "var(--radius-full)",
-                        transition: "width 0.4s ease",
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="text-xs text-[var(--secondary)] font-body-family">
+          {sources.length > 1 ? `${sources.length} income streams` : "1 income source"}
+        </div>
       </div>
     </div>
   );
