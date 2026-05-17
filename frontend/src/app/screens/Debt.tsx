@@ -179,7 +179,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
 
     if (extraPayment > 0 && zeroExtraResult && timelineResult) {
       const monthsSaved = zeroExtraResult.totalMonths - timelineResult.totalMonths;
-      const interestDiff = zeroExtraResult.totalInterest - timelineResult.totalInterest;
+      const interestDiff = zeroExtraResult.totalInterestPaid - timelineResult.totalInterestPaid;
       if (monthsSaved > 0 || interestDiff > 0) {
         tips.push({
           icon: 'PiggyBank',
