@@ -1,22 +1,6 @@
-import { X, Shield, TrendingUp, Calendar, Target, Sparkles, Bike, Plane, CreditCard, Home, Heart, GraduationCap, Wallet } from "lucide-react";
+import { X, Calendar, Sparkles } from "lucide-react";
 import type { Goal } from '@/lib/types';
-
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
-  Bike,
-  Plane,
-  CreditCard,
-  Home,
-  Heart,
-  Target,
-  TrendingUp,
-  Shield,
-  GraduationCap,
-  Wallet,
-};
-
-function getIcon(name: string) {
-  return ICON_MAP[name] || Target;
-}
+import { getGoalIcon } from "./icon-map";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -49,7 +33,7 @@ export default function JourneyGoalDetailPanel({
   if (!goal) return null;
 
   const statusColor = getStatusColor(goal.status || "not-started");
-  const Icon = getIcon(goal.icon);
+  const Icon = getGoalIcon(goal.icon);
 
   return (
     <div

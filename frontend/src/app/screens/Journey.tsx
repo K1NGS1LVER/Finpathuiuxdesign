@@ -1,169 +1,386 @@
-import { Target, Plus } from "lucide-react";
-import { AnimatePresence } from "motion/react";
-import { useFinPathStore } from '@/lib/store';
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Target, Plus, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import confetti from "canvas-confetti";
+import { useFinPathStore } from "@/lib/store";
+import { formatInrCompact } from "@/lib/format";
 import { useJourneyCanvas } from "./journey/useJourneyCanvas";
 import { useJourneyGoals } from "./journey/useJourneyGoals";
 import JourneyIncomeNode from "./journey/JourneyIncomeNode";
-import JourneyGoalNode from "./journey/JourneyGoalNode";
+import JourneyGoalNode, { getStatusColor } from "./journey/JourneyGoalNode";
 import JourneyAddGoalModal from "./journey/JourneyAddGoalModal";
 import JourneyGoalDetailPanel from "./journey/JourneyGoalDetailPanel";
+import JourneyIncomeDetailPanel from "./journey/JourneyIncomeDetailPanel";
+import {
+  COMPLETION_RING_DURATION,
+  COMPLETION_RING_SIZE,
+  CONFETTI_COLORS,
+  CONFIRM_TIMEOUT_MS,
+  NODE_CENTER,
+  TRAVELING_DOT_OPACITY,
+} from "./journey/constants";
 
-const formatCurrency = (amount: number) => {
-  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)}Cr`;
-  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-  if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
-  return `₹${amount}`;
-};
+function getDotProps(priority: number): { size: number; dur: number } {
+  if (priority === 1) return { size: 6, dur: 1.8 };
+  if (priority === 2) return { size: 5, dur: 2.8 };
+  return { size: 4, dur: 4.2 };
+}
+
+function edgeEnd(from: { x: number; y: number }, to: { x: number; y: number }) {
+  return {
+    x1: from.x + NODE_CENTER,
+    y1: from.y + NODE_CENTER,
+    x2: to.x + NODE_CENTER,
+    y2: to.y + NODE_CENTER,
+  };
+}
+
+// Memoized traveling dot: animation keyframes only change when its endpoints actually move,
+// not on every parent render (e.g. hover, panel open).
+interface TravelingDotProps {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  size: number;
+  duration: number;
+  delay: number;
+  color: string;
+}
+
+const TravelingDot = memo(function TravelingDot({
+  fromX,
+  fromY,
+  toX,
+  toY,
+  size,
+  duration,
+  delay,
+  color,
+}: TravelingDotProps) {
+  const half = size / 2;
+  const xs = useMemo(() => [fromX - half, toX - half], [fromX, toX, half]);
+  const ys = useMemo(() => [fromY - half, toY - half], [fromY, toY, half]);
+  return (
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        width: size,
+        height: size,
+        top: 0,
+        left: 0,
+        background: color,
+        boxShadow: `0 0 ${size * 2}px ${color}, 0 0 ${size}px ${color}`,
+        opacity: TRAVELING_DOT_OPACITY,
+      }}
+      animate={{ x: xs, y: ys }}
+      transition={{ duration, repeat: Infinity, ease: "linear", delay }}
+    />
+  );
+});
 
 export default function Journey() {
   const income = useFinPathStore((s) => s.income);
 
   const goals = useJourneyGoals();
   const canvas = useJourneyCanvas(goals.sortedGoals);
+  const [showIncomePanel, setShowIncomePanel] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    },
+    [],
+  );
+
+  // Fire visual side effects (confetti) here, not in the data hook.
+  const handleCompleteGoal = (goalId: string) => {
+    const el = canvas.canvasRef.current?.querySelector<HTMLElement>(`[data-goal-id="${goalId}"]`);
+    const rect = el?.getBoundingClientRect();
+    goals.handleComplete(goalId);
+    const origin = rect
+      ? {
+          x: (rect.left + rect.width / 2) / window.innerWidth,
+          y: (rect.top + rect.height / 2) / window.innerHeight,
+        }
+      : { x: 0.5, y: 0.4 };
+    confetti({
+      particleCount: 55,
+      spread: 50,
+      startVelocity: 22,
+      ticks: 80,
+      origin,
+      colors: CONFETTI_COLORS,
+      scalar: 0.85,
+      gravity: 1.2,
+    });
+  };
+
+  const handleRemoveCompletedClick = () => {
+    if (!confirmRemove) {
+      setConfirmRemove(true);
+      confirmTimer.current = setTimeout(() => setConfirmRemove(false), CONFIRM_TIMEOUT_MS);
+      return;
+    }
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    setConfirmRemove(false);
+    goals.handleRemoveCompleted();
+  };
+
+  // Single transform applied via CSS: pan and zoom in one wrapper. Children use LOCAL coords.
+  const worldTransform = `translate(${canvas.panOffset.x * canvas.zoom}px, ${canvas.panOffset.y * canvas.zoom}px) scale(${canvas.zoom})`;
+  const svgWorldTransform = `translate(${canvas.panOffset.x * canvas.zoom} ${canvas.panOffset.y * canvas.zoom}) scale(${canvas.zoom})`;
 
   return (
-    <div className="h-[calc(100vh-120px)] md:h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4">
-      <div
-        ref={canvas.canvasRef}
-        className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
-        style={{ borderColor: 'var(--canvas-border)', backgroundColor: 'var(--card)' }}
-        onWheel={canvas.handleWheel}
-        onMouseDown={canvas.handleCanvasPointerDown}
-        onMouseMove={canvas.handlePointerMove}
-        onMouseUp={canvas.handlePointerUp}
-        onMouseLeave={canvas.handlePointerUp}
-        onTouchStart={canvas.handleCanvasPointerDown}
-        onTouchMove={canvas.handlePointerMove}
-        onTouchEnd={canvas.handlePointerUp}
-      >
-        <svg className="canvas-bg absolute inset-0 w-full h-full pointer-events-none">
-          <defs>
-            <pattern
-              id="dots"
-              x={canvas.panOffset.x * canvas.zoom}
-              y={canvas.panOffset.y * canvas.zoom}
-              width={20 * canvas.zoom}
-              height={20 * canvas.zoom}
-              patternUnits="userSpaceOnUse"
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="journey-page-title slashed-zero">Goals</h2>
+        <div className="flex items-center gap-2">
+          {goals.completedGoals.length > 0 && (
+            <button
+              onClick={handleRemoveCompletedClick}
+              aria-label={
+                confirmRemove
+                  ? `Confirm remove ${goals.completedGoals.length} completed goals`
+                  : `Remove ${goals.completedGoals.length} completed goals`
+              }
+              className="px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-all hover:scale-105"
+              style={{
+                background: "color-mix(in srgb, var(--surface-hover) 70%, transparent)",
+                border: "1px solid var(--border)",
+                color: confirmRemove ? "var(--red)" : "var(--secondary)",
+                backdropFilter: "blur(8px)",
+              }}
             >
-              <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} fill="var(--canvas-dot)" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#dots)" />
+              <Trash2 size={16} className="md:w-[18px] md:h-[18px] icon-wireframe" />
+              <span className="font-semibold text-xs md:text-sm hidden sm:inline font-body">
+                {confirmRemove
+                  ? `Confirm? (${goals.completedGoals.length})`
+                  : `Clear (${goals.completedGoals.length})`}
+              </span>
+            </button>
+          )}
 
-          <g transform={`scale(${canvas.zoom})`}>
-            {goals.sortedGoals.map((goal, i) => {
-              const goalPos = canvas.getNodePos(goal.id, i);
-              return (
-                <line
-                  key={`conn-${goal.id}`}
-                  x1={canvas.incomePos.x + 80 + canvas.panOffset.x}
-                  y1={canvas.incomePos.y + 80 + canvas.panOffset.y}
-                  x2={goalPos.x + 80 + canvas.panOffset.x}
-                  y2={goalPos.y + 80 + canvas.panOffset.y}
-                  className={goal.status === "complete" ? "stroke-accent" : "stroke-secondary"}
-                  strokeWidth="3"
-                  strokeDasharray={goal.status === "complete" ? "0" : "8,4"}
-                  opacity={goal.status === "complete" ? 0.8 : 0.4}
-                />
-              );
-            })}
-          </g>
-        </svg>
-
-        <div
-          className="absolute top-2 left-2 md:top-4 md:left-4 px-3 py-2 rounded-xl text-[10px] md:text-xs z-10 bg-surface-tint border border-border text-secondary"
-        >
-          Priority glow guide: stronger glow = higher priority (P1).
+          <button
+            onClick={() => {
+              goals.setAddGoalError("");
+              goals.setShowAddModal(true);
+            }}
+            aria-label="Add goal"
+            className="px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg bg-accent text-on-accent"
+          >
+            <Plus size={18} className="md:w-5 md:h-5" />
+            <span className="font-semibold text-sm md:text-base hidden sm:inline font-body">Add Goal</span>
+          </button>
         </div>
-
-        <div style={{ transform: `scale(${canvas.zoom})`, transformOrigin: "0 0", position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-          <JourneyIncomeNode
-            x={canvas.incomePos.x + canvas.panOffset.x}
-            y={canvas.incomePos.y + canvas.panOffset.y}
-            dragging={canvas.dragging === "income"}
-            income={income}
-            formatCurrency={formatCurrency}
-            onPointerDown={canvas.handlePointerDown}
-          />
-
-          <AnimatePresence>
-            {goals.sortedGoals.map((goal, i) => {
-              const pos = canvas.getNodePos(goal.id, i);
-              return (
-                <JourneyGoalNode
-                  key={goal.id}
-                  goal={goal}
-                  x={pos.x + canvas.panOffset.x}
-                  y={pos.y + canvas.panOffset.y}
-                  isDragging={canvas.dragging === goal.id}
-                  onPointerDown={canvas.handlePointerDown}
-                  onClick={() => goals.setSelectedGoalId(goal.id)}
-                  formatCurrency={formatCurrency}
-                />
-              );
-            })}
-          </AnimatePresence>
-        </div>
-
-        {goals.sortedGoals.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center p-8">
-              <Target
-                size={48}
-                className="mx-auto mb-4 text-secondary opacity-30"
-              />
-              <p
-                className="text-lg font-semibold text-secondary mb-2 font-display"
-              >
-                No goals yet
-              </p>
-              <p
-                className="text-sm text-secondary font-body"
-              >
-                Click the + button to add your first goal
-              </p>
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={() => { goals.setAddGoalError(""); goals.setShowAddModal(true); }}
-          className="absolute top-2 right-2 md:top-4 md:right-4 px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg z-20 pointer-events-auto bg-accent text-on-accent"
-        >
-          <Plus size={18} className="md:w-5 md:h-5" />
-          <span className="font-semibold text-sm md:text-base hidden sm:inline font-body">Add Goal</span>
-        </button>
       </div>
 
-      <JourneyAddGoalModal
-        show={goals.showAddModal}
-        onClose={() => goals.setShowAddModal(false)}
-        storeGoals={goals.storeGoals}
-        activeGoals={goals.activeGoals}
-        monthlySurplus={goals.monthlySurplus}
-        existingMonthlyNeed={goals.existingMonthlyNeed}
-        budgetRemaining={goals.budgetRemaining}
-        addGoalError={goals.addGoalError}
-        setAddGoalError={goals.setAddGoalError}
-        customName={goals.customName}
-        setCustomName={goals.setCustomName}
-        customTarget={goals.customTarget}
-        setCustomTarget={goals.setCustomTarget}
-        customMonths={goals.customMonths}
-        setCustomMonths={goals.setCustomMonths}
-        onAddPreset={goals.handleAddPreset}
-        onAddCustom={goals.handleAddCustom}
-      />
+      <div className="h-[calc(100vh-180px)] flex flex-col md:flex-row gap-4">
+        <div
+          ref={canvas.canvasRef}
+          className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? "cursor-grabbing" : "cursor-grab"}`}
+          style={{ borderColor: "var(--canvas-border)", backgroundColor: "var(--card)" }}
+          onMouseDown={canvas.handleCanvasPointerDown}
+          onMouseMove={canvas.handlePointerMove}
+          onMouseUp={canvas.handlePointerUp}
+          onMouseLeave={canvas.handlePointerUp}
+          onTouchStart={canvas.handleCanvasPointerDown}
+          onTouchMove={canvas.handlePointerMove}
+          onTouchEnd={canvas.handlePointerUp}
+        >
+          {/* Layer 0 — dot grid (untransformed) + SVG edges (world-transformed) */}
+          <svg className="canvas-bg absolute inset-0 w-full h-full pointer-events-none">
+            <defs>
+              <pattern
+                id="dots"
+                x={canvas.panOffset.x * canvas.zoom}
+                y={canvas.panOffset.y * canvas.zoom}
+                width={20 * canvas.zoom}
+                height={20 * canvas.zoom}
+                patternUnits="userSpaceOnUse"
+              >
+                <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} fill="var(--canvas-dot)" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots)" />
 
-      <JourneyGoalDetailPanel
-        goal={goals.selectedGoal}
-        onClose={() => goals.setSelectedGoalId(null)}
-        onComplete={goals.handleComplete}
-        onDelete={goals.handleDelete}
-        onPriorityChange={goals.handlePriorityChange}
-        activeGoalsCount={goals.activeGoals.length}
-      />
+            <g transform={svgWorldTransform}>
+              {goals.sortedGoals.map((goal) => {
+                const goalPos = canvas.getNodePos(goal.id);
+                const { x1, y1, x2, y2 } = edgeEnd(canvas.incomePos, goalPos);
+                return (
+                  <line
+                    key={`conn-${goal.id}`}
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    className={goal.status === "complete" ? "stroke-accent" : "stroke-secondary"}
+                    strokeWidth="3"
+                    strokeDasharray={goal.status === "complete" ? "0" : "8,4"}
+                    opacity={goal.status === "complete" ? 0.8 : 0.4}
+                  />
+                );
+              })}
+            </g>
+          </svg>
+
+          {/* Single world-transformed wrapper holding dots, rings, and node cards. */}
+          <div
+            style={{
+              transform: worldTransform,
+              transformOrigin: "0 0",
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+            }}
+          >
+            {/* Traveling dots */}
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+              {goals.sortedGoals.map((goal, i) => {
+                if (goal.status === "complete") return null;
+                const goalPos = canvas.getNodePos(goal.id);
+                const { x1, y1, x2, y2 } = edgeEnd(canvas.incomePos, goalPos);
+                const { size, dur } = getDotProps(goal.priority);
+                return (
+                  <TravelingDot
+                    key={`dot-${goal.id}`}
+                    fromX={x1}
+                    fromY={y1}
+                    toX={x2}
+                    toY={y2}
+                    size={size}
+                    duration={dur}
+                    delay={i * 0.5}
+                    color={getStatusColor(goal.status)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Completion rings */}
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2 }}>
+              <AnimatePresence>
+                {goals.completingIds.map((id) => {
+                  const pos = canvas.getNodePos(id);
+                  return (
+                    <motion.div
+                      key={id}
+                      className="absolute rounded-full"
+                      style={{
+                        left: pos.x + NODE_CENTER,
+                        top: pos.y + NODE_CENTER,
+                        translateX: "-50%",
+                        translateY: "-50%",
+                        border: "1.5px solid var(--accent)",
+                        boxShadow: "0 0 16px var(--accent-glow)",
+                        background: "transparent",
+                      }}
+                      initial={{ width: 0, height: 0, opacity: 0.9 }}
+                      animate={{
+                        width: COMPLETION_RING_SIZE,
+                        height: COMPLETION_RING_SIZE,
+                        opacity: 0,
+                      }}
+                      transition={{
+                        duration: COMPLETION_RING_DURATION,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    />
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+
+            {/* Node cards */}
+            <div className="absolute inset-0" style={{ zIndex: 3, pointerEvents: "none" }}>
+              <JourneyIncomeNode
+                x={canvas.incomePos.x}
+                y={canvas.incomePos.y}
+                dragging={canvas.dragging === "income"}
+                income={income}
+                formatCurrency={formatInrCompact}
+                onPointerDown={canvas.handlePointerDown}
+                onClick={() => {
+                  goals.setSelectedGoalId(null);
+                  setShowIncomePanel(true);
+                }}
+              />
+
+              <AnimatePresence>
+                {goals.sortedGoals.map((goal, i) => {
+                  const pos = canvas.getNodePos(goal.id);
+                  return (
+                    <JourneyGoalNode
+                      key={goal.id}
+                      goal={goal}
+                      index={i}
+                      x={pos.x}
+                      y={pos.y}
+                      isDragging={canvas.dragging === goal.id}
+                      onPointerDown={canvas.handlePointerDown}
+                      onClick={() => {
+                        setShowIncomePanel(false);
+                        goals.setSelectedGoalId(goal.id);
+                      }}
+                      formatCurrency={formatInrCompact}
+                    />
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {goals.sortedGoals.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center p-8">
+                <Target size={48} className="mx-auto mb-4 text-secondary opacity-30" />
+                <p className="text-lg font-semibold text-secondary mb-2 font-display">No goals yet</p>
+                <p className="text-sm text-secondary font-body">Click the + button to add your first goal</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <JourneyAddGoalModal
+          show={goals.showAddModal}
+          onClose={() => goals.setShowAddModal(false)}
+          storeGoals={goals.storeGoals}
+          activeGoals={goals.activeGoals}
+          monthlySurplus={goals.monthlySurplus}
+          existingMonthlyNeed={goals.existingMonthlyNeed}
+          budgetRemaining={goals.budgetRemaining}
+          addGoalError={goals.addGoalError}
+          setAddGoalError={goals.setAddGoalError}
+          customName={goals.customName}
+          setCustomName={goals.setCustomName}
+          customTarget={goals.customTarget}
+          setCustomTarget={goals.setCustomTarget}
+          customMonths={goals.customMonths}
+          setCustomMonths={goals.setCustomMonths}
+          onAddPreset={goals.handleAddPreset}
+          onAddCustom={goals.handleAddCustom}
+        />
+
+        {showIncomePanel && (
+          <JourneyIncomeDetailPanel
+            income={income}
+            onClose={() => setShowIncomePanel(false)}
+            formatCurrency={formatInrCompact}
+          />
+        )}
+
+        <JourneyGoalDetailPanel
+          goal={goals.selectedGoal}
+          onClose={() => goals.setSelectedGoalId(null)}
+          onComplete={handleCompleteGoal}
+          onDelete={goals.handleDelete}
+          onPriorityChange={goals.handlePriorityChange}
+          activeGoalsCount={goals.activeGoals.length}
+        />
+      </div>
     </div>
   );
 }

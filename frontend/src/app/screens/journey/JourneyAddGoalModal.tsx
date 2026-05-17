@@ -1,23 +1,7 @@
-import { X, AlertTriangle, Target, Bike, Plane, CreditCard, Home, Heart, TrendingUp, Shield, GraduationCap, Wallet } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
 import { GOAL_PRESETS } from "./useJourneyGoals";
+import { getGoalIcon } from "./icon-map";
 import type { Goal } from '@/lib/types';
-
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
-  Bike,
-  Plane,
-  CreditCard,
-  Home,
-  Heart,
-  Target,
-  TrendingUp,
-  Shield,
-  GraduationCap,
-  Wallet,
-};
-
-function getIcon(name: string) {
-  return ICON_MAP[name] || Target;
-}
 
 interface JourneyAddGoalModalProps {
   show: boolean;
@@ -103,7 +87,7 @@ export default function JourneyAddGoalModal({
             {GOAL_PRESETS.filter(
               (p) => !storeGoals.some((g) => g.name === p.name),
             ).map((preset) => {
-              const Icon = getIcon(preset.icon);
+              const Icon = getGoalIcon(preset.icon);
               const presetMonthly = Math.round(preset.target / preset.months);
               const wouldExceed = (existingMonthlyNeed + presetMonthly) > Math.max(0, monthlySurplus) && monthlySurplus > 0;
               return (
