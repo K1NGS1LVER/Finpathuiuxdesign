@@ -6,10 +6,11 @@ PUT /api/profile  → upsert remote profile. Last-write-wins on `data.lastUpdate
 When Supabase isn't configured (or AUTH_MOCK + no anon key), endpoints
 return an ephemeral echo so the frontend can still operate locally.
 """
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -82,7 +83,7 @@ async def write_profile(
             "data": body.data,
             "storage_mode": body.storage_mode,
             "schema_version": body.schema_version,
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
             "_ephemeral": True,
         }
     return row

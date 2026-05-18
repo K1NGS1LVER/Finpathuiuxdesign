@@ -3,6 +3,7 @@
 `date` strings on each step are stripped before comparing — both engines
 generate them from runtime `now()`; the `month` integer is canonical.
 """
+
 from __future__ import annotations
 
 import pytest

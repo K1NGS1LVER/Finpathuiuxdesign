@@ -7,10 +7,12 @@ Snowball: smallest balance first.
 the TS engine but are runtime-dependent. Parity tests strip them before
 comparing — `month` is the canonical time index.
 """
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from app.engines._helpers import js_round
 
@@ -80,16 +82,18 @@ def _simulate(
             available -= payment
             total_paid += payment
 
-            steps.append({
-                "month": month,
-                "date": _month_to_date(month),
-                "debtId": debt["id"],
-                "debtName": debt["name"],
-                "payment": payment,
-                "remainingBalance": max(0, debt["balance"]),
-                "interestPaid": interest,
-                "isPaidOff": debt["balance"] <= 0.01,
-            })
+            steps.append(
+                {
+                    "month": month,
+                    "date": _month_to_date(month),
+                    "debtId": debt["id"],
+                    "debtName": debt["name"],
+                    "payment": payment,
+                    "remainingBalance": max(0, debt["balance"]),
+                    "interestPaid": interest,
+                    "isPaidOff": debt["balance"] <= 0.01,
+                }
+            )
 
         # Apply extra payment waterfall to the top-priority debt
         if available > 0 and active:
@@ -137,7 +141,9 @@ def snowball(debts: list[dict[str, Any]], extra_monthly_payment: float = 0) -> d
     return result
 
 
-def compare_strategies(debts: list[dict[str, Any]], extra_monthly_payment: float = 0) -> dict[str, Any]:
+def compare_strategies(
+    debts: list[dict[str, Any]], extra_monthly_payment: float = 0
+) -> dict[str, Any]:
     a = avalanche(debts, extra_monthly_payment)
     s = snowball(debts, extra_monthly_payment)
     recommendation: Literal["avalanche", "snowball"] = (

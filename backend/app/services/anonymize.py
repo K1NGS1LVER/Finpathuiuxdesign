@@ -4,6 +4,7 @@ Returns only aggregate numbers + goal metadata for the Groq system prompt.
 Mirrors the v3 IncomeProfile shape on the frontend store (primary/secondary/
 passive/variable). Legacy `salary`/`freelance` keys removed.
 """
+
 from __future__ import annotations
 
 from typing import Any

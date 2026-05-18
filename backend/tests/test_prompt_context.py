@@ -1,11 +1,20 @@
 """Tests for screen-context injection in build_system_prompt."""
+
 from __future__ import annotations
 
 from app.services.prompt import ROUTE_HINTS, build_system_prompt
 
 EMPTY_PROFILE = {
     "income": {"primary": 50000, "secondary": 0, "passive": 0, "variable": 0, "total": 50000},
-    "expenses": {"rent": 15000, "food": 8000, "transport": 3000, "utilities": 2000, "entertainment": 2000, "other": 2000, "total": 32000},
+    "expenses": {
+        "rent": 15000,
+        "food": 8000,
+        "transport": 3000,
+        "utilities": 2000,
+        "entertainment": 2000,
+        "other": 2000,
+        "total": 32000,
+    },
     "debts": {"totalMonthly": 5000, "items": []},
     "goals": [],
     "savings": 10000,
@@ -44,5 +53,15 @@ def test_route_is_case_insensitive() -> None:
 
 def test_all_app_routes_have_hints() -> None:
     """Sanity: every app-shell route in the SPA should be mapped."""
-    expected = {"dashboard", "journey", "month", "debt", "scenarios", "progress", "cashflow", "celebrate", "settings"}
+    expected = {
+        "dashboard",
+        "journey",
+        "month",
+        "debt",
+        "scenarios",
+        "progress",
+        "cashflow",
+        "celebrate",
+        "settings",
+    }
     assert expected.issubset(set(ROUTE_HINTS))

@@ -1,4 +1,5 @@
 """System prompt builder. Injects anonymized aggregate snapshot for Penny."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -107,15 +108,15 @@ NOT non-finance (ALWAYS engage): questions about the user's screen / page / dash
 If the user has no financial data, one sentence asking them to finish onboarding.
 
 USER'S ANONYMOUS FINANCIAL SNAPSHOT:
-- Monthly Income: ₹{_inr(income['total'])} (Primary: ₹{_inr(income['primary'])}, Secondary: ₹{_inr(income['secondary'])}, Passive: ₹{_inr(income['passive'])}, Variable: ₹{_inr(income['variable'])})
-- Monthly Expenses: ₹{_inr(expenses['total'])} (Rent: ₹{_inr(expenses['rent'])}, Food: ₹{_inr(expenses['food'])}, Transport: ₹{_inr(expenses['transport'])}, Utilities: ₹{_inr(expenses['utilities'])}, Fun: ₹{_inr(expenses['entertainment'])}, Other: ₹{_inr(expenses['other'])})
-- Monthly Debt Payments: ₹{_inr(debts['totalMonthly'])} ({debts['itemCount']} items)
+- Monthly Income: ₹{_inr(income["total"])} (Primary: ₹{_inr(income["primary"])}, Secondary: ₹{_inr(income["secondary"])}, Passive: ₹{_inr(income["passive"])}, Variable: ₹{_inr(income["variable"])})
+- Monthly Expenses: ₹{_inr(expenses["total"])} (Rent: ₹{_inr(expenses["rent"])}, Food: ₹{_inr(expenses["food"])}, Transport: ₹{_inr(expenses["transport"])}, Utilities: ₹{_inr(expenses["utilities"])}, Fun: ₹{_inr(expenses["entertainment"])}, Other: ₹{_inr(expenses["other"])})
+- Monthly Debt Payments: ₹{_inr(debts["totalMonthly"])} ({debts["itemCount"]} items)
 - Monthly Surplus: ₹{_inr(surplus)}
-- Surplus Reserve: ₹{_inr(a['monthlySurplusReserve'])}/mo (set aside, not for goals)
-- Strategy: {a['strategy']}
-- Savings: ₹{_inr(a['savings'])}
-- Investments: ₹{_inr(a['investments'])}
-- Emergency Fund: ₹{_inr(a['emergencyFund'])}
+- Surplus Reserve: ₹{_inr(a["monthlySurplusReserve"])}/mo (set aside, not for goals)
+- Strategy: {a["strategy"]}
+- Savings: ₹{_inr(a["savings"])}
+- Investments: ₹{_inr(a["investments"])}
+- Emergency Fund: ₹{_inr(a["emergencyFund"])}
 {health_line}
 
 GOALS:

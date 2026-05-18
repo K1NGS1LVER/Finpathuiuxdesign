@@ -13,11 +13,14 @@ Tool surface mirrors the agreed phase-3 list:
 - check_health
 - propose_change
 """
+
 from __future__ import annotations
 
 import logging
+import math
+from collections.abc import Callable
 from copy import deepcopy
-from typing import Any, Callable
+from typing import Any
 
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
@@ -27,9 +30,6 @@ from app.engines.health_score import calculate_health_score
 from app.engines.plan_engine import generate_plan, generate_scenario_plan
 
 log = logging.getLogger(__name__)
-
-
-import math
 
 
 ALLOWED_PROPOSAL_ACTIONS = {
@@ -51,24 +51,45 @@ class _NoArgs(BaseModel):
 
 
 class _WhatIfArgs(BaseModel):
-    income_change_pct: float = Field(0, description="Income change as a percent (e.g. 10 for +10% income).")
-    expense_change_pct: float = Field(0, description="Expense change as a percent (e.g. -5 for cutting expenses 5%).")
-    timeline_change_months: int = Field(0, description="Months added to (or removed from) every goal's timeline.")
+    income_change_pct: float = Field(
+        0, description="Income change as a percent (e.g. 10 for +10% income)."
+    )
+    expense_change_pct: float = Field(
+        0, description="Expense change as a percent (e.g. -5 for cutting expenses 5%)."
+    )
+    timeline_change_months: int = Field(
+        0, description="Months added to (or removed from) every goal's timeline."
+    )
 
 
 class _ProposeArgs(BaseModel):
-    action: str = Field(description=f"Zustand setter name. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}.")
-    payload: dict[str, Any] = Field(description="JSON payload the frontend will pass to the setter.")
-    rationale: str = Field(default="", description="Short user-facing explanation (1-2 sentences). Optional but strongly recommended.")
+    action: str = Field(
+        description=f"Zustand setter name. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}."
+    )
+    payload: dict[str, Any] = Field(
+        description="JSON payload the frontend will pass to the setter."
+    )
+    rationale: str = Field(
+        default="",
+        description="Short user-facing explanation (1-2 sentences). Optional but strongly recommended.",
+    )
 
 
 class _SimGoalArgs(BaseModel):
     goal_id: str = Field(description="ID of the goal to simulate (from read_profile goals list).")
-    extra_monthly: float = Field(ge=0, description="Extra ₹ per month to direct at this specific goal on top of its current allocation.")
+    extra_monthly: float = Field(
+        ge=0,
+        description="Extra ₹ per month to direct at this specific goal on top of its current allocation.",
+    )
 
 
 class _MonthOffsetArgs(BaseModel):
-    month_offset: int = Field(0, ge=0, le=119, description="Month index (0 = this month, 11 = 12 months from now, 59 = 5 years, up to 119).")
+    month_offset: int = Field(
+        0,
+        ge=0,
+        le=119,
+        description="Month index (0 = this month, 11 = 12 months from now, 59 = 5 years, up to 119).",
+    )
 
 
 class _GoalPriorityItem(BaseModel):
@@ -77,7 +98,9 @@ class _GoalPriorityItem(BaseModel):
 
 
 class _ReorderArgs(BaseModel):
-    new_priorities: list[_GoalPriorityItem] = Field(description="New priority assignment for each goal to reorder. Include only the goals you want to change.")
+    new_priorities: list[_GoalPriorityItem] = Field(
+        description="New priority assignment for each goal to reorder. Include only the goals you want to change."
+    )
 
 
 # ── builder ─────────────────────────────────────────────────────
@@ -177,7 +200,9 @@ def make_tools(
         goals_list = profile.get("goals") or []
         goal = next((g for g in goals_list if g.get("id") == goal_id), None)
         if goal is None:
-            return {"error": f"Goal '{goal_id}' not found. Call read_profile to get valid goal IDs."}
+            return {
+                "error": f"Goal '{goal_id}' not found. Call read_profile to get valid goal IDs."
+            }
 
         target = float(goal.get("targetAmount") or 0)
         current = float(goal.get("currentAmount") or 0)
@@ -198,7 +223,9 @@ def make_tools(
                 "extra_monthly": extra_monthly,
                 "new_monthly_allocation": extra_monthly,
                 "estimated_baseline_months": None,
-                "estimated_new_months": math.ceil(remaining / extra_monthly) if extra_monthly > 0 else None,
+                "estimated_new_months": math.ceil(remaining / extra_monthly)
+                if extra_monthly > 0
+                else None,
                 "months_saved": None,
             }
 
@@ -278,20 +305,24 @@ def make_tools(
             gid = g.get("id")
             old_priority = g.get("priority")
             new_priority = priority_map.get(gid, old_priority)
-            deltas.append({
-                "goal_id": gid,
-                "name": goal_names.get(gid, gid),
-                "old_priority": old_priority,
-                "new_priority": new_priority,
-                "baseline_completion_date": baseline_dates.get(gid),
-                "new_completion_date": new_dates.get(gid),
-                "baseline_monthly_allocation": baseline_allocs.get(gid, 0),
-                "new_monthly_allocation": new_allocs.get(gid, 0),
-            })
+            deltas.append(
+                {
+                    "goal_id": gid,
+                    "name": goal_names.get(gid, gid),
+                    "old_priority": old_priority,
+                    "new_priority": new_priority,
+                    "baseline_completion_date": baseline_dates.get(gid),
+                    "new_completion_date": new_dates.get(gid),
+                    "baseline_monthly_allocation": baseline_allocs.get(gid, 0),
+                    "new_monthly_allocation": new_allocs.get(gid, 0),
+                }
+            )
 
         return {"goal_deltas": deltas}
 
-    def _propose_change(action: str, payload: dict[str, Any], rationale: str = "") -> dict[str, Any]:
+    def _propose_change(
+        action: str, payload: dict[str, Any], rationale: str = ""
+    ) -> dict[str, Any]:
         if action not in ALLOWED_PROPOSAL_ACTIONS:
             return {
                 "ok": False,
@@ -378,7 +409,11 @@ def make_tools(
 def _summarize_plan(plan: dict[str, Any]) -> dict[str, Any]:
     """Trim the 120-month plan to a Groq-friendly summary."""
     months = plan.get("months") or []
-    sample_idx = [0, 11, 35, 59, 119] if len(months) >= 120 else list(range(0, len(months), max(1, len(months) // 5)))
+    sample_idx = (
+        [0, 11, 35, 59, 119]
+        if len(months) >= 120
+        else list(range(0, len(months), max(1, len(months) // 5)))
+    )
     snapshots = []
     for i in sample_idx:
         if i < len(months):

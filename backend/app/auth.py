@@ -11,6 +11,7 @@ token's algorithm from its header:
 The verified `sub` claim is the user's UUID — returned for use in
 route handlers (and later, RLS-aware queries).
 """
+
 from __future__ import annotations
 
 import logging
@@ -144,7 +145,9 @@ async def get_current_user(
 
     user_id = payload.get("sub")
     if not isinstance(user_id, str) or not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing sub claim.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing sub claim."
+        )
 
     request.state.user_id = user_id
     return CurrentUser(

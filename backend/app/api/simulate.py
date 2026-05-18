@@ -5,6 +5,7 @@ tool implementations. All routes require auth via Supabase JWT
 (or AUTH_MOCK during dev). Engine calls are CPU-bound so they run in
 the default threadpool to avoid blocking the event loop.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from app.auth import CurrentUser, get_current_user
+from app.auth import get_current_user
 from app.engines.debt_strategies import avalanche, compare_strategies, snowball
 from app.engines.health_score import calculate_health_score
 from app.engines.plan_engine import generate_plan, generate_scenario_plan

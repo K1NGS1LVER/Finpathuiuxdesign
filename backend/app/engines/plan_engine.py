@@ -7,6 +7,7 @@ increments, and step-up vs no-step-up modes.
 `monthToDateStr()` is presentational and depends on runtime now(); parity
 tests strip `date` keys and `goalCompletionDates` values before comparing.
 """
+
 from __future__ import annotations
 
 import math
@@ -150,7 +151,9 @@ def generate_plan(input_: dict[str, Any]) -> dict[str, Any]:
             if p_inc > 0 or s_inc > 0 or pa_inc > 0:
                 milestones.append("Annual income increment applied")
 
-        current_monthly_surplus = current_income_total - monthly_expenses_dedup - debts_total_monthly
+        current_monthly_surplus = (
+            current_income_total - monthly_expenses_dedup - debts_total_monthly
+        )
         surplus = max(0, current_monthly_surplus)
         monthly_reserved_surplus = min(surplus, reserved_surplus)
         after_reserved = max(0, surplus - monthly_reserved_surplus)
@@ -161,9 +164,7 @@ def generate_plan(input_: dict[str, Any]) -> dict[str, Any]:
             allocatable_surplus = min(allocatable_surplus, base_allocatable_surplus)
 
         # Build goals snapshot for this month
-        goals_snapshot = [
-            {**g, "currentAmount": goal_progress[g["id"]]} for g in goals
-        ]
+        goals_snapshot = [{**g, "currentAmount": goal_progress[g["id"]]} for g in goals]
         allocations = _allocate_surplus(allocatable_surplus, goals_snapshot, strategy)
 
         total_allocated = 0
@@ -202,20 +203,22 @@ def generate_plan(input_: dict[str, Any]) -> dict[str, Any]:
             cumulative_savings + cumulative_investments + non_debt_goal_progress - outstanding_debt
         )
 
-        months.append({
-            "month": m,
-            "date": _month_to_date_str(m + 1),
-            "income": current_income_total,
-            "expenses": expenses_total,
-            "debtPayments": debts_total_monthly,
-            "surplus": surplus,
-            "reservedSurplus": monthly_reserved_surplus,
-            "pendingSurplus": monthly_pending_surplus,
-            "goalAllocations": dict(allocations),
-            "milestones": milestones,
-            "cumulativeSavings": js_round(cumulative_savings),
-            "netWorth": js_round(net_worth),
-        })
+        months.append(
+            {
+                "month": m,
+                "date": _month_to_date_str(m + 1),
+                "income": current_income_total,
+                "expenses": expenses_total,
+                "debtPayments": debts_total_monthly,
+                "surplus": surplus,
+                "reservedSurplus": monthly_reserved_surplus,
+                "pendingSurplus": monthly_pending_surplus,
+                "goalAllocations": dict(allocations),
+                "milestones": milestones,
+                "cumulativeSavings": js_round(cumulative_savings),
+                "netWorth": js_round(net_worth),
+            }
+        )
 
         if all_goals_complete():
             if len(months) > len(goal_completion_dates) + 3:
@@ -251,7 +254,9 @@ def _format_indian(n: int | float) -> str:
     return f"-{out}" if neg else out
 
 
-def generate_scenario_plan(base_input: dict[str, Any], modifications: dict[str, Any]) -> dict[str, Any]:
+def generate_scenario_plan(
+    base_input: dict[str, Any], modifications: dict[str, Any]
+) -> dict[str, Any]:
     modified = dict(base_input)
     base_income = dict(base_input.get("income") or {})
     base_expenses = dict(base_input.get("expenses") or {})

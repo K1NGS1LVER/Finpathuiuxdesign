@@ -14,12 +14,14 @@ We use the prebuilt graph for simplicity — it natively implements the
 `stream_agent` wraps `graph.astream_events` and yields normalized SSE
 event dicts: token / tool_call / tool_result / proposal / done / error.
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import re
-from typing import Any, AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable
+from typing import Any
 
 from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
@@ -123,6 +125,7 @@ async def stream_agent(
             messages.append(HumanMessage(content=content))
         elif role == "assistant":
             from langchain_core.messages import AIMessage
+
             messages.append(AIMessage(content=content))
     messages.append(HumanMessage(content=user_message))
 
