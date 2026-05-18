@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
   Navigate,
 } from "react-router";
 import Landing from "./screens/Landing";
@@ -23,6 +24,7 @@ import Auth from "./screens/Auth";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import PennyPanel from "./components/PennyPanel";
+import PdfExportOverlay from "./components/PdfExportOverlay";
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import { initCloudSync } from '@/lib/cloud-sync';
@@ -38,6 +40,7 @@ function AppContent() {
   const [pennyOpen, setPennyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const onboarded = useFinPathStore((s) => s.onboarded);
   const goals = useFinPathStore((s) => s.goals);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
@@ -246,6 +249,7 @@ function AppContent() {
             </main>
           </div>
           <PennyPanel open={pennyOpen} onClose={() => setPennyOpen(false)} />
+          <PdfExportOverlay />
 
           {activeDecision && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -272,23 +276,27 @@ function AppContent() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <button
-                    onClick={() =>
+                    onClick={() => {
+                      const isLast = pendingGoalDecisions.length === 1;
                       resolveGoalCompletionDecision(
                         activeDecision.goalId,
                         "reinvest",
-                      )
-                    }
+                      );
+                      if (isLast) navigate("/celebrate");
+                    }}
                     className="py-3 px-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-accent text-on-accent font-body"
                   >
                     Reinvest Into Remaining Goals
                   </button>
                   <button
-                    onClick={() =>
+                    onClick={() => {
+                      const isLast = pendingGoalDecisions.length === 1;
                       resolveGoalCompletionDecision(
                         activeDecision.goalId,
                         "surplus",
-                      )
-                    }
+                      );
+                      if (isLast) navigate("/celebrate");
+                    }}
                     className="py-3 px-4 rounded-xl font-semibold transition-all bg-surface-tint border border-border text-card-foreground font-body"
                   >
                     Keep As Net Worth Surplus

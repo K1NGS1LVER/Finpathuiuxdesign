@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { Check, X, AlertTriangle } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
 import { apiFetch } from '@/lib/api';
-import type { Goal, InvestmentStrategy } from '@/lib/types';
+import type { Goal, InvestmentStrategy, DebtItem } from '@/lib/types';
 
 export type ProposalAction =
   | 'setStrategy'
@@ -20,7 +20,8 @@ export type ProposalAction =
   | 'updateGoal'
   | 'addGoal'
   | 'removeGoal'
-  | 'addLumpsum';
+  | 'addLumpsum'
+  | 'addDebt';
 
 export interface Proposal {
   id: string;
@@ -44,7 +45,31 @@ const ACTION_LABEL: Record<string, string> = {
   addGoal: 'Add a new goal',
   removeGoal: 'Remove goal',
   addLumpsum: 'Add lump-sum to goal',
+  addDebt: 'Add a new debt',
 };
+
+const DEBT_CATEGORIES: ReadonlySet<DebtItem['category']> = new Set([
+  'homeLoan',
+  'carLoan',
+  'personalLoan',
+  'creditCard',
+  'educationLoan',
+  'other',
+]);
+
+function normalizeDebtCategory(raw: unknown): DebtItem['category'] {
+  const s = String(raw ?? '').trim();
+  if (DEBT_CATEGORIES.has(s as DebtItem['category'])) {
+    return s as DebtItem['category'];
+  }
+  const lower = s.toLowerCase();
+  if (lower.includes('credit')) return 'creditCard';
+  if (lower.includes('home') || lower.includes('mortgage')) return 'homeLoan';
+  if (lower.includes('car') || lower.includes('auto') || lower.includes('vehicle')) return 'carLoan';
+  if (lower.includes('education') || lower.includes('student')) return 'educationLoan';
+  if (lower.includes('personal')) return 'personalLoan';
+  return 'other';
+}
 
 type PreparedApply =
   | { ok: true; apply: () => void }
@@ -100,6 +125,57 @@ function prepareApply(action: string, payload: Record<string, unknown>): Prepare
       const amount = Number(payload.amount);
       if (!id || !Number.isFinite(amount) || amount <= 0) return { ok: false, reason: 'invalid lumpsum' };
       return { ok: true, apply: () => store.addLumpsum(id, amount) };
+    }
+    case 'addDebt': {
+      const raw = (payload.debt ?? payload) as Record<string, unknown>;
+      const name = String(raw.name ?? raw.description ?? '').trim();
+      // Principal: prefer explicit; fall back to absolute amount (Penny sometimes sends negative
+      // amounts to signal debt — coerce here so the proposal can still apply).
+      const principalRaw = Number(raw.principal ?? raw.amount ?? 0);
+      const principal = Math.abs(principalRaw);
+      if (!name || !Number.isFinite(principal) || principal <= 0) {
+        return { ok: false, reason: 'debt needs a name and principal > 0' };
+      }
+      const interestRate = Number.isFinite(Number(raw.interestRate))
+        ? Math.max(0, Number(raw.interestRate))
+        : 12;
+      const monthlyPayment = Number.isFinite(Number(raw.monthlyPayment)) && Number(raw.monthlyPayment) > 0
+        ? Number(raw.monthlyPayment)
+        : Math.max(1, Math.round(principal / 12));
+      const remainingMonths = Number.isFinite(Number(raw.remainingMonths)) && Number(raw.remainingMonths) > 0
+        ? Math.round(Number(raw.remainingMonths))
+        : Math.max(1, Math.ceil(principal / monthlyPayment));
+      const category = normalizeDebtCategory(raw.category);
+      const id = String(raw.id ?? `debt-${Date.now()}`);
+      const newDebt: DebtItem = {
+        id,
+        name,
+        category,
+        principal,
+        interestRate,
+        monthlyPayment,
+        remainingMonths,
+      };
+      return {
+        ok: true,
+        apply: () => {
+          const current = useFinPathStore.getState().debts;
+          const nextItems = [...(current.items ?? []), newDebt];
+          const nextMonthly = nextItems.reduce(
+            (sum, d) => sum + Math.max(0, d.monthlyPayment || 0),
+            0,
+          );
+          const nextPrincipal = nextItems.reduce(
+            (sum, d) => sum + Math.max(0, d.principal || 0),
+            0,
+          );
+          store.setDebts({
+            items: nextItems,
+            totalMonthly: nextMonthly,
+            totalPrincipal: nextPrincipal,
+          });
+        },
+      };
     }
     default:
       return { ok: false, reason: `unknown action: ${action}` };

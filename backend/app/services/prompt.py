@@ -41,7 +41,7 @@ def build_system_prompt(profile: dict[str, Any]) -> str:
         current = g["currentAmount"] or 0
         pct = round((current / target) * 100) if target > 0 else 0
         goal_lines.append(
-            f"- {g['name']}: Target ₹{_inr(target)}, Saved ₹{_inr(current)} ({pct}%), "
+            f"- {g['id']} ({g.get('category', 'custom')}): Target ₹{_inr(target)}, Saved ₹{_inr(current)} ({pct}%), "
             f"{g['timelineMonths']}mo timeline, Priority {g['priority']}"
         )
     goals_text = "\n".join(goal_lines) if goal_lines else "No goals set yet."
@@ -71,6 +71,8 @@ OUTPUT FORMAT — STRICT:
 - No greetings ("Sure!", "Great question!"). No filler ("As we discussed", "Let me explain").
 - No restating the user's question.
 - No bullet lists unless asked. Use sentences.
+
+GREETINGS: If the user says hi, hello, hey, thanks, thank you, or any pure greeting with no question — reply with one warm sentence only. Do NOT run any tool. Do NOT give financial advice unprompted. Example: "Hey! What would you like to know about your finances?"
 
 BOUNDARIES: Only finance. Non-finance question → one line redirect: "I'm best with money questions — try asking about your budget, goals, or strategy."
 
