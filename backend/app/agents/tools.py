@@ -38,6 +38,7 @@ ALLOWED_PROPOSAL_ACTIONS = {
     "addGoal",
     "removeGoal",
     "addLumpsum",
+    "addDebt",
 }
 
 
@@ -55,7 +56,7 @@ class _WhatIfArgs(BaseModel):
 class _ProposeArgs(BaseModel):
     action: str = Field(description=f"Zustand setter name. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}.")
     payload: dict[str, Any] = Field(description="JSON payload the frontend will pass to the setter.")
-    rationale: str = Field(description="Short user-facing explanation (1-2 sentences).")
+    rationale: str = Field(default="", description="Short user-facing explanation (1-2 sentences). Optional but strongly recommended.")
 
 
 # ── builder ─────────────────────────────────────────────────────
@@ -151,7 +152,7 @@ def make_tools(
             }
         )
 
-    def _propose_change(action: str, payload: dict[str, Any], rationale: str) -> dict[str, Any]:
+    def _propose_change(action: str, payload: dict[str, Any], rationale: str = "") -> dict[str, Any]:
         if action not in ALLOWED_PROPOSAL_ACTIONS:
             return {
                 "ok": False,

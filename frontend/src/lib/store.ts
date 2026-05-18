@@ -153,6 +153,10 @@ interface FinPathStore extends FinancialProfile {
 
   // ── Reset ────────────────────────────────────────
   resetProfile: () => void;
+
+  // ── UI-only flags (not persisted) ────────────────
+  pdfExporting: boolean;
+  setPdfExporting: (b: boolean) => void;
 }
 
 /** Map goal name from onboarding to a Goal object */
@@ -408,6 +412,8 @@ export const useFinPathStore = create<FinPathStore>()(
   persist(
     (set, get) => ({
       ...defaultProfile,
+      pdfExporting: false,
+      setPdfExporting: (b: boolean) => set({ pdfExporting: b }),
 
       setIncome: (income) => {
         set({ income, lastUpdated: Date.now() });
@@ -922,6 +928,10 @@ export const useFinPathStore = create<FinPathStore>()(
       name: "finpath-store",
       version: 5,
       storage: safeStorage,
+      partialize: (state) => {
+        const { pdfExporting: _exporting, ...rest } = state;
+        return rest;
+      },
       migrate: (persistedState: any, version: number) => {
         if (version < 2 && persistedState?.income) {
           const inc = persistedState.income;

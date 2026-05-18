@@ -6,6 +6,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useNavigate } from "react-router";
 import { useFinPathStore } from '@/lib/store';
 import { formatInr, formatInrCompact } from '@/lib/format';
 import { pageContainer, pageSection } from "@/app/components/motion-variants";
@@ -24,6 +25,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
   const healthScore = useFinPathStore((s) => s.healthScore);
   const savings = useFinPathStore((s) => s.savings);
   const investments = useFinPathStore((s) => s.investments);
+  const navigate = useNavigate();
+  const isDay1 = goals.length === 0 && (savings + investments) === 0;
 
   const surplus = income.total - expenses.total - debts.totalMonthly;
   const activeGoals = useMemo(
@@ -214,6 +217,174 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
         )}
       </motion.div>
 
+      {isDay1 ? (
+        <motion.div className="space-y-4 md:space-y-6 relative z-10" variants={pageSection}>
+          <div className="bento-card p-6 md:p-8" style={{ position: "relative", overflow: "hidden" }}>
+            <p className="text-label mb-4">Net Worth Trajectory</p>
+            <svg
+              viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+              style={{ width: "100%", height: 160, opacity: 0.15 }}
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="nwGradGhost" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                d={`M0 ${SVG_H - 30} C ${SVG_W * 0.25} ${SVG_H - 60}, ${SVG_W * 0.5} ${SVG_H - 110}, ${SVG_W * 0.75} ${SVG_H - 140} S ${SVG_W} ${SVG_H - 180}, ${SVG_W} ${SVG_H - 200} L ${SVG_W} ${SVG_H} L 0 ${SVG_H} Z`}
+                fill="url(#nwGradGhost)"
+              />
+              <path
+                d={`M0 ${SVG_H - 30} C ${SVG_W * 0.25} ${SVG_H - 60}, ${SVG_W * 0.5} ${SVG_H - 110}, ${SVG_W * 0.75} ${SVG_H - 140} S ${SVG_W} ${SVG_H - 180}, ${SVG_W} ${SVG_H - 200}`}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                pointerEvents: "none",
+                paddingTop: 32,
+              }}
+            >
+              <p
+                className="font-body"
+                style={{
+                  fontSize: "var(--text-sm)",
+                  color: "var(--tertiary)",
+                  textAlign: "center",
+                  maxWidth: 320,
+                }}
+              >
+                Your trajectory appears here once you have goals and a starting balance.
+              </p>
+            </div>
+          </div>
+
+          <div className="bento-card p-6 md:p-8">
+            <p className="text-label">Your trajectory starts soon</p>
+            <h3
+              className="text-title"
+              style={{
+                color: "var(--card-foreground)",
+                marginTop: "var(--space-1)",
+              }}
+            >
+              Three steps to unlock Progress
+            </h3>
+            <p
+              className="font-body"
+              style={{
+                fontSize: "var(--text-sm)",
+                color: "var(--secondary)",
+                lineHeight: 1.6,
+                marginTop: "var(--space-2)",
+                marginBottom: "var(--space-5)",
+              }}
+            >
+              Progress tracks net worth, savings rate, and milestones. Complete these to see your first chart.
+            </p>
+
+            <div>
+              {([
+                {
+                  title: "Set up income and expenses",
+                  done: income.total > 0,
+                  cta: null as null | { label: string; onClick: () => void },
+                },
+                {
+                  title: "Add your first goal",
+                  done: goals.length > 0,
+                  cta: { label: "Go to Journey", onClick: () => navigate("/journey") },
+                },
+                {
+                  title: "Build a starting balance",
+                  done: savings + investments > 0,
+                  cta: { label: "Open Dashboard", onClick: () => navigate("/dashboard") },
+                },
+              ] as const).map((row, i, arr) => (
+                <div
+                  key={row.title}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "12px 0",
+                    borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      flexShrink: 0,
+                      background: row.done ? "var(--green-subtle)" : "var(--surface-hover)",
+                      color: row.done ? "var(--green-text)" : "var(--tertiary)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {row.done ? <Check size={14} strokeWidth={3} /> : <Clock size={14} />}
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 13.5,
+                      fontWeight: 500,
+                      flex: 1,
+                      color: row.done ? "var(--secondary)" : "var(--card-foreground)",
+                      textDecoration: row.done ? "line-through" : "none",
+                      textDecorationColor: "var(--tertiary)",
+                    }}
+                  >
+                    {row.title}
+                  </p>
+                  {!row.done && row.cta && (
+                    <button
+                      type="button"
+                      onClick={row.cta.onClick}
+                      className="pill"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                    >
+                      {row.cta.label} <ArrowRight size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bento-card penny-card p-6 md:p-8" style={{ position: "relative", overflow: "hidden" }}>
+            <div className="penny-blob" />
+            <div style={{ position: "relative" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <Sparkles size={18} style={{ color: "var(--penny-accent)" }} />
+                <p style={{ fontSize: 14, fontWeight: 700 }}>Penny is ready</p>
+              </div>
+              <p style={{ fontSize: 13.5, lineHeight: 1.6, color: "var(--secondary)" }}>
+                Once you&rsquo;ve logged a month, I&rsquo;ll start drawing your trajectory and projecting milestones. Until then, ask me anything about your setup.
+              </p>
+              <button
+                onClick={onPennyClick}
+                className="pill"
+                style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                Discuss with Penny <ArrowRight size={12} />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <>
       {/* KPI Cards */}
       <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 relative z-10" variants={pageSection}>
         {([
@@ -461,6 +632,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
             </div>
           )}
         </motion.div>
+      )}
+        </>
       )}
     </motion.div>
   );

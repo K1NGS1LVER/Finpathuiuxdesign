@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Sparkles, ArrowRight, TrendingUp, PiggyBank, AlertTriangle } from 'lucide-react';
+import { Sparkles, ArrowRight, TrendingUp, PiggyBank, AlertTriangle, CreditCard, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
 import { pageContainer, pageSection } from '@/app/components/motion-variants';
@@ -26,6 +26,9 @@ const PENNY_ICONS: Record<string, React.ComponentType<{ size?: number; className
 export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   const debts = useFinPathStore(s => s.debts);
   const goals = useFinPathStore(s => s.goals);
+  const income = useFinPathStore(s => s.income);
+  const expenses = useFinPathStore(s => s.expenses);
+  const onboarded = useFinPathStore(s => s.onboarded);
   const pal = usePalette();
 
   const [extraPayment, setExtraPayment] = useState(0);
@@ -391,14 +394,197 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
             </motion.div>
           )}
         </>
+      ) : onboarded && (debts.totalMonthly || 0) === 0 && !debtGoal ? (
+        <motion.div
+          className="bento-card"
+          style={{ padding: 'var(--space-8) var(--space-6)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}
+          variants={pageSection}
+        >
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: '-40%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 340,
+              height: 340,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, color-mix(in srgb, var(--green) 22%, transparent), transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 'var(--radius-base)',
+                background: 'color-mix(in srgb, var(--green) 18%, transparent)',
+                color: 'var(--green-text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 'var(--space-3)',
+              }}
+            >
+              <Sparkles size={24} className="icon-wireframe" />
+            </div>
+            <p className="text-label" style={{ marginBottom: 'var(--space-2)' }}>Liability-free</p>
+            <h3 className="text-display" style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}>
+              You&rsquo;re debt-free
+            </h3>
+            <p
+              className="font-body"
+              style={{
+                fontSize: 'var(--text-sm)',
+                color: 'var(--secondary)',
+                maxWidth: 460,
+                lineHeight: 1.6,
+                marginBottom: 'var(--space-4)',
+              }}
+            >
+              Nothing to pay down means every rupee of surplus goes straight to goals or net worth. That&rsquo;s the strongest base you can have.
+            </p>
+            {(income.total - expenses.total) > 0 && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-2)',
+                  padding: 'var(--space-2) var(--space-3)',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'color-mix(in srgb, var(--green) 10%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--green) 24%, transparent)',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                <span className="text-label" style={{ color: 'var(--green-text)' }}>Available surplus</span>
+                <span
+                  className="slashed-zero"
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    color: 'var(--green-text)',
+                    fontSize: 'var(--text-sm)',
+                  }}
+                >
+                  {formatInr(income.total - expenses.total)}/mo
+                </span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onPennyClick}
+              aria-label="Add a debt later if needed"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--secondary)',
+                textDecoration: 'underline',
+                textUnderlineOffset: '3px',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)',
+                fontSize: 'var(--text-sm)',
+                padding: 'var(--space-1) var(--space-2)',
+              }}
+            >
+              Add a debt later if anything changes
+            </button>
+          </div>
+        </motion.div>
       ) : (
-        <motion.div className="bento-card" style={{ padding: 'var(--space-12)', textAlign: 'center' }} variants={pageSection}>
-          <p style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--card-foreground)', marginBottom: 'var(--space-2)' }}>
-            No Debts Tracked
-          </p>
-          <p className="penny-suggest-text">
-            Add debts during onboarding to unlock strategy comparison and payoff timeline views.
-          </p>
+        <motion.div
+          className="bento-card"
+          style={{ padding: 'var(--space-8) var(--space-6)', textAlign: 'center' }}
+          variants={pageSection}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 'var(--radius-base)',
+                background: 'color-mix(in srgb, var(--accent) 14%, transparent)',
+                color: 'var(--accent-text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 'var(--space-3)',
+              }}
+            >
+              <CreditCard size={24} className="icon-wireframe" />
+            </div>
+            <p className="text-label" style={{ marginBottom: 'var(--space-2)' }}>Liabilities</p>
+            <h3 className="text-title" style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}>
+              Track a loan to unlock strategy views
+            </h3>
+            <p
+              className="font-body"
+              style={{
+                fontSize: 'var(--text-sm)',
+                color: 'var(--secondary)',
+                maxWidth: 480,
+                lineHeight: 1.6,
+                marginBottom: 'var(--space-5)',
+              }}
+            >
+              Add your EMIs and we&rsquo;ll show you avalanche vs snowball, payoff dates, and how much interest a small extra payment can save.
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'var(--space-2)',
+                justifyContent: 'center',
+                marginBottom: 'var(--space-6)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={onPennyClick}
+                aria-label="Add a debt with Penny"
+                className="px-5 py-3 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg bg-accent text-on-accent"
+              >
+                <Plus size={18} />
+                <span className="font-semibold text-sm font-body">Add a debt</span>
+              </button>
+              <button
+                type="button"
+                onClick={onPennyClick}
+                className="pill"
+                aria-label="Ask Penny about debt strategy"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                Ask Penny about strategy <ArrowRight size={14} className="icon-wireframe" />
+              </button>
+            </div>
+            <ul
+              aria-hidden="true"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-2)',
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                width: '100%',
+                maxWidth: 480,
+                opacity: 0.4,
+              }}
+            >
+              {[0, 1, 2].map(i => (
+                <li key={i} className="debt-row" style={{ pointerEvents: 'none' }}>
+                  <div className="skeleton" style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div className="skeleton" style={{ width: '42%', height: 12, borderRadius: 4 }} />
+                    <div className="skeleton" style={{ width: '64%', height: 10, borderRadius: 4 }} />
+                  </div>
+                  <div className="skeleton" style={{ width: 64, height: 14, borderRadius: 4, flexShrink: 0 }} />
+                </li>
+              ))}
+            </ul>
+          </div>
         </motion.div>
       )}
     </motion.div>

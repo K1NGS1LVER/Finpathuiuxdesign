@@ -1,4 +1,4 @@
-import { X, Calendar, Sparkles } from "lucide-react";
+import { X, Calendar, Sparkles, Shield, TrendingUp, Target } from "lucide-react";
 import type { Goal } from '@/lib/types';
 import { getGoalIcon } from "./icon-map";
 

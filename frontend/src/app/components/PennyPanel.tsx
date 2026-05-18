@@ -138,13 +138,16 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
 
     const userMsgId = `user-${Date.now()}`;
     const assistantId = `penny-${Date.now()}`;
-    setMessages(prev => [
-      ...prev,
-      { id: userMsgId, role: 'user', text: trimmed },
-      { id: assistantId, role: 'penny', text: '', toolCalls: [] },
-    ]);
+    setMessages(prev => [...prev, { id: userMsgId, role: 'user', text: trimmed }]);
     setInput('');
     setIsLoading(true);
+
+    const addOrUpdate = (text: string, toolCalls?: { name: string; input: unknown }[]) =>
+      setMessages(prev => {
+        const exists = prev.some(m => m.id === assistantId);
+        if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text, toolCalls: toolCalls ?? [] }];
+        return prev.map(m => m.id === assistantId ? { ...m, text, ...(toolCalls ? { toolCalls } : {}) } : m);
+      });
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -162,17 +165,17 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             strategy, monthlySurplusReserve,
           },
           history: messages
-            .filter(m => m.id !== 'welcome' && m.id !== assistantId && !m.proposal && m.text.trim().length > 0)
+            .filter(m => m.id !== 'welcome' && !m.proposal && m.text.trim().length > 0)
             .map(m => ({ role: m.role === 'penny' ? 'assistant' : 'user', content: m.text })),
         }),
       });
 
       if (response.status === 429) {
-        setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: "I'm getting a lot of questions right now. Try again in a moment." } : m)));
+        addOrUpdate("I'm getting a lot of questions right now. Try again in a moment.");
         return;
       }
       if (response.status === 401) {
-        setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: 'Your session expired. Please sign in again.' } : m)));
+        addOrUpdate('Your session expired. Please sign in again.');
         return;
       }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -182,29 +185,48 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         try { data = JSON.parse(ev.data); } catch { continue; }
         if (ev.event === 'token') {
           const chunk = String(data);
-          setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: m.text + chunk } : m)));
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === assistantId);
+            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: chunk, toolCalls: [] }];
+            return prev.map(m => m.id === assistantId ? { ...m, text: m.text + chunk } : m);
+          });
         } else if (ev.event === 'tool_call') {
-          setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls || []), { name: data.name, input: data.input }] } : m)));
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === assistantId);
+            const tc = { name: data.name, input: data.input };
+            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: '', toolCalls: [tc] }];
+            return prev.map(m => m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls || []), tc] } : m);
+          });
         } else if (ev.event === 'proposal') {
           const prop = data as Proposal;
           setMessages(prev => [...prev, { id: `proposal-${prop.id}`, role: 'penny', text: '', proposal: prop }]);
         } else if (ev.event === 'error') {
           const err = String(data);
-          setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: m.text || `Error: ${err}` } : m)));
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === assistantId);
+            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: `Error: ${err}`, toolCalls: [] }];
+            return prev.map(m => m.id === assistantId ? { ...m, text: m.text || `Error: ${err}` } : m);
+          });
         } else if (ev.event === 'done') {
           if (data?.reply) {
-            setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, text: data.reply } : m)));
+            setMessages(prev => {
+              const exists = prev.some(m => m.id === assistantId);
+              if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: data.reply, toolCalls: [] }];
+              return prev.map(m => m.id === assistantId ? { ...m, text: data.reply } : m);
+            });
           }
         }
       }
     } catch (err: any) {
       const isTimeout = err?.name === 'AbortError';
-      setMessages(prev => prev.map(m => (m.id === assistantId ? {
-        ...m,
-        text: isTimeout
-          ? "That took too long — my thinking timed out. Try a simpler question, or try again in a moment!"
-          : "Oops, I couldn't connect right now. Please check your connection and try again!",
-      } : m)));
+      const text = isTimeout
+        ? "That took too long — my thinking timed out. Try a simpler question, or try again in a moment!"
+        : "Oops, I couldn't connect right now. Please check your connection and try again!";
+      setMessages(prev => {
+        const exists = prev.some(m => m.id === assistantId);
+        if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text, toolCalls: [] }];
+        return prev.map(m => m.id === assistantId ? { ...m, text } : m);
+      });
     } finally {
       clearTimeout(timeout);
       setIsLoading(false);

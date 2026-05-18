@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { Trophy, Clock, Sparkles, Share2, ArrowRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Trophy, Sparkles, Share2, ArrowRight, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { useFinPathStore } from '@/lib/store';
+import { formatInr } from '@/lib/format';
+import ShareCard from '@/app/components/ShareCard';
+import { captureNodeToPng, tryShareImage, type ShareOutcome } from '@/lib/share-card';
 
 export default function Celebrate() {
   const navigate = useNavigate();
@@ -14,9 +17,53 @@ export default function Celebrate() {
   const healthScore = useFinPathStore(s => s.healthScore);
 
   const [showConfetti, setShowConfetti] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [capturing, setCapturing] = useState(false);
+  const [toast, setToast] = useState<ShareOutcome | null>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   const completedGoals = goals.filter(g => g.status === 'complete');
   const totalSaved = completedGoals.reduce((sum, g) => sum + g.targetAmount, 0);
+  const heroGoal = completedGoals[0];
+  const totalTimeline = completedGoals.reduce((sum, g) => sum + (g.timelineMonths || 0), 0);
+  const aggregateMonthly = totalTimeline > 0
+    ? Math.round(totalSaved / totalTimeline)
+    : 0;
+  const netWorthToday = savings + investments + totalSaved;
+  const dateLabel = new Date().toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  const handleShare = async () => {
+    if (sharing || !heroGoal) return;
+    setSharing(true);
+    setToast(null);
+    setCapturing(true);
+    try {
+      await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+      const card = shareCardRef.current;
+      if (!card) throw new Error('ShareCard not mounted');
+      const cardBg =
+        getComputedStyle(document.documentElement).getPropertyValue('--card').trim() ||
+        '#ffffff';
+      const blob = await captureNodeToPng(card, { pixelRatio: 2, backgroundColor: cardBg });
+      const outcome = await tryShareImage(blob, {
+        title: 'I hit a savings milestone with FinPath',
+        text: `${heroGoal.name} — saved ${formatInr(totalSaved)}`,
+        filename: `finpath-milestone-${new Date().toISOString().slice(0, 10)}.png`,
+      });
+      setToast(outcome);
+      window.setTimeout(() => setToast(null), 2200);
+    } catch (err) {
+      console.error('Share failed', err);
+      setToast(null);
+    } finally {
+      setCapturing(false);
+      setSharing(false);
+    }
+  };
 
   // Trigger confetti on mount
   useEffect(() => {
@@ -173,28 +220,109 @@ export default function Celebrate() {
 
       {/* Actions */}
       <motion.div
-        className="flex flex-col sm:flex-row gap-3 relative z-10"
+        className="flex flex-col gap-3 relative z-10"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1], delay: 0.75 }}
       >
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 button-press"
-          style={{ backgroundColor: 'var(--accent)', color: 'var(--on-secondary-accent)', fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px var(--secondary-accent-glow)' }}
-        >
-          Back to Dashboard
-          <ArrowRight size={18} />
-        </button>
-        <button
-          onClick={() => navigate('/journey')}
-          className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 button-press text-[var(--card-foreground)]"
-          style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)', fontFamily: 'var(--font-body)' }}
-        >
-          View Journey Map
-          <ArrowRight size={18} />
-        </button>
+        {completedGoals.length > 0 && (
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            aria-label="Share this milestone"
+            className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 button-press disabled:opacity-70 disabled:cursor-wait"
+            style={{
+              backgroundColor: 'var(--accent)',
+              color: 'var(--on-secondary-accent)',
+              fontFamily: 'var(--font-body)',
+              boxShadow: '0 8px 24px var(--secondary-accent-glow)',
+            }}
+          >
+            {sharing ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Generating card&hellip;
+              </>
+            ) : (
+              <>
+                <Share2 size={18} />
+                Share this milestone
+              </>
+            )}
+          </button>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 button-press text-[var(--card-foreground)]"
+            style={{
+              background: 'var(--surface-tint)',
+              border: '1px solid var(--border)',
+              fontFamily: 'var(--font-body)',
+            }}
+          >
+            Back to Dashboard
+            <ArrowRight size={18} />
+          </button>
+          <button
+            onClick={() => navigate('/journey')}
+            className="flex-1 py-4 rounded-xl font-bold flex items-center justify-center gap-2 button-press text-[var(--card-foreground)]"
+            style={{
+              background: 'var(--surface-tint)',
+              border: '1px solid var(--border)',
+              fontFamily: 'var(--font-body)',
+            }}
+          >
+            View Journey Map
+            <ArrowRight size={18} />
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              role="status"
+              aria-live="polite"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.2 }}
+              className="self-center pill"
+              style={{
+                background: 'var(--surface-hover)',
+                border: '1px solid var(--border)',
+                color: 'var(--card-foreground)',
+                fontFamily: 'var(--font-body)',
+                fontSize: 'var(--text-sm)',
+              }}
+            >
+              {toast === 'shared'
+                ? 'Shared'
+                : toast === 'copied'
+                  ? 'Saved to device &middot; copied to clipboard'.replace('&middot;', '·')
+                  : 'Saved to your device'}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
+
+      {capturing && heroGoal && (
+        <ShareCard
+          ref={shareCardRef}
+          goalName={heroGoal.name}
+          amountSaved={totalSaved}
+          timelineMonths={heroGoal.timelineMonths}
+          monthlySaved={
+            heroGoal.timelineMonths > 0
+              ? Math.round(heroGoal.targetAmount / heroGoal.timelineMonths)
+              : aggregateMonthly
+          }
+          netWorthToday={netWorthToday}
+          completedCount={completedGoals.length}
+          dateLabel={dateLabel}
+        />
+      )}
     </div>
   );
 }
