@@ -7,11 +7,12 @@ When `AUTH_MOCK=true` or Supabase isn't configured, all writes/reads
 become no-ops returning empty data — the agent still works locally
 without a real Supabase project.
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -228,7 +229,7 @@ async def update_proposal_status(
         return None
     body = {
         "status": status,
-        "resolved_at": datetime.now(timezone.utc).isoformat(),
+        "resolved_at": datetime.now(UTC).isoformat(),
     }
     try:
         client = await get_client()
@@ -315,10 +316,10 @@ async def expire_stale_proposals(max_age_hours: int = 24) -> int:
     base = _rest_base()
     if base is None or not settings.supabase_service_role_key:
         return 0
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=max_age_hours)).isoformat()
+    cutoff = (datetime.now(UTC) - timedelta(hours=max_age_hours)).isoformat()
     body = {
         "status": "expired",
-        "resolved_at": datetime.now(timezone.utc).isoformat(),
+        "resolved_at": datetime.now(UTC).isoformat(),
     }
     try:
         client = await get_client()

@@ -1,4 +1,5 @@
 """In-process response cache for Penny replies. 5-min TTL, scoped per user."""
+
 from __future__ import annotations
 
 import threading
@@ -37,7 +38,9 @@ class ResponseCache:
         with self._lock:
             self._entries[key] = _Entry(reply=reply, cached_at=now)
             if len(self._entries) > MAX_CACHE_ENTRIES:
-                expired = [k for k, v in self._entries.items() if now - v.cached_at >= CACHE_TTL_SECONDS]
+                expired = [
+                    k for k, v in self._entries.items() if now - v.cached_at >= CACHE_TTL_SECONDS
+                ]
                 for k in expired:
                     self._entries.pop(k, None)
 

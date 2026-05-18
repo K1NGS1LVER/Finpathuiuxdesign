@@ -1,4 +1,5 @@
 """Parity tests for the Python health-score engine vs TS-generated fixtures."""
+
 from __future__ import annotations
 
 import pytest

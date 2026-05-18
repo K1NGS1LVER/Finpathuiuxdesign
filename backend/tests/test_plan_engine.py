@@ -4,6 +4,7 @@ Strips `date` keys (months[].date) and `goalCompletionDates` values
 which are presentational and depend on `now()`. The integer `month`
 index and the keys of `goalCompletionDates` are canonical.
 """
+
 from __future__ import annotations
 
 import pytest

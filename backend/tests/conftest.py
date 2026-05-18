@@ -1,4 +1,5 @@
 """Shared pytest fixtures for engine parity tests."""
+
 from __future__ import annotations
 
 import json
@@ -44,9 +45,7 @@ def strip_completion_dates(value: Any) -> Any:
     as strip_dates — values are presentational date strings."""
     if isinstance(value, dict):
         return {
-            k: strip_completion_dates(v)
-            for k, v in value.items()
-            if k != "goalCompletionDates"
+            k: strip_completion_dates(v) for k, v in value.items() if k != "goalCompletionDates"
         }
     if isinstance(value, list):
         return [strip_completion_dates(v) for v in value]

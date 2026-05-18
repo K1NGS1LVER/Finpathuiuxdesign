@@ -1,4 +1,5 @@
 """Per-IP rate limiter. Mirrors src/server/penny-api.ts: 15 requests / 60s."""
+
 from __future__ import annotations
 
 import threading

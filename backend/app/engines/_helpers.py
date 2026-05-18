@@ -5,6 +5,7 @@ half-values toward +inf (e.g. 0.5 → 1, -0.5 → 0). Python's built-in
 `round` uses banker's rounding (0.5 → 0, 1.5 → 2), so we need a tiny
 shim to keep parity with the TS engines.
 """
+
 from __future__ import annotations
 
 import math

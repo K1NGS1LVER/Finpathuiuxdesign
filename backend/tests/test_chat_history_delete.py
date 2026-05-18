@@ -1,4 +1,5 @@
 """Tests for DELETE /api/chat/history endpoint + supabase helper."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch

@@ -1,11 +1,13 @@
 """Penny API — Phase 0 chat proxy + Phase 3 LangGraph SSE stream + chat/proposal CRUD."""
+
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
 import uuid
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
 from fastapi.responses import StreamingResponse
@@ -79,7 +81,9 @@ async def chat(
         )
     except Exception as exc:
         log.exception("Groq API error")
-        raise HTTPException(status_code=502, detail="Penny is temporarily unavailable. Try again shortly.") from exc
+        raise HTTPException(
+            status_code=502, detail="Penny is temporarily unavailable. Try again shortly."
+        ) from exc
 
     reply = ""
     if completion.choices and completion.choices[0].message:
@@ -184,6 +188,7 @@ async def chat_stream(
         except Exception as exc:
             log.exception("SSE stream error")
             from groq import APIStatusError
+
             if isinstance(exc, APIStatusError) and exc.status_code == 429:
                 msg = "I'm getting a lot of requests right now — try again in a moment."
             elif isinstance(exc, APIStatusError) and exc.status_code == 413:
@@ -239,6 +244,7 @@ async def clear_chat_history(
     # No-op when Supabase isn't configured / mock mode — return success so the
     # frontend can still clear local state.
     from app.config import settings as _s
+
     if not (_s.supabase_url and _s.supabase_anon_key) or not user.access_token:
         return {"deleted": True, "_ephemeral": True}
     ok = await delete_chat_history(user.access_token, user.user_id)
@@ -262,6 +268,7 @@ async def patch_proposal(
     if existing is None:
         # No Supabase configured (or row never persisted in mock mode) — echo.
         from app.config import settings as _s
+
         if not (_s.supabase_url and _s.supabase_anon_key):
             return {"id": proposal_id, "status": body.status, "_ephemeral": True}
         raise HTTPException(status_code=404, detail="Proposal not found.")

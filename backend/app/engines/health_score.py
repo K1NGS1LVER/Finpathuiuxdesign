@@ -3,6 +3,7 @@
 Produces a 0–100 composite score across 4 dimensions plus up to
 3 actionable recommendations.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -58,12 +59,14 @@ def _score_income_stability(income: dict[str, Any]) -> int:
     if (income.get("total") or 0) <= 0:
         return 0
     sources = sum(
-        1 for v in (
+        1
+        for v in (
             income.get("primary", 0),
             income.get("secondary", 0),
             income.get("passive", 0),
             income.get("variable", 0),
-        ) if v and v > 0
+        )
+        if v and v > 0
     )
     if sources >= 4:
         return 25
@@ -135,7 +138,9 @@ def calculate_health_score(input_: dict[str, Any]) -> dict[str, Any]:
     income_total = income.get("total") or 0
 
     income_stability = _score_income_stability(income)
-    savings_rate = _score_savings_rate(income_total, monthly_expenses_deduplicated, debts_total_monthly)
+    savings_rate = _score_savings_rate(
+        income_total, monthly_expenses_deduplicated, debts_total_monthly
+    )
     debt_load = _score_debt_load(income_total, debts_total_monthly)
     emergency_fund_score = _score_emergency_fund(
         emergency_fund, monthly_expenses_deduplicated + debts_total_monthly
