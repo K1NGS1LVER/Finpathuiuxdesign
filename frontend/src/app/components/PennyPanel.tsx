@@ -1,5 +1,6 @@
-import { X, Send, Loader2, Wrench } from 'lucide-react';
+import { X, Send, Loader2, Wrench, Trash2 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router';
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import { apiFetch } from '@/lib/api';
@@ -63,10 +64,14 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   const [loadingPhrase, setLoadingPhrase] = useState(LOADING_PHRASES[0]);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [hydratedForUser, setHydratedForUser] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const userId = useAuthStore(s => s.user?.id ?? null);
+  const location = useLocation();
+  const route = (location.pathname.replace(/^\//, '').split('/')[0] || 'landing').toLowerCase();
 
   const onboarded = useFinPathStore(s => s.onboarded);
   const income = useFinPathStore(s => s.income);
@@ -167,6 +172,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           history: messages
             .filter(m => m.id !== 'welcome' && !m.proposal && m.text.trim().length > 0)
             .map(m => ({ role: m.role === 'penny' ? 'assistant' : 'user', content: m.text })),
+          context: route,
         }),
       });
 
@@ -204,7 +210,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           const err = String(data);
           setMessages(prev => {
             const exists = prev.some(m => m.id === assistantId);
-            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: `Error: ${err}`, toolCalls: [] }];
+            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: err, toolCalls: [] }];
             return prev.map(m => m.id === assistantId ? { ...m, text: m.text || `Error: ${err}` } : m);
           });
         } else if (ev.event === 'done') {
@@ -232,7 +238,21 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [input, isLoading, onboarded, income, expenses, debts, savings, investments, emergencyFund, goals, healthScore, strategy, monthlySurplusReserve, messages]);
+  }, [input, isLoading, onboarded, income, expenses, debts, savings, investments, emergencyFund, goals, healthScore, strategy, monthlySurplusReserve, messages, route]);
+
+  const handleClearHistory = useCallback(async () => {
+    if (isClearing) return;
+    setIsClearing(true);
+    try {
+      await apiFetch('/api/chat/history', { method: 'DELETE' });
+    } catch {
+      // ignore — local clear still happens even if server clear fails.
+    } finally {
+      setMessages([WELCOME]);
+      setShowClearConfirm(false);
+      setIsClearing(false);
+    }
+  }, [isClearing]);
 
   const quickSuggestions = onboarded || income.total > 0
     ? ['How am I doing financially?', 'What if I get a 10% raise?', 'Compare avalanche vs snowball', 'Help me save more']
@@ -259,10 +279,59 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             <span className="font-bold font-display-family">Penny</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] font-semibold">AI</span>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]" aria-label="Close Penny">
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              disabled={messages.length <= 1 || isLoading}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40 disabled:hover:bg-transparent"
+              aria-label="Clear chat history"
+              title="Clear chat history"
+            >
+              <Trash2 className="icon-wireframe" size={18} />
+            </button>
+            <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]" aria-label="Close Penny">
+              <X size={18} />
+            </button>
+          </div>
         </div>
+
+        {showClearConfirm && (
+          <div
+            className="absolute inset-0 z-10 flex items-center justify-center p-6"
+            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+            onClick={() => !isClearing && setShowClearConfirm(false)}
+          >
+            <div
+              className="bento-card w-full max-w-[300px] p-5"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="clear-chat-title"
+            >
+              <h3 id="clear-chat-title" className="text-heading mb-2">Clear chat history?</h3>
+              <p className="text-sm text-[var(--secondary)] mb-4">
+                This permanently deletes every message between you and Penny. Can't be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  disabled={isClearing}
+                  className="px-3 py-1.5 rounded-lg text-sm hover:bg-[var(--surface-hover)] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearHistory}
+                  disabled={isClearing}
+                  className="px-3 py-1.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+                  style={{ background: 'var(--red)', color: 'var(--on-accent, white)' }}
+                >
+                  {isClearing ? 'Clearing…' : 'Clear'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.map((msg) => (

@@ -29,6 +29,9 @@ from app.engines.plan_engine import generate_plan, generate_scenario_plan
 log = logging.getLogger(__name__)
 
 
+import math
+
+
 ALLOWED_PROPOSAL_ACTIONS = {
     "setStrategy",
     "setEmergencyFund",
@@ -57,6 +60,24 @@ class _ProposeArgs(BaseModel):
     action: str = Field(description=f"Zustand setter name. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}.")
     payload: dict[str, Any] = Field(description="JSON payload the frontend will pass to the setter.")
     rationale: str = Field(default="", description="Short user-facing explanation (1-2 sentences). Optional but strongly recommended.")
+
+
+class _SimGoalArgs(BaseModel):
+    goal_id: str = Field(description="ID of the goal to simulate (from read_profile goals list).")
+    extra_monthly: float = Field(ge=0, description="Extra ₹ per month to direct at this specific goal on top of its current allocation.")
+
+
+class _MonthOffsetArgs(BaseModel):
+    month_offset: int = Field(0, ge=0, le=119, description="Month index (0 = this month, 11 = 12 months from now, 59 = 5 years, up to 119).")
+
+
+class _GoalPriorityItem(BaseModel):
+    goal_id: str
+    priority: int = Field(ge=1, description="New priority. 1 = highest urgency.")
+
+
+class _ReorderArgs(BaseModel):
+    new_priorities: list[_GoalPriorityItem] = Field(description="New priority assignment for each goal to reorder. Include only the goals you want to change.")
 
 
 # ── builder ─────────────────────────────────────────────────────
@@ -152,6 +173,124 @@ def make_tools(
             }
         )
 
+    def _simulate_goal(goal_id: str, extra_monthly: float = 0) -> dict[str, Any]:
+        goals_list = profile.get("goals") or []
+        goal = next((g for g in goals_list if g.get("id") == goal_id), None)
+        if goal is None:
+            return {"error": f"Goal '{goal_id}' not found. Call read_profile to get valid goal IDs."}
+
+        target = float(goal.get("targetAmount") or 0)
+        current = float(goal.get("currentAmount") or 0)
+        remaining = max(0.0, target - current)
+        if remaining == 0:
+            return {"goal_id": goal_id, "name": goal.get("name"), "status": "already_complete"}
+
+        plan = generate_plan(deepcopy(base_plan_input))
+        alloc = float((plan.get("recommendedAllocations") or {}).get(goal_id, 0))
+
+        if alloc <= 0:
+            return {
+                "goal_id": goal_id,
+                "name": goal.get("name"),
+                "note": "Goal has no current monthly allocation (no surplus or goal deprioritised). Adding extra_monthly would be the only funding.",
+                "remaining": remaining,
+                "baseline_monthly_allocation": 0,
+                "extra_monthly": extra_monthly,
+                "new_monthly_allocation": extra_monthly,
+                "estimated_baseline_months": None,
+                "estimated_new_months": math.ceil(remaining / extra_monthly) if extra_monthly > 0 else None,
+                "months_saved": None,
+            }
+
+        baseline_months = math.ceil(remaining / alloc)
+        new_alloc = alloc + extra_monthly
+        new_months = math.ceil(remaining / new_alloc)
+        months_saved = baseline_months - new_months
+
+        return {
+            "goal_id": goal_id,
+            "name": goal.get("name"),
+            "remaining": remaining,
+            "baseline_monthly_allocation": alloc,
+            "extra_monthly": extra_monthly,
+            "new_monthly_allocation": new_alloc,
+            "estimated_baseline_months": baseline_months,
+            "estimated_new_months": new_months,
+            "months_saved": months_saved,
+        }
+
+    def _get_month_cashflow(month_offset: int = 0) -> dict[str, Any]:
+        plan = generate_plan(deepcopy(base_plan_input))
+        months = plan.get("months") or []
+        if month_offset >= len(months):
+            return {"error": f"Plan only has {len(months)} months. Requested month {month_offset}."}
+        m = months[month_offset]
+        goals_list = profile.get("goals") or []
+        goal_names = {g.get("id"): g.get("name", g.get("id")) for g in goals_list}
+        allocs = {
+            goal_names.get(gid, gid): amt
+            for gid, amt in (m.get("goalAllocations") or {}).items()
+            if amt > 0
+        }
+        return {
+            "month_offset": month_offset,
+            "date": m.get("date"),
+            "income": m.get("income"),
+            "expenses": m.get("expenses"),
+            "debt_payments": m.get("debtPayments"),
+            "surplus": m.get("surplus"),
+            "reserved_surplus": m.get("reservedSurplus"),
+            "goal_allocations": allocs,
+            "net_worth": m.get("netWorth"),
+            "milestones": m.get("milestones") or [],
+        }
+
+    def _simulate_goal_reorder(new_priorities: list[dict[str, Any]]) -> dict[str, Any]:
+        goals_list = profile.get("goals") or []
+        if not goals_list:
+            return {"error": "No goals found."}
+
+        # Build priority update map. Items are _GoalPriorityItem Pydantic objects.
+        priority_map: dict[str, int] = {
+            (item.goal_id if hasattr(item, "goal_id") else item.get("goal_id", "")): int(
+                item.priority if hasattr(item, "priority") else item.get("priority", 1)
+            )
+            for item in new_priorities
+        }
+
+        # Baseline plan
+        baseline_plan = generate_plan(deepcopy(base_plan_input))
+        baseline_dates = baseline_plan.get("goalCompletionDates") or {}
+        baseline_allocs = baseline_plan.get("recommendedAllocations") or {}
+
+        # Modified goals with new priorities
+        modified_input = deepcopy(base_plan_input)
+        for g in modified_input.get("goals") or []:
+            if g.get("id") in priority_map:
+                g["priority"] = priority_map[g["id"]]
+        new_plan = generate_plan(modified_input)
+        new_dates = new_plan.get("goalCompletionDates") or {}
+        new_allocs = new_plan.get("recommendedAllocations") or {}
+
+        goal_names = {g.get("id"): g.get("name", g.get("id")) for g in goals_list}
+        deltas = []
+        for g in goals_list:
+            gid = g.get("id")
+            old_priority = g.get("priority")
+            new_priority = priority_map.get(gid, old_priority)
+            deltas.append({
+                "goal_id": gid,
+                "name": goal_names.get(gid, gid),
+                "old_priority": old_priority,
+                "new_priority": new_priority,
+                "baseline_completion_date": baseline_dates.get(gid),
+                "new_completion_date": new_dates.get(gid),
+                "baseline_monthly_allocation": baseline_allocs.get(gid, 0),
+                "new_monthly_allocation": new_allocs.get(gid, 0),
+            })
+
+        return {"goal_deltas": deltas}
+
     def _propose_change(action: str, payload: dict[str, Any], rationale: str = "") -> dict[str, Any]:
         if action not in ALLOWED_PROPOSAL_ACTIONS:
             return {
@@ -204,6 +343,34 @@ def make_tools(
                 "tool that the change is actually beneficial."
             ),
             args_schema=_ProposeArgs,
+        ),
+        StructuredTool.from_function(
+            func=_simulate_goal,
+            name="simulate_goal",
+            description=(
+                "Show how many months faster a specific goal completes if the user adds ₹extra_monthly/month to it. "
+                "Use when the user asks 'how much faster if I put more into X goal' or 'I want to accelerate my [goal]'."
+            ),
+            args_schema=_SimGoalArgs,
+        ),
+        StructuredTool.from_function(
+            func=_get_month_cashflow,
+            name="get_month_cashflow",
+            description=(
+                "Return detailed cashflow for a specific future month: income, expenses, debt payments, surplus, "
+                "per-goal allocations, net worth. Use when the user asks about a specific point in time "
+                "('what does month 6 look like', 'in a year', 'when I hit my emergency fund')."
+            ),
+            args_schema=_MonthOffsetArgs,
+        ),
+        StructuredTool.from_function(
+            func=_simulate_goal_reorder,
+            name="simulate_goal_reorder",
+            description=(
+                "Simulate the impact of changing goal priorities. Returns new vs baseline completion dates and "
+                "monthly allocation changes per goal. Use when the user wants to know 'what if I prioritise X over Y'."
+            ),
+            args_schema=_ReorderArgs,
         ),
     ]
 
