@@ -42,27 +42,33 @@ _FUNCTION_OPEN_RE = re.compile(r"<function=[^>]*$")
 SYSTEM_SUFFIX = """
 
 TOOLS AVAILABLE:
-- read_profile() — pull a structured snapshot of the user's profile.
+- read_profile() — pull a structured snapshot of the user's profile (goal IDs, names, balances).
 - simulate_plan() — run the 120-month plan as-is.
-- simulate_what_if(income_change_pct, expense_change_pct, timeline_change_months) — scenario plan.
+- simulate_what_if(income_change_pct, expense_change_pct, timeline_change_months) — scenario plan with % tweaks to income/expenses or months shift to all goals.
+- simulate_goal(goal_id, extra_monthly) — how many months faster would a specific goal complete if the user adds ₹extra_monthly/month to it?
+- get_month_cashflow(month_offset) — detailed cashflow for a specific future month (0 = this month, 11 = 12mo from now, 59 = 5 years).
+- simulate_goal_reorder(new_priorities) — show the impact of changing goal priorities on completion dates and monthly allocations.
 - compare_debt_strategies() — avalanche vs snowball.
 - check_health() — recompute the 4D health score.
 - propose_change(action, payload, rationale) — propose a single store mutation for user Approve/Reject.
 
 TOOL USAGE RULES:
 1. NEVER answer a numeric what-if question without first calling simulate_what_if. Don't guess outcomes.
-2. Call each tool AT MOST ONCE per turn. If you already called simulate_what_if, do not call it again with the same args.
-3. NEVER call propose_change unless tool math actually supports the change.
-4. Allowed propose_change actions: setStrategy, setEmergencyFund, setSavings, setInvestments, updateGoal, addGoal, removeGoal, addLumpsum, addDebt.
-5. propose_change.payload must match the Zustand setter shape:
+2. "How much faster if I put ₹X more into [goal]?" → ALWAYS call simulate_goal(goal_id, extra_monthly). Never estimate.
+3. "What does month N look like?" / "In 6 months" / "What's my cash flow in a year?" → call get_month_cashflow(month_offset).
+4. "What if I prioritise X over Y?" / "Reorder my goals" → call simulate_goal_reorder.
+5. Call each tool AT MOST ONCE per turn.
+6. NEVER call propose_change unless tool math actually supports the change.
+7. Allowed propose_change actions: setStrategy, setEmergencyFund, setSavings, setInvestments, updateGoal, addGoal, removeGoal, addLumpsum, addDebt.
+8. propose_change.payload must match the Zustand setter shape:
    - updateGoal -> {"id": "...", "updates": {...}}
    - addLumpsum -> {"goalId": "...", "amount": <positive number>} (amount > 0; never negative)
    - addDebt   -> {"debt": {"name": "...", "principal": <positive amount>, "interestRate": <annual %>, "monthlyPayment": <amount>, "category": "personalLoan|creditCard|homeLoan|carLoan|educationLoan|other"}}
      For addDebt: principal is always POSITIVE (the amount owed). If user says "I owe 10000" or "add 10000 debt", principal = 10000.
      Never use addLumpsum to model a new debt — use addDebt.
-6. ALWAYS include a one-sentence `rationale` in every propose_change call (e.g. "User requested adding a personal debt of ₹10,000."). Empty rationale is allowed by the tool but worsens the user experience.
-7. Tool calls happen via the API only. NEVER write `<function=...>`, `</function>`, JSON tool-call blocks, or any literal tool-invocation syntax in your reply text. Use the function-calling API to invoke tools; the reply is plain prose for the user.
-8. Do NOT instruct the user to call a function or suggest "calling X". Either call the tool yourself via the API, or omit the suggestion. The user does not see tool names.
+9. ALWAYS include a one-sentence `rationale` in every propose_change call (e.g. "User requested adding a personal debt of ₹10,000."). Empty rationale is allowed by the tool but worsens the user experience.
+10. Tool calls happen via the API only. NEVER write `<function=...>`, `</function>`, JSON tool-call blocks, or any literal tool-invocation syntax in your reply text. Use the function-calling API to invoke tools; the reply is plain prose for the user.
+11. Do NOT instruct the user to call a function or suggest "calling X". Either call the tool yourself via the API, or omit the suggestion. The user does not see tool names.
 
 FINAL REPLY FORMAT — STRICT:
 - Two short paragraphs separated by a blank line. 4-6 sentences total.
@@ -81,7 +87,7 @@ def _llm() -> ChatGroq:
         api_key=settings.groq_api_key,
         model="llama-3.3-70b-versatile",
         temperature=0.3,
-        max_tokens=350,
+        max_tokens=500,
     )
 
 
@@ -99,6 +105,7 @@ async def stream_agent(
     history: list[dict[str, str]] | None,
     propose: Callable[[str, dict[str, Any], str], dict[str, Any]],
     proposal_queue: asyncio.Queue,
+    context: str | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Stream normalized SSE events for one Penny turn.
 
@@ -107,9 +114,9 @@ async def stream_agent(
     """
     graph = build_graph(profile, propose)
 
-    sys_prompt = build_system_prompt(profile) + SYSTEM_SUFFIX
+    sys_prompt = build_system_prompt(profile, context) + SYSTEM_SUFFIX
     messages: list[Any] = [SystemMessage(content=sys_prompt)]
-    for m in history or []:
+    for m in (history or [])[-20:]:
         role = m.get("role")
         content = m.get("content") or ""
         if role == "user":

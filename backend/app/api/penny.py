@@ -18,12 +18,15 @@ from app.services.groq_client import get_groq_client
 from app.services.prompt import build_system_prompt
 from app.services.rate_limit import rate_limiter
 from app.services.supabase_db import (
+    delete_chat_history,
     get_proposal,
     insert_chat_message,
     insert_proposal,
     list_chat_history,
     update_proposal_status,
 )
+
+PENNY_MODEL = "llama-3.3-70b-versatile"
 
 log = logging.getLogger(__name__)
 router = APIRouter()
@@ -62,20 +65,16 @@ async def chat(
         return PennyChatResponse(reply=cached)
 
     messages: list[dict[str, str]] = [
-        {"role": "system", "content": build_system_prompt(req.profile)},
+        {"role": "system", "content": build_system_prompt(req.profile, req.context)},
+        {"role": "user", "content": req.message},
     ]
-    if req.context:
-        messages.append(
-            {"role": "user", "content": f"[Context: The user is currently on the {req.context} page of the app.]"}
-        )
-    messages.append({"role": "user", "content": req.message})
 
     try:
         completion = get_groq_client().chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=PENNY_MODEL,
             messages=messages,
             temperature=0.3,
-            max_tokens=350,
+            max_tokens=500,
             stream=False,
         )
     except Exception as exc:
@@ -97,6 +96,7 @@ class PennyStreamRequest(BaseModel):
     message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     profile: dict[str, Any]
     history: list[dict[str, str]] | None = None
+    context: str | None = Field(default=None, max_length=64)
 
 
 def _sse_format(event: str, data: Any) -> str:
@@ -173,6 +173,7 @@ async def chat_stream(
                 history=req.history,
                 propose=_propose,
                 proposal_queue=proposal_queue,
+                context=req.context,
             ):
                 if ev["event"] == "done":
                     payload = ev["data"]
@@ -182,7 +183,16 @@ async def chat_stream(
                 yield _sse_format(ev["event"], ev["data"]).encode("utf-8")
         except Exception as exc:
             log.exception("SSE stream error")
-            yield _sse_format("error", str(exc) or "stream failed").encode("utf-8")
+            from groq import APIStatusError
+            if isinstance(exc, APIStatusError) and exc.status_code == 429:
+                msg = "I'm getting a lot of requests right now — try again in a moment."
+            elif isinstance(exc, APIStatusError) and exc.status_code == 413:
+                msg = "That conversation is too long for me to process. Try clearing your chat history and asking again."
+            elif isinstance(exc, APIStatusError):
+                msg = "Penny ran into an issue with the AI service. Try again shortly."
+            else:
+                msg = "Something went wrong on my end. Please try again."
+            yield _sse_format("error", msg).encode("utf-8")
             return
         finally:
             if assistant_reply:
@@ -219,6 +229,22 @@ async def chat_history(
 ) -> list[dict[str, Any]]:
     rows = await list_chat_history(user.access_token, user.user_id, limit=max(1, min(limit, 200)))
     return rows
+
+
+@router.delete("/api/chat/history")
+async def clear_chat_history(
+    user: CurrentUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Delete all chat history for the authenticated user. Irreversible."""
+    # No-op when Supabase isn't configured / mock mode — return success so the
+    # frontend can still clear local state.
+    from app.config import settings as _s
+    if not (_s.supabase_url and _s.supabase_anon_key) or not user.access_token:
+        return {"deleted": True, "_ephemeral": True}
+    ok = await delete_chat_history(user.access_token, user.user_id)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Failed to clear chat history.")
+    return {"deleted": True}
 
 
 # ── Phase 3: proposal status update ───────────────────────────────

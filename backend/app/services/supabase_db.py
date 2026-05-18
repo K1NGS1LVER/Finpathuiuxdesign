@@ -135,6 +135,29 @@ async def list_chat_history(
         return []
 
 
+async def delete_chat_history(user_jwt: str | None, user_id: str) -> bool:
+    """Delete all chat_history rows for the given user. RLS confines the
+    operation to the caller's own rows; the user_id filter is belt-and-braces.
+    Returns True on 2xx, False otherwise."""
+    base = _rest_base()
+    if base is None or not user_jwt:
+        return False
+    try:
+        client = await get_client()
+        r = await client.delete(
+            f"{base}/chat_history",
+            headers=_user_headers(user_jwt),
+            params={"user_id": f"eq.{user_id}"},
+        )
+        if r.status_code >= 400:
+            log.warning("delete_chat_history failed %s %s", r.status_code, r.text[:200])
+            return False
+        return True
+    except Exception:
+        log.exception("delete_chat_history error")
+        return False
+
+
 # ── proposals ──────────────────────────────────────────────────
 async def insert_proposal(
     user_jwt: str | None,
