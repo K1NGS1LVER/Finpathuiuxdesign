@@ -11,3 +11,13 @@ css_audit.md
 todo.md
 playwright-report/
 test-results/
+
+# Screenshots / design review images
+/*.png
+
+# Python backend
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
