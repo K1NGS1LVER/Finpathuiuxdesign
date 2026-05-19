@@ -1,7 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Loader2, FileText, X, Check, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  FileText,
+  X,
+  Check,
+  AlertCircle,
+  Download,
+  Calendar,
+  Clock,
+  RefreshCw,
+} from "lucide-react";
 import PdfPages from "./pdf/PdfPages";
+import ScheduleConsultationModal from "./ScheduleConsultationModal";
+import ConsultationCard from "./ConsultationCard";
+import Toast from "./Toast";
 import {
   defaultPdfFilename,
   downloadPlanPdf,
@@ -9,9 +22,13 @@ import {
   type PdfProgress,
 } from "@/lib/pdf-export";
 import { useFinPathStore } from "@/lib/store";
+import {
+  useExpertConsultation,
+  type ConsultationState,
+} from "@/lib/useExpertConsultation";
 import type { FinancialProfile } from "@/lib/types";
 
-type Status = "idle" | "running" | "done" | "error" | "cancelled";
+type Status = "menu" | "running" | "done" | "error" | "cancelled";
 
 const STEP_LABELS: Record<PdfProgress["step"], string> = {
   rendering: "Preparing pages…",
@@ -24,49 +41,60 @@ const STEP_LABELS: Record<PdfProgress["step"], string> = {
 export default function PdfExportOverlay() {
   const exporting = useFinPathStore((s) => s.pdfExporting);
   const setExporting = useFinPathStore((s) => s.setPdfExporting);
+  const {
+    state: consultationState,
+    data: consultationData,
+  } = useExpertConsultation();
 
-  // Snapshot the store once when the overlay opens. Use state (not a ref) so
-  // setting it triggers the re-render that mounts <PdfPages>, populating the
-  // containerRef before the capture effect runs.
   const [snapshot, setSnapshot] = useState<FinancialProfile | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const prevConsultationState = useRef<ConsultationState>("IDLE");
 
-  const [status, setStatus] = useState<Status>("idle");
+  const [status, setStatus] = useState<Status>("menu");
   const [progress, setProgress] = useState<PdfProgress | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     if (!exporting) {
       setSnapshot(null);
-      setStatus("idle");
+      setStatus("menu");
       setProgress(null);
       setErrorMessage(null);
+      setScheduleModalOpen(false);
       return;
     }
     setSnapshot(useFinPathStore.getState());
   }, [exporting]);
 
   useEffect(() => {
-    if (!exporting || !snapshot) return;
+    if (
+      prevConsultationState.current === "SCHEDULING" &&
+      consultationState === "SCHEDULED"
+    ) {
+      setShowToast(true);
+    }
+    prevConsultationState.current = consultationState;
+  }, [consultationState]);
+
+  useEffect(() => {
+    if (status !== "running" || !snapshot) return;
 
     const controller = new AbortController();
     abortRef.current = controller;
-    setStatus("running");
     setProgress({ step: "rendering", totalPages: 4 });
     setErrorMessage(null);
 
     let cancelled = false;
 
     const run = async () => {
-      // wait for offscreen pages to mount + paint
       await new Promise<void>((r) =>
         requestAnimationFrame(() => requestAnimationFrame(() => r())),
       );
       if (controller.signal.aborted) return;
 
-      // Poll for the container ref in case AnimatePresence delays paint
-      // beyond the 2×rAF wait. Up to ~1s.
       let container = containerRef.current;
       for (let i = 0; i < 50 && !container; i++) {
         await new Promise<void>((r) => setTimeout(r, 20));
@@ -88,11 +116,9 @@ export default function PdfExportOverlay() {
           },
         });
         setStatus("done");
-        window.setTimeout(() => setExporting(false), 900);
       } catch (err) {
         if (err instanceof PdfExportAbortedError || controller.signal.aborted) {
-          setStatus("cancelled");
-          window.setTimeout(() => setExporting(false), 700);
+          setStatus("menu");
         } else {
           console.error("PDF export failed", err);
           const msg =
@@ -111,7 +137,7 @@ export default function PdfExportOverlay() {
       cancelled = true;
       controller.abort();
     };
-  }, [exporting, snapshot, setExporting]);
+  }, [status, snapshot]);
 
   const cancel = () => {
     abortRef.current?.abort();
@@ -122,10 +148,16 @@ export default function PdfExportOverlay() {
     setExporting(false);
   };
 
+  const startDownload = () => {
+    setProgress(null);
+    setErrorMessage(null);
+    setStatus("running");
+  };
+
   const message = (() => {
     if (status === "done") return "Saved to your device";
-    if (status === "cancelled") return "Cancelled";
-    if (status === "error") return errorMessage ?? "Something went wrong. Try again.";
+    if (status === "error")
+      return errorMessage ?? "Something went wrong. Try again.";
     if (!progress) return STEP_LABELS.rendering;
     if (progress.step === "capturing" && progress.pageLabel) {
       return `Capturing ${progress.pageLabel} (${(progress.pageIndex ?? 0) + 1} of ${progress.totalPages})`;
@@ -144,11 +176,49 @@ export default function PdfExportOverlay() {
     return 100;
   })();
 
+  const titleText = (() => {
+    if (status === "running") return "Generating your plan";
+    if (status === "done") return "Plan saved";
+    if (status === "error") return "Export failed";
+    return "Export Plan";
+  })();
+
+  const headerIcon = (() => {
+    if (status === "done") return <Check size={20} />;
+    if (status === "error") return <AlertCircle size={20} />;
+    return <FileText size={20} />;
+  })();
+
+  const scheduleButtonContent = (() => {
+    if (consultationState === "SCHEDULING") {
+      return (
+        <>
+          <Loader2 size={14} className="animate-spin icon-wireframe" />
+          Scheduling…
+        </>
+      );
+    }
+    if (consultationState === "SCHEDULED") {
+      return (
+        <>
+          <RefreshCw size={14} className="icon-wireframe" />
+          Reschedule Call
+        </>
+      );
+    }
+    return (
+      <>
+        <Calendar size={14} className="icon-wireframe" />
+        Schedule Call with Expert
+      </>
+    );
+  })();
+
   return (
     <AnimatePresence>
       {exporting && (
         <>
-          {snapshot && (
+          {snapshot && (status === "running" || status === "done") && (
             <PdfPages ref={containerRef} profile={snapshot} />
           )}
           <motion.div
@@ -157,7 +227,10 @@ export default function PdfExportOverlay() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[10000] flex items-center justify-center p-6"
-            style={{ background: "rgba(8, 10, 22, 0.62)", backdropFilter: "blur(10px)" }}
+            style={{
+              background: "rgba(8, 10, 22, 0.62)",
+              backdropFilter: "blur(10px)",
+            }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="pdf-export-title"
@@ -170,11 +243,13 @@ export default function PdfExportOverlay() {
               className="bento-card"
               style={{
                 width: "100%",
-                maxWidth: 460,
+                maxWidth: 480,
                 padding: "var(--space-5)",
                 background: "var(--card)",
                 border: "1px solid var(--border)",
                 position: "relative",
+                overflowY: "auto",
+                maxHeight: "90vh",
               }}
             >
               <button
@@ -200,12 +275,19 @@ export default function PdfExportOverlay() {
                 <X size={16} className="icon-wireframe" />
               </button>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  marginBottom: 6,
+                }}
+              >
                 <div
                   style={{
                     width: 40,
                     height: 40,
-                    borderRadius: 12,
+                    borderRadius: "var(--radius-base)",
                     background: "var(--accent)",
                     color: "var(--on-accent)",
                     display: "flex",
@@ -213,13 +295,7 @@ export default function PdfExportOverlay() {
                     justifyContent: "center",
                   }}
                 >
-                  {status === "done" ? (
-                    <Check size={20} />
-                  ) : status === "error" ? (
-                    <AlertCircle size={20} />
-                  ) : (
-                    <FileText size={20} />
-                  )}
+                  {headerIcon}
                 </div>
                 <div>
                   <p className="text-label" style={{ margin: 0 }}>
@@ -230,107 +306,263 @@ export default function PdfExportOverlay() {
                     style={{
                       margin: 0,
                       fontFamily: "var(--font-display)",
-                      fontWeight: 700,
+                      fontWeight: "var(--font-weight-bold)",
                       fontSize: "var(--text-xl)",
                       color: "var(--card-foreground)",
                     }}
                   >
-                    {status === "done"
-                      ? "Plan saved"
-                      : status === "error"
-                        ? "Export failed"
-                        : status === "cancelled"
-                          ? "Cancelled"
-                          : "Generating your plan"}
+                    {titleText}
                   </h3>
                 </div>
               </div>
 
-              <p
-                style={{
-                  margin: "6px 0 16px",
-                  fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-sm)",
-                  color: "var(--secondary)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                {status === "running" && <Loader2 size={14} className="animate-spin" />}
-                {message}
-              </p>
-
-              <div
-                style={{
-                  height: 6,
-                  borderRadius: 999,
-                  backgroundColor: "var(--surface-hover)",
-                  overflow: "hidden",
-                  marginBottom: 16,
-                }}
-              >
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPct}%` }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  style={{
-                    height: "100%",
-                    background:
-                      status === "error"
-                        ? "var(--red)"
-                        : "linear-gradient(90deg, var(--accent), var(--secondary-accent))",
-                  }}
-                />
-              </div>
-
-              {status === "running" && (
-                <button
-                  type="button"
-                  onClick={cancel}
-                  className="pill"
-                  style={{ width: "100%", padding: "10px 16px" }}
-                >
-                  Cancel
-                </button>
-              )}
-              {status === "error" && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    type="button"
-                    onClick={close}
-                    className="pill"
-                    style={{ flex: 1, padding: "10px 16px" }}
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setErrorMessage(null);
-                      setStatus("idle");
-                      setSnapshot(null);
-                      // re-trigger by toggling exporting flag
-                      setExporting(false);
-                      window.setTimeout(() => setExporting(true), 50);
-                    }}
-                    className="pill"
+              {status === "menu" && (
+                <>
+                  <p
                     style={{
-                      flex: 1,
-                      padding: "10px 16px",
-                      background:
-                        "linear-gradient(135deg, var(--accent), var(--secondary-accent))",
-                      color: "var(--on-accent)",
-                      border: "none",
-                      fontWeight: 600,
+                      margin: "var(--space-2) 0 var(--space-2)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--text-sm)",
+                      color: "var(--secondary)",
+                      lineHeight: 1.5,
                     }}
                   >
-                    Try again
-                  </button>
-                </div>
+                    Download a PDF snapshot of your plan, or schedule a live
+                    call with a domain expert.
+                  </p>
+
+                  <div style={{ display: "flex", gap: "var(--space-1)" }}>
+                    <button
+                      type="button"
+                      onClick={startDownload}
+                      className="pill"
+                      style={{
+                        flex: 1,
+                        padding: "10px 16px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "var(--space-0.5)",
+                      }}
+                    >
+                      <Download size={14} className="icon-wireframe" />
+                      Download PDF
+                    </button>
+                    <button
+                      type="button"
+                      className="pill"
+                      onClick={() => {
+                        if (consultationState !== "SCHEDULING") {
+                          setScheduleModalOpen(true);
+                        }
+                      }}
+                      disabled={consultationState === "SCHEDULING"}
+                      style={{
+                        flex: 1,
+                        padding: "10px 16px",
+                        border:
+                          consultationState === "SCHEDULED"
+                            ? "1px solid var(--border)"
+                            : "1px solid transparent",
+                        background:
+                          consultationState === "SCHEDULED"
+                            ? "var(--surface-hover)"
+                            : consultationState === "SCHEDULING"
+                              ? "var(--surface-active)"
+                              : "linear-gradient(135deg, var(--accent), var(--secondary-accent))",
+                        color:
+                          consultationState === "SCHEDULED"
+                            ? "var(--card-foreground)"
+                            : consultationState === "SCHEDULING"
+                              ? "var(--tertiary)"
+                              : "var(--on-accent)",
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--text-sm)",
+                        fontWeight: "var(--font-weight-semibold)",
+                        cursor:
+                          consultationState === "SCHEDULING"
+                            ? "not-allowed"
+                            : "pointer",
+                        justifyContent: "center",
+                        gap: "var(--space-0.5)",
+                      }}
+                    >
+                      {scheduleButtonContent}
+                    </button>
+                  </div>
+
+                  {consultationState === "SCHEDULING" && (
+                    <div
+                      role="status"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "var(--space-0.5)",
+                        padding: "var(--space-0.5) var(--space-1)",
+                        borderRadius: "var(--radius-full)",
+                        background: "var(--amber-subtle)",
+                        color: "var(--amber-text)",
+                        fontSize: "var(--text-xs)",
+                        fontWeight: "var(--font-weight-semibold)",
+                        marginTop: "var(--space-1)",
+                      }}
+                    >
+                      <Clock size={12} className="icon-wireframe" />
+                      Scheduling your call…
+                    </div>
+                  )}
+
+                  {consultationState === "SCHEDULED" && consultationData && (
+                    <ConsultationCard data={consultationData} />
+                  )}
+                </>
+              )}
+
+              {(status === "running" || status === "done") && (
+                <>
+                  <p
+                    style={{
+                      margin: "var(--space-1) 0 var(--space-2)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--text-sm)",
+                      color: "var(--secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    {status === "running" && (
+                      <Loader2 size={14} className="animate-spin" />
+                    )}
+                    {message}
+                  </p>
+
+                  <div
+                    style={{
+                      height: 6,
+                      borderRadius: "var(--radius-full)",
+                      backgroundColor: "var(--surface-hover)",
+                      overflow: "hidden",
+                      marginBottom: "var(--space-2)",
+                    }}
+                  >
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPct}%` }}
+                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      style={{
+                        height: "100%",
+                        background:
+                          "linear-gradient(90deg, var(--accent), var(--secondary-accent))",
+                      }}
+                    />
+                  </div>
+
+                  {status === "running" ? (
+                    <button
+                      type="button"
+                      onClick={cancel}
+                      className="pill"
+                      style={{ width: "100%", padding: "10px 16px" }}
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <div style={{ display: "flex", gap: "var(--space-1)" }}>
+                      <button
+                        type="button"
+                        onClick={() => setStatus("menu")}
+                        className="pill"
+                        style={{ flex: 1, padding: "10px 16px" }}
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={close}
+                        style={{
+                          flex: 1,
+                          padding: "10px 16px",
+                          borderRadius: "var(--radius-md)",
+                          border: "none",
+                          background:
+                            "linear-gradient(135deg, var(--accent), var(--secondary-accent))",
+                          color: "var(--on-accent)",
+                          fontFamily: "var(--font-body)",
+                          fontSize: "var(--text-sm)",
+                          fontWeight: "var(--font-weight-semibold)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Done
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {status === "error" && (
+                <>
+                  <p
+                    style={{
+                      margin: "var(--space-1) 0 var(--space-2)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--text-sm)",
+                      color: "var(--red)",
+                    }}
+                  >
+                    {message}
+                  </p>
+                  <div style={{ display: "flex", gap: "var(--space-1)" }}>
+                    <button
+                      type="button"
+                      onClick={close}
+                      className="pill"
+                      style={{ flex: 1, padding: "10px 16px" }}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setErrorMessage(null);
+                        startDownload();
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "10px 16px",
+                        borderRadius: "var(--radius-md)",
+                        border: "none",
+                        background:
+                          "linear-gradient(135deg, var(--accent), var(--secondary-accent))",
+                        color: "var(--on-accent)",
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--text-sm)",
+                        fontWeight: "var(--font-weight-semibold)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </>
               )}
             </motion.div>
           </motion.div>
+
+          <ScheduleConsultationModal
+            open={scheduleModalOpen}
+            onClose={() => setScheduleModalOpen(false)}
+          />
+
+          <AnimatePresence>
+            {showToast && (
+              <Toast
+                message="Consultation scheduled. Meeting details have been emailed to your address."
+                onDismiss={() => setShowToast(false)}
+              />
+            )}
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
