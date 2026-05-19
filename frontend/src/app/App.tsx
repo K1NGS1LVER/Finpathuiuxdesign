@@ -25,6 +25,7 @@ import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import PennyPanel from "./components/PennyPanel";
 import PdfExportOverlay from "./components/PdfExportOverlay";
+import DemoControlPanel from "./components/DemoControlPanel";
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import { initCloudSync } from '@/lib/cloud-sync';
@@ -250,6 +251,7 @@ function AppContent() {
           </div>
           <PennyPanel open={pennyOpen} onClose={() => setPennyOpen(false)} />
           <PdfExportOverlay />
+          <DemoControlPanel />
 
           {activeDecision && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">

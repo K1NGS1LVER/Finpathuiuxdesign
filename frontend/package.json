@@ -34,6 +34,7 @@
     "motion": "12.23.24",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.6.205",
+    "qrcode.react": "^4.2.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router": "7.13.0",
