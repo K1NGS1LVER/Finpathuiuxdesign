@@ -126,3 +126,56 @@ RULES:
 1. Cite their specific numbers — never generic advice.
 2. End paragraph 2 with one concrete action ("Move **₹5,000** from entertainment to your emergency fund this month.").
 3. For affordability, calculate from actual surplus + timeline."""
+
+
+def build_fallback_response(profile: dict[str, Any]) -> str:
+    """Deterministic Penny-voice reply used when the LLM stream fails mid-turn.
+
+    Never mentions error/AI/unavailable. Surfaces health score, surplus, and top goal.
+    """
+    a = anonymize_profile(profile)
+    income_total = (a.get("income") or {}).get("total") or 0
+    expenses_total = (a.get("expenses") or {}).get("total") or 0
+    debts_monthly = (a.get("debts") or {}).get("totalMonthly") or 0
+    surplus = income_total - expenses_total - debts_monthly
+    health_overall = ((a.get("healthScore") or {}).get("overall") or 0)
+
+    goals = a.get("goals") or []
+    top_goal = goals[0] if goals else None
+    goal_name = (top_goal or {}).get("category", "your top goal") if top_goal else "your top goal"
+    goal_current = (top_goal or {}).get("currentAmount") or 0
+    goal_target = (top_goal or {}).get("targetAmount") or 0
+    goal_gap = max(0, goal_target - goal_current)
+
+    p1 = (
+        "Let me think harder for a moment — I hit a snag, so here’s what I know right now. "
+        f"Your financial health score is **{health_overall}/100** "
+        f"and your monthly surplus is **₹{_inr(surplus)}**."
+    )
+
+    if top_goal and goal_gap > 0 and surplus > 0:
+        months_to_goal = int(goal_gap / surplus)
+        p2 = (
+            f"Your priority is {goal_name}, sitting at **₹{_inr(goal_current)}** of "
+            f"**₹{_inr(goal_target)}** — roughly **{months_to_goal} months** away at current pace. "
+            f"Put your full surplus of **₹{_inr(surplus)}** toward it this month to keep momentum."
+        )
+    elif top_goal and goal_gap > 0:
+        # surplus <= 0: timeline is stalled — never divide by zero or render "0 months"
+        p2 = (
+            f"Your priority is {goal_name} but your monthly surplus is tight right now — "
+            "at current pace, that timeline is stalled. "
+            "Even a small expense cut of **₹1,000/month** would get things moving."
+        )
+    elif health_overall < 60:
+        p2 = (
+            "With a health score below 60, the fastest win is building your emergency fund to cover "
+            f"**6 months** of expenses — target **₹{_inr(expenses_total * 6)}** total."
+        )
+    else:
+        p2 = (
+            "Your finances look stable — ask me anything specific and I’ll dig in properly once "
+            "I’m back at full speed."
+        )
+
+    return f"{p1}\n\n{p2}"

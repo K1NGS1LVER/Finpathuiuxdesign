@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from contextlib import asynccontextmanager
+
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,10 +16,24 @@ from app.api.penny import router as penny_router
 from app.api.profile import router as profile_router
 from app.api.simulate import router as simulate_router
 from app.config import settings
+from app.services.logging import request_id_var
 from app.services.supabase_db import close_client, expire_stale_proposals
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s",
+)
 log = logging.getLogger(__name__)
+
+
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        rid = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        request_id_var.set(rid)
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = rid
+        return response
+
 
 _PROPOSAL_EXPIRY_INTERVAL_S = 60 * 60  # 1 hour
 _PROPOSAL_MAX_AGE_HOURS = 24
@@ -64,6 +81,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "Accept"],
     max_age=600,
 )
+app.add_middleware(RequestIdMiddleware)
 
 app.include_router(penny_router)
 app.include_router(profile_router)

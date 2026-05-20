@@ -19,8 +19,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+from functools import lru_cache
 import logging
 import re
+import httpx
 from collections.abc import AsyncIterator, Callable
 from typing import Any
 
@@ -30,7 +32,7 @@ from langgraph.prebuilt import create_react_agent
 
 from app.agents.tools import make_tools
 from app.config import settings
-from app.services.prompt import build_system_prompt
+from app.services.prompt import build_system_prompt, build_fallback_response
 
 log = logging.getLogger(__name__)
 
@@ -176,6 +178,9 @@ DISAMBIGUATION:
 """
 
 
+# Cached base instance. LangGraph's bind_tools() returns a fresh Runnable per request,
+# so per-turn tool isolation is preserved while the underlying httpx pool stays warm.
+@lru_cache(maxsize=1)
 def _llm() -> ChatGroq:
     if not settings.groq_api_key:
         raise RuntimeError("GROQ_API_KEY not set on backend")
@@ -184,6 +189,7 @@ def _llm() -> ChatGroq:
         model="llama-3.3-70b-versatile",
         temperature=0.3,
         max_tokens=500,
+        timeout=httpx.Timeout(connect=5.0, read=60.0, write=5.0, pool=5.0),
     )
 
 
@@ -325,9 +331,18 @@ async def stream_agent(
                 prop = proposal_queue.get_nowait()
                 yield {"event": "proposal", "data": prop}
 
-    except Exception as exc:
+    except Exception:
         log.exception("Penny agent error")
-        yield {"event": "error", "data": str(exc) or "agent error"}
+        fallback_text = build_fallback_response(profile)
+        yield {"event": "token", "data": fallback_text}
+        yield {
+            "event": "done",
+            "data": {
+                "reply": fallback_text,
+                "tool_calls": [],
+                "tool_results": [],
+            },
+        }
         return
 
     # Final drain in case a proposal was queued after the last LLM event.
