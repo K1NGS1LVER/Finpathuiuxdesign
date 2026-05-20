@@ -4,6 +4,7 @@ import {
   Check,
   Clock,
   ArrowRight,
+  Flame,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
@@ -391,8 +392,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
           { label: "Net Worth Δ", value: formatInrCompact(netWorthDelta), delta: `+${netWorthDeltaPct}%`, color: "var(--green-text)" },
           { label: "Avg Monthly Save", value: formatInrCompact(Math.max(0, surplus)), delta: `${savingsRate}% rate`, color: "var(--accent-text)" },
           { label: "Goals Hit", value: `${completedGoals}/${goals.length}`, delta: goals.length > 0 ? `${Math.round((completedGoals / goals.length) * 100)}%` : "0%", color: "var(--accent-text)" },
-          { label: "Streak", value: `${streakDays} days`, delta: "🔥", color: "var(--amber-text)" },
-        ] as const).map(({ label, value, delta, color }) => (
+          { label: "Streak", value: `${streakDays} days`, delta: <Flame size={14} style={{ display: "inline-block", color: "var(--amber-text)", marginBottom: 2 }} />, color: "var(--amber-text)" },
+        ]).map(({ label, value, delta, color }) => (
           <div key={label} className="bento-card p-5">
             <p className="text-label">{label}</p>
             <p

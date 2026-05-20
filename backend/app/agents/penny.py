@@ -18,6 +18,7 @@ event dicts: token / tool_call / tool_result / proposal / done / error.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 from collections.abc import AsyncIterator, Callable
@@ -39,6 +40,92 @@ log = logging.getLogger(__name__)
 # We strip both the closed and open variants from streamed tokens.
 _FUNCTION_TAG_RE = re.compile(r"<function=[^>]*>(.*?</function>)?", re.DOTALL)
 _FUNCTION_OPEN_RE = re.compile(r"<function=[^>]*$")
+
+# Closed-tag matcher for *recovery*: captures the tool name, the opening-tag
+# attribute area (which Groq's Llama variant stuffs JSON args into), and the
+# body (the alternate variant). Either may carry the JSON payload.
+_FUNCTION_FULL_RE = re.compile(
+    r"<function=([A-Za-z_][A-Za-z0-9_]*)([^>]*)>(.*?)</function>",
+    re.DOTALL,
+)
+
+
+def _first_json_object(s: str) -> str | None:
+    """Find the first balanced {...} substring. Needed because propose_change
+    payloads contain nested objects (e.g. {"updates": {"target": 150000}})
+    that a lazy regex would truncate at the first '}'."""
+    depth = 0
+    start = -1
+    in_str = False
+    esc = False
+    for i, ch in enumerate(s):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+            continue
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start != -1:
+                return s[start : i + 1]
+    return None
+
+
+def _extract_leaked_calls(text: str) -> list[tuple[str, dict[str, Any]]]:
+    """Find every closed `<function=NAME ...></function>` in text and return
+    (name, parsed_args) pairs. Bad JSON / non-object args are dropped."""
+    out: list[tuple[str, dict[str, Any]]] = []
+    for m in _FUNCTION_FULL_RE.finditer(text):
+        name = m.group(1)
+        raw = _first_json_object(m.group(2) or "") or _first_json_object(m.group(3) or "")
+        if not raw:
+            continue
+        try:
+            args = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(args, dict):
+            out.append((name, args))
+    return out
+
+
+# Open-only opener (no `</function>` required). Llama frequently emits the
+# opening tag like a stop-sequence and never closes it.
+_FUNCTION_OPEN_FULL_RE = re.compile(r"<function=([A-Za-z_][A-Za-z0-9_]*)([^>]*)>")
+
+
+def _extract_leaked_open_calls(text: str) -> list[tuple[str, dict[str, Any]]]:
+    """Recover OPEN-only `<function=NAME {JSON}>` leaks where Llama never
+    wrote `</function>`. Safe at stream-end only — mid-stream the close may
+    still be coming. Dedup vs the closed-tag pass is handled by
+    `_run_recovered` via `invoked_sigs`."""
+    out: list[tuple[str, dict[str, Any]]] = []
+    for m in _FUNCTION_OPEN_FULL_RE.finditer(text):
+        raw = _first_json_object(m.group(2) or "")
+        if not raw:
+            continue
+        try:
+            args = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(args, dict):
+            out.append((m.group(1), args))
+    return out
+
+
+def _signature(name: str, args: dict[str, Any]) -> str:
+    """Stable key for dedup. Sorted keys so equivalent dicts hash identically."""
+    return f"{name}:{json.dumps(args, sort_keys=True, default=str)}"
 
 
 SYSTEM_SUFFIX = """
@@ -70,7 +157,9 @@ TOOL USAGE RULES:
      Never use addLumpsum to model a new debt — use addDebt.
 9. ALWAYS include a one-sentence `rationale` in every propose_change call (e.g. "User requested adding a personal debt of ₹10,000."). Empty rationale is allowed by the tool but worsens the user experience.
 10. Tool calls happen via the API only. NEVER write `<function=...>`, `</function>`, JSON tool-call blocks, or any literal tool-invocation syntax in your reply text. Use the function-calling API to invoke tools; the reply is plain prose for the user.
-11. Do NOT instruct the user to call a function or suggest "calling X". Either call the tool yourself via the API, or omit the suggestion. The user does not see tool names.
+11. Do NOT instruct the user to call a function or suggest "calling X". Either call the tool yourself via the API now, or omit the suggestion. The user does not see tool names — phrases like "call propose_change", "consider calling addDebt", "Call simulate_plan" are forbidden.
+12. ACTION INTENT — when the user says "do it", "do that", "do iy", "apply", "go ahead", "yes do it", "make it happen", "change it", "update it", they are authorising the change you just discussed. Call propose_change with the values you computed earlier in the conversation. Do NOT call simulate_plan again unless the user explicitly asks to re-simulate.
+13. AMBIGUOUS REFERENT — if the user asks to change something that doesn't exist in the snapshot (e.g. "update the education loan" but there is no education loan), ask ONE plain-English clarifying question ("You don't have an education loan — do you want me to add one, or did you mean your education savings goal?"). Do NOT suggest tool names and do NOT call any tool until the user answers.
 
 FINAL REPLY FORMAT — STRICT:
 - Two short paragraphs separated by a blank line. 4-6 sentences total.
@@ -79,6 +168,11 @@ FINAL REPLY FORMAT — STRICT:
 - Every ₹ amount, % and month count wrapped in markdown bold: **₹12,500**, **8 months**, **+15%**.
 - Do NOT repeat the same scenario twice. Do NOT restate the user's question. No greetings, no filler.
 - Plain prose only. No XML, no JSON, no `<function=...>` tags.
+
+DISAMBIGUATION:
+- If the user refers to a goal by ordinal or priority ("p1", "the first goal", "highest priority", "the top one", "second goal"), call read_profile FIRST in the same turn to resolve the goal_id. Do NOT propose_change against a guessed id.
+- For percent-based changes ("increase X by 50%", "halve Y"), compute the new value from the resolved current value, then propose_change with the absolute new value in the payload.
+- If the resolved goal has status="complete", do NOT call propose_change with updateGoal. Tell the user in one sentence that the goal is already done and ask whether they want to addGoal a new target or move on.
 """
 
 
@@ -98,7 +192,7 @@ def build_graph(
     propose: Callable[[str, dict[str, Any], str], dict[str, Any]],
 ):
     tools = make_tools(profile, propose)
-    return create_react_agent(_llm(), tools)
+    return create_react_agent(_llm(), tools), tools
 
 
 async def stream_agent(
@@ -114,7 +208,8 @@ async def stream_agent(
     Yields dicts with shape `{"event": str, "data": dict | str}` for the SSE
     endpoint to serialize.
     """
-    graph = build_graph(profile, propose)
+    graph, tools = build_graph(profile, propose)
+    tools_by_name = {t.name: t for t in tools}
 
     sys_prompt = build_system_prompt(profile, context) + SYSTEM_SUFFIX
     messages: list[Any] = [SystemMessage(content=sys_prompt)]
@@ -133,6 +228,31 @@ async def stream_agent(
     tool_calls_log: list[dict[str, Any]] = []
     tool_results_log: list[dict[str, Any]] = []
     token_buffer = ""  # holds tail across chunks so we can detect split tags
+    invoked_sigs: set[str] = set()  # dedup between real tool_calls and recovered ones
+
+    def _run_recovered(name: str, args: dict[str, Any]) -> list[dict[str, Any]]:
+        """Invoke a leaked tool call by name. Returns SSE event dicts to yield.
+        Empty list on duplicate, unknown name, or invocation failure (logged)."""
+        sig = _signature(name, args)
+        if sig in invoked_sigs:
+            return []
+        tool = tools_by_name.get(name)
+        if tool is None:
+            log.warning("penny: leaked tool '%s' not in registry", name)
+            return []
+        invoked_sigs.add(sig)
+        try:
+            output = tool.invoke(args)
+        except Exception:
+            log.exception("penny: recovered tool '%s' invocation failed", name)
+            return []
+        payload = output.content if hasattr(output, "content") else output
+        tool_calls_log.append({"name": name, "input": args})
+        tool_results_log.append({"name": name, "output": payload})
+        return [
+            {"event": "tool_call", "data": {"name": name, "input": args, "_recovered": True}},
+            {"event": "tool_result", "data": {"name": name, "output": payload, "_recovered": True}},
+        ]
 
     try:
         async for event in graph.astream_events({"messages": messages}, version="v2"):
@@ -144,6 +264,21 @@ async def stream_agent(
                     text = chunk.content
                     if isinstance(text, str) and text:
                         token_buffer += text
+                        # Recover any closed `<function=...></function>` leaks before
+                        # the strip wipes them. propose_change pushes onto
+                        # proposal_queue inside its body, so the drain loop below
+                        # emits the `proposal` SSE event on its own.
+                        for _name, _args in _extract_leaked_calls(token_buffer):
+                            for _ev in _run_recovered(_name, _args):
+                                yield _ev
+                        # Open-only fallback — Llama frequently emits
+                        # `<function=NAME {JSON}>` without ever closing it. Safe
+                        # to fire as soon as the opening `>` arrives because the
+                        # JSON sits inside the attribute area. Dedup by signature
+                        # protects against re-fire when the close finally arrives.
+                        for _name, _args in _extract_leaked_open_calls(token_buffer):
+                            for _ev in _run_recovered(_name, _args):
+                                yield _ev
                         cleaned = _FUNCTION_TAG_RE.sub("", token_buffer)
                         # If a `<function=` tag opens but hasn't closed yet, hold the
                         # tail back until the next chunk so we don't leak partial markup.
@@ -161,6 +296,8 @@ async def stream_agent(
             elif kind == "on_tool_start":
                 name = event.get("name") or ""
                 tool_input = event["data"].get("input") or {}
+                if isinstance(tool_input, dict):
+                    invoked_sigs.add(_signature(name, tool_input))
                 tool_calls_log.append({"name": name, "input": tool_input})
                 yield {
                     "event": "tool_call",
@@ -201,6 +338,15 @@ async def stream_agent(
     # If the stream ended while we were holding back text behind an unclosed
     # `<function=` tag, strip and emit what's left so the user isn't left mid-sentence.
     if token_buffer:
+        for _name, _args in _extract_leaked_calls(token_buffer):
+            for _ev in _run_recovered(_name, _args):
+                yield _ev
+        # Open-only fallback — recover `<function=NAME {JSON}>` the model never closed.
+        for _name, _args in _extract_leaked_open_calls(token_buffer):
+            for _ev in _run_recovered(_name, _args):
+                yield _ev
+        while not proposal_queue.empty():
+            yield {"event": "proposal", "data": proposal_queue.get_nowait()}
         leftover = _FUNCTION_TAG_RE.sub("", token_buffer)
         leftover = _FUNCTION_OPEN_RE.sub("", leftover)
         if leftover:

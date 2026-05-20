@@ -328,6 +328,20 @@ def make_tools(
                 "ok": False,
                 "error": f"Action '{action}' not allowed. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}",
             }
+        if action == "updateGoal":
+            goal_id = (payload or {}).get("id")
+            goals_list = profile.get("goals") or []
+            target_goal = next((g for g in goals_list if g.get("id") == goal_id), None)
+            if target_goal is not None and target_goal.get("status") == "complete":
+                name = target_goal.get("name") or goal_id
+                return {
+                    "ok": False,
+                    "error": (
+                        f"Goal '{name}' is already complete; updateGoal is rejected. "
+                        "If the user wants to keep saving, propose addGoal with a new "
+                        "target instead."
+                    ),
+                }
         result = propose(action, payload, rationale)
         return {"ok": True, "proposal": result}
 

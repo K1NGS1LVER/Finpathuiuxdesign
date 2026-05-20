@@ -1,9 +1,11 @@
-export const pageContainer = {
+import type { Variants } from "motion/react";
+
+export const pageContainer: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
 };
 
-export const pageSection = {
+export const pageSection: Variants = {
   hidden: { opacity: 0, y: 18 },
   visible: {
     opacity: 1,
