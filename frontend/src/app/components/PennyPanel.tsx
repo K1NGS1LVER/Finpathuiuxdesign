@@ -14,6 +14,11 @@ interface PennyPanelProps {
 
 const MAX_MESSAGE_CHARS = 4000;
 
+// Belt-and-suspenders: even if the backend ever leaks `<function=…>` fine-tune
+// markup into content, never paint it. Mirrors backend penny.py:_FUNCTION_TAG_RE.
+const FUNCTION_TAG_RE = /<function=[^>]*>(?:[\s\S]*?<\/function>)?/g;
+const stripFunctionTags = (s: string) => s.replace(FUNCTION_TAG_RE, '');
+
 interface Message {
   id: string;
   role: 'user' | 'penny';
@@ -190,7 +195,8 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         let data: any;
         try { data = JSON.parse(ev.data); } catch { continue; }
         if (ev.event === 'token') {
-          const chunk = String(data);
+          const chunk = stripFunctionTags(String(data));
+          if (!chunk) continue;
           setMessages(prev => {
             const exists = prev.some(m => m.id === assistantId);
             if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: chunk, toolCalls: [] }];
@@ -215,10 +221,11 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           });
         } else if (ev.event === 'done') {
           if (data?.reply) {
+            const cleaned = stripFunctionTags(String(data.reply));
             setMessages(prev => {
               const exists = prev.some(m => m.id === assistantId);
-              if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: data.reply, toolCalls: [] }];
-              return prev.map(m => m.id === assistantId ? { ...m, text: data.reply } : m);
+              if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: cleaned, toolCalls: [] }];
+              return prev.map(m => m.id === assistantId ? { ...m, text: cleaned } : m);
             });
           }
         }
