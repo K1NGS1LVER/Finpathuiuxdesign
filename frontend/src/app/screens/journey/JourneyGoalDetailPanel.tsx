@@ -1,7 +1,24 @@
 import { useState, useEffect, useRef } from "react";
-import { X, CheckCircle, Trash2, Trophy } from "lucide-react";
+import { X, CheckCircle, Trash2, Trophy, Pencil } from "lucide-react";
 import type { Goal } from '@/lib/types';
 import { getGoalIcon } from "./icon-map";
+import { useFinPathStore } from "@/lib/store";
+
+function monthsToYYYYMM(months: number): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function yyyymmToMonths(value: string): number {
+  const [y, m] = value.split("-").map(Number);
+  const target = new Date(y, (m ?? 1) - 1, 1);
+  const now = new Date();
+  const diff =
+    (target.getFullYear() - now.getFullYear()) * 12 +
+    (target.getMonth() - now.getMonth());
+  return Math.max(1, diff);
+}
 
 function GoalRing({ pct, color, size = 64 }: { pct: number; color: string; size?: number }) {
   const r = size / 2 - 5;
