@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Target, Plus, Trash2 } from "lucide-react";
+import type { ComponentType, CSSProperties } from "react";
+import { Target, Plus, Trash2, Coins, CheckCircle, Info } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import confetti from "canvas-confetti";
 import { useFinPathStore } from "@/lib/store";
@@ -19,6 +20,39 @@ import {
   NODE_CENTER,
   TRAVELING_DOT_OPACITY,
 } from "./journey/constants";
+
+function StatPill({
+  icon: Icon,
+  label,
+  value,
+  color,
+  subtle,
+}: {
+  icon: ComponentType<{ size?: number; strokeWidth?: number; style?: CSSProperties; className?: string }>;
+  label: string;
+  value: string | number;
+  color: string;
+  subtle: string;
+}) {
+  return (
+    <div
+      className="journey-stat-pill"
+      style={{
+        background: subtle,
+        border: `1px solid color-mix(in srgb, ${color} 20%, transparent)`,
+      }}
+    >
+      <Icon size={12} strokeWidth={2} style={{ color }} />
+      <span
+        className="slashed-zero tabular-nums"
+        style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color }}
+      >
+        {value}
+      </span>
+      <span style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)" }}>{label}</span>
+    </div>
+  );
+}
 
 function getDotProps(priority: number): { size: number; dur: number } {
   if (priority === 1) return { size: 6, dur: 1.8 };
@@ -81,9 +115,14 @@ const TravelingDot = memo(function TravelingDot({
 
 export default function Journey() {
   const income = useFinPathStore((s) => s.income);
+  const updateGoal = useFinPathStore((s) => s.updateGoal);
 
   const goals = useJourneyGoals();
   const canvas = useJourneyCanvas(goals.sortedGoals);
+  const monthlyTotal = useMemo(
+    () => goals.activeGoals.reduce((sum, g) => sum + g.monthlyAllocation, 0),
+    [goals.activeGoals],
+  );
   const [showIncomePanel, setShowIncomePanel] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -118,6 +157,10 @@ export default function Journey() {
     });
   };
 
+  const handleCompleteMonth = (goalId: string) => {
+    updateGoal(goalId, { checkedThisMonth: true });
+  };
+
   const handleRemoveCompletedClick = () => {
     if (!confirmRemove) {
       setConfirmRemove(true);
@@ -135,9 +178,12 @@ export default function Journey() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="journey-page-title slashed-zero">Goals</h2>
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="journey-eyebrow">Financial Roadmap</p>
+          <h2 className="journey-page-title slashed-zero">Goals</h2>
+        </div>
+        <div className="flex items-center gap-2 pt-1">
           {goals.completedGoals.length > 0 && (
             <button
               onClick={handleRemoveCompletedClick}
@@ -177,7 +223,40 @@ export default function Journey() {
         </div>
       </div>
 
-      <div className="h-[calc(100vh-180px)] flex flex-col md:flex-row gap-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <StatPill
+          icon={Target}
+          value={goals.activeGoals.length}
+          label={`active goal${goals.activeGoals.length !== 1 ? "s" : ""}`}
+          color="var(--accent)"
+          subtle="var(--accent-subtle)"
+        />
+        <StatPill
+          icon={Coins}
+          value={`${formatInrCompact(monthlyTotal)}/mo`}
+          label="commitment"
+          color="var(--secondary-accent)"
+          subtle="var(--secondary-accent-subtle)"
+        />
+        {goals.completedGoals.length > 0 && (
+          <StatPill
+            icon={CheckCircle}
+            value={goals.completedGoals.length}
+            label="completed"
+            color="var(--green)"
+            subtle="var(--green-subtle)"
+          />
+        )}
+        <div
+          className="ml-auto flex items-center gap-1.5"
+          style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)" }}
+        >
+          <Info size={11} className="icon-wireframe" style={{ color: "var(--tertiary)" }} />
+          Click a node to view details
+        </div>
+      </div>
+
+      <div className="h-[calc(100vh-240px)] flex flex-col md:flex-row gap-4">
         <div
           ref={canvas.canvasRef}
           className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? "cursor-grabbing" : "cursor-grab"}`}
@@ -333,6 +412,11 @@ export default function Journey() {
             </div>
           </div>
 
+          <div className="journey-canvas-hint">
+            <Info size={11} className="icon-wireframe" />
+            Scroll to zoom · Drag to pan · Click node to view
+          </div>
+
           {goals.sortedGoals.length === 0 && (
             <motion.div
               className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none"
@@ -469,6 +553,7 @@ export default function Journey() {
           goal={goals.selectedGoal}
           onClose={() => goals.setSelectedGoalId(null)}
           onComplete={handleCompleteGoal}
+          onCompleteMonth={handleCompleteMonth}
           onDelete={goals.handleDelete}
           onPriorityChange={goals.handlePriorityChange}
           activeGoalsCount={goals.activeGoals.length}
