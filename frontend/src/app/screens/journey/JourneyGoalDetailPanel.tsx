@@ -137,6 +137,10 @@ export default function JourneyGoalDetailPanel({
     [],
   );
 
+  useEffect(() => {
+    setIsEditing(false);
+  }, [goal?.id]);
+
   if (!goal) return null;
 
   const pct =
