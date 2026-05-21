@@ -331,6 +331,47 @@ def make_tools(
 
         return {"goal_deltas": deltas}
 
+    # Goal field normalization. Llama sometimes (a) flattens fields to top level,
+    # (b) uses snake_case aliases, or (c) stringifies numbers. Normalize here so
+    # the frontend contract is rigid before the proposal leaves the backend.
+    _GOAL_NUM_FIELDS = {"targetAmount", "currentAmount", "timelineMonths", "priority"}
+    _GOAL_FIELD_ALIASES = {
+        "target": "targetAmount",
+        "current": "currentAmount",
+        "timeline_months": "timelineMonths",
+    }
+
+    def _coerce_num(v: Any) -> Any:
+        if isinstance(v, (int, float)):
+            return v
+        if isinstance(v, str):
+            try:
+                f = float(v.replace(",", ""))
+                return int(f) if f.is_integer() else f
+            except ValueError:
+                return v
+        return v
+
+    def _normalize_update_goal_payload(p: dict[str, Any]) -> dict[str, Any]:
+        """Guarantee `{"id": str, "updates": {camelCase + numeric-typed fields}}`."""
+        out_id = p.get("id") or p.get("goalId") or p.get("goal_id")
+        src: dict[str, Any] = dict(p.get("updates") or {})
+        # Pull recognized top-level fields into updates (the model often flattens).
+        for k, v in p.items():
+            if k in ("id", "goalId", "goal_id", "updates"):
+                continue
+            target_key = _GOAL_FIELD_ALIASES.get(k, k)
+            src.setdefault(target_key, v)
+        # Rename aliases inside the original updates dict too.
+        for alias, canonical in _GOAL_FIELD_ALIASES.items():
+            if alias in src and canonical not in src:
+                src[canonical] = src.pop(alias)
+        # Coerce numerics.
+        cleaned: dict[str, Any] = {}
+        for k, v in src.items():
+            cleaned[k] = _coerce_num(v) if k in _GOAL_NUM_FIELDS else v
+        return {"id": out_id, "updates": cleaned}
+
     def _propose_change(
         action: str, payload: dict[str, Any], rationale: str = ""
     ) -> dict[str, Any]:
@@ -339,11 +380,28 @@ def make_tools(
                 "ok": False,
                 "error": f"Action '{action}' not allowed. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}",
             }
+
         if action == "updateGoal":
-            goal_id = (payload or {}).get("id")
+            normalized = _normalize_update_goal_payload(payload or {})
+            if normalized != (payload or {}):
+                log.info(
+                    "penny: updateGoal payload normalized raw=%s normalized=%s",
+                    payload,
+                    normalized,
+                )
+            payload = normalized
+
+            goal_id = payload.get("id")
             goals_list = profile.get("goals") or []
             target_goal = next((g for g in goals_list if g.get("id") == goal_id), None)
-            if target_goal is not None and target_goal.get("status") == "complete":
+            if target_goal is None:
+                return {
+                    "ok": False,
+                    "error": (
+                        f"Goal id '{goal_id}' not found. Call read_profile to get valid ids."
+                    ),
+                }
+            if target_goal.get("status") == "complete":
                 name = target_goal.get("name") or goal_id
                 return {
                     "ok": False,
@@ -353,6 +411,7 @@ def make_tools(
                         "target instead."
                     ),
                 }
+
         result = propose(action, payload, rationale)
         return {
             "status": "pending_user_approval",

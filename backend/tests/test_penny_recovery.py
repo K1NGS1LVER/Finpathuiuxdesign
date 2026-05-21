@@ -134,7 +134,7 @@ async def test_stream_agent_recovers_leaked_propose_change(
 
     events: list[dict] = []
     async for ev in stream_agent(
-        profile={},
+        profile={"goals": [{"id": "goal-1", "name": "Bike", "status": "in-progress"}]},
         user_message="increase the p1 goal by 50%",
         history=None,
         propose=propose_cb,
@@ -143,11 +143,12 @@ async def test_stream_agent_recovers_leaked_propose_change(
     ):
         events.append(ev)
 
-    # propose() callback was actually invoked with the right args
+    # propose() callback fires with the *normalized* payload — `target` was
+    # renamed to `targetAmount` by _propose_change before being forwarded.
     assert captured == [
         (
             "updateGoal",
-            {"id": "goal-1", "updates": {"target": 150000}},
+            {"id": "goal-1", "updates": {"targetAmount": 150000}},
             "User asked to bump target.",
         )
     ]
@@ -164,7 +165,7 @@ async def test_stream_agent_recovers_leaked_propose_change(
     assert tc["data"].get("_recovered") is True
     assert tr["data"].get("_recovered") is True
     assert pr["data"]["action"] == "updateGoal"
-    assert pr["data"]["payload"] == {"id": "goal-1", "updates": {"target": 150000}}
+    assert pr["data"]["payload"] == {"id": "goal-1", "updates": {"targetAmount": 150000}}
 
     done = next(ev for ev in events if ev["event"] == "done")
     assert "<function=" not in done["data"]["reply"]
@@ -401,7 +402,7 @@ async def test_stream_agent_recovers_open_only_propose_change(
 
     events: list[dict] = []
     async for ev in stream_agent(
-        profile={},
+        profile={"goals": [{"id": "goal-1", "name": "Bike", "status": "in-progress"}]},
         user_message="bump it",
         history=None,
         propose=propose_cb,
@@ -410,8 +411,9 @@ async def test_stream_agent_recovers_open_only_propose_change(
     ):
         events.append(ev)
 
+    # Normalized: `target` → `targetAmount`.
     assert captured == [
-        ("updateGoal", {"id": "goal-1", "updates": {"target": 200000}}, "bump")
+        ("updateGoal", {"id": "goal-1", "updates": {"targetAmount": 200000}}, "bump")
     ]
     kinds = [ev["event"] for ev in events]
     assert "tool_call" in kinds

@@ -251,12 +251,41 @@ function prepareApply(action: string, payload: Record<string, unknown>): Prepare
     case 'updateGoal': {
       const id = String(payload.id ?? '');
       if (!id) return { ok: false, reason: 'missing goal id' };
-      const raw = (payload.updates ?? {}) as Record<string, unknown>;
-      const updates: Partial<Goal> = { ...raw } as Partial<Goal>;
-      // Normalize aliases the LLM may use from a stale read_profile snapshot
-      if ('target' in raw && !('targetAmount' in raw)) updates.targetAmount = Number(raw.target);
-      if ('current' in raw && !('currentAmount' in raw)) updates.currentAmount = Number(raw.current);
-      if ('timeline_months' in raw && !('timelineMonths' in raw)) updates.timelineMonths = Number(raw.timeline_months);
+
+      // Llama sometimes flattens the payload (no `updates` wrapper) or stringifies
+      // numbers ("targetAmount": "150000"). Both render fine in the card but slip
+      // past store.updateGoal's `typeof === "number"` guard and silently no-op.
+      const rawUpdates = (payload.updates ?? {}) as Record<string, unknown>;
+      const rawTop = payload as Record<string, unknown>;
+      const pick = (canonical: string, alias?: string): unknown => {
+        if (canonical in rawUpdates) return rawUpdates[canonical];
+        if (alias && alias in rawUpdates) return rawUpdates[alias];
+        if (canonical in rawTop) return rawTop[canonical];
+        if (alias && alias in rawTop) return rawTop[alias];
+        return undefined;
+      };
+      const toNum = (v: unknown): number | undefined => {
+        if (v === undefined || v === null || v === '') return undefined;
+        const n = typeof v === 'number' ? v : Number(v);
+        return Number.isFinite(n) ? n : undefined;
+      };
+
+      const updates: Partial<Goal> = {};
+      const targetAmount = toNum(pick('targetAmount', 'target'));
+      if (targetAmount !== undefined) updates.targetAmount = targetAmount;
+      const currentAmount = toNum(pick('currentAmount', 'current'));
+      if (currentAmount !== undefined) updates.currentAmount = currentAmount;
+      const timelineMonths = toNum(pick('timelineMonths', 'timeline_months'));
+      if (timelineMonths !== undefined) updates.timelineMonths = Math.max(1, Math.round(timelineMonths));
+      const priority = toNum(pick('priority'));
+      if (priority !== undefined) updates.priority = priority;
+      const nameVal = pick('name');
+      if (typeof nameVal === 'string' && nameVal.trim()) updates.name = nameVal.trim();
+
+      if (Object.keys(updates).length === 0) {
+        console.warn('[ProposalCard] updateGoal: no recognizable fields in payload', payload);
+        return { ok: false, reason: 'no recognizable fields to update' };
+      }
       return { ok: true, apply: () => store.updateGoal(id, updates) };
     }
     case 'addGoal': {
