@@ -151,8 +151,10 @@ TOOL USAGE RULES:
 5. Call each tool AT MOST ONCE per turn.
 6. NEVER call propose_change unless tool math actually supports the change.
 7. Allowed propose_change actions: setStrategy, setEmergencyFund, setSavings, setInvestments, updateGoal, addGoal, removeGoal, addLumpsum, addDebt.
-8. propose_change.payload must match the Zustand setter shape:
-   - updateGoal -> {"id": "...", "updates": {...}}
+8. propose_change.payload must match the Zustand setter shape exactly — use camelCase field names:
+   - updateGoal -> {"id": "...", "updates": {"targetAmount": <INR>, "timelineMonths": <months>, "name": "..."}} — only include fields being changed. Field names MUST be camelCase: targetAmount (not target), currentAmount (not current), timelineMonths (not timeline_months).
+   - addGoal    -> {"goal": {"id": "goal-<timestamp>", "name": "...", "targetAmount": <INR>, "timelineMonths": <months>, "category": "custom", "icon": "Target", "priority": <number>, "currentAmount": 0, "status": "not-started", "monthlyAllocation": 0, "color": "var(--accent)"}}
+   - removeGoal -> {"id": "..."}
    - addLumpsum -> {"goalId": "...", "amount": <positive number>} (amount > 0; never negative)
    - addDebt   -> {"debt": {"name": "...", "principal": <positive amount>, "interestRate": <annual %>, "monthlyPayment": <amount>, "category": "personalLoan|creditCard|homeLoan|carLoan|educationLoan|other"}}
      For addDebt: principal is always POSITIVE (the amount owed). If user says "I owe 10000" or "add 10000 debt", principal = 10000.

@@ -158,11 +158,11 @@ def make_tools(
                 {
                     "id": g.get("id"),
                     "name": g.get("name"),
-                    "target": g.get("targetAmount"),
-                    "current": g.get("currentAmount"),
+                    "targetAmount": g.get("targetAmount"),
+                    "currentAmount": g.get("currentAmount"),
                     "priority": g.get("priority"),
                     "status": g.get("status"),
-                    "timeline_months": g.get("timelineMonths"),
+                    "timelineMonths": g.get("timelineMonths"),
                 }
                 for g in (profile.get("goals") or [])
             ],
