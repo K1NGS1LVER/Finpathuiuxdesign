@@ -102,11 +102,14 @@ export default function JourneyGoalDetailPanel({
   activeGoalsCount,
 }: JourneyGoalDetailPanelProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const confirmCompleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
     () => () => {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
+      if (confirmCompleteTimer.current) clearTimeout(confirmCompleteTimer.current);
     },
     [],
   );
@@ -167,6 +170,17 @@ export default function JourneyGoalDetailPanel({
     if (confirmTimer.current) clearTimeout(confirmTimer.current);
     setConfirmDelete(false);
     onDelete(goal.id);
+  };
+
+  const handleCompleteClick = () => {
+    if (!confirmComplete) {
+      setConfirmComplete(true);
+      confirmCompleteTimer.current = setTimeout(() => setConfirmComplete(false), 3000);
+      return;
+    }
+    if (confirmCompleteTimer.current) clearTimeout(confirmCompleteTimer.current);
+    setConfirmComplete(false);
+    onComplete(goal.id);
   };
 
   return (
@@ -391,16 +405,23 @@ export default function JourneyGoalDetailPanel({
             {goal.checkedThisMonth ? "✓ Done this month" : "Complete for the Month"}
           </button>
           <button
-            onClick={() => onComplete(goal.id)}
-            className="w-full flex items-center justify-center gap-1.5 btn-ghost-gradient button-press"
+            onClick={handleCompleteClick}
+            className="w-full flex items-center justify-center gap-1.5 button-press"
             style={{
               padding: "11px",
               borderRadius: "var(--radius-base)",
               fontFamily: "var(--font-display)",
+              fontSize: "var(--text-sm)",
+              fontWeight: "var(--font-weight-semibold)",
+              cursor: "pointer",
+              transition: "all 200ms ease",
+              background: confirmComplete ? "var(--green-subtle)" : "transparent",
+              border: `1px solid ${confirmComplete ? "color-mix(in srgb, var(--green) 33%, transparent)" : "color-mix(in srgb, var(--accent) 40%, transparent)"}`,
+              color: confirmComplete ? "var(--green-text)" : "var(--accent)",
             }}
           >
             <Trophy size={16} className="icon-wireframe" />
-            Complete Goal
+            {confirmComplete ? "Confirm complete?" : "Complete Goal"}
           </button>
         </div>
       )}
@@ -416,28 +437,6 @@ export default function JourneyGoalDetailPanel({
           gap: 8,
         }}
       >
-        {!isComplete && (
-          <button
-            onClick={() => onComplete(goal.id)}
-            className="w-full flex items-center justify-center gap-1.5 button-press"
-            style={{
-              padding: "11px",
-              borderRadius: "var(--radius-base)",
-              background: "linear-gradient(135deg, var(--accent) 40%, var(--secondary-accent) 140%)",
-              border: "none",
-              color: "var(--on-accent)",
-              fontWeight: "var(--font-weight-semibold)",
-              fontSize: "var(--text-sm)",
-              cursor: "pointer",
-              fontFamily: "var(--font-display)",
-              boxShadow: "0 4px 14px var(--accent-glow)",
-              transition: "all 250ms ease",
-            }}
-          >
-            <CheckCircle size={14} className="icon-wireframe" />
-            Mark complete
-          </button>
-        )}
         <button
           onClick={handleDeleteClick}
           className="w-full flex items-center justify-center gap-1.5"
