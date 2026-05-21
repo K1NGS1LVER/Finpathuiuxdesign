@@ -123,6 +123,12 @@ export default function JourneyGoalDetailPanel({
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const confirmCompleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftTarget, setDraftTarget] = useState(0);
+  const [draftMonths, setDraftMonths] = useState(0);
+
+  const updateGoal = useFinPathStore((s) => s.updateGoal);
+
   useEffect(
     () => () => {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
@@ -198,6 +204,16 @@ export default function JourneyGoalDetailPanel({
     if (confirmCompleteTimer.current) clearTimeout(confirmCompleteTimer.current);
     setConfirmComplete(false);
     onComplete(goal.id);
+  };
+
+  const handleEditClick = () => {
+    setDraftTarget(goal.targetAmount);
+    setDraftMonths(goal.timelineMonths || 12);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
   };
 
   return (
@@ -360,6 +376,31 @@ export default function JourneyGoalDetailPanel({
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Edit goal — view mode only */}
+        {!isComplete && !isEditing && (
+          <div style={{ marginBottom: 20 }}>
+            <button
+              onClick={handleEditClick}
+              className="w-full flex items-center justify-center gap-1.5"
+              style={{
+                padding: "9px",
+                borderRadius: "var(--radius-base)",
+                background: "var(--surface-tint)",
+                border: "1px solid var(--border)",
+                color: "var(--accent)",
+                fontWeight: "var(--font-weight-semibold)",
+                fontSize: "var(--text-xs)",
+                cursor: "pointer",
+                fontFamily: "var(--font-display)",
+                transition: "all 200ms ease",
+              }}
+            >
+              <Pencil size={12} className="icon-wireframe" />
+              Edit Goal
+            </button>
           </div>
         )}
 
