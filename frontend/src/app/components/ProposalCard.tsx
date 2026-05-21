@@ -85,7 +85,7 @@ function PayloadSummary({
   const wrap = (rows: ReactNode) => (
     <div
       style={{
-        background: 'var(--surface-2, var(--neutral-50))',
+        background: 'var(--surface-tint)',
         borderRadius: 'var(--radius-sm)',
         padding: '8px 10px',
         display: 'flex',
