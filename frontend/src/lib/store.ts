@@ -138,6 +138,7 @@ interface FinPathStore extends FinancialProfile {
     goals: { name: string; targetAmount?: number; priority?: number }[];
     expenseBreakdown?: Record<string, number>;
     debtBreakdown?: Record<string, number>;
+    debtItems?: DebtItem[];
     totalDebtPrincipal?: number;
     strategy?: InvestmentStrategy;
     surplus?: number;
@@ -834,21 +835,29 @@ export const useFinPathStore = create<FinPathStore>()(
         };
 
         const db = data.debtBreakdown || {};
-        const debts = normalizeDebtProfile({
-          items: Object.entries(db)
-            .filter(([, v]) => v > 0)
-            .map(([key, value], i) => ({
-              id: `debt-${i}`,
-              name: key,
-              category: key as any,
-              principal: value * 12, // Rough estimate
-              interestRate: 10, // Default
-              monthlyPayment: value,
-              remainingMonths: 12,
-            })),
-          totalMonthly: data.debts,
-          totalPrincipal: data.totalDebtPrincipal,
-        });
+        const debts = normalizeDebtProfile(
+          data.debtItems
+            ? {
+                items: data.debtItems,
+                totalMonthly: data.debts,
+                totalPrincipal: data.totalDebtPrincipal,
+              }
+            : {
+                items: Object.entries(db)
+                  .filter(([, v]) => v > 0)
+                  .map(([key, value], i) => ({
+                    id: `debt-${i}`,
+                    name: key,
+                    category: key as DebtItem['category'],
+                    principal: value * 12,
+                    interestRate: 10,
+                    monthlyPayment: value,
+                    remainingMonths: 12,
+                  })),
+                totalMonthly: data.debts,
+                totalPrincipal: data.totalDebtPrincipal,
+              }
+        );
 
         const goals = data.goals.map((g, i) => {
           const goal = goalNameToGoal(g.name, i);
