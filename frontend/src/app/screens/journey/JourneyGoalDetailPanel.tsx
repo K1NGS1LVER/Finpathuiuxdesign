@@ -184,6 +184,21 @@ export default function JourneyGoalDetailPanel({
       : []),
   ];
 
+  const draftMonthly = Math.round(
+    Math.max(0, draftTarget - (goal.currentAmount || 0)) / Math.max(1, draftMonths)
+  );
+
+  const draftValidationError: string | null =
+    draftTarget <= 0
+      ? "Enter a target amount"
+      : draftTarget <= (goal.currentAmount || 0)
+      ? `Target must exceed amount already saved (₹${(goal.currentAmount || 0).toLocaleString("en-IN")})`
+      : draftMonths < 1
+      ? "At least 1 month required"
+      : null;
+
+  const isDraftValid = draftValidationError === null;
+
   const handleDeleteClick = () => {
     if (!confirmDelete) {
       setConfirmDelete(true);
@@ -263,178 +278,335 @@ export default function JourneyGoalDetailPanel({
 
       {/* Body */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+        {!isEditing && (
+          <>
+            {/* Ring + target amount */}
+            <div className="flex items-center gap-4" style={{ marginBottom: 20 }}>
+              <GoalRing pct={pct} color={statusColor} size={80} />
+              <div style={{ flex: 1 }}>
+                <p
+                  style={{
+                    fontSize: "var(--text-2xs)",
+                    color: "var(--tertiary)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 2,
+                  }}
+                >
+                  Target
+                </p>
+                <p
+                  className="slashed-zero tabular-nums"
+                  style={{
+                    fontSize: "var(--text-xl)",
+                    fontWeight: "var(--font-weight-bold)",
+                    color: "var(--card-foreground)",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  ₹{(goal.targetAmount || 0).toLocaleString("en-IN")}
+                </p>
+                <div
+                  style={{
+                    height: 5,
+                    borderRadius: "var(--radius-full)",
+                    background: "var(--progress-inactive)",
+                    overflow: "hidden",
+                    marginTop: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${pct}%`,
+                      background: statusColor,
+                      borderRadius: "var(--radius-full)",
+                      transition: "width 1200ms ease",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
 
-        {/* Ring + target amount */}
-        <div className="flex items-center gap-4" style={{ marginBottom: 20 }}>
-          <GoalRing pct={pct} color={statusColor} size={80} />
-          <div style={{ flex: 1 }}>
-            <p
-              style={{
-                fontSize: "var(--text-2xs)",
-                color: "var(--tertiary)",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                marginBottom: 2,
-              }}
+            {/* Stats grid */}
+            <div
+              style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}
             >
-              Target
-            </p>
-            <p
-              className="slashed-zero tabular-nums"
-              style={{
-                fontSize: "var(--text-xl)",
-                fontWeight: "var(--font-weight-bold)",
-                color: "var(--card-foreground)",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              ₹{(goal.targetAmount || 0).toLocaleString("en-IN")}
-            </p>
+              {stats.map((s) => (
+                <div
+                  key={s.label}
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: "var(--radius-base)",
+                    background: "var(--surface-tint)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "var(--text-2xs)",
+                      color: "var(--tertiary)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {s.label}
+                  </p>
+                  <p
+                    className="slashed-zero tabular-nums"
+                    style={{
+                      fontSize: "var(--text-sm)",
+                      fontWeight: "var(--font-weight-bold)",
+                      color: s.color,
+                    }}
+                  >
+                    {s.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Priority buttons (active goals only) */}
+            {!isComplete && (
+              <div style={{ marginBottom: 20 }}>
+                <p
+                  style={{
+                    fontSize: "var(--text-2xs)",
+                    color: "var(--tertiary)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 8,
+                  }}
+                >
+                  Priority
+                </p>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {Array.from({ length: Math.max(activeGoalsCount, 1) }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={`priority-${goal.id}-${p}`}
+                      onClick={() => onPriorityChange(goal.id, p)}
+                      className={`journey-priority-btn${goal.priority === p ? " active" : ""}`}
+                    >
+                      P{p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Edit goal — view mode only */}
+            {!isComplete && !isEditing && (
+              <div style={{ marginBottom: 20 }}>
+                <button
+                  onClick={handleEditClick}
+                  className="w-full flex items-center justify-center gap-1.5"
+                  style={{
+                    padding: "9px",
+                    borderRadius: "var(--radius-base)",
+                    background: "var(--surface-tint)",
+                    border: "1px solid var(--border)",
+                    color: "var(--accent)",
+                    fontWeight: "var(--font-weight-semibold)",
+                    fontSize: "var(--text-xs)",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-display)",
+                    transition: "all 200ms ease",
+                  }}
+                >
+                  <Pencil size={12} className="icon-wireframe" />
+                  Edit Goal
+                </button>
+              </div>
+            )}
+
+            {/* Status badge */}
             <div
               style={{
-                height: 5,
-                borderRadius: "var(--radius-full)",
-                background: "var(--progress-inactive)",
-                overflow: "hidden",
-                marginTop: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 14px",
+                borderRadius: "var(--radius-base)",
+                background: statusMeta.bg,
+                border: `1px solid ${statusMeta.border}`,
               }}
             >
               <div
                 style={{
-                  height: "100%",
-                  width: `${pct}%`,
-                  background: statusColor,
-                  borderRadius: "var(--radius-full)",
-                  transition: "width 1200ms ease",
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: statusMeta.dot,
+                  flexShrink: 0,
                 }}
               />
+              <span
+                style={{
+                  fontSize: "var(--text-xs)",
+                  fontWeight: "var(--font-weight-semibold)",
+                  color: statusMeta.text,
+                }}
+              >
+                {statusMeta.label}
+              </span>
             </div>
-          </div>
-        </div>
+          </>
+        )}
+        {/* edit form goes here in step 3 */}
+        {isEditing && (
+          <>
+            {/* Ring + Target Amount input */}
+            <div className="flex items-center gap-4" style={{ marginBottom: 20 }}>
+              <GoalRing pct={pct} color={statusColor} size={80} />
+              <div style={{ flex: 1 }}>
+                <p
+                  style={{
+                    fontSize: "var(--text-2xs)",
+                    color: "var(--tertiary)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 4,
+                  }}
+                >
+                  Target Amount (₹)
+                </p>
+                <input
+                  type="number"
+                  min={1}
+                  value={draftTarget}
+                  onChange={(e) => setDraftTarget(Math.max(0, Number(e.target.value)))}
+                  className="slashed-zero tabular-nums w-full"
+                  style={{
+                    fontSize: "var(--text-lg)",
+                    fontWeight: "var(--font-weight-bold)",
+                    color: "var(--card-foreground)",
+                    background: "var(--surface-tint)",
+                    border: "1px solid var(--accent)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "6px 10px",
+                    outline: "none",
+                    letterSpacing: "-0.02em",
+                  }}
+                />
+              </div>
+            </div>
 
-        {/* Stats grid */}
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}
-        >
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              style={{
-                padding: "12px 14px",
-                borderRadius: "var(--radius-base)",
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-              }}
-            >
+            {/* Timeline — months + date picker, linked */}
+            <div style={{ marginBottom: 20 }}>
               <p
                 style={{
                   fontSize: "var(--text-2xs)",
                   color: "var(--tertiary)",
                   textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  marginBottom: 4,
+                  letterSpacing: "0.08em",
+                  marginBottom: 8,
                 }}
               >
-                {s.label}
+                Timeline
               </p>
-              <p
-                className="slashed-zero tabular-nums"
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <p style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)", marginBottom: 4 }}>
+                    Months
+                  </p>
+                  <input
+                    type="number"
+                    min={1}
+                    max={240}
+                    value={draftMonths}
+                    onChange={(e) => setDraftMonths(Math.max(1, Number(e.target.value)))}
+                    className="w-full tabular-nums"
+                    style={{
+                      fontSize: "var(--text-sm)",
+                      fontWeight: "var(--font-weight-bold)",
+                      color: "var(--card-foreground)",
+                      background: "var(--surface-tint)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "var(--radius-sm)",
+                      padding: "7px 10px",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                <div>
+                  <p style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)", marginBottom: 4 }}>
+                    Target Date
+                  </p>
+                  <input
+                    type="month"
+                    min={monthsToYYYYMM(1)}
+                    value={monthsToYYYYMM(draftMonths)}
+                    onChange={(e) => setDraftMonths(yyyymmToMonths(e.target.value))}
+                    className="w-full"
+                    style={{
+                      fontSize: "var(--text-xs)",
+                      color: "var(--card-foreground)",
+                      background: "var(--surface-tint)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "var(--radius-sm)",
+                      padding: "7px 8px",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+              </div>
+              <p style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)", marginTop: 6, fontStyle: "italic" }}>
+                ↔ changing either updates the other
+              </p>
+            </div>
+
+            {/* Live monthly recompute */}
+            <div style={{ marginBottom: 20 }}>
+              <div
                 style={{
-                  fontSize: "var(--text-sm)",
-                  fontWeight: "var(--font-weight-bold)",
-                  color: s.color,
+                  padding: "12px 14px",
+                  borderRadius: "var(--radius-base)",
+                  background: "color-mix(in srgb, var(--accent) 8%, transparent)",
+                  border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
                 }}
               >
-                {s.value}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Priority buttons (active goals only) */}
-        {!isComplete && (
-          <div style={{ marginBottom: 20 }}>
-            <p
-              style={{
-                fontSize: "var(--text-2xs)",
-                color: "var(--tertiary)",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                marginBottom: 8,
-              }}
-            >
-              Priority
-            </p>
-            <div style={{ display: "flex", gap: 6 }}>
-              {Array.from({ length: Math.max(activeGoalsCount, 1) }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={`priority-${goal.id}-${p}`}
-                  onClick={() => onPriorityChange(goal.id, p)}
-                  className={`journey-priority-btn${goal.priority === p ? " active" : ""}`}
+                <p
+                  style={{
+                    fontSize: "var(--text-2xs)",
+                    color: "var(--accent-text)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    marginBottom: 4,
+                  }}
                 >
-                  P{p}
-                </button>
-              ))}
+                  New Monthly Needed
+                </p>
+                <p
+                  className="slashed-zero tabular-nums"
+                  style={{
+                    fontSize: "var(--text-lg)",
+                    fontWeight: "var(--font-weight-bold)",
+                    color: "var(--accent)",
+                  }}
+                >
+                  ₹{draftMonthly.toLocaleString("en-IN")}/mo
+                </p>
+                <p style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)", marginTop: 2 }}>
+                  updates as you type
+                </p>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Edit goal — view mode only */}
-        {!isComplete && !isEditing && (
-          <div style={{ marginBottom: 20 }}>
-            <button
-              onClick={handleEditClick}
-              className="w-full flex items-center justify-center gap-1.5"
-              style={{
-                padding: "9px",
-                borderRadius: "var(--radius-base)",
-                background: "var(--surface-tint)",
-                border: "1px solid var(--border)",
-                color: "var(--accent)",
-                fontWeight: "var(--font-weight-semibold)",
-                fontSize: "var(--text-xs)",
-                cursor: "pointer",
-                fontFamily: "var(--font-display)",
-                transition: "all 200ms ease",
-              }}
-            >
-              <Pencil size={12} className="icon-wireframe" />
-              Edit Goal
-            </button>
-          </div>
+            {/* Validation error */}
+            {draftValidationError && (
+              <p
+                style={{
+                  fontSize: "var(--text-xs)",
+                  color: "var(--red)",
+                  marginBottom: 12,
+                }}
+              >
+                {draftValidationError}
+              </p>
+            )}
+          </>
         )}
-
-        {/* Status badge */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "10px 14px",
-            borderRadius: "var(--radius-base)",
-            background: statusMeta.bg,
-            border: `1px solid ${statusMeta.border}`,
-          }}
-        >
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: statusMeta.dot,
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: "var(--text-xs)",
-              fontWeight: "var(--font-weight-semibold)",
-              color: statusMeta.text,
-            }}
-          >
-            {statusMeta.label}
-          </span>
-        </div>
       </div>
 
       {/* New lifecycle actions */}
