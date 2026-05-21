@@ -405,7 +405,7 @@ export default function JourneyGoalDetailPanel({
             )}
 
             {/* Edit goal — view mode only */}
-            {!isComplete && !isEditing && (
+            {!isComplete && (
               <div style={{ marginBottom: 20 }}>
                 <button
                   onClick={handleEditClick}
@@ -636,7 +636,7 @@ export default function JourneyGoalDetailPanel({
               cursor: isDraftValid ? "pointer" : "not-allowed",
               background: isDraftValid ? "var(--accent)" : "var(--surface-tint)",
               border: isDraftValid ? "none" : "1px solid var(--border)",
-              color: isDraftValid ? "#fff" : "var(--tertiary)",
+              color: isDraftValid ? "var(--on-accent)" : "var(--tertiary)",
               transition: "all 200ms ease",
             }}
           >
