@@ -143,13 +143,13 @@ function PayloadSummary({
         timelineMonths: 'Timeline (months)',
         name: 'Name',
         priority: 'Priority',
-        currentSaved: 'Already saved',
+        currentAmount: 'Already saved',
       };
       const rows: ReactNode[] = [<Row key="goal" label="Goal" value={goalName(id)} />];
       for (const [k, v] of Object.entries(updates)) {
         const lbl = FIELD_LABELS[k] ?? k;
         const display =
-          k === 'targetAmount' || k === 'currentSaved'
+          k === 'targetAmount' || k === 'currentAmount'
             ? fmt(Number(v))
             : String(v);
         rows.push(<Row key={k} label={lbl} value={display} />);
