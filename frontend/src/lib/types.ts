@@ -200,4 +200,10 @@ export interface FinancialProfile {
    * so the user can sign in from another browser/device.
    */
   storageMode: StorageMode;
+  /**
+   * Set to true when the user explicitly deletes the debt goal so that
+   * syncDebtGoal does not re-inject it on subsequent store mutations.
+   * Reset to false when the debt profile transitions to zero.
+   */
+  debtGoalDeleted?: boolean;
 }

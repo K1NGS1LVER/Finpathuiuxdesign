@@ -14,16 +14,17 @@ interface MonthTask {
   isGoal: boolean;
   goalId?: string;
   amount?: number;
+  committedAmount?: number;
   prefix?: string;
   suffix?: string;
 }
 
-const now = new Date();
-const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-const daysLeft = daysInMonth - now.getDate();
-const monthLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
-
 export default function Month() {
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysLeft = daysInMonth - now.getDate();
+  const monthLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
+
   const navigate = useNavigate();
   const income = useFinPathStore((s) => s.income);
   const expenses = useFinPathStore((s) => s.expenses);
@@ -130,9 +131,13 @@ export default function Month() {
       return prev.map((pt, i) => {
         const backendAmountChanged =
           prevInitial[i]?.amount !== initialTasks[i].amount;
+        const backendDoneChanged =
+          prevInitial[i]?.done !== initialTasks[i].done;
         return {
           ...initialTasks[i],
-          done: pt.done,
+          // If store's done state changed externally (e.g. from Journey panel),
+          // respect it; otherwise preserve the user's local toggle.
+          done: backendDoneChanged ? initialTasks[i].done : pt.done,
           amount: backendAmountChanged ? initialTasks[i].amount : pt.amount,
         };
       });
@@ -154,6 +159,12 @@ export default function Month() {
     }
   }, [activeGoals, lumpsumGoalId]);
 
+  useEffect(() => {
+    if (!lumpsumNotice) return;
+    const id = setTimeout(() => setLumpsumNotice(""), 4000);
+    return () => clearTimeout(id);
+  }, [lumpsumNotice]);
+
   const toggleTask = (id: string) => {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
@@ -167,7 +178,10 @@ export default function Month() {
         if (newDoneState) {
           newAmount = Math.min(goal.targetAmount, goal.currentAmount + task.amount);
         } else {
-          newAmount = Math.max(0, goal.currentAmount - task.amount);
+          // Use the amount that was actually committed when checking, not the
+          // current (possibly edited) task.amount, to avoid over/under-subtraction.
+          const subtractAmount = task.committedAmount ?? task.amount;
+          newAmount = Math.max(0, goal.currentAmount - subtractAmount);
         }
 
         const justCompleted = newAmount >= goal.targetAmount;
@@ -203,7 +217,16 @@ export default function Month() {
       }
     }
 
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+    setTasks(tasks.map((t) => {
+      if (t.id !== id) return t;
+      const newDone = !t.done;
+      return {
+        ...t,
+        done: newDone,
+        // Lock in the amount used at check time so uncheck subtracts the right value.
+        committedAmount: newDone && t.isGoal ? task.amount : t.committedAmount,
+      };
+    }));
   };
 
   const applyLumpsum = () => {
@@ -233,8 +256,10 @@ export default function Month() {
   const savingsTarget = Math.max(0, goalSavingsTarget + reservedSurplus);
 
   const doneTasks = tasks.filter((t) => t.done).length;
+  const goalTasks = tasks.filter((t) => t.isGoal);
+  const doneGoalTasks = goalTasks.filter((t) => t.done).length;
   const onTrackPct =
-    tasks.length > 0 ? Math.round((doneTasks / tasks.length) * 100) : 0;
+    goalTasks.length > 0 ? Math.round((doneGoalTasks / goalTasks.length) * 100) : 0;
 
   if (!plan || !plan.months || plan.months.length === 0) {
     return (

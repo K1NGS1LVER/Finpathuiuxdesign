@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinPath — Every rupee has a destination</title>
+<style>
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-Regular.ttf');font-weight:400;}
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-Medium.ttf');font-weight:500;}
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-SemiBold.ttf');font-weight:600;}
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-Bold.ttf');font-weight:700;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body,#root{width:100%;height:100%;}
+body{font-family:'Lufga',system-ui,sans-serif;overflow:hidden;}
+#page{height:100vh;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(123,140,255,0.25);border-radius:2px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-10px) rotate(1deg);}}
+@keyframes dotBounce{0%,80%,100%{transform:translateY(0);opacity:.35;}40%{transform:translateY(-5px);opacity:1;}}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes gradShift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+.hero-in{animation:fadeUp .75s cubic-bezier(.22,1,.36,1) both;}
+.h1{animation-delay:.05s;}.h2{animation-delay:.2s;}.h3{animation-delay:.35s;}.h4{animation-delay:.5s;}.h5{animation-delay:.65s;}
+.float{animation:float 6s ease-in-out infinite;}
+.appear{opacity:0;transform:translateY(28px);transition:opacity .65s cubic-bezier(.22,1,.36,1),transform .65s cubic-bezier(.22,1,.36,1);}
+.appear.in{opacity:1;transform:translateY(0);}
+@media(max-width:768px){
+  .rsp-nav{padding:12px 20px!important;}
+  .rsp-nav-links{display:none!important;}
+  .rsp-hero-section{padding:80px 20px 48px!important;}
+  .rsp-hero-grid{grid-template-columns:1fr!important;gap:32px!important;}
+  .rsp-hero-card{max-width:100%!important;}
+  .rsp-stat-bar{padding:24px 20px!important;}
+  .rsp-stat-inner{flex-wrap:wrap!important;gap:20px!important;justify-content:center!important;}
+  .rsp-section{padding:64px 20px!important;}
+  .rsp-feat-grid{grid-template-columns:1fr!important;}
+  .rsp-how-grid{grid-template-columns:1fr!important;gap:16px!important;}
+  .rsp-how-line{display:none!important;}
+  .rsp-penny-grid{grid-template-columns:1fr!important;gap:32px!important;}
+  .rsp-testi-grid{grid-template-columns:1fr!important;}
+  .rsp-footer{padding:20px!important;flex-direction:column!important;align-items:flex-start!important;gap:8px!important;}
+  .rsp-hero-col{text-align:center!important;}
+  .rsp-hero-col h1,.rsp-hero-col p{text-align:center!important;}
+  .rsp-hero-btns{justify-content:center!important;flex-wrap:wrap!important;}
+  .rsp-hero-social{justify-content:center!important;}
+  .rsp-penny-text{text-align:center!important;}
+  .rsp-penny-text .rsp-checklist{align-items:flex-start!important;}
+}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+/* ── INLINE ICONS ────────────────────────────────── */
+const Ico=({size=18,color='currentColor',strokeWidth=1.5,fill='none',children})=>
+  <svg viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" width={size} height={size}>{children}</svg>;
+
+const Target=p=><Ico {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></Ico>;
+const Zap=p=><Ico {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Ico>;
+const Sparkles=p=><Ico {...p}><path d="M12 3l1.5 4.5 4.5 1.5-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19.5 8.5l.75 2.25 2.25.75-2.25.75-.75 2.25-.75-2.25-2.25-.75 2.25-.75z"/><path d="M5 3.5l.6 1.7 1.7.6-1.7.6L5 8.1l-.6-1.7-1.7-.6 1.7-.6z"/></Ico>;
+const TrendingUp=p=><Ico {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Ico>;
+const Bike=p=><Ico {...p}><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7M5.5 17.5l3-7h4.5l3 7M12 10.5V8"/><line x1="8" y1="10.5" x2="12" y2="10.5"/></Ico>;
+const Home=p=><Ico {...p}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Ico>;
+const Plane=p=><Ico {...p}><path d="M21 3L3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z"/></Ico>;
+const FileText=p=><Ico {...p}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></Ico>;
+const CalendarCheck=p=><Ico {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></Ico>;
+const Snowflake=p=><Ico {...p}><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><path d="M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/></Ico>;
+const Star=p=><Ico {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></Ico>;
+const ArrowRight=p=><Ico {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></Ico>;
+const Sun=p=><Ico {...p}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></Ico>;
+const Moon=p=><Ico {...p}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></Ico>;
+const X=p=><Ico {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Ico>;
+const Check=p=><Ico {...p}><polyline points="20 6 9 17 4 12"/></Ico>;
+const Send=p=><Ico {...p}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></Ico>;
+const SlidersHorizontal=p=><Ico {...p}><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><circle cx="12" cy="4" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="20" r="2"/></Ico>;
+const ChevronRight=p=><Ico {...p}><polyline points="9 18 15 12 9 6"/></Ico>;
+const ShieldCheck=p=><Ico {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></Ico>;
+const MessageCircle=p=><Ico {...p}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></Ico>;
+const Coins=p=><Ico {...p}><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="M16.71 13.88l.71.71-2.82 2.82"/></Ico>;
+
+/* ── PALETTES ────────────────────────────────────── */
+const PALETTES={
+  'blue-violet':{
+    darkA:'#7b8cff',darkB:'#c77dff',
+    lightA:'#495bff',lightB:'#ac49ff',
+    swatch:['#7b8cff','#c77dff'],
+  },
+  'teal-blue':{
+    darkA:'#2dd4bf',darkB:'#60a5fa',
+    lightA:'#0d9488',lightB:'#2563eb',
+    swatch:['#2dd4bf','#60a5fa'],
+  },
+  'rose-orange':{
+    darkA:'#fb7185',darkB:'#fb923c',
+    lightA:'#e11d48',lightB:'#ea580c',
+    swatch:['#fb7185','#fb923c'],
+  },
+  'emerald-indigo':{
+    darkA:'#34d399',darkB:'#818cf8',
+    lightA:'#059669',lightB:'#4f46e5',
+    swatch:['#34d399','#818cf8'],
+  },
+};
+
+/* ── TOKENS ──────────────────────────────────────── */
+const BASE_DARK={
+  bg:'linear-gradient(135deg,#0f1422 0%,#161a33 35%,#181533 65%,#131022 85%,#080a14 100%)',
+  card:'rgba(17,24,39,0.65)',cardSolid:'#111827',
+  fg:'#f1f5f9',secondary:'#94a3b8',tertiary:'#64748b',
+  lime:'#b0ff09',limeText:'#b0ff09',
+  border:'rgba(255,255,255,0.09)',surface:'rgba(255,255,255,0.04)',surfaceHover:'rgba(255,255,255,0.07)',
+  shadow:'0 8px 32px rgba(0,0,0,0.45)',shadowLg:'0 24px 64px rgba(0,0,0,0.55)',
+  green:'#22c55e',greenText:'#4ade80',greenSubtle:'rgba(34,197,94,0.13)',
+  amber:'#f59e0b',navBg:'rgba(15,20,34,0.85)',
+};
+const BASE_LIGHT={
+  bg:'linear-gradient(135deg,#eef4f8 0%,#e8edff 35%,#edeaff 65%,#f0ebff 85%,#f6f4ff 100%)',
+  card:'rgba(255,255,255,0.88)',cardSolid:'#fff',
+  fg:'#050f1c',secondary:'#1e293b',tertiary:'#475569',
+  lime:'#b0ff09',limeText:'#598500',
+  border:'rgba(5,15,28,0.09)',surface:'rgba(5,15,28,0.03)',surfaceHover:'rgba(5,15,28,0.06)',
+  shadow:'0 8px 32px rgba(5,15,28,0.08)',shadowLg:'0 24px 64px rgba(5,15,28,0.13)',
+  green:'#22c55e',greenText:'#16853d',greenSubtle:'rgba(34,197,94,0.09)',
+  amber:'#f59e0b',navBg:'rgba(238,240,255,0.88)',
+};
+
+function getTokens(isDark,palette){
+  const base=isDark?BASE_DARK:BASE_LIGHT;
+  const pal=PALETTES[palette]||PALETTES['blue-violet'];
+  const a=isDark?pal.darkA:pal.lightA;
+  const b=isDark?pal.darkB:pal.lightB;
+  return{
+    ...base,
+    accent:a,accentHover:a,
+    accentSubtle:`${a}22`,accentGlow:`${a}44`,accentText:a,
+    violet:b,violetSubtle:`${b}18`,
+    blobA:`${a}33`,blobB:`${b}22`,
+  };
+}
+
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ── HOOKS ───────────────────────────────────────── */
+function useInView(threshold=0.15){
+  const ref=useRef();const[v,setV]=useState(false);
+  useEffect(()=>{
+    const o=new IntersectionObserver(([e])=>{if(e.isIntersecting)setV(true);},{threshold});
+    if(ref.current)o.observe(ref.current);
+    return()=>o.disconnect();
+  },[]);
+  return[ref,v];
+}
+function useCountUp(target,active,dur=1600){
+  const[val,setVal]=useState(0);const fr=useRef();
+  useEffect(()=>{
+    if(!active)return;
+    const s=Date.now();
+    const tick=()=>{
+      const p=Math.min((Date.now()-s)/dur,1);
+      setVal(Math.round((1-Math.pow(1-p,3))*target));
+      if(p<1)fr.current=requestAnimationFrame(tick);
+    };
+    fr.current=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(fr.current);
+  },[target,active]);
+  return val;
+}
+
+/* ── LOGO ────────────────────────────────────────── */
+function Logo({size=28,t}){
+  return(
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
+      <defs><linearGradient id="lg-l2" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0%" stopColor={t.accent}/><stop offset="100%" stopColor={t.violet}/></linearGradient></defs>
+      <path d="M12 60 L38 30" stroke="url(#lg-l2)" strokeWidth="11" strokeLinecap="round"/>
+      <path d="M38 30 L64 60" stroke="url(#lg-l2)" strokeWidth="11" strokeLinecap="round"/>
+      <path d="M51 44 L66 16" stroke="url(#lg-l2)" strokeWidth="2.5" strokeLinecap="round" strokeOpacity=".4" strokeDasharray="2 4"/>
+      <circle cx="68" cy="13" r="6" fill={t.accent}/>
+      <circle cx="68" cy="13" r="2.8" fill={t===BASE_DARK||t.fg==='#f1f5f9'?'#0f1422':'#fff'}/>
+    </svg>
+  );
+}
+
+/* ── ICON WRAPPER ────────────────────────────────── */
+function IcoBox({icon:Ic,color,size=40,iconSize=18,radius=12}){
+  return(
+    <div style={{width:size,height:size,borderRadius:radius,background:`${color}20`,border:`1px solid ${color}35`,display:'flex',alignItems:'center',justifyContent:'center',color,flexShrink:0}}>
+      <Ic size={iconSize} strokeWidth={1.5}/>
+    </div>
+  );
+}
+
+/* ── MINI RING ───────────────────────────────────── */
+function MiniRing({pct,color,size=72,t}){
+  const r=(size/2)-5;const circ=2*Math.PI*r;
+  const[a,setA]=useState(0);
+  useEffect(()=>{const id=setTimeout(()=>setA(pct),400);return()=>clearTimeout(id);},[pct]);
+  const off=circ-(a/100)*circ;
+  return(
+    <div style={{position:'relative',width:size,height:size,flexShrink:0}}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{transform:'rotate(-90deg)'}}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={t?t.border:'rgba(255,255,255,0.1)'} strokeWidth="5"/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="5"
+          strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
+          style={{transition:'stroke-dashoffset 1200ms cubic-bezier(.22,1,.36,1)'}}/>
+      </svg>
+      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <span style={{fontSize:size>80?15:11,fontWeight:700,color:t?t.fg:'#f1f5f9',fontVariantNumeric:'slashed-zero tabular-nums'}}>{a}%</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── PRODUCT WINDOW ──────────────────────────────── */
+function ProductWindow({t}){
+  const r=70, circ=2*Math.PI*r;
+  const[hAnim,setHAnim]=useState(0);
+  const[barAnim,setBarAnim]=useState(0);
+  useEffect(()=>{
+    const t1=setTimeout(()=>setHAnim(78),400);
+    const t2=setTimeout(()=>setBarAnim(62),700);
+    return()=>{clearTimeout(t1);clearTimeout(t2);};
+  },[]);
+  const hOff=circ-(hAnim/100)*circ;
+  return(
+    <div className="rsp-hero-card" style={{
+      position:'relative',width:'100%',maxWidth:560,
+      background:t.card,backdropFilter:'blur(32px)',WebkitBackdropFilter:'blur(32px)',
+      border:`1px solid ${t.border}`,borderRadius:32,overflow:'hidden',
+      boxShadow:t.shadowLg,
+    }}>
+      {/* Blobs */}
+      <div style={{position:'absolute',top:-40,right:-40,width:180,height:180,borderRadius:'50%',background:t.accent,opacity:.1,filter:'blur(40px)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',bottom:-32,left:-32,width:180,height:180,borderRadius:'50%',background:t.violet,opacity:.08,filter:'blur(40px)',pointerEvents:'none'}}/>
+      {/* Chrome */}
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'14px 22px',borderBottom:`1px solid ${t.border}`}}>
+        {['#ef4444','#f59e0b','#22c55e'].map(c=><div key={c} style={{width:10,height:10,borderRadius:'50%',background:c}}/>)}
+      </div>
+      {/* Body */}
+      <div style={{padding:'36px 40px'}}>
+        <div style={{display:'flex',gap:36,alignItems:'flex-start'}}>
+          {/* Health ring */}
+          <div style={{position:'relative',width:152,height:152,flexShrink:0}}>
+            <svg width={152} height={152} viewBox="0 0 160 160" style={{transform:'rotate(-90deg)',width:'100%',height:'100%'}}>
+              <defs>
+                <linearGradient id="hw-ring-g" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={t.accent}/>
+                  <stop offset="40%" stopColor={t.accent}/>
+                  <stop offset="100%" stopColor={t.violet}/>
+                </linearGradient>
+              </defs>
+              <circle cx="80" cy="80" r={r} fill="none" stroke={t.border} strokeWidth="12" strokeDasharray="6 6"/>
+              <circle cx="80" cy="80" r={r} fill="none" stroke="url(#hw-ring-g)" strokeWidth="12"
+                strokeDasharray={circ} strokeDashoffset={hOff} strokeLinecap="round"
+                style={{transition:'stroke-dashoffset 1500ms cubic-bezier(0.4,0,0.2,1)',filter:`drop-shadow(0 0 6px ${t.accentGlow})`}}/>
+            </svg>
+            <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+              <span style={{fontFamily:'Lufga,system-ui',fontSize:36,fontWeight:700,color:t.fg,fontVariantNumeric:'slashed-zero tabular-nums'}}>{hAnim}</span>
+              <span style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.08em',color:t.tertiary,fontWeight:600,marginTop:2}}>Score</span>
+            </div>
+          </div>
+          {/* Stats */}
+          <div style={{display:'flex',flexDirection:'column',gap:16,flex:1}}>
+            {[
+              {label:'Monthly Income',val:'₹1,20,000',color:t.fg},
+              {label:'Surplus',val:'₹34,500',color:t.fg},
+              {label:'Savings Rate',val:'28.8%',color:t.greenText},
+            ].map(s=>(
+              <div key={s.label} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontSize:15,color:t.secondary}}>{s.label}</span>
+                <span style={{fontFamily:'Lufga,system-ui',fontSize:15,fontWeight:600,color:s.color,fontVariantNumeric:'slashed-zero tabular-nums'}}>{s.val}</span>
+              </div>
+            ))}
+            {/* Emergency Fund */}
+            <div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                <span style={{fontSize:15,color:t.secondary}}>Emergency Fund</span>
+                <span style={{fontFamily:'Lufga,system-ui',fontSize:14,fontWeight:600,color:t.fg,fontVariantNumeric:'slashed-zero tabular-nums'}}>62%</span>
+              </div>
+              <div style={{width:'100%',height:6,borderRadius:99,background:t.border,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${barAnim}%`,borderRadius:99,background:t.accent,transition:'width 1200ms cubic-bezier(.22,1,.36,1)'}}/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── FEATURE VISUALS ─────────────────────────────── */
+function FeatGoals({t}){
+  const goals=[
+    {Icon:Bike, name:'Royal Enfield',pct:45,color:t.accent,  monthly:'₹8,500'},
+    {Icon:Home, name:'Down Payment', pct:12,color:t.violet,  monthly:'₹15,000'},
+    {Icon:Plane,name:'Europe Trip',  pct:67,color:t.lime,    monthly:'₹6,000'},
+  ];
+  return(
+    <div style={{display:'flex',gap:12,padding:'24px 20px',justifyContent:'center'}}>
+      {goals.map(g=>(
+        <div key={g.name} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:10,padding:'20px 12px',borderRadius:16,background:t.surface,border:`1px solid ${t.border}`}}>
+          <IcoBox icon={g.Icon} color={g.color} size={40} iconSize={18}/>
+          <MiniRing pct={g.pct} color={g.color} size={76} t={t}/>
+          <div style={{textAlign:'center'}}>
+            <p style={{fontSize:12,fontWeight:700,color:t.fg,marginBottom:2}}>{g.name}</p>
+            <p style={{fontSize:10,color:t.tertiary}}>{g.monthly}/mo</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+function FeatDebt({t}){
+  return(
+    <div style={{padding:'20px',display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{padding:18,borderRadius:16,background:t.accentSubtle,border:`1px solid ${t.accentGlow}`,position:'relative'}}>
+        <span style={{position:'absolute',top:14,right:14,background:t.accent,color:'#fff',fontSize:9,fontWeight:700,padding:'3px 9px',borderRadius:99}}>Recommended</span>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+          <IcoBox icon={Zap} color={t.accent} size={32} iconSize={14} radius={8}/>
+          <p style={{fontSize:13,fontWeight:700,color:t.fg}}>Avalanche Method</p>
+        </div>
+        <div style={{display:'flex',gap:20}}>
+          <div><p style={{fontSize:9,color:t.tertiary,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2}}>Interest saved</p><p style={{fontSize:20,fontWeight:700,color:t.accentText,fontVariantNumeric:'slashed-zero tabular-nums'}}>₹28,400</p></div>
+          <div><p style={{fontSize:9,color:t.tertiary,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2}}>Debt-free in</p><p style={{fontSize:20,fontWeight:700,color:t.fg}}>18 months</p></div>
+        </div>
+      </div>
+      <div style={{padding:18,borderRadius:16,background:t.surface,border:`1px solid ${t.border}`}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+          <IcoBox icon={Snowflake} color={t.violet} size={32} iconSize={14} radius={8}/>
+          <p style={{fontSize:13,fontWeight:700,color:t.fg}}>Snowball Method</p>
+        </div>
+        <div style={{display:'flex',gap:20}}>
+          <div><p style={{fontSize:9,color:t.tertiary,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2}}>Interest saved</p><p style={{fontSize:20,fontWeight:700,color:t.secondary,fontVariantNumeric:'slashed-zero tabular-nums'}}>₹12,100</p></div>
+          <div><p style={{fontSize:9,color:t.tertiary,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2}}>Debt-free in</p><p style={{fontSize:20,fontWeight:700,color:t.secondary}}>22 months</p></div>
+        </div>
+      </div>
+      <p style={{fontSize:11,color:t.secondary,textAlign:'center'}}>Avalanche saves you ₹16,300 more in interest</p>
+    </div>
+  );
+}
+function FeatPenny({t}){
+  return(
+    <div style={{padding:20,display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{display:'flex',justifyContent:'flex-end'}}>
+        <div style={{maxWidth:'78%',padding:'11px 14px',fontSize:13,lineHeight:1.55,borderRadius:'18px 18px 4px 18px',background:t.accent,color:'#fff'}}>
+          What should I prioritize this month?
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
+        <div style={{width:28,height:28,borderRadius:'50%',background:`linear-gradient(135deg,${t.accent},${t.violet})`,color:'#fff',fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>P</div>
+        <div style={{maxWidth:'80%',padding:'11px 14px',fontSize:13,lineHeight:1.55,borderRadius:'4px 18px 18px 18px',background:t.surface,border:`1px solid ${t.border}`,color:t.secondary}}>
+          Pay <strong style={{color:t.fg}}>₹6K to Europe trip</strong> first — you're 3 months out. Then debt EMIs, then save the rest. You're on track.
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8,marginTop:4}}>
+        <div style={{flex:1,padding:'8px 14px',borderRadius:99,background:t.surface,border:`1px solid ${t.border}`,fontSize:12,color:t.tertiary}}>Ask Penny anything...</div>
+        <div style={{width:34,height:34,borderRadius:'50%',background:`linear-gradient(135deg,${t.accent},${t.violet})`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${t.accentGlow}`,cursor:'pointer'}}>
+          <Send size={14} strokeWidth={2} color="#fff"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+function FeatScenarios({t}){
+  const W=300,H=140;
+  const months=[0,1,2,3,4,5,6,7,8,9,10,11];
+  const base=months.map(m=>240+m*10);
+  const raise=months.map(m=>240+m*18);
+  const home=months.map(m=>m<3?240+m*8:m<5?(252)-(m-3)*35:m<7?(182)+m*5:(182+7*5)+(m-7)*14);
+  const all=[...base,...raise,...home];
+  const mn=Math.min(...all),mx=Math.max(...all);
+  const toX=i=>(i/11)*W;
+  const toY=v=>H-10-((v-mn)/(mx-mn))*(H-20);
+  const pts=arr=>arr.map((v,i)=>`${toX(i)},${toY(v)}`).join(' L ');
+  return(
+    <div style={{padding:'20px 20px 12px'}}>
+      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+        <path d={`M ${pts(base)}`} fill="none" stroke={t.border} strokeWidth="1.5" strokeDasharray="4 3"/>
+        <path d={`M ${pts(raise)}`} fill="none" stroke={t.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d={`M ${pts(home)}`} fill="none" stroke={t.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="5 3"/>
+      </svg>
+      <div style={{display:'flex',gap:16,justifyContent:'center',marginTop:10}}>
+        {[['Current pace',t.tertiary,false],['30% raise',t.accent,false],['Buy home',t.violet,true]].map(([l,c,dashed])=>(
+          <div key={l} style={{display:'flex',alignItems:'center',gap:5}}>
+            <div style={{width:18,height:2,borderRadius:99,background:dashed?'transparent':c,backgroundImage:dashed?`repeating-linear-gradient(90deg,${c},${c} 4px,transparent 4px,transparent 7px)`:'none'}}/>
+            <span style={{fontSize:10,color:t.secondary}}>{l}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── NAV ─────────────────────────────────────────── */
+function Nav({t,tweaks,setTweak}){
+  const[scrolled,setScrolled]=useState(false);
+  useEffect(()=>{
+    const el=document.getElementById('page');
+    const h=()=>setScrolled(el.scrollTop>40);
+    el?.addEventListener('scroll',h);
+    return()=>el?.removeEventListener('scroll',h);
+  },[]);
+  return(
+    <nav className="rsp-nav" style={{
+      position:'fixed',top:0,left:0,right:0,zIndex:100,
+      display:'flex',alignItems:'center',justifyContent:'space-between',
+      padding:'14px 48px',
+      background:scrolled?t.navBg:'transparent',
+      backdropFilter:scrolled?'blur(20px)':'none',
+      WebkitBackdropFilter:scrolled?'blur(20px)':'none',
+      borderBottom:scrolled?`1px solid ${t.border}`:'1px solid transparent',
+      transition:'all 350ms ease',
+    }}>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <Logo size={28} t={t}/>
+        <span style={{fontFamily:'Lufga,system-ui',fontSize:18,fontWeight:600,letterSpacing:'-0.025em',color:t.fg}}>
+          fin<span style={{color:t.accent}}>path</span>
+        </span>
+      </div>
+      <div className="rsp-nav-links" style={{display:'flex',alignItems:'center',gap:28}}>
+        {[['Features','#features'],['How it works','#how'],['Testimonials','#testimonials']].map(([l,h])=>(
+          <a key={l} href={h} onClick={e=>{e.preventDefault();document.querySelector(h)?.scrollIntoView({behavior:'smooth'});}} style={{fontSize:14,fontWeight:500,color:t.secondary,textDecoration:'none',transition:'color 200ms ease',cursor:'pointer'}}
+            onMouseEnter={e=>e.target.style.color=t.fg} onMouseLeave={e=>e.target.style.color=t.secondary}>{l}</a>
+        ))}
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <button style={{padding:'9px 22px',borderRadius:99,fontFamily:'Lufga,system-ui',fontSize:13,fontWeight:600,background:`linear-gradient(135deg,${t.accent} 40%,${t.violet} 140%)`,color:'#fff',border:'none',cursor:'pointer',boxShadow:`0 4px 16px ${t.accentGlow}`,transition:'all 200ms ease'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';e.currentTarget.style.boxShadow=`0 8px 24px ${t.accentGlow}`;}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=`0 4px 16px ${t.accentGlow}`;}}>
+          {tweaks.ctaText}
+        </button>
+        <button onClick={()=>setTweak('theme',tweaks.theme==='dark'?'light':'dark')} style={{width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',background:t.surface,border:`1px solid ${t.border}`,color:t.secondary,cursor:'pointer',transition:'all 200ms ease'}}>
+          {tweaks.theme==='dark'?<Sun size={15} strokeWidth={1.5}/>:<Moon size={15} strokeWidth={1.5}/>}
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+/* ── HERO ────────────────────────────────────────── */
+function Hero({t,tweaks}){
+  return(
+    <section className="rsp-hero-section" style={{minHeight:'100vh',display:'flex',alignItems:'center',padding:'100px 48px 60px',position:'relative'}}>
+      <div style={{position:'absolute',inset:0,overflow:'hidden',pointerEvents:'none',zIndex:0}}>
+        <div style={{position:'absolute',top:'15%',left:'10%',width:'55vw',height:'55vh',borderRadius:'50%',background:t.blobA,filter:'blur(100px)',opacity:.55}}/>
+        <div style={{position:'absolute',bottom:'20%',right:'10%',width:'40vw',height:'45vh',borderRadius:'50%',background:t.blobB,filter:'blur(80px)',opacity:.6}}/>
+      </div>
+      <div className="rsp-hero-grid" style={{maxWidth:1280,margin:'0 auto',width:'100%',display:'grid',gridTemplateColumns:'1fr 1fr',gap:60,alignItems:'center',position:'relative',zIndex:1}}>
+        <div className="rsp-hero-col">
+
+          <h1 className="hero-in h2" style={{fontFamily:'Lufga,system-ui',fontSize:'clamp(44px,5vw,72px)',fontWeight:700,letterSpacing:'-0.03em',lineHeight:1.05,color:t.fg,marginBottom:22}}>
+            {tweaks.headline.split(' ').slice(0,-1).join(' ')}{' '}
+            <span style={{backgroundImage:`linear-gradient(135deg,${t.accent} 0%,${t.violet} 55%,${t.lime} 100%)`,WebkitBackgroundClip:'text',backgroundClip:'text',WebkitTextFillColor:'transparent',color:'transparent'}}>
+              {tweaks.headline.split(' ').slice(-1)[0]}
+            </span>
+          </h1>
+          <p className="hero-in h3" style={{fontSize:18,color:t.secondary,lineHeight:1.7,marginBottom:36,maxWidth:480}}>
+            FinPath maps your income to every goal, debt, and reserve — automatically. No spreadsheets. No guesswork.
+          </p>
+          <div className="hero-in h4 rsp-hero-btns" style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:36}}>
+            <button style={{padding:'14px 28px',borderRadius:99,fontFamily:'Lufga,system-ui',fontSize:15,fontWeight:600,background:`linear-gradient(135deg,${t.accent} 40%,${t.violet} 140%)`,color:'#fff',border:'none',cursor:'pointer',boxShadow:`0 6px 24px ${t.accentGlow}`,display:'flex',alignItems:'center',gap:8,transition:'all 200ms ease'}}
+              onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 12px 36px ${t.accentGlow}`;}}
+              onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=`0 6px 24px ${t.accentGlow}`;}}>
+              {tweaks.ctaText}<ArrowRight size={16} strokeWidth={2}/>
+            </button>
+            <a href="#features" onClick={e=>{e.preventDefault();document.querySelector('#features')?.scrollIntoView({behavior:'smooth'});}} style={{padding:'14px 28px',borderRadius:99,fontFamily:'Lufga,system-ui',fontSize:15,fontWeight:500,background:'transparent',color:t.secondary,border:`1px solid ${t.border}`,cursor:'pointer',display:'flex',alignItems:'center',gap:8,textDecoration:'none',transition:'all 200ms ease'}}
+              onMouseEnter={e=>{const el=e.currentTarget;el.style.color=t.fg;el.style.borderColor=t.accentGlow;el.style.transform='translateY(-2px)';}}
+              onMouseLeave={e=>{const el=e.currentTarget;el.style.color=t.secondary;el.style.borderColor=t.border;el.style.transform='none';}}>
+              See how it works
+            </a>
+          </div>
+          <div className="hero-in h5 rsp-hero-social" style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{display:'flex'}}>
+              {['AK','RV','PS','MG','SN'].map((i,idx)=>(
+                <div key={i} style={{width:22,height:22,borderRadius:'50%',background:t.accentSubtle,border:`2px solid ${t.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:7,fontWeight:700,color:t.accentText,marginLeft:idx?-6:0,flexShrink:0}}>{i}</div>
+              ))}
+            </div>
+            <div>
+              <div style={{display:'flex',gap:1,marginBottom:1}}>
+                {[1,2,3,4,5].map(s=><Star key={s} size={9} fill={t.amber} color={t.amber}/>)}
+              </div>
+              <p style={{fontSize:10,color:t.secondary}}>Trusted by <strong style={{color:t.fg}}>12,000+</strong> Indian professionals</p>
+            </div>
+          </div>
+        </div>
+        <div style={{display:'flex',justifyContent:'flex-end'}}>
+          <ProductWindow t={t}/>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── STATS BAR ───────────────────────────────────── */
+function StatsBar({t}){
+  const[ref,inView]=useInView(0.3);
+  const n1=useCountUp(450,inView);
+  const n2=useCountUp(12000,inView);
+  const n3=useCountUp(98,inView);
+  const stats=[
+    {ico:Coins,val:`₹${n1}Cr`,label:'tracked across goals',color:t.accent},
+    {ico:Target,val:`${n2.toLocaleString('en-IN')}+`,label:'active users',color:t.violet},
+    {ico:Star,val:'4.9',label:'average rating',color:t.amber,static:true},
+  ];
+  return(
+    <div ref={ref} className="rsp-stat-bar" style={{background:t.surface,borderTop:`1px solid ${t.border}`,borderBottom:`1px solid ${t.border}`,padding:'28px 48px'}}>
+      <div className="rsp-stat-inner" style={{maxWidth:1280,margin:'0 auto',display:'flex',justifyContent:'space-around',flexWrap:'wrap',gap:24}}>
+        {stats.map(s=>(
+          <div key={s.label} style={{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+            <s.ico size={20} strokeWidth={1.5} color={s.color}/>
+            <p style={{fontFamily:'Lufga,system-ui',fontSize:28,fontWeight:700,color:s.color,letterSpacing:'-0.02em',fontVariantNumeric:'slashed-zero tabular-nums'}}>{s.val}</p>
+            <p style={{fontSize:13,color:t.secondary}}>{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── FEATURES ────────────────────────────────────── */
+function FeaturesSection({t}){
+  const[ref,inView]=useInView(0.1);
+  const[active,setActive]=useState(0);
+  const features=[
+    {Icon:Target,title:'Goal-first planning',desc:'Set any goal with a target amount and timeline. FinPath auto-allocates your surplus across goals every month — adjusting as your finances change.',Visual:FeatGoals},
+    {Icon:Zap,title:'Debt payoff intelligence',desc:'Compare Avalanche vs Snowball strategies side-by-side. See your debt-free date, interest saved, and the exact rupee impact of switching.',Visual:FeatDebt},
+    {Icon:Sparkles,title:'Penny AI companion',desc:'Your personal financial AI reads your full plan. Ask Penny anything — from "what should I pay this month" to "can I afford a vacation next year."',Visual:FeatPenny},
+    {Icon:TrendingUp,title:'What-if scenarios',desc:'Model any life change — 30% raise, buying a home, starting a family — and see the impact on every goal and your emergency buffer before you commit.',Visual:FeatScenarios},
+  ];
+  const V=features[active].Visual;
+  return(
+    <section id="features" ref={ref} className="rsp-section" style={{padding:'100px 48px'}}>
+      <div style={{maxWidth:1280,margin:'0 auto'}}>
+        <div className={`appear${inView?' in':''}`} style={{textAlign:'center',marginBottom:60}}>
+          <p style={{fontSize:12,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:t.accentText,marginBottom:14}}>Everything you need</p>
+          <h2 style={{fontFamily:'Lufga,system-ui',fontSize:'clamp(32px,4vw,52px)',fontWeight:700,letterSpacing:'-0.025em',color:t.fg,marginBottom:14}}>Your CFO, in your pocket</h2>
+          <p style={{fontSize:17,color:t.secondary,maxWidth:520,margin:'0 auto',lineHeight:1.65}}>The financial clarity of a corporate treasury desk — built for Indian professionals.</p>
+        </div>
+        <div className={`appear${inView?' in':''} rsp-feat-grid`} style={{transitionDelay:'0.15s',display:'grid',gridTemplateColumns:'2fr 3fr',gap:28,alignItems:'stretch'}}>
+          <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            {features.map((f,i)=>{
+              const isA=active===i;
+              return(
+                <button key={i} onClick={()=>setActive(i)} style={{textAlign:'left',padding:'16px 18px',borderRadius:16,background:isA?t.accentSubtle:t.surface,border:`1px solid ${isA?t.accentGlow:t.border}`,cursor:'pointer',transition:'all 200ms ease'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:isA?8:0}}>
+                    <IcoBox icon={f.Icon} color={isA?t.accent:t.tertiary} size={32} iconSize={15} radius={9}/>
+                    <span style={{fontSize:14,fontWeight:600,color:isA?t.fg:t.secondary,fontFamily:'Lufga,system-ui',flex:1}}>{f.title}</span>
+                    {isA&&<ChevronRight size={14} color={t.accent} strokeWidth={2}/>}
+                  </div>
+                  {isA&&<p style={{fontSize:13,color:t.secondary,lineHeight:1.6,paddingLeft:42}}>{f.desc}</p>}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{background:t.card,backdropFilter:'blur(28px)',WebkitBackdropFilter:'blur(28px)',borderRadius:22,border:`1px solid ${t.border}`,overflow:'hidden',boxShadow:t.shadow,display:'flex',flexDirection:'column'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,padding:'11px 16px',borderBottom:`1px solid ${t.border}`,background:t.surface}}>
+              {['#ef4444','#f59e0b','#22c55e'].map(c=><div key={c} style={{width:10,height:10,borderRadius:'50%',background:c}}/>)}
+              <span style={{fontSize:10,color:t.tertiary,marginLeft:8}}>{features[active].title}</span>
+            </div>
+            <div style={{flex:1}}><V t={t}/></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── HOW IT WORKS ────────────────────────────────── */
+function HowSection({t}){
+  const[ref,inView]=useInView(0.1);
+  const steps=[
+    {Icon:FileText,color:t.accent,n:'01',title:'Fill in your numbers',desc:'Income, expenses, debts, and savings in under 2 minutes. No bank connections required.'},
+    {Icon:Sparkles,color:t.violet,n:'02',title:'Penny builds your plan',desc:'Your AI companion allocates your monthly surplus across every goal and debt automatically.'},
+    {Icon:CalendarCheck,color:t.accent,n:'03',title:'Check in monthly',desc:'A simple checklist every month. Mark what you\'ve done, celebrate wins, watch your net worth grow.'},
+  ];
+  return(
+    <section id="how" ref={ref} className="rsp-section" style={{padding:'100px 48px',background:t.surface,borderTop:`1px solid ${t.border}`,borderBottom:`1px solid ${t.border}`}}>
+      <div style={{maxWidth:1280,margin:'0 auto'}}>
+        <div className={`appear${inView?' in':''}`} style={{textAlign:'center',marginBottom:60}}>
+          <p style={{fontSize:12,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:t.accentText,marginBottom:14}}>Simple by design</p>
+          <h2 style={{fontFamily:'Lufga,system-ui',fontSize:'clamp(28px,3.5vw,48px)',fontWeight:700,letterSpacing:'-0.025em',color:t.fg}}>Up and running in 5 minutes</h2>
+        </div>
+        <div className="rsp-how-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:28,position:'relative'}}>
+          <div className="rsp-how-line" style={{position:'absolute',top:40,left:'16.5%',right:'16.5%',height:1,background:`linear-gradient(90deg,${t.accent},${t.violet})`,opacity:.25,zIndex:0}}/>
+          {steps.map((s,i)=>(
+            <div key={i} className={`appear${inView?' in':''}`} style={{transitionDelay:`${i*0.12}s`,padding:28,borderRadius:20,background:t.card,border:`1px solid ${t.border}`,backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',boxShadow:t.shadow,position:'relative',zIndex:1}}>
+              <div style={{width:44,height:44,borderRadius:14,background:`linear-gradient(135deg,${t.accent},${t.violet})`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
+                <s.Icon size={20} strokeWidth={1.5} color="#fff"/>
+              </div>
+              <p style={{fontSize:11,fontWeight:700,color:t.tertiary,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:6}}>{s.n}</p>
+              <h3 style={{fontFamily:'Lufga,system-ui',fontSize:18,fontWeight:700,color:t.fg,marginBottom:10,letterSpacing:'-0.01em'}}>{s.title}</h3>
+              <p style={{fontSize:14,color:t.secondary,lineHeight:1.65}}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── PENNY DEMO ──────────────────────────────────── */
+function PennySection({t}){
+  const[ref,inView]=useInView(0.15);
+  const[msgs,setMsgs]=useState([]);
+  const[typing,setTyping]=useState(false);
+  const runRef=useRef(0);
+  useEffect(()=>{
+    if(!inView)return;
+    let cancelled=false;
+    const run=async(id)=>{
+      await delay(600);if(cancelled||runRef.current!==id)return;
+      setMsgs([{r:'user',txt:'When can I afford the Royal Enfield?'}]);
+      await delay(700);if(cancelled||runRef.current!==id)return;
+      setTyping(true);await delay(1400);if(cancelled||runRef.current!==id)return;
+      setTyping(false);
+      setMsgs(m=>[...m,{r:'penny',txt:"At ₹8,500/month you'll hit your ₹2L target by July 2027 — 13 months away. A ₹2K top-up gets you there by May 2027. Want me to update the plan?"}]);
+      await delay(2200);if(cancelled||runRef.current!==id)return;
+      setMsgs(m=>[...m,{r:'user',txt:'Yes please — update it!'}]);
+      await delay(600);if(cancelled||runRef.current!==id)return;
+      setTyping(true);await delay(1600);if(cancelled||runRef.current!==id)return;
+      setTyping(false);
+      setMsgs(m=>[...m,{r:'penny',txt:"Done! I've bumped your allocation to ₹10,500/month. You'll save ₹4,200 in total. New goal date: May 2027."}]);
+      await delay(4000);if(cancelled||runRef.current!==id)return;
+      setMsgs([]);setTyping(false);runRef.current=Date.now();run(runRef.current);
+    };
+    runRef.current=Date.now();run(runRef.current);
+    return()=>{cancelled=true;};
+  },[inView]);
+  return(
+    <section ref={ref} className="rsp-section" style={{padding:'100px 48px'}}>
+      <div className="rsp-penny-grid" style={{maxWidth:1100,margin:'0 auto',display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'center'}}>
+        <div className={`appear${inView?' in':''} rsp-penny-text`}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 14px',borderRadius:99,background:t.accentSubtle,border:`1px solid ${t.accentGlow}`,marginBottom:20}}>
+            <Sparkles size={12} strokeWidth={1.5} color={t.accent}/>
+            <span style={{fontSize:11,fontWeight:700,color:t.accentText,letterSpacing:'0.06em',textTransform:'uppercase'}}>Meet Penny</span>
+          </div>
+          <h2 style={{fontFamily:'Lufga,system-ui',fontSize:'clamp(28px,3.5vw,44px)',fontWeight:700,letterSpacing:'-0.025em',color:t.fg,marginBottom:16,lineHeight:1.1}}>Your AI financial companion</h2>
+          <p style={{fontSize:16,color:t.secondary,lineHeight:1.7,marginBottom:28}}>Penny knows your full financial picture — income, goals, debts, timeline. Ask her anything, any time.</p>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {['Reads your full anonymized financial plan','Answers questions in plain language','Proactively flags risks and opportunities'].map((item,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:20,height:20,borderRadius:'50%',background:t.greenSubtle,border:`1px solid ${t.green}44`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <Check size={11} strokeWidth={2.5} color={t.green}/>
+                </div>
+                <span style={{fontSize:14,color:t.secondary}}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className={`appear${inView?' in':''}`} style={{transitionDelay:'0.15s',background:t.card,backdropFilter:'blur(32px)',WebkitBackdropFilter:'blur(32px)',borderRadius:24,border:`1px solid ${t.border}`,overflow:'hidden',boxShadow:t.shadowLg}}>
+          <div style={{padding:'14px 20px',borderBottom:`1px solid ${t.border}`,display:'flex',alignItems:'center',gap:10,background:t.surface}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:`linear-gradient(135deg,${t.accent},${t.violet})`,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:14,fontWeight:700,flexShrink:0}}>P</div>
+            <div>
+              <p style={{fontSize:14,fontWeight:600,color:t.fg}}>Penny</p>
+              <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:6,height:6,borderRadius:'50%',background:t.green,boxShadow:`0 0 6px ${t.green}`}}/><p style={{fontSize:11,color:t.greenText}}>Online · reading your plan</p></div>
+            </div>
+          </div>
+          <div style={{padding:16,minHeight:256,display:'flex',flexDirection:'column',gap:10,justifyContent:'flex-end'}}>
+            {msgs.length===0&&<p style={{textAlign:'center',fontSize:13,color:t.tertiary,padding:'24px 0'}}>Penny is ready to help...</p>}
+            {msgs.map((m,i)=>(
+              <div key={i} style={{display:'flex',justifyContent:m.r==='user'?'flex-end':'flex-start',gap:8,alignItems:'flex-end',animation:'msgIn .35s cubic-bezier(.22,1,.36,1)'}}>
+                {m.r==='penny'&&<div style={{width:28,height:28,borderRadius:'50%',background:`linear-gradient(135deg,${t.accent},${t.violet})`,color:'#fff',fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>P</div>}
+                <div style={{maxWidth:'78%',padding:'11px 15px',fontSize:13,lineHeight:1.6,borderRadius:m.r==='user'?'18px 18px 4px 18px':'4px 18px 18px 18px',background:m.r==='user'?t.accent:t.surface,border:m.r==='penny'?`1px solid ${t.border}`:'none',color:m.r==='user'?'#fff':t.secondary,boxShadow:m.r==='user'?`0 4px 14px ${t.accentGlow}`:'none'}}>{m.txt}</div>
+              </div>
+            ))}
+            {typing&&(
+              <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
+                <div style={{width:28,height:28,borderRadius:'50%',background:`linear-gradient(135deg,${t.accent},${t.violet})`,color:'#fff',fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>P</div>
+                <div style={{padding:'12px 16px',borderRadius:'4px 18px 18px 18px',background:t.surface,border:`1px solid ${t.border}`,display:'flex',gap:4,alignItems:'center'}}>
+                  {[0,180,360].map(d=><div key={d} style={{width:7,height:7,borderRadius:'50%',background:t.secondary,animation:`dotBounce 1.2s ${d}ms ease-in-out infinite`}}/>)}
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{padding:'12px 16px',borderTop:`1px solid ${t.border}`,display:'flex',gap:8,background:t.surface}}>
+            <div style={{flex:1,padding:'9px 14px',borderRadius:99,background:t.card,border:`1px solid ${t.border}`,fontSize:13,color:t.tertiary}}>Ask Penny anything...</div>
+            <div style={{width:38,height:38,borderRadius:'50%',background:`linear-gradient(135deg,${t.accent},${t.violet})`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,boxShadow:`0 4px 12px ${t.accentGlow}`}}>
+              <Send size={15} strokeWidth={2} color="#fff"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── TESTIMONIALS ────────────────────────────────── */
+function TestimonialsSection({t}){
+  const[ref,inView]=useInView(0.1);
+  const cards=[
+    {initials:'AK',color:t.accent,quote:"I've run P&Ls at Fortune 500 companies for 20 years. FinPath is the first tool that brings that rigour to personal finances. The scenario engine alone is worth it.",name:'Ananya Krishnan',role:'CFO, Bangalore-based SaaS'},
+    {initials:'RV',color:t.violet,quote:"My CA told me I was saving too little. I set a target in FinPath and within 3 months went from 12% to 26% savings rate. The auto-allocation removed all mental load.",name:'Rahul Venkatesh',role:'VP Product, Mumbai'},
+    {initials:'PS',color:t.lime,quote:"Debt payoff felt like guesswork until FinPath showed Avalanche vs Snowball side by side. I chose Avalanche and will save ₹1.8L in interest.",name:'Priya Sharma',role:'Engineering Lead, Delhi'},
+  ];
+  return(
+    <section id="testimonials" ref={ref} className="rsp-section" style={{padding:'100px 48px',background:t.surface,borderTop:`1px solid ${t.border}`,borderBottom:`1px solid ${t.border}`}}>
+      <div style={{maxWidth:1280,margin:'0 auto'}}>
+        <div className={`appear${inView?' in':''}`} style={{textAlign:'center',marginBottom:60}}>
+          <p style={{fontSize:12,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:t.accentText,marginBottom:14}}>Loved by professionals</p>
+          <h2 style={{fontFamily:'Lufga,system-ui',fontSize:'clamp(28px,3.5vw,48px)',fontWeight:700,letterSpacing:'-0.025em',color:t.fg}}>Real results, real people</h2>
+        </div>
+        <div className="rsp-testi-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20}}>
+          {cards.map((c,i)=>(
+            <div key={i} className={`appear${inView?' in':''}`} style={{transitionDelay:`${i*0.12}s`,padding:28,borderRadius:22,background:t.card,border:`1px solid ${t.border}`,backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',boxShadow:t.shadow,display:'flex',flexDirection:'column',position:'relative',overflow:'hidden'}}>
+              <div style={{position:'absolute',top:-20,left:-20,width:100,height:100,borderRadius:'50%',background:c.color,opacity:.07,filter:'blur(30px)',pointerEvents:'none'}}/>
+              <MessageCircle size={20} strokeWidth={1.5} color={c.color} style={{opacity:.4,marginBottom:14}}/>
+              <p style={{fontSize:14,color:t.secondary,lineHeight:1.7,flex:1,marginBottom:20}}>{c.quote}</p>
+              <div style={{display:'flex',alignItems:'center',gap:12,paddingTop:16,borderTop:`1px solid ${t.border}`}}>
+                <div style={{width:40,height:40,borderRadius:'50%',background:`${c.color}22`,border:`1px solid ${c.color}44`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:c.color,flexShrink:0}}>{c.initials}</div>
+                <div><p style={{fontSize:13,fontWeight:600,color:t.fg}}>{c.name}</p><p style={{fontSize:11,color:t.tertiary}}>{c.role}</p></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── CTA ─────────────────────────────────────────── */
+function CTASection({t,tweaks}){
+  const[ref,inView]=useInView(0.2);
+  return(
+    <section ref={ref} className="rsp-section" style={{padding:'120px 48px',textAlign:'center',position:'relative',overflow:'hidden'}}>
+      <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>
+        <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:500,height:500,borderRadius:'50%',background:t.accent,opacity:.06,filter:'blur(80px)'}}/>
+      </div>
+      <div className={`appear${inView?' in':''}`} style={{position:'relative',zIndex:1,maxWidth:640,margin:'0 auto'}}>
+        <p style={{fontSize:12,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:t.accentText,marginBottom:16}}>Start today</p>
+        <h2 style={{fontFamily:'Lufga,system-ui',fontSize:'clamp(32px,4vw,56px)',fontWeight:700,letterSpacing:'-0.03em',color:t.fg,marginBottom:16,lineHeight:1.05}}>Where does your next rupee go?</h2>
+        <p style={{fontSize:17,color:t.secondary,marginBottom:40,lineHeight:1.65}}>Join thousands of Indian professionals who've stopped guessing and started knowing.</p>
+        <button style={{padding:'16px 40px',borderRadius:99,fontFamily:'Lufga,system-ui',fontSize:16,fontWeight:700,background:`linear-gradient(135deg,${t.accent} 40%,${t.violet} 140%)`,color:'#fff',border:'none',cursor:'pointer',boxShadow:`0 8px 32px ${t.accentGlow}`,display:'inline-flex',alignItems:'center',gap:8,transition:'all 200ms ease'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 14px 44px ${t.accentGlow}`;}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=`0 8px 32px ${t.accentGlow}`;}}>
+          {tweaks.ctaText}<ArrowRight size={18} strokeWidth={2.5}/>
+        </button>
+        <p style={{fontSize:12,color:t.tertiary,marginTop:14}}>Free forever · No bank connections required · 2-min setup</p>
+      </div>
+    </section>
+  );
+}
+
+/* ── FOOTER ──────────────────────────────────────── */
+function Footer({t}){
+  return(
+    <footer className="rsp-footer" style={{borderTop:`1px solid ${t.border}`,padding:'28px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <Logo size={22} t={t}/>
+        <span style={{fontSize:13,fontWeight:600,color:t.fg}}>fin<span style={{color:t.accent}}>path</span></span>
+        <span style={{fontSize:12,color:t.tertiary,marginLeft:8}}>· Every rupee has a destination.</span>
+      </div>
+      <p style={{fontSize:12,color:t.tertiary}}>© {new Date().getFullYear()} FinPath. Built for Indian professionals.</p>
+    </footer>
+  );
+}
+
+/* ── TWEAKS PANEL ────────────────────────────────── */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "palette": "blue-violet",
+  "headline": "Every rupee has a destination",
+  "ctaText": "Start My Journey",
+  "showStats": true,
+  "showHow": true,
+  "showTestimonials": true
+}/*EDITMODE-END*/;
+
+function TweaksPanel({tweaks,setTweak,visible,onClose}){
+  const isDark=tweaks.theme==='dark';
+  const bg=isDark?'rgba(17,24,39,0.97)':'rgba(255,255,255,0.97)';
+  const fg=isDark?'#f1f5f9':'#050f1c';
+  const sec=isDark?'#94a3b8':'#64748b';
+  const bdr=isDark?'rgba(255,255,255,0.1)':'rgba(5,15,28,0.1)';
+  const surf=isDark?'rgba(255,255,255,0.06)':'rgba(5,15,28,0.04)';
+  const acc=isDark?PALETTES[tweaks.palette].darkA:PALETTES[tweaks.palette].lightA;
+  if(!visible)return null;
+
+  const Label=({children})=><p style={{fontSize:9,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:sec,marginBottom:8}}>{children}</p>;
+  const Toggle=({label,value,onChange})=>(
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+      <span style={{fontSize:13,color:fg}}>{label}</span>
+      <button onClick={()=>onChange(!value)} style={{
+        width:40,height:22,borderRadius:99,background:value?acc:bdr,border:'none',cursor:'pointer',position:'relative',transition:'background 200ms ease',flexShrink:0,
+      }}>
+        <div style={{position:'absolute',top:3,left:value?20:3,width:16,height:16,borderRadius:'50%',background:'#fff',transition:'left 200ms ease',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
+      </button>
+    </div>
+  );
+
+  return(
+    <div style={{
+      position:'fixed',bottom:24,right:24,zIndex:1000,width:260,
+      background:bg,backdropFilter:'blur(32px)',WebkitBackdropFilter:'blur(32px)',
+      border:`1px solid ${bdr}`,borderRadius:20,padding:20,
+      boxShadow:'0 24px 64px rgba(0,0,0,0.5)',
+    }}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <SlidersHorizontal size={14} strokeWidth={2} color={acc}/>
+          <span style={{fontSize:14,fontWeight:700,color:fg}}>Tweaks</span>
+        </div>
+        <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',color:sec,display:'flex',padding:2}}><X size={14} strokeWidth={2}/></button>
+      </div>
+
+      {/* Theme */}
+      <div style={{marginBottom:16}}>
+        <Label>Theme</Label>
+        <div style={{display:'flex',gap:6}}>
+          {[['dark','Dark'],['light','Light']].map(([v,l])=>(
+            <button key={v} onClick={()=>setTweak('theme',v)} style={{flex:1,padding:'8px',borderRadius:10,border:`1px solid ${tweaks.theme===v?acc:bdr}`,background:tweaks.theme===v?`${acc}22`:surf,color:tweaks.theme===v?acc:sec,fontSize:12,fontWeight:tweaks.theme===v?600:400,cursor:'pointer',fontFamily:'Lufga,system-ui',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
+              {v==='dark'?<Moon size={11} strokeWidth={1.5}/>:<Sun size={11} strokeWidth={1.5}/>}{l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Palette */}
+      <div style={{marginBottom:16}}>
+        <Label>Accent color</Label>
+        <div style={{display:'flex',gap:8}}>
+          {Object.entries(PALETTES).map(([id,pal])=>(
+            <button key={id} onClick={()=>setTweak('palette',id)} style={{
+              width:38,height:38,borderRadius:'50%',border:`2.5px solid ${tweaks.palette===id?'#fff':bdr}`,
+              background:`linear-gradient(135deg,${pal.swatch[0]},${pal.swatch[1]})`,
+              cursor:'pointer',outline:tweaks.palette===id?`2px solid ${pal.swatch[0]}`:'none',
+              outlineOffset:2,transition:'all 150ms ease',
+            }}/>
+          ))}
+        </div>
+      </div>
+
+      {/* Headline */}
+      <div style={{marginBottom:16}}>
+        <Label>Hero headline</Label>
+        <input value={tweaks.headline} onChange={e=>setTweak('headline',e.target.value)} style={{width:'100%',padding:'8px 12px',borderRadius:10,border:`1px solid ${bdr}`,background:surf,color:fg,fontSize:12,fontFamily:'Lufga,system-ui',outline:'none'}}/>
+      </div>
+
+      {/* CTA Text */}
+      <div style={{marginBottom:16}}>
+        <Label>CTA button text</Label>
+        <input value={tweaks.ctaText} onChange={e=>setTweak('ctaText',e.target.value)} style={{width:'100%',padding:'8px 12px',borderRadius:10,border:`1px solid ${bdr}`,background:surf,color:fg,fontSize:12,fontFamily:'Lufga,system-ui',outline:'none'}}/>
+      </div>
+
+      {/* Section visibility */}
+      <div>
+        <Label>Visible sections</Label>
+        <Toggle label="Stats bar" value={tweaks.showStats} onChange={v=>setTweak('showStats',v)}/>
+        <Toggle label="How it works" value={tweaks.showHow} onChange={v=>setTweak('showHow',v)}/>
+        <Toggle label="Testimonials" value={tweaks.showTestimonials} onChange={v=>setTweak('showTestimonials',v)}/>
+      </div>
+    </div>
+  );
+}
+
+/* ── APP ─────────────────────────────────────────── */
+function App(){
+  const[tweaks,setTweaksState]=useState(TWEAK_DEFAULTS);
+  const[tweaksVisible,setTweaksVisible]=useState(false);
+
+  const setTweak=useCallback((key,value)=>{
+    setTweaksState(prev=>{
+      const next={...prev,[key]:value};
+      window.parent.postMessage({type:'__edit_mode_set_keys',edits:next},'*');
+      return next;
+    });
+  },[]);
+
+  useEffect(()=>{
+    const handler=e=>{
+      if(e.data?.type==='__activate_edit_mode')setTweaksVisible(true);
+      if(e.data?.type==='__deactivate_edit_mode')setTweaksVisible(false);
+    };
+    window.addEventListener('message',handler);
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+    return()=>window.removeEventListener('message',handler);
+  },[]);
+
+  const t=getTokens(tweaks.theme==='dark',tweaks.palette);
+
+  return(
+    <div id="page" style={{background:t.bg,color:t.fg,fontFamily:'Lufga,system-ui,sans-serif',transition:'background 350ms ease,color 350ms ease'}}>
+      <Nav t={t} tweaks={tweaks} setTweak={setTweak}/>
+      <Hero t={t} tweaks={tweaks}/>
+      {tweaks.showStats&&<StatsBar t={t}/>}
+      <FeaturesSection t={t}/>
+      {tweaks.showHow&&<HowSection t={t}/>}
+      <PennySection t={t}/>
+      {tweaks.showTestimonials&&<TestimonialsSection t={t}/>}
+      <CTASection t={t} tweaks={tweaks}/>
+      <Footer t={t}/>
+      <TweaksPanel tweaks={tweaks} setTweak={setTweak} visible={tweaksVisible} onClose={()=>{setTweaksVisible(false);window.parent.postMessage({type:'__edit_mode_dismissed'},'*');}}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

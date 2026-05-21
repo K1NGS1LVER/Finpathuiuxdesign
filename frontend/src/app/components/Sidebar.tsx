@@ -361,8 +361,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
           </div>
         )}
 
-        {/* Export Plan Button */}
-        <div style={{ padding: '0 var(--space-2)' }}>
+        {/* Export Plan Button — secondary pill, sits above the primary Ask Penny pill */}
+        <div style={{ padding: '0 var(--space-2)', marginBottom: 'var(--space-1)' }}>
           <button
             title={collapsed ? 'Export Plan' : undefined}
             disabled={!onboarded}
@@ -375,17 +375,16 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: collapsed ? 0 : 'var(--space-1)',
-              padding: `var(--space-1) var(--space-2)`,
-              borderRadius: 'var(--radius-md)',
-              background:
-                'transparent padding-box, linear-gradient(135deg, var(--accent), var(--secondary-accent)) border-box',
-              border: '1px solid transparent',
-              color: 'var(--card-foreground)',
+              gap: collapsed ? 0 : 'var(--btn-gap)',
+              padding: collapsed ? 'var(--btn-padding-collapsed)' : '6px 12px',
+              borderRadius: 'var(--btn-radius-pill)',
+              background: 'transparent',
+              border: '1.5px solid var(--accent)',
+              color: 'var(--accent-text)',
               fontFamily: 'var(--font-body)',
-              fontWeight: 'var(--font-weight-medium)',
-              fontSize: 'var(--text-sm)',
-              boxShadow: '0 2px 6px color-mix(in srgb, var(--accent) 18%, transparent)',
+              fontWeight: 'var(--btn-font-weight)',
+              fontSize: 'var(--btn-font-size)',
+              boxShadow: 'none',
               transition: 'transform 200ms ease, box-shadow 200ms ease',
               cursor: onboarded ? 'pointer' : 'not-allowed',
               opacity: onboarded ? 1 : 0.5,
@@ -393,13 +392,11 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             onMouseEnter={(e) => {
               if (!onboarded) return;
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow =
-                '0 4px 12px color-mix(in srgb, var(--accent) 28%, transparent)';
+              e.currentTarget.style.boxShadow = '0 4px 12px var(--accent-glow)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'none';
-              e.currentTarget.style.boxShadow =
-                '0 2px 6px color-mix(in srgb, var(--accent) 18%, transparent)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             <FileDown size={16} className="icon-wireframe flex-shrink-0" />
