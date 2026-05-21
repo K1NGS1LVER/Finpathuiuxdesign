@@ -16,6 +16,7 @@ Tool surface mirrors the agreed phase-3 list:
 
 from __future__ import annotations
 
+import json
 import logging
 import math
 from collections.abc import Callable
@@ -23,7 +24,7 @@ from copy import deepcopy
 from typing import Any
 
 from langchain_core.tools import StructuredTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.engines.debt_strategies import compare_strategies
 from app.engines.health_score import calculate_health_score
@@ -73,6 +74,16 @@ class _ProposeArgs(BaseModel):
         default="",
         description="Short user-facing explanation (1-2 sentences). Optional but strongly recommended.",
     )
+
+    @field_validator("payload", mode="before")
+    @classmethod
+    def parse_payload(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except Exception:
+                pass
+        return v
 
 
 class _SimGoalArgs(BaseModel):
@@ -343,7 +354,15 @@ def make_tools(
                     ),
                 }
         result = propose(action, payload, rationale)
-        return {"ok": True, "proposal": result}
+        return {
+            "status": "pending_user_approval",
+            "message": (
+                "A proposal card has been sent to the user for approval. "
+                "The change has NOT been applied yet. Do NOT say 'updated' or 'changed'. "
+                "Say 'I\u2019ve proposed this change \u2014 please review and approve it in the card below.'"
+            ),
+            "proposal_id": result.get("id"),
+        }
 
     return [
         StructuredTool.from_function(

@@ -114,7 +114,7 @@ export function useJourneyGoals() {
 
       const merged = storeGoals.map((goal) => {
         const nextPriority = priorityById.get(goal.id);
-        return typeof nextPriority === "number" ? { ...goal, priority: nextPriority } : goal;
+        return typeof nextPriority === "number" ? { ...goal, priority: nextPriority } : { ...goal, priority: 0 };
       });
 
       setGoals(merged);

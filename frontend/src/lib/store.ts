@@ -380,7 +380,7 @@ function normalizeActiveGoalPriorities(goals: Goal[]): Goal[] {
     const nextPriority = priorityById.get(goal.id);
     return typeof nextPriority === "number"
       ? { ...goal, priority: nextPriority }
-      : goal;
+      : { ...goal, priority: 0 };
   });
 }
 
