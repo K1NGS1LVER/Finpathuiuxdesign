@@ -250,14 +250,38 @@ function prepareApply(action: string, payload: Record<string, unknown>): Prepare
     }
     case 'updateGoal': {
       const id = String(payload.id ?? '');
-      const updates = (payload.updates ?? {}) as Partial<Goal>;
       if (!id) return { ok: false, reason: 'missing goal id' };
+      const raw = (payload.updates ?? {}) as Record<string, unknown>;
+      const updates: Partial<Goal> = { ...raw } as Partial<Goal>;
+      // Normalize aliases the LLM may use from a stale read_profile snapshot
+      if ('target' in raw && !('targetAmount' in raw)) updates.targetAmount = Number(raw.target);
+      if ('current' in raw && !('currentAmount' in raw)) updates.currentAmount = Number(raw.current);
+      if ('timeline_months' in raw && !('timelineMonths' in raw)) updates.timelineMonths = Number(raw.timeline_months);
       return { ok: true, apply: () => store.updateGoal(id, updates) };
     }
     case 'addGoal': {
-      const g = payload.goal as Goal | undefined;
-      if (!g || !g.name) return { ok: false, reason: 'missing goal' };
-      return { ok: true, apply: () => store.addGoal(g) };
+      const raw = (payload.goal ?? payload) as Record<string, unknown>;
+      const name = String(raw.name ?? '').trim();
+      if (!name) return { ok: false, reason: 'missing goal name' };
+      const targetAmount = Number(raw.targetAmount ?? raw.target ?? 0);
+      if (!Number.isFinite(targetAmount) || targetAmount <= 0) {
+        return { ok: false, reason: 'goal needs targetAmount > 0' };
+      }
+      const timelineMonths = Number(raw.timelineMonths ?? raw.timeline_months ?? 12);
+      const newGoal: Goal = {
+        id: String(raw.id ?? `goal-${Date.now()}`),
+        name,
+        icon: String(raw.icon ?? 'Target'),
+        category: String(raw.category ?? 'custom') as Goal['category'],
+        targetAmount,
+        currentAmount: Number(raw.currentAmount ?? raw.current ?? 0),
+        timelineMonths: Number.isFinite(timelineMonths) && timelineMonths > 0 ? Math.round(timelineMonths) : 12,
+        priority: Number(raw.priority ?? 0),
+        status: 'not-started',
+        monthlyAllocation: 0,
+        color: String(raw.color ?? 'var(--accent)'),
+      };
+      return { ok: true, apply: () => store.addGoal(newGoal) };
     }
     case 'removeGoal': {
       const id = String(payload.id ?? '');
