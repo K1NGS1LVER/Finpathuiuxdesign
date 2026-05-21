@@ -394,7 +394,7 @@ export default function ProposalCard({ proposal, onResolved }: Props) {
       <div
         className="rounded-xl px-3 py-2 text-xs"
         style={{
-          background: 'var(--surface-2, var(--neutral-50))',
+          background: 'var(--surface-tint)',
           color: 'var(--secondary)',
           border: '1px solid var(--border)',
         }}
@@ -408,7 +408,7 @@ export default function ProposalCard({ proposal, onResolved }: Props) {
     <div
       className="rounded-xl p-3 space-y-2"
       style={{
-        background: 'var(--surface, var(--neutral-50))',
+        background: 'var(--card)',
         border: '1px solid var(--accent)',
         boxShadow: 'var(--shadow-sm)',
       }}
