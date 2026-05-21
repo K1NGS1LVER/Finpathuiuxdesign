@@ -231,6 +231,15 @@ export default function JourneyGoalDetailPanel({
     setIsEditing(false);
   };
 
+  const handleUpdate = () => {
+    if (!isDraftValid) return;
+    updateGoal(goal.id, {
+      targetAmount: draftTarget,
+      timelineMonths: draftMonths,
+    });
+    setIsEditing(false);
+  };
+
   return (
     <div
       className="absolute top-0 right-0 h-full w-full md:w-[300px] shadow-2xl z-30 overflow-hidden journey-detail-panel"
@@ -608,8 +617,54 @@ export default function JourneyGoalDetailPanel({
         )}
       </div>
 
-      {/* New lifecycle actions */}
-      {!isComplete && (
+      {/* Edit mode: Update / Cancel */}
+      {isEditing && (
+        <div
+          className="flex-shrink-0"
+          style={{ padding: "12px 20px", display: "flex", flexDirection: "column", gap: 8 }}
+        >
+          <button
+            onClick={handleUpdate}
+            disabled={!isDraftValid}
+            className="w-full flex items-center justify-center gap-1.5 button-press"
+            style={{
+              padding: "11px",
+              borderRadius: "var(--radius-base)",
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--text-sm)",
+              fontWeight: "var(--font-weight-semibold)",
+              cursor: isDraftValid ? "pointer" : "not-allowed",
+              background: isDraftValid ? "var(--accent)" : "var(--surface-tint)",
+              border: isDraftValid ? "none" : "1px solid var(--border)",
+              color: isDraftValid ? "#fff" : "var(--tertiary)",
+              transition: "all 200ms ease",
+            }}
+          >
+            Update Goal
+          </button>
+          <button
+            onClick={handleCancel}
+            className="w-full flex items-center justify-center gap-1.5"
+            style={{
+              padding: "9px",
+              borderRadius: "var(--radius-base)",
+              background: "transparent",
+              border: "1px solid var(--border)",
+              color: "var(--tertiary)",
+              fontWeight: "var(--font-weight-medium)",
+              fontSize: "var(--text-xs)",
+              cursor: "pointer",
+              fontFamily: "var(--font-display)",
+              transition: "all 200ms ease",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* View mode: lifecycle actions */}
+      {!isComplete && !isEditing && (
         <div
           className="flex-shrink-0"
           style={{
