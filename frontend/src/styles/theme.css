@@ -18,6 +18,29 @@
   --space-8: 64px;
   --space-12: 96px;
 
+  /* ─── Button Tokens ─── */
+  /* Padding: matches .btn-primary spec (10px vertical / 16px horizontal) */
+  --btn-padding-y: 10px;
+  --btn-padding-x: 16px;
+  /* Collapsed icon-only state */
+  --btn-padding-collapsed: var(--space-1);
+  /* Border radius for rectangular CTAs (.btn-primary family) */
+  --btn-radius: var(--radius-sm);
+  /* Border radius for pill CTAs (Ask Penny, pill-button) */
+  --btn-radius-pill: var(--radius-full);
+  /* Font */
+  --btn-font-size: var(--text-sm);
+  --btn-font-weight: var(--font-weight-semibold);
+  /* Icon gap */
+  --btn-gap: var(--space-1);
+  /* Primary solid-accent shadow */
+  --btn-shadow: 0 4px 12px var(--accent-glow);
+  --btn-shadow-hover: 0 8px 20px var(--accent-glow);
+  /* Gradient used by Export Plan + Ask Penny */
+  --btn-gradient: linear-gradient(135deg, var(--accent), var(--secondary-accent));
+  /* Disabled opacity */
+  --btn-disabled-opacity: 0.5;
+
   /* ═══════════════════════════════════════════════
      LIGHT MODE
 
@@ -938,28 +961,141 @@ a.bento-card:hover,
   cursor: pointer;
 }
 
-/* Primary CTA button */
+/* Primary CTA button — solid accent fill */
 .btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
+  gap: var(--btn-gap);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border-radius: var(--btn-radius);
   background: var(--accent);
   color: var(--on-accent);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  box-shadow: 0 4px 12px var(--accent-glow);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  box-shadow: var(--btn-shadow);
   transition: all 200ms ease;
   cursor: pointer;
   border: none;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px var(--accent-glow);
+  box-shadow: var(--btn-shadow-hover);
 }
 .btn-primary:active {
   transform: translateY(0);
+}
+.btn-primary:disabled {
+  opacity: var(--btn-disabled-opacity);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Gradient CTA button — accent→secondary-accent fill */
+/* Used by: Export Plan, Ask Penny, any dual-accent primary action. */
+.btn-gradient {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--btn-gap);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border-radius: var(--btn-radius);
+  background: var(--btn-gradient);
+  color: var(--on-accent);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  box-shadow: var(--btn-shadow);
+  border: none;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--btn-shadow-hover);
+}
+.btn-gradient:active {
+  transform: translateY(0);
+}
+.btn-gradient:disabled {
+  opacity: var(--btn-disabled-opacity);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Gradient pill CTA — pill radius variant (Ask Penny style) */
+.btn-gradient-pill {
+  border-radius: var(--btn-radius-pill);
+}
+
+/* Ghost gradient border button — outlined gradient stroke, transparent fill */
+/* For secondary/tertiary actions that need visual weight without solid fill. */
+.btn-ghost-gradient {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--btn-gap);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border-radius: var(--btn-radius);
+  background: transparent;
+  color: var(--accent-text);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: inset 0 0 0 1.5px transparent;
+  position: relative;
+  cursor: pointer;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.btn-ghost-gradient::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  background: var(--btn-gradient);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.btn-ghost-gradient:hover {
+  transform: translateY(-1px);
+  opacity: 0.85;
+}
+.btn-ghost-gradient:active {
+  transform: translateY(0);
+}
+
+/* ── Secondary pill button ──────────────────────────────────────────────────
+   Sits one tier below a solid-fill primary pill (e.g. Ask Penny).
+   Pill-shaped with a gradient border stroke — fully transparent interior.
+   Use for: Export Plan, Share, and any secondary action next to a primary pill.
+   ─────────────────────────────────────────────────────────────────────────── */
+.btn-secondary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--btn-gap);
+  /* Tighter than primary: 6px vertical / 12px horizontal */
+  padding: 6px 12px;
+  border-radius: var(--btn-radius-pill);
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  color: var(--accent-text);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  box-shadow: none;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease;
+}
+.btn-secondary-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+.btn-secondary-pill:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.btn-secondary-pill:disabled {
+  opacity: var(--btn-disabled-opacity);
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Pill — smaller inline badge/action button */
@@ -1262,6 +1398,10 @@ a.bento-card:hover,
   background-color: var(--accent);
   color: var(--on-accent);
   font-family: var(--font-body);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  cursor: pointer;
+  border: none;
 }
 
 .btn-delete-goal {
@@ -1352,6 +1492,79 @@ a.bento-card:hover,
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-left: 1px solid var(--border);
+}
+
+/* ── Journey page header ── */
+.journey-eyebrow {
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tertiary);
+  margin-bottom: var(--space-0.5);
+}
+
+.journey-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+}
+
+.journey-canvas-hint {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  font-size: var(--text-2xs);
+  color: var(--tertiary);
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Journey goal ring (SVG progress circle) ── */
+.journey-goal-ring-track {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 4;
+}
+
+.journey-goal-ring-fill {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Journey detail panel priority buttons ── */
+.journey-priority-btn {
+  flex: 1;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: all 150ms ease;
+  border: 1px solid var(--border);
+  background: var(--surface-tint);
+  color: var(--secondary);
+}
+
+.journey-priority-btn.active {
+  border-color: var(--accent-glow);
+  background: var(--accent-subtle);
+  color: var(--accent-text);
 }
 
 /* ═══════════════════════════════════════════════
@@ -2263,10 +2476,10 @@ a.bento-card:hover,
 
 .journey-page-title {
   font-family: var(--font-display);
-  font-size: var(--text-4xl);
+  font-size: var(--text-3xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.03em;
-  margin-top: 4px;
+  letter-spacing: -0.025em;
+  line-height: 1;
   color: var(--foreground);
 }
 

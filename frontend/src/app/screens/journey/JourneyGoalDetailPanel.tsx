@@ -380,14 +380,14 @@ export default function JourneyGoalDetailPanel({
             onClick={() => !goal.checkedThisMonth && onCompleteMonth(goal.id)}
             disabled={goal.checkedThisMonth === true}
             aria-label={goal.checkedThisMonth ? "Goal already marked complete this month" : "Mark this month's contribution as complete"}
-            className="w-full flex items-center justify-center gap-1.5 btn-complete-goal button-press disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-1.5 btn-complete-goal button-press"
             style={{
               padding: "11px",
               borderRadius: "var(--radius-base)",
               fontFamily: "var(--font-display)",
             }}
           >
-            <CheckCircle size={14} className="icon-wireframe" />
+            <CheckCircle size={16} className="icon-wireframe" />
             {goal.checkedThisMonth ? "✓ Done this month" : "Complete for the Month"}
           </button>
           <button
@@ -399,7 +399,7 @@ export default function JourneyGoalDetailPanel({
               fontFamily: "var(--font-display)",
             }}
           >
-            <Trophy size={14} className="icon-wireframe" />
+            <Trophy size={16} className="icon-wireframe" />
             Complete Goal
           </button>
         </div>
