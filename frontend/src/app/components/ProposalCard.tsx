@@ -6,7 +6,7 @@
 // Reject flow: PATCH server only.
 // ============================================================
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Check, X, AlertTriangle } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
 import { apiFetch } from '@/lib/api';
@@ -47,6 +47,29 @@ const ACTION_LABEL: Record<string, string> = {
   addLumpsum: 'Add lump-sum to goal',
   addDebt: 'Add a new debt',
 };
+
+const fmt = (n: number) =>
+  n.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+
+function Row({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+      <span style={{ color: 'var(--secondary)', fontSize: 'var(--text-xs)', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+      <span
+        style={{
+          color: 'var(--foreground)',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 'var(--font-weight-medium)',
+          textAlign: 'right',
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
 
 const DEBT_CATEGORIES: ReadonlySet<DebtItem['category']> = new Set([
   'homeLoan',
@@ -187,9 +210,15 @@ export default function ProposalCard({ proposal, onResolved }: Props) {
   const [busy, setBusy] = useState(false);
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
+  const goals = useFinPathStore(s => s.goals);
+  const goalName = (id: string) => goals.find(g => g.id === id)?.name ?? id;
+
   const label = ACTION_LABEL[proposal.action] ?? proposal.action;
 
   // Returns true on success (server says we own the transition), false on hard fail.
+  // Best-effort: only a 409 Conflict (double-resolve) blocks. All other failures
+  // (404 race, network error, Supabase not configured) allow the local mutation
+  // to proceed — the PATCH is server sync, not a gate.
   async function patch(next: 'approved' | 'rejected'): Promise<boolean> {
     try {
       const r = await apiFetch(`/api/proposals/${encodeURIComponent(proposal.id)}`, {
@@ -201,14 +230,12 @@ export default function ProposalCard({ proposal, onResolved }: Props) {
         setErrMsg('Proposal already resolved.');
         return false;
       }
-      setErrMsg(`Could not ${next === 'approved' ? 'approve' : 'reject'} (HTTP ${r.status}).`);
-      return false;
+      // Non-409 failure (404 race, 500, etc.) — proceed with local mutation.
+      // The proposal was ephemeral or the DB write hadn't landed yet.
+      return true;
     } catch {
-      // Network failure — treat as success only when Supabase isn't configured
-      // (ephemeral proposals). Server-side patch endpoint already echos in that case,
-      // so a thrown error here is a real network problem.
-      setErrMsg('Network error.');
-      return false;
+      // Network failure — proceed with local mutation (offline-first).
+      return true;
     }
   }
 
