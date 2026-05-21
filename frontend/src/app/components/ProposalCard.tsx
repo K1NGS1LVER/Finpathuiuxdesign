@@ -427,12 +427,7 @@ export default function ProposalCard({ proposal, onResolved }: Props) {
           {proposal.rationale}
         </p>
       )}
-      <pre
-        className="text-xs overflow-x-auto rounded-lg px-2 py-1.5"
-        style={{ background: 'var(--surface-2, var(--neutral-50))', color: 'var(--secondary)' }}
-      >
-        {JSON.stringify(proposal.payload, null, 2)}
-      </pre>
+      <PayloadSummary action={proposal.action} payload={proposal.payload} goalName={goalName} />
       {errMsg && (
         <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--red)' }}>
           <AlertTriangle size={12} /> {errMsg}
