@@ -266,12 +266,9 @@ async def patch_proposal(
 ) -> dict[str, Any]:
     existing = await get_proposal(user.access_token, proposal_id)
     if existing is None:
-        # No Supabase configured (or row never persisted in mock mode) — echo.
-        from app.config import settings as _s
-
-        if not (_s.supabase_url and _s.supabase_anon_key):
-            return {"id": proposal_id, "status": body.status, "_ephemeral": True}
-        raise HTTPException(status_code=404, detail="Proposal not found.")
+        # Ephemeral mode OR fire-and-forget insert hasn't landed yet — echo OK.
+        # The frontend applies the mutation locally regardless.
+        return {"id": proposal_id, "status": body.status, "_ephemeral": True}
     if existing.get("status") != "pending":
         raise HTTPException(
             status_code=409,

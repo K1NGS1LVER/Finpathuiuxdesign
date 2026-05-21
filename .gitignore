@@ -21,3 +21,4 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+eg_agent/

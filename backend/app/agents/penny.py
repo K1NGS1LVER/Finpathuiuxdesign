@@ -28,7 +28,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
-from langgraph.prebuilt import create_react_agent
+from langgraph.prebuilt import create_react_agent, ToolNode
 
 from app.agents.tools import make_tools
 from app.config import settings
@@ -162,6 +162,8 @@ TOOL USAGE RULES:
 11. Do NOT instruct the user to call a function or suggest "calling X". Either call the tool yourself via the API now, or omit the suggestion. The user does not see tool names — phrases like "call propose_change", "consider calling addDebt", "Call simulate_plan" are forbidden.
 12. ACTION INTENT — when the user says "do it", "do that", "do iy", "apply", "go ahead", "yes do it", "make it happen", "change it", "update it", they are authorising the change you just discussed. Call propose_change with the values you computed earlier in the conversation. Do NOT call simulate_plan again unless the user explicitly asks to re-simulate.
 13. AMBIGUOUS REFERENT — if the user asks to change something that doesn't exist in the snapshot (e.g. "update the education loan" but there is no education loan), ask ONE plain-English clarifying question ("You don't have an education loan — do you want me to add one, or did you mean your education savings goal?"). Do NOT suggest tool names and do NOT call any tool until the user answers.
+14. TWO-STEP CONFIRMATION — When the user asks for a change ("increase my goal by 50%", "add ₹10k to my emergency fund", "switch to snowball"), do NOT call propose_change in the same turn. Instead: (a) Call read_profile (and optionally simulate_plan / simulate_goal) to understand the current state. (b) Reply with the IMPACT of the change: show the current value, the proposed new value, and any downstream effects. (c) Wait for the user to confirm ("do it", "yes", "go ahead", "apply", "make the change"). (d) ONLY THEN call propose_change. Exception: if the user already confirmed in the same message ("increase my goal by 50% and apply it"), you may call propose_change immediately.
+15. PROPOSAL LANGUAGE — propose_change creates a PENDING proposal. The change is NOT applied until the user clicks Approve on the proposal card. NEVER say "updated", "changed", "done", or "applied" after calling propose_change. Instead say "I've proposed this change — review and approve it in the card below." or similar phrasing that makes clear the change is pending.
 
 FINAL REPLY FORMAT — STRICT:
 - Two short paragraphs separated by a blank line. 4-6 sentences total.
@@ -198,7 +200,7 @@ def build_graph(
     propose: Callable[[str, dict[str, Any], str], dict[str, Any]],
 ):
     tools = make_tools(profile, propose)
-    return create_react_agent(_llm(), tools), tools
+    return create_react_agent(_llm(), ToolNode(tools, handle_tool_errors=True)), tools
 
 
 async def stream_agent(

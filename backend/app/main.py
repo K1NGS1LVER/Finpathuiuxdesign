@@ -16,13 +16,10 @@ from app.api.penny import router as penny_router
 from app.api.profile import router as profile_router
 from app.api.simulate import router as simulate_router
 from app.config import settings
-from app.services.logging import request_id_var
+from app.services.logging import request_id_var, setup_logging
 from app.services.supabase_db import close_client, expire_stale_proposals
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s",
-)
+setup_logging()
 log = logging.getLogger(__name__)
 
 
