@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Trophy, Sparkles, Share2, ArrowRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import confetti from 'canvas-confetti';
 import { useFinPathStore } from '@/lib/store';
 import { formatInr } from '@/lib/format';
 import ShareCard from '@/app/components/ShareCard';
@@ -16,7 +15,6 @@ export default function Celebrate() {
   const investments = useFinPathStore(s => s.investments);
   const healthScore = useFinPathStore(s => s.healthScore);
 
-  const [showConfetti, setShowConfetti] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [toast, setToast] = useState<ShareOutcome | null>(null);
@@ -64,44 +62,6 @@ export default function Celebrate() {
       setSharing(false);
     }
   };
-
-  // Trigger confetti on mount
-  useEffect(() => {
-    if (completedGoals.length > 0) {
-      setShowConfetti(true);
-      const duration = 3000;
-      const end = Date.now() + duration;
-
-      // Resolve CSS variables to hex — canvas-confetti can't parse var()
-      const styles = getComputedStyle(document.documentElement);
-      const accent = styles.getPropertyValue('--accent').trim() || '#495bff';
-      const secondary = styles.getPropertyValue('--secondary-accent').trim() || '#ac49ff';
-      const amber = styles.getPropertyValue('--amber').trim() || '#f59e0b';
-      const green = styles.getPropertyValue('--green').trim() || '#22c55e';
-
-      const frame = () => {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0, y: 0.7 },
-          colors: [accent, secondary, accent],
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1, y: 0.7 },
-          colors: [accent, amber, green],
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-      frame();
-    }
-  }, []);
 
   const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
