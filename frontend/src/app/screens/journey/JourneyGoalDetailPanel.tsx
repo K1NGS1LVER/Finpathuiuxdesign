@@ -453,7 +453,6 @@ export default function JourneyGoalDetailPanel({
             </div>
           </>
         )}
-        {/* edit form goes here in step 3 */}
         {isEditing && (
           <>
             {/* Ring + Target Amount input */}
