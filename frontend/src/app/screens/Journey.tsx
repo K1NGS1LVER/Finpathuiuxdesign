@@ -158,7 +158,21 @@ export default function Journey() {
   };
 
   const handleCompleteMonth = (goalId: string) => {
-    updateGoal(goalId, { checkedThisMonth: true });
+    const goal = goals.storeGoals.find((g) => g.id === goalId);
+    if (!goal) return;
+    const allocation =
+      goal.monthlyAllocation ||
+      Math.round(
+        Math.max(0, goal.targetAmount - goal.currentAmount) /
+          Math.max(1, goal.timelineMonths),
+      );
+    const newAmount = Math.min(goal.targetAmount, goal.currentAmount + allocation);
+    const justCompleted = newAmount >= goal.targetAmount;
+    updateGoal(goalId, {
+      checkedThisMonth: true,
+      currentAmount: newAmount,
+      status: justCompleted ? "complete" : newAmount > 0 ? "in-progress" : "not-started",
+    });
   };
 
   const handleRemoveCompletedClick = () => {
@@ -257,6 +271,7 @@ export default function Journey() {
       </div>
 
       <div className="h-[calc(100vh-240px)] flex flex-col md:flex-row gap-4">
+        {goals.sortedGoals.length > 0 && (
         <div
           ref={canvas.canvasRef}
           className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? "cursor-grabbing" : "cursor-grab"}`}
@@ -416,110 +431,111 @@ export default function Journey() {
             <Info size={11} className="icon-wireframe" />
             Scroll to zoom · Drag to pan · Click node to view
           </div>
-
-          {goals.sortedGoals.length === 0 && (
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        </div>
+        )}
+        {goals.sortedGoals.length === 0 && (
+          <motion.div
+            className="flex-1 rounded-2xl flex items-center justify-center p-6 border"
+            style={{ borderColor: "var(--canvas-border)", backgroundColor: "var(--card)" }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div
+              className="flex flex-col items-center text-center"
+              style={{ maxWidth: 440 }}
             >
               <div
-                className="flex flex-col items-center text-center pointer-events-auto"
-                style={{ maxWidth: 440 }}
+                aria-hidden="true"
+                style={{ position: "relative", width: 240, height: 96, marginBottom: "var(--space-4)" }}
               >
-                <div
-                  aria-hidden="true"
-                  style={{ position: "relative", width: 240, height: 96, marginBottom: "var(--space-4)" }}
+                <svg
+                  width="240"
+                  height="96"
+                  style={{ position: "absolute", inset: 0 }}
                 >
-                  <svg
-                    width="240"
-                    height="96"
-                    style={{ position: "absolute", inset: 0 }}
-                  >
-                    <line x1="36" y1="48" x2="92" y2="20" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="4 4" />
-                    <line x1="36" y1="48" x2="120" y2="48" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="4 4" />
-                    <line x1="36" y1="48" x2="92" y2="76" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="4 4" />
-                  </svg>
-                  <div
+                  <line x1="36" y1="48" x2="92" y2="20" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="4 4" />
+                  <line x1="36" y1="48" x2="120" y2="48" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="4 4" />
+                  <line x1="36" y1="48" x2="92" y2="76" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="4 4" />
+                </svg>
+                <div
+                  className="skeleton"
+                  style={{
+                    position: "absolute",
+                    left: 4,
+                    top: 28,
+                    width: 64,
+                    height: 40,
+                    borderRadius: "var(--radius-base)",
+                  }}
+                />
+                {[
+                  { left: 80, top: 4, delay: 0 },
+                  { left: 116, top: 32, delay: 0.4 },
+                  { left: 80, top: 60, delay: 0.8 },
+                ].map((p, i) => (
+                  <motion.div
+                    key={i}
                     className="skeleton"
                     style={{
                       position: "absolute",
-                      left: 4,
-                      top: 28,
-                      width: 64,
-                      height: 40,
+                      left: p.left,
+                      top: p.top,
+                      width: 56,
+                      height: 32,
                       borderRadius: "var(--radius-base)",
                     }}
+                    animate={{ opacity: [0.4, 0.65, 0.4] }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: p.delay,
+                    }}
                   />
-                  {[
-                    { left: 80, top: 4, delay: 0 },
-                    { left: 116, top: 32, delay: 0.4 },
-                    { left: 80, top: 60, delay: 0.8 },
-                  ].map((p, i) => (
-                    <motion.div
-                      key={i}
-                      className="skeleton"
-                      style={{
-                        position: "absolute",
-                        left: p.left,
-                        top: p.top,
-                        width: 56,
-                        height: 32,
-                        borderRadius: "var(--radius-base)",
-                      }}
-                      animate={{ opacity: [0.4, 0.65, 0.4] }}
-                      transition={{
-                        duration: 2.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: p.delay,
-                      }}
-                    />
-                  ))}
-                </div>
-
-                <Target
-                  size={24}
-                  className="icon-wireframe"
-                  style={{ color: "var(--secondary)", opacity: 0.5, marginBottom: "var(--space-2)" }}
-                />
-                <p className="text-label" style={{ color: "var(--tertiary)", marginBottom: "var(--space-2)" }}>
-                  Your map is empty
-                </p>
-                <h3
-                  className="text-display"
-                  style={{ color: "var(--card-foreground)", marginBottom: "var(--space-3)" }}
-                >
-                  Plant your first goal
-                </h3>
-                <p
-                  className="font-body"
-                  style={{
-                    fontSize: "var(--text-sm)",
-                    color: "var(--secondary)",
-                    lineHeight: 1.6,
-                    marginBottom: "var(--space-5)",
-                  }}
-                >
-                  Every goal you add becomes a node on your map, fed by the income you already track. Start with something close &mdash; a phone, a trip, an emergency cushion.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    goals.setAddGoalError("");
-                    goals.setShowAddModal(true);
-                  }}
-                  aria-label="Add your first goal"
-                  className="px-5 py-3 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg bg-accent text-on-accent"
-                >
-                  <Plus size={18} />
-                  <span className="font-semibold text-sm font-body">Add your first goal</span>
-                </button>
+                ))}
               </div>
-            </motion.div>
-          )}
-        </div>
+
+              <Target
+                size={24}
+                className="icon-wireframe"
+                style={{ color: "var(--secondary)", opacity: 0.5, marginBottom: "var(--space-2)" }}
+              />
+              <p className="text-label" style={{ color: "var(--tertiary)", marginBottom: "var(--space-2)" }}>
+                Your map is empty
+              </p>
+              <h3
+                className="text-display"
+                style={{ color: "var(--card-foreground)", marginBottom: "var(--space-3)" }}
+              >
+                Plant your first goal
+              </h3>
+              <p
+                className="font-body"
+                style={{
+                  fontSize: "var(--text-sm)",
+                  color: "var(--secondary)",
+                  lineHeight: 1.6,
+                  marginBottom: "var(--space-5)",
+                }}
+              >
+                Every goal you add becomes a node on your map, fed by the income you already track. Start with something close &mdash; a phone, a trip, an emergency cushion.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  goals.setAddGoalError("");
+                  goals.setShowAddModal(true);
+                }}
+                aria-label="Add your first goal"
+                className="px-5 py-3 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg bg-accent text-on-accent"
+              >
+                <Plus size={18} />
+                <span className="font-semibold text-sm font-body">Add your first goal</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         <JourneyAddGoalModal
           show={goals.showAddModal}

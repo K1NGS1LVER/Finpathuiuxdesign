@@ -50,6 +50,7 @@ const defaultProfile: FinancialProfile = {
   lastUpdated: Date.now(),
   investmentReturnRate: 12,
   storageMode: "local",
+  debtGoalDeleted: false,
 };
 
 const safeStorage = createJSONStorage(() => ({
@@ -342,11 +343,11 @@ function makeDebtGoal(
   };
 }
 
-function syncDebtGoal(goals: Goal[], debts: DebtProfile): Goal[] {
+function syncDebtGoal(goals: Goal[], debts: DebtProfile, debtGoalDeleted?: boolean): Goal[] {
   const existingDebtGoal = goals.find((goal) => goal.id === DEBT_GOAL_ID);
   const goalsWithoutDebt = goals.filter((goal) => goal.id !== DEBT_GOAL_ID);
 
-  if (!hasDebt(debts)) {
+  if (!hasDebt(debts) || debtGoalDeleted) {
     return goalsWithoutDebt;
   }
 
@@ -432,8 +433,9 @@ export const useFinPathStore = create<FinPathStore>()(
         set((s) => ({
           debts: nextDebts,
           goals: normalizeActiveGoalPriorities(
-            syncDebtGoal(s.goals, nextDebts),
+            syncDebtGoal(s.goals, nextDebts, hasDebt(nextDebts) ? (s.debtGoalDeleted ?? false) : false),
           ),
+          debtGoalDeleted: hasDebt(nextDebts) ? (s.debtGoalDeleted ?? false) : false,
           lastUpdated: Date.now(),
         }));
         const store = get();
@@ -460,13 +462,16 @@ export const useFinPathStore = create<FinPathStore>()(
       },
 
       setGoals: (goals) => {
-        set((s) => ({
-          debts: resolveDebtsFromGoals(s.debts, goals),
-          goals: normalizeActiveGoalPriorities(
-            syncDebtGoal(goals, resolveDebtsFromGoals(s.debts, goals)),
-          ),
-          lastUpdated: Date.now(),
-        }));
+        set((s) => {
+          const nextDebts = resolveDebtsFromGoals(s.debts, goals);
+          return {
+            debts: nextDebts,
+            goals: normalizeActiveGoalPriorities(
+              syncDebtGoal(goals, nextDebts, s.debtGoalDeleted),
+            ),
+            lastUpdated: Date.now(),
+          };
+        });
         const store = get();
         store.generatePlan();
       },
@@ -482,7 +487,7 @@ export const useFinPathStore = create<FinPathStore>()(
 
           return {
             goals: normalizeActiveGoalPriorities(
-              syncDebtGoal([...s.goals, goalWithPriority], s.debts),
+              syncDebtGoal([...s.goals, goalWithPriority], s.debts, s.debtGoalDeleted),
             ),
             lastUpdated: Date.now(),
           };
@@ -556,7 +561,7 @@ export const useFinPathStore = create<FinPathStore>()(
           return {
             debts: nextDebts,
             goals: normalizeActiveGoalPriorities(
-              syncDebtGoal(nextGoals, nextDebts),
+              syncDebtGoal(nextGoals, nextDebts, s.debtGoalDeleted),
             ),
             pendingGoalDecisions,
             lastUpdated: Date.now(),
@@ -572,8 +577,10 @@ export const useFinPathStore = create<FinPathStore>()(
             syncDebtGoal(
               s.goals.filter((g) => g.id !== id),
               s.debts,
+              id === DEBT_GOAL_ID ? true : (s.debtGoalDeleted ?? false),
             ),
           ),
+          debtGoalDeleted: id === DEBT_GOAL_ID ? true : (s.debtGoalDeleted ?? false),
           pendingGoalDecisions: removeDecisionFromQueue(
             s.pendingGoalDecisions,
             id,
@@ -649,7 +656,7 @@ export const useFinPathStore = create<FinPathStore>()(
           return {
             debts: nextDebts,
             goals: normalizeActiveGoalPriorities(
-              syncDebtGoal(nextGoals, nextDebts),
+              syncDebtGoal(nextGoals, nextDebts, s.debtGoalDeleted),
             ),
             pendingGoalDecisions,
             lastUpdated: Date.now(),
@@ -741,7 +748,7 @@ export const useFinPathStore = create<FinPathStore>()(
         const state = get();
         const debts = resolveDebtsFromGoals(state.debts, state.goals);
         const syncedGoals = normalizeActiveGoalPriorities(
-          syncDebtGoal(state.goals, debts),
+          syncDebtGoal(state.goals, debts, state.debtGoalDeleted),
         );
         const plan = generatePlan({
           income: state.income,
@@ -860,7 +867,8 @@ export const useFinPathStore = create<FinPathStore>()(
           income,
           expenses,
           debts,
-          goals: normalizeActiveGoalPriorities(syncDebtGoal(goals, debts)),
+          goals: normalizeActiveGoalPriorities(syncDebtGoal(goals, debts, false)),
+          debtGoalDeleted: false,
           savings: 0,
           investments: 0,
           emergencyFund: 0,

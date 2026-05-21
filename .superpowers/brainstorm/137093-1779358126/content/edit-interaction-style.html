@@ -1,0 +1,99 @@
+<h2>How should editing feel in the Goal Detail Panel?</h2>
+<p class="subtitle">The panel is a 300px slide-over. Currently shows: Target ₹, Timeline (months), and computed Monthly/mo. How should the user edit these values?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f0f14;border-radius:8px;padding:16px;font-family:system-ui;color:#e8e8f0">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:4px">TARGET</div>
+      <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">₹5,00,000</div>
+      <div style="height:4px;background:#222;border-radius:99px;overflow:hidden">
+        <div style="width:38%;height:100%;background:#495bff;border-radius:99px"></div>
+      </div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="padding:10px;background:#16161e;border:1px solid #222;border-radius:8px">
+          <div style="font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px">Timeline</div>
+          <div style="font-size:13px;font-weight:700;color:#e8e8f0">24 months</div>
+        </div>
+        <div style="padding:10px;background:#16161e;border:1px solid #222;border-radius:8px">
+          <div style="font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px">Monthly</div>
+          <div style="font-size:13px;font-weight:700;color:#495bff">₹17,500/mo</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;text-align:center">
+        <button style="padding:7px 18px;background:#495bff22;border:1px solid #495bff44;border-radius:8px;color:#8b96ff;font-size:11px;cursor:pointer">✏️ Edit Goal</button>
+      </div>
+      <div style="margin-top:8px;padding:12px;background:#16161e;border:1px solid #333;border-radius:8px">
+        <div style="font-size:10px;color:#888;margin-bottom:6px">EDIT MODE</div>
+        <input style="width:100%;background:#0a0a12;border:1px solid #495bff;border-radius:6px;padding:6px 8px;color:#fff;font-size:12px;margin-bottom:6px" value="500000" />
+        <input style="width:100%;background:#0a0a12;border:1px solid #333;border-radius:6px;padding:6px 8px;color:#fff;font-size:12px" value="24 months" />
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button style="flex:1;padding:5px;background:#495bff;border:none;border-radius:6px;color:#fff;font-size:11px">Save</button>
+          <button style="flex:1;padding:5px;background:#222;border:1px solid #333;border-radius:6px;color:#888;font-size:11px">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Edit Mode Toggle</h3>
+      <p>Normal view → click "Edit Goal" → panel switches to edit mode with Save/Cancel. Explicit commit, clear states.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f0f14;border-radius:8px;padding:16px;font-family:system-ui;color:#e8e8f0">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:4px">TARGET</div>
+      <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">₹5,00,000</div>
+      <div style="height:4px;background:#222;border-radius:99px;overflow:hidden">
+        <div style="width:38%;height:100%;background:#495bff;border-radius:99px"></div>
+      </div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="padding:10px;background:#16161e;border:1px solid #222;border-radius:8px;cursor:pointer;position:relative" title="Click to edit">
+          <div style="font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px">Target ✎</div>
+          <input style="width:100%;background:transparent;border:none;border-bottom:1px solid #495bff;color:#e8e8f0;font-size:13px;font-weight:700;outline:none" value="₹5,00,000" />
+        </div>
+        <div style="padding:10px;background:#16161e;border:1px solid #222;border-radius:8px;cursor:pointer" title="Click to edit">
+          <div style="font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px">Months ✎</div>
+          <div style="font-size:13px;font-weight:700;color:#e8e8f0">24 months</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:10px;background:#16161e;border:1px solid #222;border-radius:8px">
+        <div style="font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px">Monthly (computed)</div>
+        <div style="font-size:13px;font-weight:700;color:#495bff">₹17,500/mo</div>
+      </div>
+      <div style="margin-top:6px;font-size:10px;color:#495bff;text-align:right">Auto-saving…</div>
+    </div>
+    <div class="card-body">
+      <h3>B — Inline Click-to-Edit</h3>
+      <p>Click any stat tile to edit it in place. Debounce auto-saves to store. Monthly recomputes live. No Save button needed.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f0f14;border-radius:8px;padding:16px;font-family:system-ui;color:#e8e8f0">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:4px">TARGET</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <input style="flex:1;background:#16161e;border:1px solid #333;border-radius:8px;padding:6px 10px;color:#fff;font-size:18px;font-weight:700;outline:none" value="500000" />
+        <span style="color:#888;font-size:12px">₹</span>
+      </div>
+      <div style="height:4px;background:#222;border-radius:99px;overflow:hidden;margin-bottom:14px">
+        <div style="width:38%;height:100%;background:#495bff;border-radius:99px"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div style="padding:10px;background:#16161e;border:1px solid #333;border-radius:8px">
+          <div style="font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px">Months</div>
+          <input style="width:100%;background:transparent;border:none;border-bottom:1px solid #333;color:#e8e8f0;font-size:13px;font-weight:700;outline:none" value="24" />
+        </div>
+        <div style="padding:10px;background:#16161e;border:1px solid #333;border-radius:8px">
+          <div style="font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px">Monthly</div>
+          <div style="font-size:13px;font-weight:700;color:#495bff">₹17,500/mo</div>
+        </div>
+      </div>
+      <button style="width:100%;padding:9px;background:#495bff;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:600">Save Changes</button>
+    </div>
+    <div class="card-body">
+      <h3>C — Always-Editable + Save</h3>
+      <p>Panel opens with inputs already active. Target and months are always input fields. Monthly recomputes as you type. One explicit Save button at the bottom.</p>
+    </div>
+  </div>
+
+</div>

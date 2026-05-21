@@ -68,7 +68,7 @@ export function useJourneyGoals() {
   const existingMonthlyNeed = useMemo(
     () => activeGoals
       .filter((g) => g.category !== "debt")
-      .reduce((sum, g) => sum + Math.round((g.targetAmount - g.currentAmount) / Math.max(1, g.timelineMonths)), 0),
+      .reduce((sum, g) => sum + (g.monthlyAllocation || 0), 0),
     [activeGoals],
   );
   const budgetRemaining = monthlySurplus - existingMonthlyNeed;

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinPath — Goals Journey</title>
+<style>
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-Regular.ttf');font-weight:400;}
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-Medium.ttf');font-weight:500;}
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-SemiBold.ttf');font-weight:600;}
+@font-face{font-family:'Lufga';src:url('fonts/Lufga-Bold.ttf');font-weight:700;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body,#root{width:100%;height:100%;}
+body{font-family:'Lufga',system-ui,sans-serif;overflow:hidden;}
+@keyframes nodeFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+@keyframes panelIn{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes dotBounce{0%,80%,100%{transform:translateY(0);opacity:.35;}40%{transform:translateY(-5px);opacity:1;}}
+@keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(123,140,255,.4);}70%{box-shadow:0 0 0 10px rgba(123,140,255,0);}100%{box-shadow:0 0 0 0 rgba(123,140,255,0);}}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+/* ── TOKENS ─────────────────────────────────────── */
+const T={
+  bg:'linear-gradient(135deg,#0f1422 0%,#161a33 35%,#181533 65%,#131022 85%,#080a14 100%)',
+  card:'rgba(17,24,39,0.65)',cardSolid:'#111827',
+  fg:'#f1f5f9',secondary:'#94a3b8',tertiary:'#64748b',
+  accent:'#7b8cff',accentSubtle:'rgba(123,140,255,0.14)',accentGlow:'rgba(123,140,255,0.28)',accentText:'#7b8cff',
+  violet:'#c77dff',violetSubtle:'rgba(199,125,255,0.14)',
+  lime:'#b0ff09',limeSubtle:'rgba(176,255,9,0.14)',limeText:'#b0ff09',
+  border:'rgba(255,255,255,0.09)',surface:'rgba(255,255,255,0.04)',surfaceHover:'rgba(255,255,255,0.07)',
+  shadow:'0 8px 28px rgba(0,0,0,0.45)',shadowLg:'0 20px 56px rgba(0,0,0,0.55)',
+  green:'#22c55e',greenText:'#4ade80',greenSubtle:'rgba(34,197,94,0.14)',
+  amber:'#f59e0b',amberSubtle:'rgba(245,158,11,0.14)',amberText:'#fbbf24',
+  red:'#ef4444',redSubtle:'rgba(239,68,68,0.14)',
+  canvasDot:'rgba(255,255,255,0.18)',canvasBorder:'rgba(255,255,255,0.15)',
+};
+
+/* ── ICONS ───────────────────────────────────────── */
+const Ico=({size=18,color='currentColor',strokeWidth=1.5,fill='none',children})=>
+  <svg viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" width={size} height={size}>{children}</svg>;
+const Plus=p=><Ico {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Ico>;
+const Trash2=p=><Ico {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></Ico>;
+const Target=p=><Ico {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></Ico>;
+const CheckCircle=p=><Ico {...p}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Ico>;
+const Coins=p=><Ico {...p}><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="M16.71 13.88l.71.71-2.82 2.82"/></Ico>;
+const Wallet=p=><Ico {...p}><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></Ico>;
+const Home=p=><Ico {...p}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Ico>;
+const Bike=p=><Ico {...p}><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7M5.5 17.5l3-7h4.5l3 7M12 10.5V8"/><line x1="8" y1="10.5" x2="12" y2="10.5"/></Ico>;
+const Plane=p=><Ico {...p}><path d="M21 3L3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z"/></Ico>;
+const ArrowLeft=p=><Ico {...p}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></Ico>;
+const X=p=><Ico {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Ico>;
+const ChevronUp=p=><Ico {...p}><polyline points="18 15 12 9 6 15"/></Ico>;
+const ChevronDown=p=><Ico {...p}><polyline points="6 9 12 15 18 9"/></Ico>;
+const Check=p=><Ico {...p}><polyline points="20 6 9 17 4 12"/></Ico>;
+const Zap=p=><Ico {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Ico>;
+const Info=p=><Ico {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></Ico>;
+
+/* ── DEMO DATA ─────────────────────────────────── */
+const GOALS=[
+  {id:'g1',name:'Royal Enfield',icon:'bike',Icon:Bike,category:'bike',color:'#7b8cff',colorSubtle:'rgba(123,140,255,0.14)',target:200000,current:90000,monthly:8500,months:13,priority:1,status:'in-progress'},
+  {id:'g2',name:'Down Payment', icon:'home',Icon:Home,category:'home',color:'#c77dff',colorSubtle:'rgba(199,125,255,0.14)',target:400000,current:48000,monthly:15000,months:24,priority:2,status:'not-started'},
+  {id:'g3',name:'Europe Trip',  icon:'travel',Icon:Plane,category:'travel',color:'#b0ff09',colorSubtle:'rgba(176,255,9,0.14)',target:54000,current:54000,monthly:0,months:0,priority:3,status:'complete'},
+];
+const INCOME={total:120000,primary:100000,secondary:20000};
+const fmt=n=>n>=100000?'₹'+(n/100000).toFixed(1)+'L':n>=1000?'₹'+Math.round(n/1000)+'K':'₹'+n;
+const fmtFull=n=>'₹'+n.toLocaleString('en-IN');
+
+/* ── GOAL PROGRESS RING ────────────────────────── */
+function GoalRing({pct,color,size=64}){
+  const r=(size/2)-5,circ=2*Math.PI*r;
+  const [a,setA]=useState(0);
+  useEffect(()=>{const id=setTimeout(()=>setA(pct),300);return()=>clearTimeout(id);},[pct]);
+  return(
+    <div style={{position:'relative',width:size,height:size,flexShrink:0}}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{transform:'rotate(-90deg)'}}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={T.border} strokeWidth="4"/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="4"
+          strokeDasharray={circ} strokeDashoffset={circ-(a/100)*circ} strokeLinecap="round"
+          style={{transition:'stroke-dashoffset 1200ms cubic-bezier(.22,1,.36,1)'}}/>
+      </svg>
+      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <span style={{fontSize:12,fontWeight:700,color:T.fg,fontVariantNumeric:'slashed-zero tabular-nums'}}>{a}%</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── CANVAS MOCK ─────────────────────────────────── */
+function CanvasMock({onSelectGoal,selectedGoalId}){
+  // Node positions (canvas coords)
+  const INC={x:55,y:200,w:200,h:130};
+  const NODES=[
+    {id:'g1',x:340,y:55, w:155,h:185},
+    {id:'g2',x:360,y:270,w:155,h:185},
+    {id:'g3',x:340,y:460,w:155,h:185},
+  ];
+  // Edge centers
+  const ic={x:INC.x+INC.w/2, y:INC.y+INC.h/2};
+  const nc=NODES.map(n=>({id:n.id,x:n.x+n.w/2,y:n.y+n.h/2}));
+
+  return(
+    <div style={{
+      position:'relative',flex:1,borderRadius:18,overflow:'hidden',
+      background:T.cardSolid,border:`1px solid ${T.canvasBorder}`,
+      cursor:'grab',userSelect:'none',
+    }}>
+      {/* Dot grid + edges SVG */}
+      <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none'}}>
+        <defs>
+          <pattern id="cg-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill={T.canvasDot}/>
+          </pattern>
+          {/* Edge paths for animateMotion */}
+          {nc.map(n=>(
+            <path key={n.id} id={`ep-${n.id}`} d={`M ${ic.x} ${ic.y} L ${n.x} ${n.y}`}/>
+          ))}
+        </defs>
+        <rect width="100%" height="100%" fill="url(#cg-dots)"/>
+        {/* Edges */}
+        {GOALS.map((g,i)=>{
+          const n=nc[i];
+          return(
+            <line key={g.id}
+              x1={ic.x} y1={ic.y} x2={n.x} y2={n.y}
+              stroke={g.status==='complete'?T.accent:T.secondary}
+              strokeWidth="2.5"
+              strokeDasharray={g.status==='complete'?'none':'8,5'}
+              opacity={g.status==='complete'?0.7:0.35}/>
+          );
+        })}
+        {/* Traveling dots */}
+        {GOALS.filter(g=>g.status!=='complete').map((g,i)=>{
+          const dur=[1.8,2.8,4.2][g.priority-1]||2;
+          return(
+            <circle key={g.id} r="3.5" fill={g.color} opacity="0.75"
+              style={{filter:`drop-shadow(0 0 6px ${g.color})`}}>
+              <animateMotion dur={`${dur}s`} repeatCount="indefinite" calcMode="linear">
+                <mpath xlinkHref={`#ep-${g.id}`}/>
+              </animateMotion>
+            </circle>
+          );
+        })}
+      </svg>
+
+      {/* Income node */}
+      <div style={{
+        position:'absolute',left:INC.x,top:INC.y,width:INC.w,
+        background:T.card,backdropFilter:'blur(24px)',
+        border:`2px solid ${T.accent}`,borderRadius:16,padding:16,
+        boxShadow:`0 0 20px ${T.violetSubtle},${T.shadow}`,cursor:'pointer',
+      }}>
+        <div style={{width:40,height:40,borderRadius:12,background:T.surface,display:'flex',alignItems:'center',justifyContent:'center',color:T.accent,marginBottom:10}}>
+          <Wallet size={20}/>
+        </div>
+        <p style={{fontSize:13,fontWeight:600,color:T.fg,marginBottom:4}}>Income</p>
+        <p style={{fontSize:20,fontWeight:700,color:T.fg,letterSpacing:'-0.02em',fontVariantNumeric:'slashed-zero tabular-nums',marginBottom:3}}>{fmt(INCOME.total)}</p>
+        <p style={{fontSize:11,color:T.secondary}}>2 income streams</p>
+      </div>
+
+      {/* Goal nodes */}
+      {GOALS.map((g,i)=>{
+        const n=NODES[i];
+        const pct=Math.round(g.current/g.target*100);
+        const isSelected=selectedGoalId===g.id;
+        const isComplete=g.status==='complete';
+        const glow=g.priority===1?`0 0 32px ${T.accentGlow}`:g.priority===2?`0 0 20px ${T.accentGlow}`:`0 0 12px ${T.accentGlow}`;
+        return(
+          <div key={g.id} onClick={()=>onSelectGoal(isSelected?null:g.id)} style={{
+            position:'absolute',left:n.x,top:n.y,width:n.w,
+            animation:`nodeFloat ${3.5+i*0.4}s ${i*0.35}s ease-in-out infinite ${isComplete?'paused':'running'}`,
+            cursor:'pointer',
+          }}>
+            <div style={{
+              background:T.card,backdropFilter:'blur(24px)',
+              border:`2px solid ${isSelected?T.accent:g.color}`,borderRadius:16,padding:16,
+              boxShadow:isComplete?`0 0 20px ${g.color}44,${T.shadow}`:isSelected?`0 0 28px ${T.accentGlow},${T.shadow}`:`${glow},${T.shadow}`,
+              transition:'all 200ms ease',
+              transform:isSelected?'scale(1.04)':'scale(1)',
+            }}>
+              <div style={{width:40,height:40,borderRadius:12,background:g.colorSubtle,display:'flex',alignItems:'center',justifyContent:'center',color:g.color,marginBottom:10}}>
+                <g.Icon size={20}/>
+              </div>
+              <p style={{fontSize:13,fontWeight:700,color:T.fg,marginBottom:2}}>{g.name}</p>
+              {!isComplete&&<p style={{fontSize:10,fontWeight:600,color:T.accentText,marginBottom:6,letterSpacing:'0.05em'}}>P{g.priority}</p>}
+              <p style={{fontSize:18,fontWeight:700,color:T.fg,letterSpacing:'-0.02em',fontVariantNumeric:'slashed-zero tabular-nums',marginBottom:6}}>{fmt(g.target)}</p>
+              <p style={{fontSize:10,color:T.secondary,marginBottom:6}}>{pct}% complete</p>
+              <div style={{height:4,borderRadius:99,background:'rgba(255,255,255,0.1)',overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${pct}%`,background:g.color,borderRadius:99}}/>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Pan hint */}
+      <div style={{
+        position:'absolute',bottom:14,right:16,
+        fontSize:10,color:T.tertiary,letterSpacing:'0.04em',
+        display:'flex',alignItems:'center',gap:6,
+        background:'rgba(17,24,39,0.6)',backdropFilter:'blur(8px)',
+        padding:'5px 10px',borderRadius:99,border:`1px solid ${T.border}`,
+      }}>
+        <Info size={11} color={T.tertiary}/>
+        Scroll to zoom · Drag to pan · Click node to view
+      </div>
+    </div>
+  );
+}
+
+/* ── STAT PILL ──────────────────────────────────── */
+function StatPill({icon:Ic,label,value,color,subtle}){
+  return(
+    <div style={{
+      display:'inline-flex',alignItems:'center',gap:6,
+      padding:'6px 12px',borderRadius:99,
+      background:subtle,border:`1px solid ${color}33`,
+    }}>
+      <Ic size={12} color={color} strokeWidth={2}/>
+      <span style={{fontSize:12,fontWeight:600,color,fontVariantNumeric:'slashed-zero tabular-nums'}}>{value}</span>
+      <span style={{fontSize:11,color:T.tertiary}}>{label}</span>
+    </div>
+  );
+}
+
+/* ── DETAIL PANEL ────────────────────────────────── */
+function GoalDetailPanel({goal,onClose}){
+  const [confirmDelete,setConfirmDelete]=useState(false);
+  const [marked,setMarked]=useState(false);
+  if(!goal)return null;
+  const pct=Math.round(goal.current/goal.target*100);
+  const isComplete=goal.status==='complete';
+  return(
+    <div style={{
+      width:300,flexShrink:0,
+      background:T.card,backdropFilter:'blur(32px)',WebkitBackdropFilter:'blur(32px)',
+      border:`1px solid ${T.border}`,borderLeft:`1px solid ${T.border}`,
+      borderRadius:18,display:'flex',flexDirection:'column',
+      animation:'panelIn 0.3s cubic-bezier(.22,1,.36,1)',
+      overflow:'hidden',
+    }}>
+      {/* Panel header */}
+      <div style={{padding:'16px 20px',borderBottom:`1px solid ${T.border}`,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:32,height:32,borderRadius:10,background:goal.colorSubtle,display:'flex',alignItems:'center',justifyContent:'center',color:goal.color}}>
+            <goal.Icon size={16}/>
+          </div>
+          <span style={{fontSize:14,fontWeight:700,color:T.fg}}>{goal.name}</span>
+        </div>
+        <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',color:T.tertiary,display:'flex',padding:4}}>
+          <X size={16}/>
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{flex:1,overflowY:'auto',padding:'20px'}}>
+
+        {/* Ring + stats */}
+        <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:20}}>
+          <GoalRing pct={pct} color={goal.color} size={80}/>
+          <div style={{flex:1}}>
+            <div style={{marginBottom:8}}>
+              <p style={{fontSize:10,color:T.tertiary,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:2}}>Target</p>
+              <p style={{fontSize:20,fontWeight:700,color:T.fg,letterSpacing:'-0.02em',fontVariantNumeric:'slashed-zero tabular-nums'}}>{fmtFull(goal.target)}</p>
+            </div>
+            <div style={{height:5,borderRadius:99,background:T.border,overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${pct}%`,background:goal.color,borderRadius:99,transition:'width 1200ms ease'}}/>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats grid */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:20}}>
+          {[
+            {label:'Saved',val:fmtFull(goal.current),color:T.fg},
+            {label:'Remaining',val:fmtFull(goal.target-goal.current),color:goal.color},
+            ...(isComplete?[]:[
+              {label:'Monthly',val:`${fmt(goal.monthly)}/mo`,color:T.accentText},
+              {label:'Timeline',val:`${goal.months} months`,color:T.fg},
+            ]),
+          ].map(s=>(
+            <div key={s.label} style={{padding:'12px 14px',borderRadius:12,background:T.surface,border:`1px solid ${T.border}`}}>
+              <p style={{fontSize:10,color:T.tertiary,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>{s.label}</p>
+              <p style={{fontSize:14,fontWeight:700,color:s.color,fontVariantNumeric:'slashed-zero tabular-nums'}}>{s.val}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Priority (only active goals) */}
+        {!isComplete&&(
+          <div style={{marginBottom:20}}>
+            <p style={{fontSize:10,color:T.tertiary,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>Priority</p>
+            <div style={{display:'flex',gap:6}}>
+              {[1,2,3].map(p=>(
+                <button key={p} style={{
+                  flex:1,padding:'8px',borderRadius:10,fontSize:12,fontWeight:600,
+                  fontFamily:'Lufga,system-ui',cursor:'pointer',
+                  border:`1px solid ${goal.priority===p?T.accentGlow:T.border}`,
+                  background:goal.priority===p?T.accentSubtle:T.surface,
+                  color:goal.priority===p?T.accentText:T.secondary,
+                  transition:'all 150ms ease',
+                }}>P{p}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Status badge */}
+        <div style={{
+          display:'flex',alignItems:'center',gap:8,padding:'10px 14px',
+          borderRadius:12,background:isComplete?T.greenSubtle:goal.status==='in-progress'?T.amberSubtle:T.surface,
+          border:`1px solid ${isComplete?T.green+'44':goal.status==='in-progress'?T.amber+'44':T.border}`,
+          marginBottom:20,
+        }}>
+          <div style={{width:8,height:8,borderRadius:'50%',background:isComplete?T.green:goal.status==='in-progress'?T.amber:T.lime,flexShrink:0}}/>
+          <span style={{fontSize:12,fontWeight:600,color:isComplete?T.greenText:goal.status==='in-progress'?T.amberText:T.limeText}}>
+            {isComplete?'Goal completed!':goal.status==='in-progress'?'In progress':'Not started yet'}
+          </span>
+        </div>
+      </div>
+
+      {/* Footer actions */}
+      <div style={{padding:'16px 20px',borderTop:`1px solid ${T.border}`,display:'flex',flexDirection:'column',gap:8}}>
+        {!isComplete&&(
+          <button onClick={()=>setMarked(!marked)} style={{
+            width:'100%',padding:'11px',borderRadius:12,
+            background:marked?T.green:`linear-gradient(135deg,${T.accent} 40%,${T.violet} 140%)`,
+            border:'none',color:'#fff',fontWeight:600,fontSize:13,cursor:'pointer',
+            fontFamily:'Lufga,system-ui',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+            transition:'all 250ms ease',boxShadow:marked?`0 4px 14px ${T.greenSubtle}`:`0 4px 14px ${T.accentGlow}`,
+          }}>
+            <Check size={14}/>{marked?'Marked done ✓':'Mark as done this month'}
+          </button>
+        )}
+        <button onClick={()=>setConfirmDelete(!confirmDelete)} style={{
+          width:'100%',padding:'9px',borderRadius:12,
+          background:confirmDelete?T.redSubtle:T.surface,
+          border:`1px solid ${confirmDelete?T.red+'55':T.border}`,
+          color:confirmDelete?T.red:T.tertiary,
+          fontWeight:500,fontSize:12,cursor:'pointer',fontFamily:'Lufga,system-ui',
+          transition:'all 200ms ease',
+        }}>
+          <Trash2 size={12} style={{display:'inline',verticalAlign:'middle',marginRight:5}}/>{confirmDelete?'Confirm delete?':'Delete goal'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── SIDEBAR MOCK ────────────────────────────────── */
+function SidebarMock(){
+  const items=[
+    {label:'Dashboard',active:false},
+    {label:'Goals',active:true},
+    {label:'Month',active:false},
+    {label:'Cashflow',active:false},
+    {label:'Debt',active:false},
+  ];
+  return(
+    <div style={{
+      width:56,flexShrink:0,height:'100%',
+      background:T.card,backdropFilter:'blur(24px)',
+      borderRight:`1px solid ${T.border}`,
+      display:'flex',flexDirection:'column',alignItems:'center',
+      padding:'18px 0 12px',gap:4,
+    }}>
+      {/* Logo mark */}
+      <div style={{marginBottom:16}}>
+        <svg width={28} height={28} viewBox="0 0 80 80" fill="none">
+          <defs><linearGradient id="sb-lg" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stopColor={T.accent}/><stop offset="100%" stopColor={T.violet}/></linearGradient></defs>
+          <path d="M12 60 L38 30" stroke="url(#sb-lg)" strokeWidth="11" strokeLinecap="round"/>
+          <path d="M38 30 L64 60" stroke="url(#sb-lg)" strokeWidth="11" strokeLinecap="round"/>
+          <path d="M51 44 L66 16" stroke="url(#sb-lg)" strokeWidth="2.5" strokeLinecap="round" strokeOpacity=".4" strokeDasharray="2 4"/>
+          <circle cx="68" cy="13" r="6" fill={T.accent}/>
+          <circle cx="68" cy="13" r="2.8" fill="#0f1422"/>
+        </svg>
+      </div>
+      {items.map(it=>(
+        <div key={it.label} style={{
+          width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',
+          background:it.active?T.accentSubtle:'transparent',
+          border:it.active?`1px solid ${T.accentGlow}`:'1px solid transparent',
+          cursor:'pointer',
+        }}>
+          <div style={{width:8,height:8,borderRadius:2,background:it.active?T.accent:T.tertiary,opacity:it.active?1:0.5}}/>
+        </div>
+      ))}
+      <div style={{flex:1}}/>
+      {/* Ask Penny */}
+      <div style={{
+        width:40,height:40,borderRadius:12,
+        background:`linear-gradient(135deg,${T.accent} 40%,${T.violet} 140%)`,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        cursor:'pointer',boxShadow:`0 4px 12px ${T.accentGlow}`,
+      }}>
+        <Zap size={16} color="#fff" strokeWidth={2}/>
+      </div>
+    </div>
+  );
+}
+
+/* ── MAIN APP ────────────────────────────────────── */
+function App(){
+  const [selectedGoalId,setSelectedGoalId]=useState(null);
+  const [confirmClear,setConfirmClear]=useState(false);
+  const selectedGoal=GOALS.find(g=>g.id===selectedGoalId)||null;
+
+  const activeGoals=GOALS.filter(g=>g.status!=='complete');
+  const completedGoals=GOALS.filter(g=>g.status==='complete');
+  const monthlyTotal=activeGoals.reduce((s,g)=>s+g.monthly,0);
+
+  return(
+    <div style={{
+      display:'flex',width:'100vw',height:'100vh',overflow:'hidden',
+      background:T.bg,fontFamily:'Lufga,system-ui,sans-serif',color:T.fg,
+    }}>
+      {/* Background blobs */}
+      <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0}}>
+        <div style={{position:'absolute',top:'20%',left:'20%',width:'50vw',height:'50vh',borderRadius:'50%',background:T.accentSubtle,filter:'blur(100px)',opacity:.6}}/>
+        <div style={{position:'absolute',bottom:'20%',right:'15%',width:'40vw',height:'40vh',borderRadius:'50%',background:T.violetSubtle,filter:'blur(80px)',opacity:.6}}/>
+      </div>
+
+      <SidebarMock/>
+
+      {/* Main content */}
+      <main style={{flex:1,display:'flex',flexDirection:'column',padding:'28px 28px 28px 24px',gap:14,overflow:'hidden',position:'relative',zIndex:1}}>
+
+        {/* ── REDESIGNED HEADER ── */}
+        <div style={{display:'flex',flexDirection:'column',gap:10,flexShrink:0}}>
+
+          {/* Title row */}
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:16}}>
+            <div>
+              <p style={{fontSize:10,fontWeight:600,letterSpacing:'0.12em',textTransform:'uppercase',color:T.tertiary,marginBottom:4}}>Financial Roadmap</p>
+              <h2 style={{fontFamily:'Lufga,system-ui',fontSize:34,fontWeight:700,letterSpacing:'-0.025em',color:T.fg,lineHeight:1}}>Goals</h2>
+            </div>
+
+            {/* Actions */}
+            <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:4}}>
+              {completedGoals.length>0&&(
+                <button onClick={()=>setConfirmClear(!confirmClear)} style={{
+                  display:'flex',alignItems:'center',gap:6,padding:'8px 14px',height:40,borderRadius:12,
+                  background:confirmClear?T.redSubtle:T.surface,
+                  border:`1px solid ${confirmClear?T.red+'55':T.border}`,
+                  color:confirmClear?T.red:T.secondary,
+                  fontFamily:'Lufga,system-ui',fontSize:13,fontWeight:500,cursor:'pointer',
+                  transition:'all 200ms ease',
+                }}>
+                  <Trash2 size={14}/>{confirmClear?`Confirm? (${completedGoals.length})`:`Clear (${completedGoals.length})`}
+                </button>
+              )}
+              <button style={{
+                display:'flex',alignItems:'center',gap:6,padding:'8px 16px',height:40,borderRadius:12,
+                background:`linear-gradient(135deg,${T.accent} 40%,${T.violet} 140%)`,
+                border:'none',color:'#fff',
+                fontFamily:'Lufga,system-ui',fontSize:13,fontWeight:600,cursor:'pointer',
+                boxShadow:`0 4px 14px ${T.accentGlow}`,transition:'all 200ms ease',
+              }}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';e.currentTarget.style.boxShadow=`0 6px 20px ${T.accentGlow}`;}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=`0 4px 14px ${T.accentGlow}`;}}>
+                <Plus size={15}/> Add Goal
+              </button>
+            </div>
+          </div>
+
+          {/* Stats strip */}
+          <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+            <StatPill icon={Target} value={activeGoals.length} label={`active goal${activeGoals.length!==1?'s':''}`} color={T.accent} subtle={T.accentSubtle}/>
+            <StatPill icon={Coins} value={`${fmt(monthlyTotal)}/mo`} label="commitment" color={T.violet} subtle={T.violetSubtle}/>
+            {completedGoals.length>0&&(
+              <StatPill icon={CheckCircle} value={completedGoals.length} label="completed" color={T.green} subtle={T.greenSubtle}/>
+            )}
+            <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5,fontSize:11,color:T.tertiary}}>
+              <Info size={11} color={T.tertiary}/>
+              Click a node to view details
+            </div>
+          </div>
+        </div>
+
+        {/* ── CANVAS + DETAIL PANEL ── */}
+        <div style={{flex:1,minHeight:0,display:'flex',gap:14}}>
+          <CanvasMock onSelectGoal={setSelectedGoalId} selectedGoalId={selectedGoalId}/>
+          <GoalDetailPanel goal={selectedGoal} onClose={()=>setSelectedGoalId(null)}/>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

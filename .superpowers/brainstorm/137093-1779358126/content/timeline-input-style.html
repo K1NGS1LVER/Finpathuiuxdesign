@@ -1,0 +1,30 @@
+<h2>How should the user set the timeline?</h2>
+<p class="subtitle">The store saves <code>timelineMonths: number</code>. Which input should the Edit panel expose?</p>
+
+<div class="options">
+
+  <div class="option" data-choice="months-only" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Months number input only</h3>
+      <p>Simple. Type "36" for 3 years. No conversion needed. Matches what the store already holds. Completion date shown as a computed label below the input.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="date-only" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Date picker only</h3>
+      <p>User picks "June 2029". Months derived from today → that date. Store still saves timelineMonths (converted). More intuitive for goal-oriented thinking.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="both-linked" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Both, linked together</h3>
+      <p>Date picker + months input side by side. Editing one updates the other live. Most flexible but more complex to build and harder to fit in the 300px panel.</p>
+    </div>
+  </div>
+
+</div>
