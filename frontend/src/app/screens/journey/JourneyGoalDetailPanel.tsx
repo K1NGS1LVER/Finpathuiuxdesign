@@ -1,22 +1,92 @@
-import { X, Calendar, Sparkles, Shield, TrendingUp, Target } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, CheckCircle, Trash2, Trophy } from "lucide-react";
 import type { Goal } from '@/lib/types';
 import { getGoalIcon } from "./icon-map";
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case "complete":
-      return "var(--accent)";
-    case "in-progress":
-      return "var(--amber)";
-    default:
-      return "var(--tertiary-accent)";
-  }
+function GoalRing({ pct, color, size = 64 }: { pct: number; color: string; size?: number }) {
+  const r = size / 2 - 5;
+  const circ = 2 * Math.PI * r;
+  const [animated, setAnimated] = useState(0);
+
+  useEffect(() => {
+    const id = setTimeout(() => setAnimated(pct), 300);
+    return () => clearTimeout(id);
+  }, [pct]);
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ transform: "rotate(-90deg)" }}
+      >
+        <circle cx={size / 2} cy={size / 2} r={r} className="journey-goal-ring-track" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          className="journey-goal-ring-fill"
+          stroke={color}
+          strokeDasharray={circ}
+          strokeDashoffset={circ - (animated / 100) * circ}
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span
+          className="slashed-zero tabular-nums"
+          style={{
+            fontSize: "var(--text-xs)",
+            fontWeight: "var(--font-weight-bold)",
+            color: "var(--card-foreground)",
+          }}
+        >
+          {animated}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function getStatusMeta(status: string): { bg: string; border: string; text: string; dot: string; label: string } {
+  if (status === "complete")
+    return {
+      bg: "var(--green-subtle)",
+      border: "color-mix(in srgb, var(--green) 27%, transparent)",
+      text: "var(--green-text)",
+      dot: "var(--green)",
+      label: "Goal completed!",
+    };
+  if (status === "in-progress")
+    return {
+      bg: "var(--amber-subtle)",
+      border: "color-mix(in srgb, var(--amber) 27%, transparent)",
+      text: "var(--amber-text)",
+      dot: "var(--amber)",
+      label: "In progress",
+    };
+  return {
+    bg: "var(--tertiary-accent-subtle)",
+    border: "color-mix(in srgb, var(--tertiary-accent) 27%, transparent)",
+    text: "var(--tertiary-accent-text)",
+    dot: "var(--tertiary-accent)",
+    label: "Not started yet",
+  };
 }
 
 interface JourneyGoalDetailPanelProps {
   goal: Goal | null;
   onClose: () => void;
   onComplete: (goalId: string) => void;
+  onCompleteMonth: (goalId: string) => void;
   onDelete: (goalId: string) => void;
   onPriorityChange: (goalId: string, newPriority: number) => void;
   activeGoalsCount: number;
@@ -26,196 +96,366 @@ export default function JourneyGoalDetailPanel({
   goal,
   onClose,
   onComplete,
+  onCompleteMonth,
   onDelete,
   onPriorityChange,
   activeGoalsCount,
 }: JourneyGoalDetailPanelProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    },
+    [],
+  );
+
   if (!goal) return null;
 
-  const statusColor = getStatusColor(goal.status || "not-started");
+  const pct =
+    (goal.targetAmount || 0) > 0
+      ? Math.round(((goal.currentAmount || 0) / (goal.targetAmount || 1)) * 100)
+      : 0;
+  const isComplete = goal.status === "complete";
+  const statusColor = isComplete
+    ? "var(--accent)"
+    : goal.status === "in-progress"
+      ? "var(--amber)"
+      : "var(--tertiary-accent)";
+  const statusMeta = getStatusMeta(goal.status || "not-started");
   const Icon = getGoalIcon(goal.icon);
+
+  const monthlyReq = Math.round(
+    Math.max(0, (goal.targetAmount || 0) - (goal.currentAmount || 0)) /
+      Math.max(1, goal.timelineMonths || 12),
+  );
+
+  const stats = [
+    {
+      label: "Saved",
+      value: `₹${(goal.currentAmount || 0).toLocaleString("en-IN")}`,
+      color: "var(--card-foreground)",
+    },
+    {
+      label: "Remaining",
+      value: `₹${Math.max(0, (goal.targetAmount || 0) - (goal.currentAmount || 0)).toLocaleString("en-IN")}`,
+      color: statusColor,
+    },
+    ...(!isComplete
+      ? [
+          {
+            label: "Monthly",
+            value: `₹${monthlyReq.toLocaleString("en-IN")}/mo`,
+            color: "var(--accent-text)",
+          },
+          {
+            label: "Timeline",
+            value: `${goal.timelineMonths || 12} months`,
+            color: "var(--card-foreground)",
+          },
+        ]
+      : []),
+  ];
+
+  const handleDeleteClick = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      confirmTimer.current = setTimeout(() => setConfirmDelete(false), 3000);
+      return;
+    }
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    setConfirmDelete(false);
+    onDelete(goal.id);
+  };
 
   return (
     <div
-      className="absolute top-0 right-0 h-full w-full md:w-[360px] p-4 md:p-6 space-y-5 shadow-2xl z-30 overflow-y-auto transform transition-transform duration-300 journey-detail-panel"
+      className="absolute top-0 right-0 h-full w-full md:w-[300px] shadow-2xl z-30 overflow-hidden journey-detail-panel"
+      style={{ display: "flex", flexDirection: "column" }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
-        <h3 className="text-xl font-bold text-[var(--card-foreground)] font-display-family">
-          Goal Details
-        </h3>
+      {/* Panel header */}
+      <div
+        className="flex items-center justify-between flex-shrink-0"
+        style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex items-center justify-center flex-shrink-0"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "var(--radius-sm)",
+              background: `color-mix(in srgb, ${statusColor} 15%, transparent)`,
+              color: statusColor,
+            }}
+          >
+            <Icon size={16} className="icon-wireframe" />
+          </div>
+          <span
+            style={{
+              fontSize: "var(--text-sm)",
+              fontWeight: "var(--font-weight-bold)",
+              color: "var(--card-foreground)",
+            }}
+          >
+            {goal.name || "Goal"}
+          </span>
+        </div>
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--card-foreground)] transition-colors"
+          className="flex items-center justify-center"
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--tertiary)", padding: 4 }}
         >
-          <X size={18} />
+          <X size={16} className="icon-wireframe" />
         </button>
       </div>
 
-      <div className="flex flex-col items-center text-center py-4">
-        {/* Icon circle: color from statusColor (runtime) — kept inline */}
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+
+        {/* Ring + target amount */}
+        <div className="flex items-center gap-4" style={{ marginBottom: 20 }}>
+          <GoalRing pct={pct} color={statusColor} size={80} />
+          <div style={{ flex: 1 }}>
+            <p
+              style={{
+                fontSize: "var(--text-2xs)",
+                color: "var(--tertiary)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginBottom: 2,
+              }}
+            >
+              Target
+            </p>
+            <p
+              className="slashed-zero tabular-nums"
+              style={{
+                fontSize: "var(--text-xl)",
+                fontWeight: "var(--font-weight-bold)",
+                color: "var(--card-foreground)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              ₹{(goal.targetAmount || 0).toLocaleString("en-IN")}
+            </p>
+            <div
+              style={{
+                height: 5,
+                borderRadius: "var(--radius-full)",
+                background: "var(--progress-inactive)",
+                overflow: "hidden",
+                marginTop: 8,
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${pct}%`,
+                  background: statusColor,
+                  borderRadius: "var(--radius-full)",
+                  transition: "width 1200ms ease",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Stats grid */}
         <div
-          className="w-24 h-24 rounded-full flex items-center justify-center mb-5"
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}
+        >
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              style={{
+                padding: "12px 14px",
+                borderRadius: "var(--radius-base)",
+                background: "var(--surface-tint)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "var(--text-2xs)",
+                  color: "var(--tertiary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: 4,
+                }}
+              >
+                {s.label}
+              </p>
+              <p
+                className="slashed-zero tabular-nums"
+                style={{
+                  fontSize: "var(--text-sm)",
+                  fontWeight: "var(--font-weight-bold)",
+                  color: s.color,
+                }}
+              >
+                {s.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Priority buttons (active goals only) */}
+        {!isComplete && (
+          <div style={{ marginBottom: 20 }}>
+            <p
+              style={{
+                fontSize: "var(--text-2xs)",
+                color: "var(--tertiary)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginBottom: 8,
+              }}
+            >
+              Priority
+            </p>
+            <div style={{ display: "flex", gap: 6 }}>
+              {Array.from({ length: Math.max(activeGoalsCount, 1) }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={`priority-${goal.id}-${p}`}
+                  onClick={() => onPriorityChange(goal.id, p)}
+                  className={`journey-priority-btn${goal.priority === p ? " active" : ""}`}
+                >
+                  P{p}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Status badge */}
+        <div
           style={{
-            background: `color-mix(in srgb, ${statusColor} 15%, transparent)`,
-            color: statusColor,
-            boxShadow: `0 0 30px color-mix(in srgb, ${statusColor} 30%, transparent)`,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 14px",
+            borderRadius: "var(--radius-base)",
+            background: statusMeta.bg,
+            border: `1px solid ${statusMeta.border}`,
           }}
         >
-          <Icon size={40} className="icon-wireframe" strokeWidth={1.5} />
-        </div>
-        <h2 className="text-2xl font-bold mb-1 text-[var(--card-foreground)] font-display-family">
-          {goal.name || "Goal"}
-        </h2>
-        <div className="text-[13px] font-medium uppercase tracking-wider text-[var(--secondary)] mb-4">
-          {(goal.status || "not-started").replace("-", " ")}
-        </div>
-
-        {/* Amount color is statusColor (runtime) — kept inline */}
-        <div
-          className="text-4xl font-extrabold slashed-zero tracking-tight font-display-family"
-          style={{ color: statusColor }}
-        >
-          ₹{(goal.targetAmount || 0).toLocaleString("en-IN")}
-        </div>
-      </div>
-
-      <div className="p-4 rounded-2xl stat-card">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-[var(--secondary)]">
-            Overall Progress
-          </span>
-          <span className="text-sm font-bold text-[var(--card-foreground)]">
-            {(goal.targetAmount || 0) > 0
-              ? Math.round(
-                  ((goal.currentAmount || 0) /
-                    (goal.targetAmount || 1)) *
-                    100,
-                )
-              : 0}
-            %
-          </span>
-        </div>
-        <div
-          className="h-2.5 rounded-full overflow-hidden"
-          style={{ backgroundColor: "var(--progress-inactive)" }}
-        >
-          {/* Width and color are runtime-computed — kept inline */}
           <div
-            className="h-full rounded-full transition-all duration-1000 ease-out"
             style={{
-              width: `${(goal.targetAmount || 0) > 0 ? Math.round(((goal.currentAmount || 0) / (goal.targetAmount || 1)) * 100) : 0}%`,
-              backgroundColor: statusColor,
-              boxShadow: `0 0 10px ${statusColor}`,
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: statusMeta.dot,
+              flexShrink: 0,
             }}
           />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-4 rounded-2xl stat-card">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-accent">
-            <Shield size={16} />
-          </div>
-          <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
-            Saved So Far
-          </div>
-          <div className="text-lg font-bold text-[var(--card-foreground)] slashed-zero">
-            ₹{(goal.currentAmount || 0).toLocaleString("en-IN")}
-          </div>
-        </div>
-        <div className="p-4 rounded-2xl stat-card">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-lime">
-            <TrendingUp size={16} />
-          </div>
-          <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
-            Remaining
-          </div>
-          <div className="text-lg font-bold text-[var(--card-foreground)] slashed-zero">
-            ₹
-            {Math.max(
-              0,
-              (goal.targetAmount || 0) -
-                (goal.currentAmount || 0),
-            ).toLocaleString("en-IN")}
-          </div>
-        </div>
-        <div className="p-4 rounded-2xl stat-card">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-amber">
-            <Calendar size={16} />
-          </div>
-          <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
-            Timeline
-          </div>
-          <div className="text-lg font-bold text-[var(--card-foreground)]">
-            {goal.timelineMonths || 12} months
-          </div>
-        </div>
-        <div className="p-4 rounded-2xl stat-card">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 stat-icon-lime">
-            <Target size={16} />
-          </div>
-          <div className="text-xs font-medium mb-1 text-[var(--secondary)]">
-            Monthly Req.
-          </div>
-          <div className="text-lg font-bold text-[var(--card-foreground)] slashed-zero">
-            ₹
-            {Math.round(
-              Math.max(
-                0,
-                (goal.targetAmount || 0) -
-                  (goal.currentAmount || 0),
-              ) / Math.max(1, goal.timelineMonths || 12),
-            ).toLocaleString("en-IN")}
-          </div>
-        </div>
-      </div>
-
-      {goal.status !== "complete" && (
-        <div className="p-4 rounded-2xl stat-card">
-          <div className="text-xs font-medium mb-2 text-[var(--secondary)]">
-            Goal Priority
-          </div>
-          <select
-            value={goal.priority}
-            onChange={(e) =>
-              onPriorityChange(goal.id, parseInt(e.target.value, 10))
-            }
-            className="w-full px-3 py-2 rounded-xl outline-none text-[var(--card-foreground)] goal-priority-select"
+          <span
+            style={{
+              fontSize: "var(--text-xs)",
+              fontWeight: "var(--font-weight-semibold)",
+              color: statusMeta.text,
+            }}
           >
-            {Array.from(
-              { length: Math.max(activeGoalsCount, 1) },
-              (_, i) => i + 1,
-            ).map((priority) => (
-              <option
-                key={`priority-${goal.id}-${priority}`}
-                value={priority}
-              >{`Priority ${priority}`}</option>
-            ))}
-          </select>
-          <div className="text-[11px] mt-2 text-secondary-color">
-            Brighter node glow means higher priority.
-          </div>
+            {statusMeta.label}
+          </span>
+        </div>
+      </div>
+
+      {/* New lifecycle actions */}
+      {!isComplete && (
+        <div
+          className="flex-shrink-0"
+          style={{
+            padding: "12px 20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <button
+            onClick={() => !goal.checkedThisMonth && onCompleteMonth(goal.id)}
+            disabled={goal.checkedThisMonth === true}
+            aria-label={goal.checkedThisMonth ? "Goal already marked complete this month" : "Mark this month's contribution as complete"}
+            className="w-full flex items-center justify-center gap-1.5 btn-complete-goal button-press disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              padding: "11px",
+              borderRadius: "var(--radius-base)",
+              fontFamily: "var(--font-display)",
+            }}
+          >
+            <CheckCircle size={14} className="icon-wireframe" />
+            {goal.checkedThisMonth ? "✓ Done this month" : "Complete for the Month"}
+          </button>
+          <button
+            onClick={() => onComplete(goal.id)}
+            className="w-full flex items-center justify-center gap-1.5 btn-ghost-gradient button-press"
+            style={{
+              padding: "11px",
+              borderRadius: "var(--radius-base)",
+              fontFamily: "var(--font-display)",
+            }}
+          >
+            <Trophy size={14} className="icon-wireframe" />
+            Complete Goal
+          </button>
         </div>
       )}
 
-      <div className="space-y-3 pt-4 mt-auto">
-        {goal.status !== "complete" && (
+      {/* Footer actions */}
+      <div
+        className="flex-shrink-0"
+        style={{
+          padding: "16px 20px",
+          borderTop: "1px solid var(--border)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        {!isComplete && (
           <button
             onClick={() => onComplete(goal.id)}
-            className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 button-press btn-complete-goal"
+            className="w-full flex items-center justify-center gap-1.5 button-press"
+            style={{
+              padding: "11px",
+              borderRadius: "var(--radius-base)",
+              background: "linear-gradient(135deg, var(--accent) 40%, var(--secondary-accent) 140%)",
+              border: "none",
+              color: "var(--on-accent)",
+              fontWeight: "var(--font-weight-semibold)",
+              fontSize: "var(--text-sm)",
+              cursor: "pointer",
+              fontFamily: "var(--font-display)",
+              boxShadow: "0 4px 14px var(--accent-glow)",
+              transition: "all 250ms ease",
+            }}
           >
-            <Sparkles size={18} />
-            Mark Complete
+            <CheckCircle size={14} className="icon-wireframe" />
+            Mark complete
           </button>
         )}
         <button
-          onClick={() => onDelete(goal.id)}
-          className="w-full py-3 rounded-xl font-semibold transition-colors hover:bg-[var(--surface-hover)] text-sm btn-delete-goal"
+          onClick={handleDeleteClick}
+          className="w-full flex items-center justify-center gap-1.5"
+          style={{
+            padding: "9px",
+            borderRadius: "var(--radius-base)",
+            background: confirmDelete ? "var(--red-subtle)" : "var(--surface-tint)",
+            border: `1px solid ${confirmDelete ? "color-mix(in srgb, var(--red) 33%, transparent)" : "var(--border)"}`,
+            color: confirmDelete ? "var(--red)" : "var(--tertiary)",
+            fontWeight: "var(--font-weight-medium)",
+            fontSize: "var(--text-xs)",
+            cursor: "pointer",
+            fontFamily: "var(--font-display)",
+            transition: "all 200ms ease",
+          }}
         >
-          Delete Goal
+          <Trash2 size={12} className="icon-wireframe" />
+          {confirmDelete ? "Confirm delete?" : "Delete goal"}
         </button>
       </div>
     </div>
