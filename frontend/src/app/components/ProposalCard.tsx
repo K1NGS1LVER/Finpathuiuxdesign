@@ -71,6 +71,127 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+function PayloadSummary({
+  action,
+  payload,
+  goalName,
+}: {
+  action: string;
+  payload: Record<string, unknown>;
+  goalName: (id: string) => string;
+}) {
+  const p = payload;
+
+  const wrap = (rows: ReactNode) => (
+    <div
+      style={{
+        background: 'var(--surface-2, var(--neutral-50))',
+        borderRadius: 'var(--radius-sm)',
+        padding: '8px 10px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+      }}
+    >
+      {rows}
+    </div>
+  );
+
+  switch (action) {
+    case 'setStrategy': {
+      const s = String(p.strategy ?? '');
+      const label = s === 'avalanche' ? 'Avalanche — highest interest first' : 'Snowball — smallest balance first';
+      return wrap(<Row label="Strategy" value={label} />);
+    }
+
+    case 'setEmergencyFund': {
+      const v = Number(p.amount ?? p.value);
+      return wrap(<Row label="Target" value={fmt(v)} />);
+    }
+
+    case 'setSavings': {
+      const v = Number(p.amount ?? p.value);
+      return wrap(<Row label="Monthly savings" value={fmt(v)} />);
+    }
+
+    case 'setInvestments': {
+      const v = Number(p.amount ?? p.value);
+      return wrap(<Row label="Monthly investments" value={fmt(v)} />);
+    }
+
+    case 'addGoal': {
+      const g = (p.goal ?? p) as Record<string, unknown>;
+      const rows: ReactNode[] = [
+        <Row key="name" label="Name" value={String(g.name ?? '—')} />,
+      ];
+      if (g.targetAmount != null) rows.push(<Row key="target" label="Target" value={fmt(Number(g.targetAmount))} />);
+      if (g.timelineMonths != null) rows.push(<Row key="tl" label="Timeline" value={`${g.timelineMonths} months`} />);
+      if (g.priority != null) rows.push(<Row key="pri" label="Priority" value={String(g.priority)} />);
+      return wrap(<>{rows}</>);
+    }
+
+    case 'removeGoal': {
+      const id = String(p.id ?? '');
+      return wrap(<Row label="Goal" value={goalName(id)} />);
+    }
+
+    case 'updateGoal': {
+      const id = String(p.id ?? '');
+      const updates = (p.updates ?? {}) as Record<string, unknown>;
+      const FIELD_LABELS: Record<string, string> = {
+        targetAmount: 'Target',
+        timelineMonths: 'Timeline (months)',
+        name: 'Name',
+        priority: 'Priority',
+        currentSaved: 'Already saved',
+      };
+      const rows: ReactNode[] = [<Row key="goal" label="Goal" value={goalName(id)} />];
+      for (const [k, v] of Object.entries(updates)) {
+        const lbl = FIELD_LABELS[k] ?? k;
+        const display =
+          k === 'targetAmount' || k === 'currentSaved'
+            ? fmt(Number(v))
+            : String(v);
+        rows.push(<Row key={k} label={lbl} value={display} />);
+      }
+      return wrap(<>{rows}</>);
+    }
+
+    case 'addLumpsum': {
+      const id = String(p.goalId ?? p.id ?? '');
+      const amount = Number(p.amount);
+      return wrap(
+        <>
+          <Row label="Goal" value={goalName(id)} />
+          <Row label="Lump sum" value={fmt(amount)} />
+        </>,
+      );
+    }
+
+    case 'addDebt': {
+      const d = (p.debt ?? p) as Record<string, unknown>;
+      const name = String(d.name ?? d.description ?? '—');
+      const principal = Math.abs(Number(d.principal ?? d.amount ?? 0));
+      const rate = Number.isFinite(Number(d.interestRate)) ? Number(d.interestRate) : 12;
+      const emi = Number.isFinite(Number(d.monthlyPayment)) ? Number(d.monthlyPayment) : 0;
+      const rows: ReactNode[] = [
+        <Row key="name" label="Name" value={name} />,
+        <Row key="principal" label="Principal" value={fmt(principal)} />,
+        <Row key="rate" label="Interest" value={`${rate}% p.a.`} />,
+      ];
+      if (emi > 0) rows.push(<Row key="emi" label="EMI" value={`${fmt(emi)}/mo`} />);
+      return wrap(<>{rows}</>);
+    }
+
+    default:
+      return wrap(
+        <span style={{ color: 'var(--secondary)', fontSize: 'var(--text-xs)' }}>
+          {JSON.stringify(payload, null, 2)}
+        </span>,
+      );
+  }
+}
+
 const DEBT_CATEGORIES: ReadonlySet<DebtItem['category']> = new Set([
   'homeLoan',
   'carLoan',
