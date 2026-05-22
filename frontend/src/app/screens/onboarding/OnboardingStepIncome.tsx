@@ -1,34 +1,24 @@
-import { Loader2, FileText } from "lucide-react";
+import { Plus, X, Loader2, FileText } from "lucide-react";
+import type { IncomeItem, IncomeType } from "./useOnboardingForm";
 import { CURRENCIES } from "./useOnboardingForm";
 
+const INCOME_TYPES: { value: IncomeType; label: string }[] = [
+  { value: "salary",   label: "Salary" },
+  { value: "freelance",label: "Freelance" },
+  { value: "passive",  label: "Passive" },
+  { value: "rental",   label: "Rental" },
+  { value: "dividend", label: "Dividend" },
+  { value: "other",    label: "Other" },
+];
+
+const PASSIVE_TYPES: IncomeType[] = ["passive", "rental", "dividend"];
+
 interface OnboardingStepIncomeProps {
-  // Hero (total)
-  totalIncome: string;
-  onChangeManualTotalIncome: (value: string) => void;
+  incomeItems: IncomeItem[];
+  onChangeIncomeItems: (items: IncomeItem[]) => void;
   incomeCurrency: string;
   onChangeIncomeCurrency: (currency: string) => void;
-  // Breakdown toggle
-  showIncomeBreakdown: boolean;
-  onToggleIncomeBreakdown: () => void;
-  onClearManualIncome: () => void;
-  // Breakdown fields
-  primaryIncome: string;
-  onChangePrimaryIncome: (value: string) => void;
-  secondaryIncome: string;
-  onChangeSecondaryIncome: (value: string) => void;
-  passiveIncome: string;
-  onChangePassiveIncome: (value: string) => void;
-  variablePercent: string;
-  onChangeVariablePercent: (value: string) => void;
-  calcPassiveVar: number;
-  // Increments
-  primaryIncrement: string;
-  onChangePrimaryIncrement: (value: string) => void;
-  secondaryIncrement: string;
-  onChangeSecondaryIncrement: (value: string) => void;
-  passiveIncrement: string;
-  onChangePassiveIncrement: (value: string) => void;
-  // Shared
+  totalIncomeINR: number;
   convertToINR: (amount: string, currency: string) => string;
   isExtracting: boolean;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -39,243 +29,254 @@ function CurrencySelect({ value, onChange }: { value: string; onChange: (v: stri
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="text-[10px] md:text-xs font-semibold outline-none cursor-pointer rounded-lg px-2 py-1 currency-select"
+      className="outline-none cursor-pointer rounded-lg px-2 py-1 currency-select font-semibold"
+      style={{ fontSize: "var(--text-2xs)" }}
       aria-label="Currency"
     >
-      {CURRENCIES.map((curr) => (
-        <option key={curr} value={curr}>{curr}</option>
-      ))}
+      {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
     </select>
   );
 }
 
-function IncomeField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  inputMode = "numeric",
-  suffix,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  inputMode?: "numeric" | "decimal";
-  suffix?: string;
-  hint?: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <label className="text-[10px] md:text-xs font-semibold text-secondary-color block">
-        {label}
-      </label>
-      <div className="relative flex items-center">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, ""))}
-          className="w-full px-4 py-2.5 md:px-4 md:py-3 text-sm md:text-base font-bold rounded-lg md:rounded-xl outline-none slashed-zero breakdown-input"
-          placeholder={placeholder}
-          inputMode={inputMode}
-          aria-label={label}
-        />
-        {suffix && (
-          <span
-            className="absolute right-3 text-sm font-bold pointer-events-none"
-            style={{ color: "var(--secondary)" }}
-          >
-            {suffix}
-          </span>
-        )}
-      </div>
-      {hint && (
-        <p className="text-[10px] slashed-zero" style={{ color: "var(--secondary)" }}>
-          {hint}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function IncrementField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="space-y-1">
-      <label className="text-[10px] md:text-xs font-semibold text-secondary-color block">
-        Annual Growth
-      </label>
-      <div className="relative flex items-center">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, ""))}
-          className="w-full px-4 py-2.5 md:px-4 md:py-3 text-sm md:text-base font-bold rounded-lg md:rounded-xl outline-none slashed-zero breakdown-input"
-          placeholder="0"
-          inputMode="decimal"
-          aria-label="Annual growth percentage"
-        />
-        <span
-          className="absolute right-3 text-sm font-bold pointer-events-none"
-          style={{ color: "var(--secondary)" }}
-        >
-          %
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export default function OnboardingStepIncome({
-  totalIncome,
-  onChangeManualTotalIncome,
+  incomeItems,
+  onChangeIncomeItems,
   incomeCurrency,
   onChangeIncomeCurrency,
-  showIncomeBreakdown,
-  onToggleIncomeBreakdown,
-  onClearManualIncome,
-  primaryIncome,
-  onChangePrimaryIncome,
-  secondaryIncome,
-  onChangeSecondaryIncome,
-  passiveIncome,
-  onChangePassiveIncome,
-  variablePercent,
-  onChangeVariablePercent,
-  calcPassiveVar,
-  primaryIncrement,
-  onChangePrimaryIncrement,
-  secondaryIncrement,
-  onChangeSecondaryIncrement,
-  passiveIncrement,
-  onChangePassiveIncrement,
+  totalIncomeINR,
   convertToINR,
   isExtracting,
   onFileUpload,
 }: OnboardingStepIncomeProps) {
-  const showConversion = totalIncome && incomeCurrency !== "INR";
-  const inrVal = showConversion ? convertToINR(totalIncome, incomeCurrency) : null;
+  const addItem = () => {
+    if (incomeItems.length >= 8) return;
+    onChangeIncomeItems([
+      ...incomeItems,
+      {
+        id: crypto.randomUUID(),
+        name: "",
+        type: "salary",
+        amount: "",
+        growthRate: "",
+        variabilityPercent: "",
+      },
+    ]);
+  };
+
+  const removeItem = (id: string) => {
+    if (incomeItems.length <= 1) return;
+    onChangeIncomeItems(incomeItems.filter((i) => i.id !== id));
+  };
+
+  const update = (id: string, patch: Partial<IncomeItem>) => {
+    onChangeIncomeItems(incomeItems.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  };
+
+  const showINRHint = incomeCurrency !== "INR" && totalIncomeINR > 0;
 
   return (
-    <div className="space-y-4 md:space-y-5">
-      {/* Section label + currency */}
+    <div className="flex flex-col gap-4">
+      {/* Header row */}
       <div className="flex items-center justify-between">
-        <label className="text-xs md:text-sm font-semibold label-secondary">
-          Monthly Income
-        </label>
+        <span className="font-semibold" style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}>
+          Income sources
+        </span>
         <CurrencySelect value={incomeCurrency} onChange={onChangeIncomeCurrency} />
       </div>
 
-      {/* Hero total input — click field to type, click button to toggle breakdown */}
-      <div
-        className="flex gap-2 md:gap-3 items-center px-5 py-5 md:px-7 md:py-6 rounded-2xl md:rounded-3xl transition-all hover:shadow-lg input-surface-2"
-        style={{ cursor: "text" }}
-      >
-        <input
-          type="text"
-          value={totalIncome}
-          onChange={(e) => {
-            onChangeManualTotalIncome(e.target.value.replace(/[^0-9]/g, ""));
-          }}
-          onBlur={() => {
-            // If field loses focus and no value, toggle breakdown to show options
-            if (!totalIncome) {
-              onToggleIncomeBreakdown();
-            }
-          }}
-          placeholder="0"
-          className="flex-1 w-full bg-transparent text-2xl md:text-3xl font-bold text-center outline-none slashed-zero text-[var(--card-foreground)] font-display-family"
-          inputMode="numeric"
-          aria-label="Total monthly income"
-        />
-        <button
-          type="button"
-          onClick={onToggleIncomeBreakdown}
-          className="text-[10px] md:text-xs font-semibold px-3 py-1.5 rounded-full transition-colors btn-breakdown-toggle flex-shrink-0"
-        >
-          {showIncomeBreakdown ? "Hide" : "Breakdown"}
-        </button>
+      {/* Income item cards */}
+      <div className="flex flex-col gap-3">
+        {incomeItems.map((item) => {
+          const isPassive = PASSIVE_TYPES.includes(item.type);
+          return (
+            <div
+              key={item.id}
+              className="rounded-xl flex flex-col gap-3 p-4"
+              style={{ background: "var(--surface-tint)", border: "1px solid var(--border)" }}
+            >
+              {/* Name + type + remove */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={item.name}
+                  onChange={(e) => update(item.id, { name: e.target.value })}
+                  placeholder="Source name"
+                  className="flex-1 bg-transparent outline-none font-semibold"
+                  style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}
+                />
+                <select
+                  value={item.type}
+                  onChange={(e) => update(item.id, { type: e.target.value as IncomeType })}
+                  className="outline-none cursor-pointer rounded-lg px-2 py-1 font-medium"
+                  style={{
+                    fontSize: "var(--text-xs)",
+                    background: "var(--card)",
+                    color: "var(--card-foreground)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  {INCOME_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+                {incomeItems.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-card"
+                    style={{ color: "var(--secondary)" }}
+                    aria-label="Remove income source"
+                  >
+                    <X size={14} className="icon-wireframe" />
+                  </button>
+                )}
+              </div>
+
+              {/* 3-field sub-grid */}
+              <div className="grid grid-cols-3 gap-2">
+                {/* Amount */}
+                <div className="flex flex-col gap-1">
+                  <label
+                    style={{
+                      fontSize: "var(--text-2xs)",
+                      color: "var(--secondary)",
+                      fontWeight: "var(--font-weight-medium)",
+                    }}
+                  >
+                    Amount/mo
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={item.amount}
+                    onChange={(e) => update(item.id, { amount: e.target.value.replace(/[^0-9.]/g, "") })}
+                    placeholder="0"
+                    className="w-full rounded-lg px-3 py-2 outline-none"
+                    style={{
+                      fontSize: "var(--text-sm)",
+                      background: "var(--card)",
+                      color: "var(--card-foreground)",
+                      border: "1px solid var(--border)",
+                    }}
+                  />
+                </div>
+                {/* Growth */}
+                <div className="flex flex-col gap-1">
+                  <label
+                    style={{
+                      fontSize: "var(--text-2xs)",
+                      color: "var(--secondary)",
+                      fontWeight: "var(--font-weight-medium)",
+                    }}
+                  >
+                    Growth %/yr
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={item.growthRate}
+                    onChange={(e) => update(item.id, { growthRate: e.target.value.replace(/[^0-9.]/g, "") })}
+                    placeholder="0"
+                    className="w-full rounded-lg px-3 py-2 outline-none"
+                    style={{
+                      fontSize: "var(--text-sm)",
+                      background: "var(--card)",
+                      color: "var(--card-foreground)",
+                      border: "1px solid var(--border)",
+                    }}
+                  />
+                </div>
+                {/* Variability — highlighted for passive/rental/dividend */}
+                <div className="flex flex-col gap-1">
+                  <label
+                    style={{
+                      fontSize: "var(--text-2xs)",
+                      color: "var(--secondary)",
+                      fontWeight: "var(--font-weight-medium)",
+                    }}
+                  >
+                    Variability %
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={item.variabilityPercent}
+                    onChange={(e) =>
+                      update(item.id, { variabilityPercent: e.target.value.replace(/[^0-9.]/g, "") })
+                    }
+                    placeholder="0"
+                    className="w-full rounded-lg px-3 py-2 outline-none transition-all"
+                    style={{
+                      fontSize: "var(--text-sm)",
+                      background: isPassive ? "var(--accent-subtle)" : "var(--card)",
+                      color: "var(--card-foreground)",
+                      border: isPassive
+                        ? "1px solid var(--secondary-accent)"
+                        : "1px solid var(--border)",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* INR conversion */}
-      {inrVal && (
-        <p className="text-center text-xs md:text-sm slashed-zero text-secondary-color">
-          ≈ ₹{parseFloat(inrVal).toLocaleString("en-IN")} INR
+      {/* Add source button */}
+      <button
+        type="button"
+        onClick={addItem}
+        disabled={incomeItems.length >= 8}
+        className="w-full rounded-xl py-3 flex items-center justify-center gap-2 transition-all duration-200 border-dashed border-2 hover:opacity-80 disabled:opacity-40"
+        style={{
+          borderColor: "var(--border)",
+          color: "var(--secondary)",
+          fontSize: "var(--text-sm)",
+        }}
+      >
+        <Plus size={16} className="icon-wireframe" />
+        Add income source
+      </button>
+
+      {/* Upload salary slip */}
+      <label
+        className="pill-button flex items-center gap-2 cursor-pointer w-fit"
+        style={{ fontSize: "var(--text-xs)" }}
+      >
+        {isExtracting
+          ? <Loader2 size={14} className="icon-wireframe animate-spin" />
+          : <FileText size={14} className="icon-wireframe" />}
+        {isExtracting ? "Scanning salary slip…" : "Upload salary slip"}
+        <input
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="hidden"
+          onChange={onFileUpload}
+          disabled={isExtracting}
+        />
+      </label>
+
+      {/* INR conversion hint */}
+      {showINRHint && (
+        <p className="text-center" style={{ fontSize: "var(--text-xs)", color: "var(--secondary)" }}>
+          ≈ ₹{Math.round(totalIncomeINR).toLocaleString("en-IN")} / mo in INR
         </p>
       )}
 
-      {/* Breakdown panel — 2-column grid matching expenses pattern */}
-      {showIncomeBreakdown && (
-        <div className="space-y-2.5 p-4 md:p-5 rounded-xl md:rounded-2xl breakdown-panel">
-          <div className="grid grid-cols-2 gap-2 md:gap-3">
-            {/* Primary */}
-            <IncomeField
-              label="Primary Income"
-              value={primaryIncome}
-              onChange={(v) => { onChangePrimaryIncome(v); onClearManualIncome(); }}
-              placeholder="Main job"
-            />
-            <IncrementField value={primaryIncrement} onChange={onChangePrimaryIncrement} />
-
-            {/* Secondary */}
-            <IncomeField
-              label="Secondary Income"
-              value={secondaryIncome}
-              onChange={(v) => { onChangeSecondaryIncome(v); onClearManualIncome(); }}
-              placeholder="Side job"
-            />
-            <IncrementField value={secondaryIncrement} onChange={onChangeSecondaryIncrement} />
-
-            {/* Passive Fixed */}
-            <IncomeField
-              label="Passive Income"
-              value={passiveIncome}
-              onChange={(v) => { onChangePassiveIncome(v); onClearManualIncome(); }}
-              placeholder="Rental/dividends"
-            />
-            <IncrementField value={passiveIncrement} onChange={onChangePassiveIncrement} />
-
-            {/* Variable Yield */}
-            <IncomeField
-              label="Variable Yield"
-              value={variablePercent}
-              onChange={(v) => { onChangeVariablePercent(v); onClearManualIncome(); }}
-              placeholder="% of passive"
-              inputMode="decimal"
-              suffix="%"
-              hint={
-                calcPassiveVar > 0
-                  ? `≈ ₹${calcPassiveVar.toLocaleString("en-IN")}/mo`
-                  : undefined
-              }
-            />
-          </div>
+      {/* Total row */}
+      {totalIncomeINR > 0 && (
+        <div
+          className="flex justify-between items-center pt-3 border-t"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <span className="font-semibold" style={{ fontSize: "var(--text-sm)", color: "var(--secondary)" }}>
+            Total income
+          </span>
+          <span className="font-bold" style={{ fontSize: "var(--text-base)", color: "var(--card-foreground)" }}>
+            ₹{Math.round(totalIncomeINR).toLocaleString("en-IN")}
+          </span>
         </div>
       )}
-
-      {/* File Upload — tertiary weight */}
-      <div className="pt-1 flex justify-center">
-        <label
-          htmlFor="document-upload-income"
-          className={`pill-button px-6 py-3 text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all ${isExtracting ? "opacity-70 pointer-events-none" : "hover:scale-105"}`}
-          aria-label="Upload salary slip for auto-extraction"
-        >
-          {isExtracting ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <FileText size={16} />
-          )}
-          {isExtracting ? "Penny is reading your document..." : "Upload Salary Slip (PDF/Image)"}
-        </label>
-        <input
-          type="file"
-          id="document-upload-income"
-          className="hidden"
-          accept=".pdf,.png,.jpg,.jpeg"
-          onChange={onFileUpload}
-          aria-hidden="true"
-        />
-      </div>
     </div>
   );
 }
