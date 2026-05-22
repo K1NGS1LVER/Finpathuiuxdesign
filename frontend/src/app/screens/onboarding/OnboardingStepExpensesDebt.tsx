@@ -38,6 +38,7 @@ interface OnboardingStepExpensesDebtProps {
   onChangeDebtItems: (items: OnboardingDebtItem[]) => void;
   totalDebtINR: number;
   totalExpensesINR: number;
+  incomeINR: number;
   // Shared
   convertToINR: (amount: string, currency: string) => string;
   isExtracting: boolean;
@@ -66,7 +67,7 @@ export default function OnboardingStepExpensesDebt({
   onClearManualExpenses,
   debtCurrency, onChangeDebtCurrency,
   debtItems, onChangeDebtItems,
-  totalDebtINR, totalExpensesINR,
+  totalDebtINR, totalExpensesINR, incomeINR,
   convertToINR, isExtracting, onFileUpload,
 }: OnboardingStepExpensesDebtProps) {
 
@@ -100,6 +101,8 @@ export default function OnboardingStepExpensesDebt({
   const anyDebtFilled = debtItems.some((d) => parseFloat(d.monthlyPayment) > 0);
   const showSurplusBanner = totalExpensesINR > 0 && anyDebtFilled;
   const totalCaptured = totalExpensesINR + totalDebtINR;
+  const surplus = incomeINR - totalExpensesINR - totalDebtINR;
+  const surplusPositive = surplus > 0;
 
   // convertToINR is kept in the interface for future use / consistency
   void convertToINR;
@@ -389,18 +392,23 @@ export default function OnboardingStepExpensesDebt({
           <div
             className="rounded-xl px-4 py-3 flex justify-between items-center"
             style={{
-              background: "var(--accent-subtle)",
-              border: "1px solid var(--border)",
+              background: surplusPositive
+                ? 'color-mix(in srgb, var(--green) 12%, var(--card))'
+                : 'color-mix(in srgb, var(--amber) 12%, var(--card))',
+              border: `1px solid ${surplusPositive ? 'var(--green)' : 'var(--amber)'}`,
             }}
           >
             <span style={{ fontSize: "var(--text-xs)", color: "var(--secondary)" }}>
-              Monthly costs captured
+              Monthly costs captured · ₹{Math.round(totalCaptured).toLocaleString("en-IN")}
             </span>
             <span
-              className="font-bold"
-              style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}
+              style={{
+                fontSize: "var(--text-sm)",
+                color: surplusPositive ? 'var(--green)' : 'var(--amber)',
+                fontWeight: 'var(--font-weight-semibold)',
+              }}
             >
-              ₹{Math.round(totalCaptured).toLocaleString("en-IN")}
+              {surplusPositive ? 'Surplus' : 'Deficit'}: ₹{Math.abs(Math.round(surplus)).toLocaleString('en-IN')}/mo
             </span>
           </div>
         )}
