@@ -184,7 +184,7 @@ export function useOnboardingForm() {
       (a, b) => toINR(b.amount, incomeCurrency) - toINR(a.amount, incomeCurrency)
     );
 
-    const primaryINR = sortedActive[0] ? toINR(sortedActive[0].amount, incomeCurrency) : totalIncomeINR;
+    const primaryINR = sortedActive[0] ? toINR(sortedActive[0].amount, incomeCurrency) : 0;
     const secondaryINR = sortedActive.slice(1).reduce((s, i) => s + toINR(i.amount, incomeCurrency), 0);
     const passiveINR = passiveItems.reduce((s, i) => s + toINR(i.amount, incomeCurrency), 0);
 
@@ -203,9 +203,14 @@ export function useOnboardingForm() {
         principal: toINR(d.principal, debtCurrency),
         interestRate: parseFloat(d.interestRate) || 0,
         monthlyPayment: toINR(d.monthlyPayment, debtCurrency),
-        remainingMonths: Math.ceil(
-          toINR(d.principal, debtCurrency) / (toINR(d.monthlyPayment, debtCurrency) || 1)
-        ) || 0,
+        remainingMonths: (() => {
+          const P = toINR(d.principal, debtCurrency);
+          const EMI = toINR(d.monthlyPayment, debtCurrency) || 1;
+          const r = (parseFloat(d.interestRate) || 0) / 100 / 12;
+          if (r === 0) return Math.ceil(P / EMI) || 0;
+          const n = -Math.log(1 - (P * r) / EMI) / Math.log(1 + r);
+          return isFinite(n) && n > 0 ? Math.ceil(n) : Math.ceil(P / EMI) || 0;
+        })(),
       }));
 
     const formattedGoals = sortedSelectedGoals.map(([name, data]) => ({
