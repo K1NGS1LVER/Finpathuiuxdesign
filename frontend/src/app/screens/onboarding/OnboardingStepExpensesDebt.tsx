@@ -40,7 +40,6 @@ interface OnboardingStepExpensesDebtProps {
   totalExpensesINR: number;
   incomeINR: number;
   // Shared
-  convertToINR: (amount: string, currency: string) => string;
   isExtracting: boolean;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -68,7 +67,7 @@ export default function OnboardingStepExpensesDebt({
   debtCurrency, onChangeDebtCurrency,
   debtItems, onChangeDebtItems,
   totalDebtINR, totalExpensesINR, incomeINR,
-  convertToINR, isExtracting, onFileUpload,
+  isExtracting, onFileUpload,
 }: OnboardingStepExpensesDebtProps) {
 
   // ── Expense derived ────────────────────────────────────
@@ -103,9 +102,6 @@ export default function OnboardingStepExpensesDebt({
   const totalCaptured = totalExpensesINR + totalDebtINR;
   const surplus = incomeINR - totalExpensesINR - totalDebtINR;
   const surplusPositive = surplus > 0;
-
-  // convertToINR is kept in the interface for future use / consistency
-  void convertToINR;
 
   return (
     <div className="flex flex-col gap-6">
@@ -156,6 +152,7 @@ export default function OnboardingStepExpensesDebt({
             {EXPENSE_FIELDS.map(({ key, label, placeholder }) => (
               <div key={key} className="flex flex-col gap-1">
                 <label
+                  htmlFor={`exp-${key}`}
                   style={{
                     fontSize: "var(--text-2xs)",
                     color: "var(--secondary)",
@@ -165,6 +162,7 @@ export default function OnboardingStepExpensesDebt({
                   {label}
                 </label>
                 <input
+                  id={`exp-${key}`}
                   type="text"
                   inputMode="numeric"
                   value={expenseBreakdown[key]}
@@ -261,6 +259,7 @@ export default function OnboardingStepExpensesDebt({
                   {/* EMI */}
                   <div className="flex flex-col gap-1">
                     <label
+                      htmlFor={`debt-emi-${item.id}`}
                       style={{
                         fontSize: "var(--text-2xs)",
                         color: "var(--secondary)",
@@ -270,6 +269,7 @@ export default function OnboardingStepExpensesDebt({
                       EMI/mo
                     </label>
                     <input
+                      id={`debt-emi-${item.id}`}
                       type="text"
                       inputMode="numeric"
                       value={item.monthlyPayment}
@@ -289,6 +289,7 @@ export default function OnboardingStepExpensesDebt({
                   {/* Principal */}
                   <div className="flex flex-col gap-1">
                     <label
+                      htmlFor={`debt-principal-${item.id}`}
                       style={{
                         fontSize: "var(--text-2xs)",
                         color: "var(--secondary)",
@@ -298,6 +299,7 @@ export default function OnboardingStepExpensesDebt({
                       Principal
                     </label>
                     <input
+                      id={`debt-principal-${item.id}`}
                       type="text"
                       inputMode="numeric"
                       value={item.principal}
@@ -317,6 +319,7 @@ export default function OnboardingStepExpensesDebt({
                   {/* Rate % — always red highlighted */}
                   <div className="flex flex-col gap-1">
                     <label
+                      htmlFor={`debt-rate-${item.id}`}
                       style={{
                         fontSize: "var(--text-2xs)",
                         color: "var(--red)",
@@ -326,6 +329,7 @@ export default function OnboardingStepExpensesDebt({
                       Rate %
                     </label>
                     <input
+                      id={`debt-rate-${item.id}`}
                       type="text"
                       inputMode="numeric"
                       value={item.interestRate}
