@@ -191,7 +191,7 @@ export function useOnboardingForm() {
     const expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency)) || 0;
     const expBreakdown: Record<string, number> = {};
     for (const [k, v] of Object.entries(expenseBreakdown)) {
-      expBreakdown[k] = parseFloat(v) || 0;
+      expBreakdown[k] = parseFloat(convertToINR(v, expensesCurrency)) || 0;
     }
 
     const builtDebtItems: DebtItem[] = debtItems
@@ -223,6 +223,8 @@ export function useOnboardingForm() {
       primaryIncome: primaryINR,
       secondaryIncome: secondaryINR,
       passiveIncome: passiveINR,
+      // Per spec: variabilityPercent on IncomeItem = yield % for passive/rental/dividend,
+      // mapped to IncomeProfile.variablePercent (proportion of passive that is variable).
       variablePercent: avgVariabilityPercent(passiveItems),
       primaryIncrement: weightedAvgGrowth(sortedActive.slice(0, 1)),
       secondaryIncrement: weightedAvgGrowth(sortedActive.slice(1)),
