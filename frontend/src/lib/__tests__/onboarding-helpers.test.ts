@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   weightedAvgGrowth,
   avgVariabilityPercent,
-} from '../../app/screens/onboarding/useOnboardingForm';
+} from '../../app/screens/onboarding/onboarding-helpers';
 
 describe('weightedAvgGrowth', () => {
   it('returns 0 for empty array', () => {
