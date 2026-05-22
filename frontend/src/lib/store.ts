@@ -10,6 +10,7 @@ import type {
   IncomeProfile,
   ExpenseProfile,
   DebtProfile,
+  DebtItem,
   Goal,
   HealthScore,
   FinancialPlan,
