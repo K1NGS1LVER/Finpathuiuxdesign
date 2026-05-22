@@ -307,7 +307,6 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   incomeCurrency={form.incomeCurrency}
                   onChangeIncomeCurrency={form.setIncomeCurrency}
                   totalIncomeINR={form.totalIncomeINR}
-                  convertToINR={form.convertToINR}
                   isExtracting={form.isExtracting}
                   onFileUpload={handleFileForIncome}
                 />
