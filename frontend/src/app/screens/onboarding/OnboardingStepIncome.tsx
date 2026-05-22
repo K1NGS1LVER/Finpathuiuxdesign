@@ -19,7 +19,6 @@ interface OnboardingStepIncomeProps {
   incomeCurrency: string;
   onChangeIncomeCurrency: (currency: string) => void;
   totalIncomeINR: number;
-  convertToINR: (amount: string, currency: string) => string;
   isExtracting: boolean;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -44,7 +43,6 @@ export default function OnboardingStepIncome({
   incomeCurrency,
   onChangeIncomeCurrency,
   totalIncomeINR,
-  convertToINR,
   isExtracting,
   onFileUpload,
 }: OnboardingStepIncomeProps) {
