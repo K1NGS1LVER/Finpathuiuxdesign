@@ -43,10 +43,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
 
   const meta = STEP_META[form.step];
   const showSummary = form.totalIncomeINR > 0;
-  const surplus =
-    form.totalIncomeINR -
-    (parseFloat(form.totalExpenses) || 0) -
-    form.totalDebtINR;
+  const expensesINR = parseFloat(form.totalExpenses) || 0;
+  const surplus = form.totalIncomeINR - expensesINR - form.totalDebtINR;
 
   return (
     <div className="h-[100dvh] w-full flex flex-col md:flex-row bg-background overflow-hidden relative">
@@ -76,7 +74,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
               className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: "var(--accent)" }}
             >
-              <span className="font-bold text-sm" style={{ color: "#fff" }}>F</span>
+              <span className="font-bold" style={{ color: "#fff", fontSize: "var(--text-xs)" }}>F</span>
             </div>
             <span className="font-bold" style={{ fontSize: "var(--text-base)" }}>FinPath</span>
           </div>
@@ -84,7 +82,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             type="button"
             onClick={() => navigate("/")}
             className="pill flex items-center gap-1.5 text-secondary hover:text-card-foreground transition-colors"
-            style={{ fontSize: "var(--text-xs)", padding: "6px 12px" }}
+            style={{ fontSize: "var(--text-xs)" }}
           >
             <ArrowLeft size={14} className="icon-wireframe" />
             Back
@@ -97,7 +95,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             const completed = i < form.step;
             const current   = i === form.step;
             return (
-              <div key={i} className="flex items-start gap-3">
+              <div key={sm.title} className="flex items-start gap-3">
                 <div className="flex flex-col items-center">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${current ? "pulse-ring" : ""}`}
@@ -148,10 +146,9 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
           <p style={{ fontSize: "var(--text-xs)", color: "var(--secondary)" }}>{meta.subtitle}</p>
           {meta.hint && (
             <span
-              className="inline-block mt-2 rounded-full font-semibold"
+              className="inline-block mt-2 rounded-full font-semibold px-2.5 py-1"
               style={{
                 fontSize: "var(--text-2xs)",
-                padding: "4px 10px",
                 background: "var(--accent-subtle)",
                 color: "var(--accent)",
               }}
@@ -180,12 +177,12 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   {fmtINR(form.totalIncomeINR)}
                 </span>
               </div>
-              {form.step >= 1 && (parseFloat(form.totalExpenses) || 0) + form.totalDebtINR > 0 && (
+              {form.step >= 1 && expensesINR + form.totalDebtINR > 0 && (
                 <>
                   <div className="flex justify-between items-center">
                     <span style={{ fontSize: "var(--text-xs)", color: "var(--secondary)" }}>Exp + Debt</span>
                     <span className="font-semibold" style={{ fontSize: "var(--text-xs)", color: "var(--card-foreground)" }}>
-                      {fmtINR((parseFloat(form.totalExpenses) || 0) + form.totalDebtINR)}
+                      {fmtINR(expensesINR + form.totalDebtINR)}
                     </span>
                   </div>
                   <div
