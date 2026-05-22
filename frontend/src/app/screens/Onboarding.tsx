@@ -332,7 +332,6 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
                   totalDebtINR={form.totalDebtINR}
                   totalExpensesINR={parseFloat(form.totalExpenses) || 0}
                   incomeINR={form.totalIncomeINR}
-                  convertToINR={form.convertToINR}
                   isExtracting={form.isExtracting}
                   onFileUpload={handleFileForDebt}
                 />
