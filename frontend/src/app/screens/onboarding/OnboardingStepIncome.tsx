@@ -29,7 +29,7 @@ function CurrencySelect({ value, onChange }: { value: string; onChange: (v: stri
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="outline-none cursor-pointer rounded-lg px-2 py-1 currency-select font-semibold"
-      style={{ fontSize: "var(--text-2xs)" }}
+      style={{ fontSize: "var(--text-xs)" }}
       aria-label="Currency"
     >
       {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -76,7 +76,7 @@ export default function OnboardingStepIncome({
     <div className="flex flex-col gap-4">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <span className="font-semibold" style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}>
+        <span className="font-semibold" style={{ fontSize: "var(--text-base)", color: "var(--card-foreground)" }}>
           Income sources
         </span>
         <CurrencySelect value={incomeCurrency} onChange={onChangeIncomeCurrency} />
@@ -100,7 +100,7 @@ export default function OnboardingStepIncome({
                   onChange={(e) => update(item.id, { name: e.target.value })}
                   placeholder="Source name"
                   className="flex-1 bg-transparent outline-none font-semibold"
-                  style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}
+                  style={{ fontSize: "var(--text-base)", color: "var(--card-foreground)" }}
                 />
                 <select
                   value={item.type}
@@ -136,7 +136,7 @@ export default function OnboardingStepIncome({
                 <div className="flex flex-col gap-1">
                   <label
                     style={{
-                      fontSize: "var(--text-2xs)",
+                      fontSize: "var(--text-xs)",
                       color: "var(--secondary)",
                       fontWeight: "var(--font-weight-medium)",
                     }}
@@ -151,7 +151,7 @@ export default function OnboardingStepIncome({
                     placeholder="0"
                     className="w-full rounded-lg px-3 py-2 outline-none"
                     style={{
-                      fontSize: "var(--text-sm)",
+                      fontSize: "var(--text-base)",
                       background: "var(--card)",
                       color: "var(--card-foreground)",
                       border: "1px solid var(--border)",
@@ -162,7 +162,7 @@ export default function OnboardingStepIncome({
                 <div className="flex flex-col gap-1">
                   <label
                     style={{
-                      fontSize: "var(--text-2xs)",
+                      fontSize: "var(--text-xs)",
                       color: "var(--secondary)",
                       fontWeight: "var(--font-weight-medium)",
                     }}
@@ -177,7 +177,7 @@ export default function OnboardingStepIncome({
                     placeholder="0"
                     className="w-full rounded-lg px-3 py-2 outline-none"
                     style={{
-                      fontSize: "var(--text-sm)",
+                      fontSize: "var(--text-base)",
                       background: "var(--card)",
                       color: "var(--card-foreground)",
                       border: "1px solid var(--border)",
@@ -188,7 +188,7 @@ export default function OnboardingStepIncome({
                 <div className="flex flex-col gap-1">
                   <label
                     style={{
-                      fontSize: "var(--text-2xs)",
+                      fontSize: "var(--text-xs)",
                       color: "var(--secondary)",
                       fontWeight: "var(--font-weight-medium)",
                     }}
@@ -205,7 +205,7 @@ export default function OnboardingStepIncome({
                     placeholder="0"
                     className="w-full rounded-lg px-3 py-2 outline-none transition-all"
                     style={{
-                      fontSize: "var(--text-sm)",
+                      fontSize: "var(--text-base)",
                       background: isPassive ? "var(--accent-subtle)" : "var(--card)",
                       color: "var(--card-foreground)",
                       border: isPassive
@@ -229,7 +229,7 @@ export default function OnboardingStepIncome({
         style={{
           borderColor: "var(--border)",
           color: "var(--secondary)",
-          fontSize: "var(--text-sm)",
+          fontSize: "var(--text-base)",
         }}
       >
         <Plus size={16} className="icon-wireframe" />
@@ -267,7 +267,7 @@ export default function OnboardingStepIncome({
           className="flex justify-between items-center pt-3 border-t"
           style={{ borderColor: "var(--border)" }}
         >
-          <span className="font-semibold" style={{ fontSize: "var(--text-sm)", color: "var(--secondary)" }}>
+          <span className="font-semibold" style={{ fontSize: "var(--text-base)", color: "var(--secondary)" }}>
             Total income
           </span>
           <span className="font-bold" style={{ fontSize: "var(--text-base)", color: "var(--card-foreground)" }}>
