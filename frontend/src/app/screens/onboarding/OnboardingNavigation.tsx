@@ -23,7 +23,7 @@ export default function OnboardingNavigation({
         <button
           type="button"
           onClick={onBack}
-          className="px-6 py-4 md:px-8 md:py-[18px] rounded-full font-semibold flex items-center gap-2 transition-all hover:scale-105 text-[var(--card-foreground)]"
+          className="px-4 py-2.5 md:px-6 md:py-3 rounded-full font-semibold flex items-center gap-2 transition-all hover:scale-105 text-[var(--card-foreground)]"
           style={{
             fontFamily: "var(--font-body)",
             background: "var(--card)",
@@ -32,8 +32,8 @@ export default function OnboardingNavigation({
           }}
           aria-label="Go back to previous step"
         >
-          <ArrowLeft size={18} className="icon-wireframe md:w-[20px] md:h-[20px]" />
-          <span className="text-base md:text-lg">Back</span>
+          <ArrowLeft size={16} className="icon-wireframe" />
+          <span className="text-sm md:text-base">Back</span>
         </button>
       ) : (
         <div aria-hidden="true" />
@@ -42,7 +42,7 @@ export default function OnboardingNavigation({
         type="button"
         onClick={onNext}
         disabled={!canAdvance}
-        className="px-6 py-4 md:px-8 md:py-[18px] rounded-full font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="px-4 py-2.5 md:px-6 md:py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
         style={{
           backgroundColor: "var(--accent)",
           color: "var(--on-accent)",
@@ -52,10 +52,10 @@ export default function OnboardingNavigation({
         }}
         aria-label={step < totalSteps - 1 ? "Continue to next step" : "Finish onboarding"}
       >
-        <span className="text-base md:text-lg">
+        <span className="text-sm md:text-base">
           {step < totalSteps - 1 ? "Continue" : submitLabel}
         </span>
-        <ArrowRight size={18} className="md:w-[20px] md:h-[20px]" />
+        <ArrowRight size={16} className="icon-wireframe" />
       </button>
     </div>
   );

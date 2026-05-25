@@ -50,7 +50,7 @@ function CurrencySelect({ value, onChange }: { value: string; onChange: (v: stri
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="outline-none cursor-pointer rounded-lg px-2 py-1 currency-select font-semibold"
-      style={{ fontSize: "var(--text-2xs)" }}
+      style={{ fontSize: "var(--text-xs)" }}
       aria-label="Currency"
     >
       {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -109,7 +109,7 @@ export default function OnboardingStepExpensesDebt({
       {/* ══ EXPENSES ══════════════════════════════════ */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <span className="font-semibold" style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}>
+          <span className="font-semibold" style={{ fontSize: "var(--text-base)", color: "var(--card-foreground)" }}>
             Monthly expenses
           </span>
           <CurrencySelect value={expensesCurrency} onChange={onChangeExpensesCurrency} />
@@ -154,7 +154,7 @@ export default function OnboardingStepExpensesDebt({
                 <label
                   htmlFor={`exp-${key}`}
                   style={{
-                    fontSize: "var(--text-2xs)",
+                    fontSize: "var(--text-xs)",
                     color: "var(--secondary)",
                     fontWeight: "var(--font-weight-medium)",
                   }}
@@ -175,7 +175,7 @@ export default function OnboardingStepExpensesDebt({
                   placeholder={placeholder}
                   className="w-full rounded-lg px-3 py-2 outline-none"
                   style={{
-                    fontSize: "var(--text-sm)",
+                    fontSize: "var(--text-base)",
                     background: "var(--card)",
                     color: "var(--card-foreground)",
                     border: "1px solid var(--border)",
@@ -199,7 +199,7 @@ export default function OnboardingStepExpensesDebt({
       {/* ══ DEBT ══════════════════════════════════════ */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <span className="font-semibold" style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}>
+          <span className="font-semibold" style={{ fontSize: "var(--text-base)", color: "var(--card-foreground)" }}>
             Debts & EMIs
           </span>
           <CurrencySelect value={debtCurrency} onChange={onChangeDebtCurrency} />
@@ -222,7 +222,7 @@ export default function OnboardingStepExpensesDebt({
                     onChange={(e) => updateDebt(item.id, { name: e.target.value })}
                     placeholder="Debt name"
                     className="flex-1 bg-transparent outline-none font-semibold"
-                    style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)" }}
+                    style={{ fontSize: "var(--text-base)", color: "var(--card-foreground)" }}
                   />
                   <select
                     value={item.category}
@@ -261,7 +261,7 @@ export default function OnboardingStepExpensesDebt({
                     <label
                       htmlFor={`debt-emi-${item.id}`}
                       style={{
-                        fontSize: "var(--text-2xs)",
+                        fontSize: "var(--text-xs)",
                         color: "var(--secondary)",
                         fontWeight: "var(--font-weight-medium)",
                       }}
@@ -279,7 +279,7 @@ export default function OnboardingStepExpensesDebt({
                       placeholder="0"
                       className="w-full rounded-lg px-3 py-2 outline-none"
                       style={{
-                        fontSize: "var(--text-sm)",
+                        fontSize: "var(--text-base)",
                         background: "var(--card)",
                         color: "var(--card-foreground)",
                         border: "1px solid var(--border)",
@@ -291,7 +291,7 @@ export default function OnboardingStepExpensesDebt({
                     <label
                       htmlFor={`debt-principal-${item.id}`}
                       style={{
-                        fontSize: "var(--text-2xs)",
+                        fontSize: "var(--text-xs)",
                         color: "var(--secondary)",
                         fontWeight: "var(--font-weight-medium)",
                       }}
@@ -309,7 +309,7 @@ export default function OnboardingStepExpensesDebt({
                       placeholder="0"
                       className="w-full rounded-lg px-3 py-2 outline-none"
                       style={{
-                        fontSize: "var(--text-sm)",
+                        fontSize: "var(--text-base)",
                         background: "var(--card)",
                         color: "var(--card-foreground)",
                         border: "1px solid var(--border)",
@@ -321,7 +321,7 @@ export default function OnboardingStepExpensesDebt({
                     <label
                       htmlFor={`debt-rate-${item.id}`}
                       style={{
-                        fontSize: "var(--text-2xs)",
+                        fontSize: "var(--text-xs)",
                         color: "var(--red)",
                         fontWeight: "var(--font-weight-medium)",
                       }}
@@ -339,7 +339,7 @@ export default function OnboardingStepExpensesDebt({
                       placeholder="0"
                       className="w-full rounded-lg px-3 py-2 outline-none"
                       style={{
-                        fontSize: "var(--text-sm)",
+                        fontSize: "var(--text-base)",
                         background: "color-mix(in srgb, var(--red) 8%, var(--card))",
                         color: "var(--card-foreground)",
                         border: "1px solid var(--red)",
@@ -360,7 +360,7 @@ export default function OnboardingStepExpensesDebt({
           style={{
             borderColor: "var(--border)",
             color: "var(--secondary)",
-            fontSize: "var(--text-sm)",
+            fontSize: "var(--text-base)",
           }}
         >
           <Plus size={16} className="icon-wireframe" />
@@ -407,7 +407,7 @@ export default function OnboardingStepExpensesDebt({
             </span>
             <span
               style={{
-                fontSize: "var(--text-sm)",
+                fontSize: "var(--text-base)",
                 color: surplusPositive ? 'var(--green)' : 'var(--amber)',
                 fontWeight: 'var(--font-weight-semibold)',
               }}

@@ -284,8 +284,8 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         </div>
 
         {/* Form area */}
-        <div className="flex flex-col items-center px-4 md:px-8 lg:px-12 pb-16 pt-2 md:pt-16">
-          <div className="max-w-[480px] w-full">
+        <div className="flex flex-col items-center px-4 md:px-8 pb-16 pt-2 md:pt-16">
+          <div className="max-w-[720px] w-full">
             <p
               className="hidden md:block mb-4"
               style={{ fontSize: "var(--text-xs)", color: "var(--secondary)" }}
@@ -296,7 +296,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             </p>
 
             <div
-              className="bento-card !p-5 md:!p-7"
+              className="bento-card !p-6 md:!p-8"
               key={form.step}
               style={{ animation: "fadeSlide 0.4s cubic-bezier(0.22,1,0.36,1) forwards" }}
             >
