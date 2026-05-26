@@ -227,7 +227,7 @@ export default function ScheduleConsultationModal({
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "var(--space-0.5)",
+                gap: "var(--space-0_5)",
               }}
             >
               <label
@@ -266,7 +266,7 @@ export default function ScheduleConsultationModal({
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "var(--space-0.5)",
+                  gap: "var(--space-0_5)",
                   flex: 1,
                 }}
               >
@@ -293,7 +293,7 @@ export default function ScheduleConsultationModal({
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "var(--space-0.5)",
+                  gap: "var(--space-0_5)",
                   flex: 1,
                 }}
               >
@@ -334,7 +334,7 @@ export default function ScheduleConsultationModal({
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "var(--space-0.5)",
+                gap: "var(--space-0_5)",
               }}
             >
               <label
@@ -405,7 +405,7 @@ export default function ScheduleConsultationModal({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "var(--space-0.5)",
+                  gap: "var(--space-0_5)",
                 }}
               >
                 {submitting ? (

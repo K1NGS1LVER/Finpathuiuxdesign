@@ -237,7 +237,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
               <div>
                 <p className="text-label">Payoff Strategy</p>
                 {debtItems.length === 1 && (
-                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--tertiary)', marginTop: 'var(--space-0.5)' }}>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--tertiary)', marginTop: 'var(--space-0_5)' }}>
                     Both strategies identical with one debt
                   </p>
                 )}

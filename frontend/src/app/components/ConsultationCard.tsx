@@ -52,7 +52,7 @@ export default function ConsultationCard({ data }: ConsultationCardProps) {
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-0.5)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-0_5)" }}>
           <Check
             size={16}
             className="icon-wireframe"
@@ -82,7 +82,7 @@ export default function ConsultationCard({ data }: ConsultationCardProps) {
             padding: "2px var(--space-1)",
             display: "flex",
             alignItems: "center",
-            gap: "var(--space-0.5)",
+            gap: "var(--space-0_5)",
             fontFamily: "var(--font-body)",
             fontSize: "var(--text-xs)",
             fontWeight: "var(--font-weight-medium)",
@@ -114,7 +114,7 @@ export default function ConsultationCard({ data }: ConsultationCardProps) {
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: "var(--space-0.5)",
+          gap: "var(--space-0_5)",
           fontFamily: "var(--font-body)",
           fontSize: "var(--text-sm)",
           color: "var(--accent-text)",
@@ -137,7 +137,7 @@ export default function ConsultationCard({ data }: ConsultationCardProps) {
           borderRadius: "var(--radius-sm)",
           width: "fit-content",
           alignSelf: "center",
-          marginTop: "var(--space-0.5)",
+          marginTop: "var(--space-0_5)",
         }}
       >
         <QRCodeSVG
