@@ -342,7 +342,7 @@ export default function PdfExportOverlay() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: "var(--space-0.5)",
+                        gap: "var(--space-0_5)",
                       }}
                     >
                       <Download size={14} className="icon-wireframe" />
@@ -384,7 +384,7 @@ export default function PdfExportOverlay() {
                             ? "not-allowed"
                             : "pointer",
                         justifyContent: "center",
-                        gap: "var(--space-0.5)",
+                        gap: "var(--space-0_5)",
                       }}
                     >
                       {scheduleButtonContent}
@@ -397,8 +397,8 @@ export default function PdfExportOverlay() {
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "var(--space-0.5)",
-                        padding: "var(--space-0.5) var(--space-1)",
+                        gap: "var(--space-0_5)",
+                        padding: "var(--space-0_5) var(--space-1)",
                         borderRadius: "var(--radius-full)",
                         background: "var(--amber-subtle)",
                         color: "var(--amber-text)",

@@ -123,7 +123,7 @@ export default function DemoControlPanel() {
             </p>
             <p
               style={{
-                margin: "var(--space-0.5) 0 0",
+                margin: "var(--space-0_5) 0 0",
                 fontSize: "var(--text-xs)",
                 color: "var(--secondary)",
               }}
@@ -150,7 +150,7 @@ export default function DemoControlPanel() {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "var(--space-0.5)",
+            gap: "var(--space-0_5)",
           }}
         >
           <span
@@ -161,7 +161,7 @@ export default function DemoControlPanel() {
           >
             Adjust time
           </span>
-          <div style={{ display: "flex", gap: "var(--space-0.5)" }}>
+          <div style={{ display: "flex", gap: "var(--space-0_5)" }}>
             <input
               type="date"
               aria-label="Adjust date"

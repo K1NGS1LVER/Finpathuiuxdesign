@@ -173,7 +173,7 @@ export default function ExpertReviewModal({
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "var(--space-0.5)",
+                gap: "var(--space-0_5)",
               }}
             >
               <label
@@ -205,7 +205,7 @@ export default function ExpertReviewModal({
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "var(--space-0.5)",
+                gap: "var(--space-0_5)",
               }}
             >
               <label

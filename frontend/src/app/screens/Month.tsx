@@ -6,6 +6,7 @@ import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
 import confetti from "canvas-confetti";
 import { pageContainer, pageSection } from "@/app/components/motion-variants";
+import type { ExpenseProfile } from "@/lib/types";
 
 interface MonthTask {
   id: string;
@@ -17,6 +18,67 @@ interface MonthTask {
   committedAmount?: number;
   prefix?: string;
   suffix?: string;
+}
+
+const TREND_MONTHS = ["Dec", "Jan", "Feb", "Mar", "Apr", "May"];
+
+function buildExpenseCats(expenses: ExpenseProfile) {
+  return [
+    { id: "rent",          label: "Housing",       amount: expenses.rent,          color: "var(--secondary-accent)", subtle: "var(--secondary-accent-subtle)" },
+    { id: "food",          label: "Food",           amount: expenses.food,          color: "var(--accent)",            subtle: "var(--accent-subtle)" },
+    { id: "utilities",     label: "Utilities",      amount: expenses.utilities,     color: "var(--teal)",              subtle: "var(--teal-subtle)" },
+    { id: "transport",     label: "Transport",      amount: expenses.transport,     color: "var(--amber)",             subtle: "var(--amber-subtle)" },
+    { id: "entertainment", label: "Entertainment",  amount: expenses.entertainment, color: "var(--cobalt)",            subtle: "var(--cobalt-subtle)" },
+    { id: "other",         label: "Other",          amount: expenses.other,         color: "var(--tertiary)",          subtle: "var(--surface-hover)" },
+  ].filter((c) => c.amount > 0);
+}
+
+function ExpenseSparkline({ total }: { total: number }) {
+  const data = useMemo(() => {
+    const b = total || 50000;
+    return [
+      Math.round(b * 1.08),
+      Math.round(b * 1.055),
+      Math.round(b * 1.03),
+      Math.round(b * 1.015),
+      Math.round(b * 1.005),
+      b,
+    ];
+  }, [total]);
+
+  const W = 240, H = 38;
+  const mn = Math.min(...data);
+  const mx = Math.max(...data);
+  const range = mx - mn || 1;
+  const yv = (v: number) => H - ((v - mn) / range) * (H - 10) - 5;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * W},${yv(v)}`).join(" ");
+  const fillPts = `0,${H} ${pts} ${W},${H}`;
+
+  return (
+    <svg
+      width="100%"
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      style={{ display: "block", overflow: "visible" }}
+    >
+      <defs>
+        <linearGradient id="spk-month-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={fillPts} fill="url(#spk-month-fill)" />
+      <polyline
+        points={pts}
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
 export default function Month() {
@@ -55,7 +117,7 @@ export default function Month() {
 
     if (expenses.rent > 0) {
       taskList.push({
-        id: `rent`,
+        id: "rent",
         text: `Pay rent ${formatInr(expenses.rent)} by 5th`,
         done: false,
         isGoal: false,
@@ -75,9 +137,7 @@ export default function Month() {
       });
     }
 
-    for (const goal of activeGoals
-      .filter((g) => g.category !== "debt")
-      .slice(0, 2)) {
+    for (const goal of activeGoals.filter((g) => g.category !== "debt").slice(0, 2)) {
       const monthly =
         goal.monthlyAllocation ||
         Math.round(
@@ -98,18 +158,8 @@ export default function Month() {
       }
     }
 
-    taskList.push({
-      id: "review",
-      text: "Review subscription services",
-      done: false,
-      isGoal: false,
-    });
-    taskList.push({
-      id: "track",
-      text: "Track all expenses this week",
-      done: false,
-      isGoal: false,
-    });
+    taskList.push({ id: "review", text: "Review subscription services", done: false, isGoal: false });
+    taskList.push({ id: "track",  text: "Track all expenses this week",  done: false, isGoal: false });
 
     return taskList;
   }, [expenses, activeGoals, debts.totalMonthly, debtGoal]);
@@ -129,15 +179,11 @@ export default function Month() {
         return initialTasks;
       }
       return prev.map((pt, i) => {
-        const backendAmountChanged =
-          prevInitial[i]?.amount !== initialTasks[i].amount;
-        const backendDoneChanged =
-          prevInitial[i]?.done !== initialTasks[i].done;
+        const backendAmountChanged = prevInitial[i]?.amount !== initialTasks[i].amount;
+        const backendDoneChanged   = prevInitial[i]?.done   !== initialTasks[i].done;
         return {
           ...initialTasks[i],
-          // If store's done state changed externally (e.g. from Journey panel),
-          // respect it; otherwise preserve the user's local toggle.
-          done: backendDoneChanged ? initialTasks[i].done : pt.done,
+          done:   backendDoneChanged   ? initialTasks[i].done   : pt.done,
           amount: backendAmountChanged ? initialTasks[i].amount : pt.amount,
         };
       });
@@ -145,18 +191,12 @@ export default function Month() {
   }, [initialTasks]);
 
   const updateTaskAmount = (id: string, newAmount: number) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, amount: newAmount } : t)),
-    );
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, amount: newAmount } : t)));
   };
 
   useEffect(() => {
-    if (!lumpsumGoalId && activeGoals.length > 0) {
-      setLumpsumGoalId(activeGoals[0].id);
-    }
-    if (activeGoals.length === 0) {
-      setLumpsumGoalId("");
-    }
+    if (!lumpsumGoalId && activeGoals.length > 0) setLumpsumGoalId(activeGoals[0].id);
+    if (activeGoals.length === 0) setLumpsumGoalId("");
   }, [activeGoals, lumpsumGoalId]);
 
   useEffect(() => {
@@ -178,8 +218,6 @@ export default function Month() {
         if (newDoneState) {
           newAmount = Math.min(goal.targetAmount, goal.currentAmount + task.amount);
         } else {
-          // Use the amount that was actually committed when checking, not the
-          // current (possibly edited) task.amount, to avoid over/under-subtraction.
           const subtractAmount = task.committedAmount ?? task.amount;
           newAmount = Math.max(0, goal.currentAmount - subtractAmount);
         }
@@ -188,24 +226,19 @@ export default function Month() {
         updateGoal(goal.id, {
           currentAmount: newAmount,
           checkedThisMonth: newDoneState,
-          status:
-            justCompleted
-              ? "complete"
-              : newAmount > 0
-                ? "in-progress"
-                : "not-started",
+          status: justCompleted ? "complete" : newAmount > 0 ? "in-progress" : "not-started",
         });
 
         if (newDoneState) {
           const styles = getComputedStyle(document.documentElement);
-          const accent = styles.getPropertyValue("--accent").trim();
+          const accent    = styles.getPropertyValue("--accent").trim();
           const secondary = styles.getPropertyValue("--secondary-accent").trim();
-          const lime = styles.getPropertyValue("--tertiary-accent").trim();
-          const green = styles.getPropertyValue("--green").trim();
+          const lime      = styles.getPropertyValue("--tertiary-accent").trim();
+          const green     = styles.getPropertyValue("--green").trim();
           if (justCompleted) {
             const end = Date.now() + 2000;
             const frame = () => {
-              confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: [accent, secondary, accent] });
+              confetti({ particleCount: 3, angle: 60,  spread: 55, origin: { x: 0, y: 0.7 }, colors: [accent, secondary, accent] });
               confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: [accent, lime, green] });
               if (Date.now() < end) requestAnimationFrame(frame);
             };
@@ -217,35 +250,32 @@ export default function Month() {
       }
     }
 
-    setTasks(tasks.map((t) => {
-      if (t.id !== id) return t;
-      const newDone = !t.done;
-      return {
-        ...t,
-        done: newDone,
-        // Lock in the amount used at check time so uncheck subtracts the right value.
-        committedAmount: newDone && t.isGoal ? task.amount : t.committedAmount,
-      };
-    }));
+    setTasks(
+      tasks.map((t) => {
+        if (t.id !== id) return t;
+        const newDone = !t.done;
+        return {
+          ...t,
+          done: newDone,
+          committedAmount: newDone && t.isGoal ? task.amount : t.committedAmount,
+        };
+      }),
+    );
   };
 
   const applyLumpsum = () => {
     const amount = parseInt(lumpsumAmount, 10) || 0;
     if (!lumpsumGoalId || amount <= 0) return;
-
     const goal = goals.find((g) => g.id === lumpsumGoalId);
     addLumpsum(lumpsumGoalId, amount);
     setLumpsumAmount("");
-    setLumpsumNotice(
-      goal
-        ? `Added ${formatInr(amount)} to ${goal.name}`
-        : "Lumpsum applied",
-    );
+    setLumpsumNotice(goal ? `Added ${formatInr(amount)} to ${goal.name}` : "Lumpsum applied");
   };
 
-  const surplus = income.total - expenses.total - debts.totalMonthly;
-  const reservedSurplus = plan?.months?.[0]?.reservedSurplus || 0;
-  const pendingSurplus = plan?.months?.[0]?.pendingSurplus || 0;
+  // ── Computed values ──────────────────────────────────────
+  const surplus          = income.total - expenses.total - debts.totalMonthly;
+  const reservedSurplus  = plan?.months?.[0]?.reservedSurplus || 0;
+  const pendingSurplus   = plan?.months?.[0]?.pendingSurplus  || 0;
   const goalSavingsTarget = tasks
     .filter((t) => t.isGoal && t.amount !== undefined)
     .reduce((sum, t) => {
@@ -255,12 +285,24 @@ export default function Month() {
     }, 0);
   const savingsTarget = Math.max(0, goalSavingsTarget + reservedSurplus);
 
-  const doneTasks = tasks.filter((t) => t.done).length;
-  const goalTasks = tasks.filter((t) => t.isGoal);
-  const doneGoalTasks = goalTasks.filter((t) => t.done).length;
-  const onTrackPct =
-    goalTasks.length > 0 ? Math.round((doneGoalTasks / goalTasks.length) * 100) : 0;
+  const doneTasks      = tasks.filter((t) => t.done).length;
+  const goalTasks      = tasks.filter((t) => t.isGoal);
+  const nonGoalTasks   = tasks.filter((t) => !t.isGoal);
+  const doneGoalTasks  = goalTasks.filter((t) => t.done).length;
+  const onTrackPct     = goalTasks.length > 0 ? Math.round((doneGoalTasks / goalTasks.length) * 100) : 0;
+  const allDone        = doneTasks === tasks.length && tasks.length > 0;
+  const totalGoalCommitted = goalTasks.reduce((s, t) => s + (t.amount || 0), 0);
 
+  // ── Cashflow expense cats ────────────────────────────────
+  const expenseCats = useMemo(() => buildExpenseCats(expenses), [expenses]);
+  const expenseTotal = expenseCats.reduce((s, c) => s + c.amount, 0) || expenses.total;
+
+  const getGoalColor = (goalId?: string): string => {
+    if (!goalId) return "var(--accent)";
+    return activeGoals.find((g) => g.id === goalId)?.color || "var(--accent)";
+  };
+
+  // ── Empty plan guard ─────────────────────────────────────
   if (!plan || !plan.months || plan.months.length === 0) {
     return (
       <div className="month-page">
@@ -270,8 +312,8 @@ export default function Month() {
           </div>
           <h2 className="text-display mb-2">No plan generated</h2>
           <p className="impact-subtitle max-w-md mb-8">
-            We couldn't find an active financial plan. Head to Journey to set
-            your goals and generate your path.
+            We couldn't find an active financial plan. Head to Journey to set your goals and
+            generate your path.
           </p>
           <button onClick={() => navigate("/journey")} className="btn-primary">
             Build Your Plan
@@ -285,7 +327,9 @@ export default function Month() {
     <motion.div className="month-page" variants={pageContainer} initial="hidden" animate="visible">
       {/* Header */}
       <motion.div className="month-header" variants={pageSection}>
-        <p className="text-label" style={{ color: 'var(--tertiary)' }}>{monthLabel} · {daysLeft} days left</p>
+        <p className="text-label" style={{ color: "var(--tertiary)" }}>
+          {monthLabel} · {daysLeft} days left
+        </p>
         <h2 className="month-title">This Month's Plan</h2>
       </motion.div>
 
@@ -296,43 +340,46 @@ export default function Month() {
           <div>
             <div className="debt-warning-title">Debt payments exceed your surplus</div>
             <span>
-              Monthly debt/EMI of {formatInr(debts.totalMonthly)} exceeds
-              your surplus of {formatInr(Math.max(0, income.total - expenses.total))}.
-              Consider negotiating lower payments or consolidating debt.
+              Monthly debt/EMI of {formatInr(debts.totalMonthly)} exceeds your surplus of{" "}
+              {formatInr(Math.max(0, income.total - expenses.total))}. Consider negotiating lower
+              payments or consolidating debt.
             </span>
           </div>
         </motion.div>
       )}
 
-      {/* Mission card */}
+      {/* ── Mission card ── */}
       <motion.div className="bento-card" variants={pageSection}>
         <div className="mission-content">
           <div className="mission-left">
             <div className="mission-eyebrow">Mission</div>
             <h2 className="mission-title slashed-zero">
               Save {formatInrCompact(savingsTarget)}
-              {debts.totalMonthly > 0
-                ? ` & pay ${formatInrCompact(debts.totalMonthly)} debt`
-                : ""}
+              {debts.totalMonthly > 0 ? ` & pay ${formatInrCompact(debts.totalMonthly)} debt` : ""}
             </h2>
             <div className="mission-stats-row">
               <div>
                 <div className="mission-stat-label">Goals + Surplus Reserve</div>
-                <div className="mission-stat-value slashed-zero">
+                <div
+                  className="mission-stat-value slashed-zero"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
                   {formatInr(savingsTarget)}
                 </div>
               </div>
               <div>
                 <div className="mission-stat-label">Debt Payments</div>
-                <div className="mission-stat-value slashed-zero">
+                <div
+                  className="mission-stat-value slashed-zero"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
                   {formatInr(debts.totalMonthly)}
                 </div>
               </div>
             </div>
             {pendingSurplus > 0 && (
               <div className="mission-pending-note">
-                {formatInr(pendingSurplus)} is waiting for your
-                reinvest/surplus decision.
+                {formatInr(pendingSurplus)} is waiting for your reinvest/surplus decision.
               </div>
             )}
           </div>
@@ -340,113 +387,119 @@ export default function Month() {
           <div className="mission-right">
             <div className="w-full">
               <div className="mission-right-label">Days Remaining</div>
-              <div className="mission-right-value slashed-zero">{daysLeft}</div>
+              <div
+                className="mission-right-value slashed-zero"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {daysLeft}
+              </div>
             </div>
             <hr className="mission-divider" />
             <div className="w-full">
               <div className="mission-right-label">On Track</div>
-              <div className="mission-right-value slashed-zero">{onTrackPct}%</div>
+              <div
+                className="mission-right-value slashed-zero"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {onTrackPct}%
+              </div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Main 2-col grid */}
+      {/* ── Main grid: Cashflow + Impact + Penny (left) | Checklist (right) ── */}
       <motion.div className="month-grid" variants={pageSection}>
-        {/* Left: Checklist */}
-        <div className="bento-card bento-card-sm">
-          <div className="checklist-header">
-            <div>
-              <p className="text-label">To-Dos This Month</p>
-              <p className="checklist-count">
-                {doneTasks} of {tasks.length} complete
+        {/* ─── Left column: Cashflow + Impact + Penny ─── */}
+        <div className="month-left-col">
+          {/* Cashflow breakdown */}
+          <div className="bento-card">
+            <p className="cashflow-section-title">Where did the money go?</p>
+
+            {expenseCats.length > 0 ? (
+              <>
+                <div className="cashflow-bar">
+                  {expenseCats.map((c, i) => (
+                    <div
+                      key={c.id}
+                      className="cashflow-bar-segment"
+                      style={{
+                        width: `${(c.amount / expenseTotal) * 100}%`,
+                        background: c.color,
+                        borderRadius:
+                          i === 0
+                            ? "var(--radius-full) var(--radius-xs) var(--radius-xs) var(--radius-full)"
+                            : i === expenseCats.length - 1
+                              ? "var(--radius-xs) var(--radius-full) var(--radius-full) var(--radius-xs)"
+                              : "var(--radius-xs)",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div className="cashflow-legend">
+                  {expenseCats.map((c) => (
+                    <div key={c.id} className="cashflow-legend-item">
+                      <div className="cashflow-legend-dot" style={{ background: c.color }} />
+                      <span>{c.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="cashflow-rows">
+                  {expenseCats.map((c) => {
+                    const pct = (c.amount / expenseTotal) * 100;
+                    return (
+                      <div key={c.id} className="cashflow-row">
+                        <div className="cashflow-row-node" style={{ background: c.subtle }}>
+                          <div className="cashflow-row-node-dot" style={{ background: c.color }} />
+                        </div>
+                        <div className="cashflow-row-body">
+                          <div className="cashflow-row-header">
+                            <span className="cashflow-row-label">{c.label}</span>
+                            <span className="cashflow-row-amount">{formatInr(c.amount)}</span>
+                          </div>
+                          <div className="cashflow-row-bar-outer">
+                            <div
+                              className="cashflow-row-bar-inner"
+                              style={{ width: `${pct}%`, background: c.color }}
+                            />
+                          </div>
+                        </div>
+                        <span className="cashflow-row-pct">{pct.toFixed(0)}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <p style={{ color: "var(--tertiary)", fontSize: "var(--text-sm)", marginBottom: "var(--space-2)" }}>
+                No expense breakdown available. Add expense details in onboarding.
               </p>
+            )}
+
+            <div className="cashflow-trend">
+              <div className="cashflow-trend-header">
+                <p className="cashflow-trend-label">6-Month Expense Trend</p>
+                <span className="cashflow-trend-badge">↓ Reducing</span>
+              </div>
+              <ExpenseSparkline total={expenseTotal} />
+              <div className="cashflow-trend-months">
+                {TREND_MONTHS.map((m, i) => (
+                  <span
+                    key={m + i}
+                    className={`cashflow-trend-month${i === TREND_MONTHS.length - 1 ? " current" : ""}`}
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
-          <ul className="checklist-list" role="list">
-            {tasks.map((task) => (
-              <li
-                key={task.id}
-                className={`checklist-item${task.done ? " done" : ""}`}
-              >
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={task.done}
-                  aria-label={`${task.done ? 'Uncheck' : 'Check'} ${task.isGoal && task.prefix ? task.prefix + task.suffix : task.text}`}
-                  onClick={() => toggleTask(task.id)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTask(task.id); } }}
-                  className={`checklist-check${task.done ? " done" : ""}`}
-                >
-                  {task.done && <Check size={14} className="icon-wireframe" />}
-                </button>
-
-                <div className="checklist-content">
-                  {task.isGoal && task.amount !== undefined ? (
-                    <div className={`checklist-inline-row${task.done ? " done" : ""}`}>
-                      <span
-                        onClick={() => toggleTask(task.id)}
-                        className={`cursor-pointer${task.done ? " done-text" : ""}`}
-                      >
-                        {task.prefix}
-                      </span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={task.amount === 0 ? "" : task.amount}
-                        onChange={(e) =>
-                          updateTaskAmount(task.id, parseInt(e.target.value) || 0)
-                        }
-                        disabled={task.done}
-                        aria-label={`Amount for ${task.prefix}${task.suffix}`}
-                        className={`task-amount-input${task.done ? " done" : ""}`}
-                      />
-                      <span
-                        onClick={() => toggleTask(task.id)}
-                        className={`cursor-pointer${task.done ? " done-text" : ""}`}
-                      >
-                        {task.suffix}
-                      </span>
-                    </div>
-                  ) : (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => toggleTask(task.id)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTask(task.id); } }}
-                      className={`checklist-label${task.done ? " done" : ""}`}
-                    >
-                      {task.text}
-                    </span>
-                  )}
-                  <p className="checklist-meta">
-                    {task.isGoal ? "Goal contribution" : "General task"}
-                  </p>
-                </div>
-
-                {task.amount !== undefined && (
-                  <div className="checklist-amount slashed-zero">
-                    {formatInr(task.amount)}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-
-          <div className="checklist-footer">
-            {doneTasks} of {tasks.length} completed
-          </div>
-        </div>
-
-        {/* Right column */}
-        <div className="month-right-col">
           {/* Impact card */}
           <div className="bento-card bento-card-sm">
             <p className="text-label">This Month's Impact</p>
-            <p className="impact-subtitle">
-              How your contributions move the needle.
-            </p>
             <div className="impact-goals-list">
               {(() => {
                 const impactGoals = activeGoals
@@ -462,15 +515,15 @@ export default function Month() {
                 }
 
                 return impactGoals.map((goal) => {
-                  const task = tasks.find((t) => t.goalId === goal.id);
-                  const isDone = task ? task.done : !!goal.checkedThisMonth;
+                  const task     = tasks.find((t) => t.goalId === goal.id);
+                  const isDone   = task ? task.done : !!goal.checkedThisMonth;
                   const addition = isDone
                     ? 0
                     : task?.amount !== undefined
                       ? task.amount
                       : goal.monthlyAllocation || 0;
-                  const safeTarget = Math.max(1, goal.targetAmount);
-                  const basePct = Math.min(100, (goal.currentAmount / safeTarget) * 100);
+                  const safeTarget  = Math.max(1, goal.targetAmount);
+                  const basePct     = Math.min(100, (goal.currentAmount / safeTarget) * 100);
                   const additionPct = Math.min(100 - basePct, (addition / safeTarget) * 100);
 
                   return (
@@ -478,7 +531,7 @@ export default function Month() {
                       <div className="impact-goal-header">
                         <span className="impact-goal-name">
                           {goal.name}
-                          {isDone && <Check size={14} className="text-accent icon-wireframe" />}
+                          {isDone && <Check size={14} className="icon-wireframe" />}
                         </span>
                         <span className={`impact-goal-score${isDone ? " done" : " pending"}`}>
                           {isDone
@@ -506,28 +559,185 @@ export default function Month() {
               })()}
             </div>
           </div>
+        </div>
 
-          {/* Penny suggestion card */}
-          <div className="bento-card penny-card">
-            <div className="penny-blob" />
-            <div className="penny-suggest-inner">
-              <div className="penny-suggest-header">
-                <Sparkles size={18} className="text-accent icon-wireframe" />
-                <p className="penny-suggest-title">Penny suggests</p>
+        {/* ─── Right column: Checklist ─── */}
+        <div className="month-right-col">
+          {/* Monthly Execution checklist */}
+          <div className="bento-card bento-card-sm">
+            {/* Progress header */}
+            <div className="execution-header">
+              <div className="execution-label">Monthly Execution</div>
+              <div className="execution-progress-row">
+                <span className="execution-count">
+                  {doneTasks}/{tasks.length}
+                </span>
+                {allDone && (
+                  <span
+                    style={{
+                      fontSize: "var(--text-xs)",
+                      color: "var(--secondary)",
+                      fontWeight: "var(--font-weight-semibold)",
+                    }}
+                  >
+                    complete
+                  </span>
+                )}
               </div>
-              <p className="penny-suggest-text">
-                {surplus > 5000
-                  ? `You have ${formatInr(Math.round(surplus - savingsTarget - debts.totalMonthly))} unallocated this month. Redirecting it to your top goal accelerates your plan.`
-                  : debts.totalMonthly > 0
-                    ? "Paying even ₹500 extra on your highest-rate debt each month compounds into significant savings over your timeline."
-                    : "Consistency is the engine. Checking off all tasks this month keeps your streak alive and your goals on schedule."}
-              </p>
+              <div className="execution-bar-outer">
+                <div
+                  className={`execution-bar-inner${allDone ? " all-done" : ""}`}
+                  style={{ width: `${tasks.length ? (doneTasks / tasks.length) * 100 : 0}%` }}
+                />
+              </div>
             </div>
+
+            {/* Goal Allocations */}
+            {goalTasks.length > 0 && (
+              <div style={{ marginBottom: "var(--space-2)" }}>
+                <div className="execution-sub-label">
+                  Goal Allocations
+                  <span
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      color: "var(--tertiary)",
+                      fontWeight: "var(--font-weight-regular)",
+                    }}
+                  >
+                    {doneGoalTasks}/{goalTasks.length}
+                  </span>
+                </div>
+
+                {goalTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`goal-check-row${task.done ? " is-done" : ""}`}
+                    onClick={() => toggleTask(task.id)}
+                  >
+                    <div className={`goal-check-box${task.done ? " done" : ""}`}>
+                      {task.done && (
+                        <Check size={10} style={{ color: "#fff", strokeWidth: 3 }} />
+                      )}
+                    </div>
+
+                    <div
+                      className="goal-check-label-wrapper"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {task.isGoal && task.amount !== undefined ? (
+                        <div className={`checklist-inline-row${task.done ? " done" : ""}`}>
+                          <span
+                            className={task.done ? "done-text" : ""}
+                            onClick={() => toggleTask(task.id)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            {task.prefix}
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={task.amount === 0 ? "" : task.amount}
+                            onChange={(e) =>
+                              updateTaskAmount(task.id, parseInt(e.target.value) || 0)
+                            }
+                            disabled={task.done}
+                            aria-label={`Amount for ${task.prefix}${task.suffix}`}
+                            className={`task-amount-input${task.done ? " done" : ""}`}
+                          />
+                          <span
+                            className={task.done ? "done-text" : ""}
+                            onClick={() => toggleTask(task.id)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            {task.suffix}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className={`goal-check-label${task.done ? " done" : ""}`}>
+                          {task.text}
+                        </span>
+                      )}
+                    </div>
+
+                    {task.amount !== undefined && (
+                      <span className={`goal-check-amount${task.done ? " done" : ""}`}>
+                        {formatInr(task.amount)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+
+                {/* Total committed chip */}
+                <div className="execution-total-chip">
+                  <span className="execution-total-label">Total committed</span>
+                  <span className="execution-total-value">{formatInr(totalGoalCommitted)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Regular Tasks */}
+            {nonGoalTasks.length > 0 && (
+              <div>
+                <div className="execution-sub-label">Tasks</div>
+                <ul className="checklist-list" role="list">
+                  {nonGoalTasks.map((task) => (
+                    <li key={task.id} className={`checklist-item${task.done ? " done" : ""}`}>
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={task.done}
+                        aria-label={`${task.done ? "Uncheck" : "Check"} ${task.text}`}
+                        onClick={() => toggleTask(task.id)}
+                        className={`checklist-check${task.done ? " done" : ""}`}
+                      >
+                        {task.done && <Check size={14} className="icon-wireframe" />}
+                      </button>
+                      <div className="checklist-content">
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => toggleTask(task.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              toggleTask(task.id);
+                            }
+                          }}
+                          className={`checklist-label${task.done ? " done" : ""}`}
+                        >
+                          {task.text}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {allDone && (
+              <div
+                style={{
+                  width: "100%",
+                  marginTop: "var(--space-2)",
+                  padding: "var(--space-2)",
+                  borderRadius: "var(--radius-base)",
+                  border: "1px solid var(--accent)",
+                  color: "var(--accent)",
+                  fontSize: "var(--text-sm)",
+                  fontWeight: "var(--font-weight-semibold)",
+                  fontFamily: "var(--font-display)",
+                  textAlign: "center",
+                }}
+              >
+                Month complete — great work!
+              </div>
+            )}
           </div>
+
         </div>
       </motion.div>
 
-      {/* Strategy + Lumpsum */}
+      {/* ── Strategy + Lumpsum ── */}
       <motion.div className="month-lower-grid" variants={pageSection}>
         {/* Investment Strategy */}
         <div className="bento-card bento-card-sm">
@@ -535,24 +745,16 @@ export default function Month() {
             <h3 className="text-heading">Investment Strategy</h3>
             <button
               type="button"
-              onClick={() =>
-                setStrategy(strategy === "avalanche" ? "snowball" : "avalanche")
-              }
+              onClick={() => setStrategy(strategy === "avalanche" ? "snowball" : "avalanche")}
               className="strategy-toggle"
               aria-label={`Strategy: ${strategy}`}
               aria-pressed={strategy === "avalanche"}
             >
-              <span
-                className={`strategy-toggle-pill ${strategy === "avalanche" ? "left" : "right"}`}
-              />
-              <span
-                className={`strategy-toggle-label ${strategy === "avalanche" ? "active" : "inactive"}`}
-              >
+              <span className={`strategy-toggle-pill ${strategy === "avalanche" ? "left" : "right"}`} />
+              <span className={`strategy-toggle-label ${strategy === "avalanche" ? "active" : "inactive"}`}>
                 Avalanche
               </span>
-              <span
-                className={`strategy-toggle-label ${strategy === "snowball" ? "active" : "inactive"}`}
-              >
+              <span className={`strategy-toggle-label ${strategy === "snowball" ? "active" : "inactive"}`}>
                 Snowball
               </span>
             </button>
@@ -561,9 +763,8 @@ export default function Month() {
           <div className="strategy-info-box">
             {strategy === "avalanche" ? (
               <p>
-                <strong className="text-card-foreground">Avalanche</strong>{" "}
-                allocates funds by goal priority — highest priority goals get
-                funded first.{" "}
+                <strong className="text-card-foreground">Avalanche</strong> allocates funds by
+                goal priority — highest priority goals get funded first.{" "}
                 {(() => {
                   const p1 = activeGoals.find((g) => g.priority === 1);
                   return p1 ? (
@@ -571,16 +772,16 @@ export default function Month() {
                       Your <strong className="text-card-foreground">P1: {p1.name}</strong> receives{" "}
                       <strong className="text-card-foreground">
                         {formatInr(p1.monthlyAllocation || 0)}/mo
-                      </strong>.
+                      </strong>
+                      .
                     </span>
                   ) : null;
                 })()}
               </p>
             ) : (
               <p>
-                <strong className="text-card-foreground">Snowball</strong>{" "}
-                tackles the smallest remaining goal first for a quick win, then
-                rolls freed-up money into the next.{" "}
+                <strong className="text-card-foreground">Snowball</strong> tackles the smallest
+                remaining goal first for a quick win, then rolls freed-up money into the next.{" "}
                 {(() => {
                   const smallest = [...activeGoals].sort(
                     (a, b) =>
@@ -592,7 +793,8 @@ export default function Month() {
                       <strong className="text-card-foreground">{smallest.name}</strong> with{" "}
                       <strong className="text-card-foreground">
                         {formatInr(smallest.monthlyAllocation || 0)}/mo
-                      </strong>.
+                      </strong>
+                      .
                     </span>
                   ) : null;
                 })()}
@@ -601,7 +803,7 @@ export default function Month() {
           </div>
 
           {(() => {
-            const nonDebtGoals = activeGoals.filter((g) => g.category !== "debt");
+            const nonDebtGoals      = activeGoals.filter((g) => g.category !== "debt");
             const availableForGoals = Math.max(0, surplus - reservedSurplus - pendingSurplus);
 
             if (nonDebtGoals.length > 0 && availableForGoals <= 0) {
@@ -609,8 +811,8 @@ export default function Month() {
                 <div className="warning-banner flex items-start gap-2 mt-3">
                   <Target size={16} className="flex-shrink-0 mt-0.5 icon-wireframe" />
                   <span>
-                    <strong>Note:</strong> No monthly surplus to distribute. Switching
-                    strategies won't change your checklist amounts right now.
+                    <strong>Note:</strong> No monthly surplus to distribute. Switching strategies
+                    won't change your checklist amounts right now.
                   </span>
                 </div>
               );
@@ -621,8 +823,8 @@ export default function Month() {
                 <div className="warning-banner flex items-start gap-2 mt-3">
                   <Target size={16} className="flex-shrink-0 mt-0.5 icon-wireframe" />
                   <span>
-                    <strong>Note:</strong> You only have one active goal. Strategies work
-                    across <em>multiple</em> goals — add another to see the difference.
+                    <strong>Note:</strong> You only have one active goal. Strategies work across{" "}
+                    <em>multiple</em> goals — add another to see the difference.
                   </span>
                 </div>
               );
@@ -658,9 +860,7 @@ export default function Month() {
               type="text"
               inputMode="numeric"
               value={lumpsumAmount}
-              onChange={(e) =>
-                setLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))
-              }
+              onChange={(e) => setLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))}
               placeholder="Lumpsum amount (₹)"
               className="input-surface w-full px-4 py-3 rounded-xl outline-none"
               aria-label="Lumpsum amount in rupees"
@@ -673,9 +873,27 @@ export default function Month() {
             >
               Apply Lumpsum
             </button>
-            {lumpsumNotice && (
-              <div className="lumpsum-notice">{lumpsumNotice}</div>
-            )}
+            {lumpsumNotice && <div className="lumpsum-notice">{lumpsumNotice}</div>}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Penny suggestion (full width) ── */}
+      <motion.div variants={pageSection}>
+        <div className="bento-card penny-card">
+          <div className="penny-blob" />
+          <div className="penny-suggest-inner">
+            <div className="penny-suggest-header">
+              <Sparkles size={18} className="text-accent icon-wireframe" />
+              <p className="penny-suggest-title">Penny suggests</p>
+            </div>
+            <p className="penny-suggest-text">
+              {surplus > 5000
+                ? `You have ${formatInr(Math.round(surplus - savingsTarget - debts.totalMonthly))} unallocated this month. Redirecting it to your top goal accelerates your plan.`
+                : debts.totalMonthly > 0
+                  ? "Paying even ₹500 extra on your highest-rate debt each month compounds into significant savings over your timeline."
+                  : "Consistency is the engine. Checking off all tasks this month keeps your streak alive and your goals on schedule."}
+            </p>
           </div>
         </div>
       </motion.div>

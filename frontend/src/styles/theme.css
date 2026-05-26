@@ -1,14 +1,13 @@
-@custom-variant dark (&:is(.dark *));
-
 :root {
   /* ─── Typography ─── */
   --font-size: 16px;
   --font-display: "Lufga", system-ui, sans-serif;
   --font-body: "Lufga", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
 
   /* ─── 8px Spacing Scale ─── */
   --space-0: 0px;
-  --space-0.5: 4px;
+  --space-0_5: 4px;
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
@@ -18,47 +17,84 @@
   --space-8: 64px;
   --space-12: 96px;
 
+  /* ─── Sub-grid Gap Scale (off-8px fine-tuning) ─── */
+  --gap-2xs: 2px;
+  --gap-xs: 4px;
+  --gap-sm: 5px;
+  --gap-base: 6px;
+  --gap-md: 10px;
+  --gap-lg: 12px;
+  --gap-xl: 14px;
+
+  /* ─── Bar / Track Heights ─── */
+  --h-bar-xs: 3px;
+  --h-bar-sm: 5px;
+  --h-bar-md: 8px;
+  --h-bar-lg: 9px;
+  --h-bar-xl: 12px;
+
+  /* ─── Z-Index Scale ─── */
+  --z-base: 0;
+  --z-raised: 10;
+
+  /* ─── Line Heights ─── */
+  --leading-none: 1;
+  --leading-tight: 1.1;
+  --leading-snug: 1.2;
+  --leading-base: 1.5;
+  --leading-relaxed: 1.6;
+
+  /* ─── Letter Spacing ─── */
+  --tracking-tightest: -0.03em;
+  --tracking-tighter: -0.025em;
+  --tracking-tight: -0.02em;
+  --tracking-heading-sm: -0.01em;
+  --tracking-wide: 0.04em;
+  --tracking-super: 0.05em;
+  --tracking-wider: 0.07em;
+  --tracking-widest-sm: 0.1em;
+  --tracking-widest: 0.12em;
+
+  /* ─── Transition Durations ─── */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-medium: 250ms;
+  --duration-slow: 300ms;
+  --duration-theme: 350ms;
+  --duration-morph: 500ms;
+  --duration-page: 600ms;
+  --duration-bar: 800ms;
+  --duration-hero: 1200ms;
+
+  /* ─── Easing Functions ─── */
+  --ease-base: ease;
+  --ease-in-out: ease-in-out;
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
   /* ─── Button Tokens ─── */
-  /* Padding: matches .btn-primary spec (10px vertical / 16px horizontal) */
   --btn-padding-y: 10px;
   --btn-padding-x: 16px;
-  /* Collapsed icon-only state */
   --btn-padding-collapsed: var(--space-1);
-  /* Border radius for rectangular CTAs (.btn-primary family) */
   --btn-radius: var(--radius-sm);
-  /* Border radius for pill CTAs (Ask Penny, pill-button) */
   --btn-radius-pill: var(--radius-full);
-  /* Font */
   --btn-font-size: var(--text-sm);
   --btn-font-weight: var(--font-weight-semibold);
-  /* Icon gap */
   --btn-gap: var(--space-1);
-  /* Primary solid-accent shadow */
   --btn-shadow: 0 4px 12px var(--accent-glow);
   --btn-shadow-hover: 0 8px 20px var(--accent-glow);
-  /* Gradient used by Export Plan + Ask Penny */
   --btn-gradient: linear-gradient(135deg, var(--accent), var(--secondary-accent));
-  /* Disabled opacity */
   --btn-disabled-opacity: 0.5;
 
   /* ═══════════════════════════════════════════════
      LIGHT MODE
-
-     Background blob hierarchy (left → right):
-       1. Lime/Green — top-left (tertiary, smallest, subtle)
-       2. Blue — center-left (primary, LARGEST, dominant)
-       3. Indigo — center-right (secondary blue-purple)
-       4. Violet — bottom-right (secondary, medium)
-
-     Blue dominates the center taking the most
-     visual real estate. Green is pushed to the
-     corner at reduced opacity. Purple provides
-     depth in the lower-right region.
-
-     The base gradient runs from a soft blue-white
-     through a lavender-blue center into gentle
-     purple-tinted whites.
   ═══════════════════════════════════════════════ */
+
+  /* ─── Background Blob Colours ─── */
+  --blob-primary: rgba(73, 91, 255, 0.12);
+  --blob-secondary: rgba(172, 73, 255, 0.07);
+  --blob-primary-sm: rgba(73, 91, 255, 0.04);
 
   /* Main dashboard background — full blob system */
   --background:
@@ -67,18 +103,12 @@
     radial-gradient(circle at 88% 82%, rgba(172, 73, 255, 0.18) 0, rgba(172, 73, 255, 0) 34%),
     linear-gradient(135deg, #eef4f8 0%, #e8edff 35%, #edeaff 65%, #f0ebff 85%, #f6f4ff 100%);
 
-  /* Solid fallback — flat tint of the primary blue family */
   --background-solid: #eef0ff;
 
-  /* Loading state background — stripped of blobs,
-     just the base gradient at reduced saturation.
-     Cleaner for skeleton states, no visual noise.
-     Transitions smoothly into --background once
-     the dashboard content mounts. */
   --background-loading:
     linear-gradient(135deg, #f4f6f2 0%, #eff1fa 40%, #f2eff8 75%, #f5f4f9 100%);
 
-  /* Text — deep navy-ink */
+  /* Text */
   --foreground: #050f1c;
   --secondary: #1e293b;
   --tertiary: #475569;
@@ -93,7 +123,7 @@
   /* Borders */
   --border: rgba(5, 15, 28, 0.08);
 
-  /* Canvas grid dot — slightly decreased contrast in light mode */
+  /* Canvas */
   --canvas-dot: rgba(5, 15, 28, 0.25);
   --canvas-border: rgba(5, 15, 28, 0.15);
 
@@ -104,10 +134,6 @@
 
   /* ═══════════════════════════════════════════════
      PRIMARY ACCENT — Blue / Indigo #495bff
-     ─────────────────────────────────────────────
-     Owns: primary CTAs, active nav, focus rings,
-     links, selected states, primary chart series.
-     --on-accent: white (blue is dark enough).
   ═══════════════════════════════════════════════ */
   --accent: #495bff;
   --accent-mid: #6b7aff;
@@ -117,15 +143,13 @@
   --accent-bright: #495bff;
   --accent-subtle: rgba(73, 91, 255, 0.08);
   --accent-glow: rgba(73, 91, 255, 0.18);
+  --accent-border-subtle: rgba(73, 91, 255, 0.25);
+  --accent-glow-strong: rgba(73, 91, 255, 0.35);
   --on-accent: #ffffff;
   --logo-dot-inner: #ffffff;
 
   /* ═══════════════════════════════════════════════
      SECONDARY ACCENT — Violet / Purple #ac49ff
-     ─────────────────────────────────────────────
-     Owns: secondary actions, category badges,
-     investment-type indicators, chart series 2,
-     goal category color, milestone highlights.
   ═══════════════════════════════════════════════ */
   --secondary-accent: #ac49ff;
   --secondary-accent-hover: #9b30ff;
@@ -136,12 +160,6 @@
 
   /* ═══════════════════════════════════════════════
      TERTIARY ACCENT — Lime / Chartreuse #b0ff09
-     ─────────────────────────────────────────────
-     Owns: positive moments (goal reached, savings
-     milestone hit, budget under-spent), progress
-     bar fills, "on track" badges, chart series 3,
-     celebratory states.
-     --on-tertiary-accent: dark (lime is light).
   ═══════════════════════════════════════════════ */
   --tertiary-accent: #b0ff09;
   --tertiary-accent-hover: #9de600;
@@ -153,7 +171,7 @@
 
   /* ═══════════════════════════════════════════════
      PENNY ACCENT — Lighter Blue for Insights
-     ───────────────────────────────────────────── */
+  ═══════════════════════════════════════════════ */
   --penny-accent: #495bff;
   --penny-accent-subtle: rgba(107, 122, 255, 0.12);
   --penny-accent-glow: rgba(107, 122, 255, 0.22);
@@ -162,29 +180,21 @@
 
   /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Light Mode
-     Fixed financial meaning. Never decorative.
   ═══════════════════════════════════════════════ */
-
-  /* Positive / on-track / portfolio gain */
   --green: #22c55e;
   --green-text: #16853d;
   --green-subtle: rgba(34, 197, 94, 0.08);
 
-  /* Warning / approaching budget limit */
   --amber: #f59e0b;
   --amber-text: #a66a00;
   --amber-subtle: rgba(245, 158, 11, 0.08);
 
-  /* Negative / over budget / loss / error */
   --red: #ef4444;
   --red-text: #cc1f1f;
   --red-subtle: rgba(239, 68, 68, 0.08);
 
   /* ═══════════════════════════════════════════════
      NEUTRAL SCALE — Light Mode
-     Blue-tinted neutrals harmonizing with
-     the blue primary accent family.
-     100 = lightest surface → 800 = near black.
   ═══════════════════════════════════════════════ */
   --neutral-100: #eef0f8;
   --neutral-200: #dde1f0;
@@ -230,16 +240,24 @@
   --shadow-xl: 0 40px 100px rgba(5, 15, 28, 0.16);
 
   /* ─── Blur ─── */
+  --blur-xs: 8px;
   --blur-sm: 24px;
   --blur-md: 48px;
   --blur-lg: 80px;
+  --blur-xl: 100px;
   --blur-sidebar: 32px;
+
+  /* ─── Colour Overlays ─── */
+  --black-10: rgba(0, 0, 0, 0.1);
+  --black-18: rgba(0, 0, 0, 0.18);
+  --white-12: rgba(255, 255, 255, 0.12);
+  --white-15: rgba(255, 255, 255, 0.15);
 
   /* ─── Progress Track ─── */
   --progress-inactive: rgba(5, 15, 28, 0.1);
 
   /* ═══════════════════════════════════════════════
-     GOAL CATEGORY COLORS (Section 16)
+     GOAL CATEGORY COLORS
   ═══════════════════════════════════════════════ */
   --teal: #14b8a6;
   --teal-text: #0f766e;
@@ -274,19 +292,14 @@
 
 /* ═══════════════════════════════════════════════
    DARK MODE
-
-   Background blob order matches light mode:
-     1. Lime — top-left (smallest, subtle)
-     2. Blue — center (LARGEST, dominant)
-     3. Violet — bottom-right (medium)
-
-   Loading bg is the raw base gradient only,
-   no blobs — transitions into full bg on mount.
-
-   Every token re-declared. Nothing bleeds.
 ═══════════════════════════════════════════════ */
 
 .dark {
+  /* ─── Background Blob Colours ─── */
+  --blob-primary: rgba(123, 140, 255, 0.06);
+  --blob-secondary: rgba(199, 125, 255, 0.04);
+  --blob-primary-sm: rgba(123, 140, 255, 0.02);
+
   /* Main dashboard background */
   --background:
     radial-gradient(circle at 45% 38%, rgba(123, 140, 255, 0.2) 0, rgba(123, 140, 255, 0) 50%),
@@ -296,8 +309,6 @@
 
   --background-solid: #0b1221;
 
-  /* Loading background — muted base gradient,
-     no blobs. Settles the eye before content. */
   --background-loading:
     linear-gradient(135deg, #060c14 0%, #090e1a 40%, #0b0f1e 75%, #070a12 100%);
 
@@ -316,7 +327,7 @@
   /* Borders */
   --border: rgba(255, 255, 255, 0.1);
 
-  /* Canvas grid dot — less contrast in dark mode */
+  /* Canvas */
   --canvas-dot: rgba(255, 255, 255, 0.15);
   --canvas-border: rgba(255, 255, 255, 0.2);
 
@@ -327,7 +338,6 @@
 
   /* ═══════════════════════════════════════════════
      PRIMARY ACCENT — Blue (dark mode)
-     Stepped up to #7b8cff for dark surface contrast.
   ═══════════════════════════════════════════════ */
   --accent: #7b8cff;
   --accent-mid: #94a3ff;
@@ -337,6 +347,8 @@
   --accent-bright: #7b8cff;
   --accent-subtle: rgba(123, 140, 255, 0.14);
   --accent-glow: rgba(123, 140, 255, 0.24);
+  --accent-border-subtle: rgba(123, 140, 255, 0.25);
+  --accent-glow-strong: rgba(123, 140, 255, 0.35);
   --on-accent: #ffffff;
   --logo-dot-inner: #0f1422;
 
@@ -352,7 +364,6 @@
 
   /* ═══════════════════════════════════════════════
      TERTIARY ACCENT — Lime (dark mode)
-     #b0ff09 has 12:1+ on dark — stays raw.
   ═══════════════════════════════════════════════ */
   --tertiary-accent: #b0ff09;
   --tertiary-accent-hover: #9de600;
@@ -363,8 +374,8 @@
   --on-tertiary-accent: #050f1c;
 
   /* ═══════════════════════════════════════════════
-     PENNY ACCENT — Lighter Blue for Insights
-     ───────────────────────────────────────────── */
+     PENNY ACCENT — Lighter Blue (dark mode)
+  ═══════════════════════════════════════════════ */
   --penny-accent: #8e9bff;
   --penny-accent-subtle: rgba(142, 155, 255, 0.15);
   --penny-accent-glow: rgba(142, 155, 255, 0.25);
@@ -373,7 +384,6 @@
   /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Dark Mode
   ═══════════════════════════════════════════════ */
-
   --green: #22c55e;
   --green-text: #4ade80;
   --green-subtle: rgba(34, 197, 94, 0.12);
@@ -388,7 +398,6 @@
 
   /* ═══════════════════════════════════════════════
      NEUTRAL SCALE — Dark Mode
-     100 = darkest, 800 = lightest.
   ═══════════════════════════════════════════════ */
   --neutral-100: #0d1525;
   --neutral-200: #131c2f;
@@ -409,7 +418,7 @@
   --progress-inactive: rgba(255, 255, 255, 0.12);
 
   /* ═══════════════════════════════════════════════
-     GOAL CATEGORY COLORS — Dark Mode (Section 16)
+     GOAL CATEGORY COLORS — Dark Mode
   ═══════════════════════════════════════════════ */
   --teal: #2dd4bf;
   --teal-text: #5eead4;
@@ -450,8 +459,8 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: var(--gap-base);
+    height: var(--gap-base);
   }
 
   ::-webkit-scrollbar-track {
@@ -473,36 +482,22 @@
     background: var(--background);
     color: var(--foreground);
     font-size: var(--text-base);
-    line-height: 1.5;
+    line-height: var(--leading-base);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
   }
 
-  /* ═══════════════════════════════════════════════
-     UNIFIED BACKGROUND GRADIENT — All Screens (Section 1)
-     ─────────────────────────────────────────────
-     One canonical gradient, felt not seen.
-     Blue (trust, top-left), Violet (secondary, top-right),
-     Lime (growth, bottom-center).
-  ═══════════════════════════════════════════════ */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
-    z-index: 0;
+    z-index: var(--z-base);
     pointer-events: none;
     background:
-      radial-gradient(ellipse 70% 45% at 15% 20%, rgba(73, 91, 255, 0.12), transparent),
-      radial-gradient(ellipse 50% 50% at 85% 35%, rgba(172, 73, 255, 0.07), transparent),
-      radial-gradient(ellipse 35% 35% at 65% 18%, rgba(73, 91, 255, 0.04), transparent);
-  }
-
-  .dark body::before {
-    background:
-      radial-gradient(ellipse 70% 45% at 15% 20%, rgba(123, 140, 255, 0.06), transparent),
-      radial-gradient(ellipse 50% 50% at 85% 35%, rgba(199, 125, 255, 0.04), transparent),
-      radial-gradient(ellipse 35% 35% at 65% 18%, rgba(123, 140, 255, 0.02), transparent);
+      radial-gradient(ellipse 70% 45% at 15% 20%, var(--blob-primary), transparent),
+      radial-gradient(ellipse 50% 50% at 85% 35%, var(--blob-secondary), transparent),
+      radial-gradient(ellipse 35% 35% at 65% 18%, var(--blob-primary-sm), transparent);
   }
 
   html {
@@ -517,8 +512,8 @@
   h6 {
     font-family: var(--font-display);
     font-weight: var(--font-weight-bold);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
     color: var(--foreground);
   }
 
@@ -536,8 +531,8 @@
 
 .bento-card {
   background: var(--card);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(var(--blur-sidebar));
+  -webkit-backdrop-filter: blur(var(--blur-sidebar));
   border-radius: var(--radius-xl);
   padding: var(--space-2);
   box-shadow: var(--shadow-md);
@@ -577,7 +572,7 @@
   font-weight: var(--font-weight-medium);
   color: var(--card-foreground);
   cursor: pointer;
-  transition: all 200ms ease;
+  transition: all var(--duration-base) var(--ease-base);
   white-space: nowrap;
 }
 
@@ -588,7 +583,7 @@
 .pill-button.active {
   background: var(--accent);
   color: var(--on-accent);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--white-12);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
@@ -615,7 +610,7 @@ textarea:focus-visible {
 ═══════════════════════════════════════════════ */
 
 .button-press {
-  transition: all 200ms ease;
+  transition: all var(--duration-base) var(--ease-base);
 }
 
 .button-press:hover {
@@ -679,17 +674,17 @@ textarea:focus-visible {
     var(--surface-tint) 75%
   );
   background-size: 200% 100%;
-  animation: shimmer 2s infinite linear;
+  animation: shimmer 2s infinite var(--ease-base);
   border-radius: var(--radius-md);
 }
 
 .page-animate {
-  animation: scenarioFadeSlide 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: scenarioFadeSlide var(--duration-page) var(--ease-spring) forwards;
 }
 
 /* Global Theme Transition */
 body {
-  transition: background-color 350ms ease, color 350ms ease;
+  transition: background-color var(--duration-theme) var(--ease-base), color var(--duration-theme) var(--ease-base);
 }
 
 
@@ -710,8 +705,8 @@ body {
   font-family: var(--font-display);
   font-size: var(--text-4xl);
   font-weight: var(--font-weight-bold);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tightest);
 }
 
 @media (min-width: 768px) {
@@ -724,8 +719,8 @@ body {
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   font-weight: var(--font-weight-bold);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
 }
 
 @media (min-width: 768px) {
@@ -738,8 +733,8 @@ body {
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: var(--font-weight-bold);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
 }
 
 @media (min-width: 768px) {
@@ -752,34 +747,29 @@ body {
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.2;
+  line-height: var(--leading-snug);
 }
 
 .text-label {
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--tracking-wider);
   color: var(--secondary);
 }
 
 /* ═══════════════════════════════════════════════
    PENNY INSIGHT CARD
-   ─────────────────────────────────────────────
-   Shared card pattern for AI-generated insights
-   and suggestions. Accented with blue
-   (penny-accent) to signal insight/opportunity.
-   Includes a centered soft glow blob.
 ═══════════════════════════════════════════════ */
 
 .penny-insight-card {
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(var(--blur-sidebar));
+  -webkit-backdrop-filter: blur(var(--blur-sidebar));
   border-radius: var(--radius-xl);
   padding: var(--space-3);
   position: relative;
   overflow: hidden;
-  z-index: 10;
+  z-index: var(--z-raised);
   box-shadow: var(--shadow-md);
   border: 1px solid transparent;
   background:
@@ -803,7 +793,7 @@ body {
   height: 400px;
   background: var(--penny-accent);
   opacity: 0.2;
-  filter: blur(80px);
+  filter: blur(var(--blur-lg));
   border-radius: 50%;
   pointer-events: none;
 }
@@ -812,7 +802,7 @@ body {
   .penny-insight-blob {
     width: 600px;
     height: 600px;
-    filter: blur(100px);
+    filter: blur(var(--blur-xl));
   }
 }
 
@@ -847,7 +837,7 @@ select option {
 }
 
 /* ═══════════════════════════════════════════════
-   SECTION SEPARATOR (Section 14.2)
+   SECTION SEPARATOR
 ═══════════════════════════════════════════════ */
 
 .section-sep {
@@ -870,16 +860,13 @@ select option {
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--tracking-wider);
   color: var(--secondary);
   white-space: nowrap;
 }
 
 /* ═══════════════════════════════════════════════
-   PENNY CARD STANDARD (Section 14.3)
-   ─────────────────────────────────────────────
-   Penny card with lime border and lime blob.
-   Used across all Penny insight cards.
+   PENNY CARD STANDARD
 ═══════════════════════════════════════════════ */
 
 .penny-card {
@@ -891,11 +878,10 @@ select option {
 
 /* ═══════════════════════════════════════════════
    MICRO-INTERACTIONS
-   ═══════════════════════════════════════════════ */
+═══════════════════════════════════════════════ */
 
-/* Global hover effect for cards, buttons, or interactive elements */
 .micro-hover {
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.4s var(--ease-bounce), box-shadow 0.4s var(--ease-spring);
 }
 
 .micro-hover:hover {
@@ -903,12 +889,10 @@ select option {
   box-shadow: 0 20px 48px -12px var(--accent-glow);
 }
 
-/* Global click effect */
 .micro-active:active {
   transform: translateY(1px) scale(0.98);
 }
 
-/* Float animation for decorative elements */
 @keyframes float {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -916,7 +900,7 @@ select option {
 }
 
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  animation: float 6s var(--ease-in-out) infinite;
 }
 
 @keyframes node-float {
@@ -925,24 +909,21 @@ select option {
 }
 
 .node-float {
-  animation: node-float 3.5s ease-in-out infinite;
+  animation: node-float 3.5s var(--ease-in-out) infinite;
 }
 
-/* Apply base interaction to elements globally */
 button:not(:disabled) {
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease, background-color 350ms ease, color 350ms ease, border-color 350ms ease;
+  transition: transform 0.4s var(--ease-bounce), box-shadow 0.4s var(--ease-spring), filter 0.3s var(--ease-base), background-color var(--duration-theme) var(--ease-base), color var(--duration-theme) var(--ease-base), border-color var(--duration-theme) var(--ease-base);
 }
 
 button:not(:disabled):active {
   transform: translateY(1px) scale(0.98);
 }
 
-/* Base Bento Card transitions */
 .bento-card {
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1), background-color 350ms ease, color 350ms ease, border-color 350ms ease;
+  transition: transform 0.5s var(--ease-spring), box-shadow 0.5s var(--ease-spring), background-color var(--duration-theme) var(--ease-base), color var(--duration-theme) var(--ease-base), border-color var(--duration-theme) var(--ease-base);
 }
 
-/* Only glow/lift if the card is explicitly clickable */
 button.bento-card:hover,
 a.bento-card:hover,
 .bento-card.interactive:hover {
@@ -951,11 +932,9 @@ a.bento-card:hover,
 }
 
 /* ═══════════════════════════════════════════════
-   MISSING FROM HALF_DONE — merged
-   (Tokenized: all values reference CSS vars above)
+   TOKENISED UTILITY CLASSES
 ═══════════════════════════════════════════════ */
 
-/* Card hover state for clickable rows / list items */
 .card-hover:hover {
   background: var(--surface-hover);
   cursor: pointer;
@@ -973,7 +952,7 @@ a.bento-card:hover,
   font-size: var(--btn-font-size);
   font-weight: var(--btn-font-weight);
   box-shadow: var(--btn-shadow);
-  transition: all 200ms ease;
+  transition: all var(--duration-base) var(--ease-base);
   cursor: pointer;
   border: none;
 }
@@ -990,8 +969,7 @@ a.bento-card:hover,
   transform: none;
 }
 
-/* Gradient CTA button — accent→secondary-accent fill */
-/* Used by: Export Plan, Ask Penny, any dual-accent primary action. */
+/* Gradient CTA button */
 .btn-gradient {
   display: inline-flex;
   align-items: center;
@@ -1005,7 +983,7 @@ a.bento-card:hover,
   box-shadow: var(--btn-shadow);
   border: none;
   cursor: pointer;
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform var(--duration-base) var(--ease-base), box-shadow var(--duration-base) var(--ease-base);
 }
 .btn-gradient:hover {
   transform: translateY(-1px);
@@ -1020,13 +998,12 @@ a.bento-card:hover,
   transform: none;
 }
 
-/* Gradient pill CTA — pill radius variant (Ask Penny style) */
+/* Gradient pill CTA */
 .btn-gradient-pill {
   border-radius: var(--btn-radius-pill);
 }
 
-/* Ghost gradient border button — outlined gradient stroke, transparent fill */
-/* For secondary/tertiary actions that need visual weight without solid fill. */
+/* Ghost gradient border button */
 .btn-ghost-gradient {
   display: inline-flex;
   align-items: center;
@@ -1042,7 +1019,7 @@ a.bento-card:hover,
   box-shadow: inset 0 0 0 1.5px transparent;
   position: relative;
   cursor: pointer;
-  transition: opacity 200ms ease, transform 200ms ease;
+  transition: opacity var(--duration-base) var(--ease-base), transform var(--duration-base) var(--ease-base);
 }
 .btn-ghost-gradient::before {
   content: '';
@@ -1063,17 +1040,12 @@ a.bento-card:hover,
   transform: translateY(0);
 }
 
-/* ── Secondary pill button ──────────────────────────────────────────────────
-   Sits one tier below a solid-fill primary pill (e.g. Ask Penny).
-   Pill-shaped with a gradient border stroke — fully transparent interior.
-   Use for: Export Plan, Share, and any secondary action next to a primary pill.
-   ─────────────────────────────────────────────────────────────────────────── */
+/* Secondary pill button */
 .btn-secondary-pill {
   display: inline-flex;
   align-items: center;
   gap: var(--btn-gap);
-  /* Tighter than primary: 6px vertical / 12px horizontal */
-  padding: 6px 12px;
+  padding: var(--gap-base) var(--gap-lg);
   border-radius: var(--btn-radius-pill);
   background: transparent;
   border: 1.5px solid var(--accent);
@@ -1082,7 +1054,7 @@ a.bento-card:hover,
   font-weight: var(--btn-font-weight);
   box-shadow: none;
   cursor: pointer;
-  transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease;
+  transition: transform var(--duration-base) var(--ease-base), box-shadow var(--duration-base) var(--ease-base), opacity var(--duration-base) var(--ease-base);
 }
 .btn-secondary-pill:hover {
   transform: translateY(-1px);
@@ -1098,19 +1070,19 @@ a.bento-card:hover,
   transform: none;
 }
 
-/* Pill — smaller inline badge/action button */
+/* Pill — inline badge/action */
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
+  gap: var(--gap-base);
+  padding: 7px var(--gap-lg);
   border-radius: var(--radius-full);
   background: var(--surface-hover);
   color: var(--secondary);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   border: 1px solid var(--border);
-  transition: all 150ms ease;
+  transition: all var(--duration-fast) var(--ease-base);
   cursor: pointer;
 }
 .pill:hover {
@@ -1128,7 +1100,7 @@ a.bento-card:hover,
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 5px;
+  height: var(--h-bar-sm);
   background: var(--surface-hover);
   border-radius: var(--radius-full);
   outline: none;
@@ -1143,7 +1115,7 @@ a.bento-card:hover,
   border: 2.5px solid var(--accent);
   cursor: grab;
   box-shadow: 0 2px 8px var(--accent-glow);
-  transition: transform 150ms ease;
+  transition: transform var(--duration-fast) var(--ease-base);
 }
 .range::-webkit-slider-thumb:hover {
   transform: scale(1.15);
@@ -1157,7 +1129,7 @@ a.bento-card:hover,
   cursor: grab;
 }
 
-/* Penny blob — radial glow inside penny-card */
+/* Penny blob */
 .penny-blob {
   position: absolute;
   width: 260px;
@@ -1182,10 +1154,10 @@ a.bento-card:hover,
   }
 }
 .draw-line {
-  animation: drawLine 1.2s ease forwards;
+  animation: drawLine 1.2s var(--ease-base) forwards;
 }
 .draw-line-long {
-  animation: drawLine 2s ease forwards;
+  animation: drawLine 2s var(--ease-base) forwards;
 }
 
 @keyframes pulseRing {
@@ -1193,15 +1165,15 @@ a.bento-card:hover,
   50%       { box-shadow: 0 0 0 10px transparent; }
 }
 .pulse-ring {
-  animation: pulseRing 2.4s ease-in-out infinite;
+  animation: pulseRing 2.4s var(--ease-in-out) infinite;
 }
 
 @keyframes msgIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(var(--gap-base)); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .penny-msg-in {
-  animation: msgIn 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: msgIn 280ms var(--ease-spring);
 }
 
 @keyframes dotBounce {
@@ -1213,16 +1185,8 @@ a.bento-card:hover,
   height: 7px;
   border-radius: 50%;
   background: var(--secondary);
-  animation: dotBounce 1.2s ease-in-out infinite;
+  animation: dotBounce 1.2s var(--ease-in-out) infinite;
 }
-
-/* ═══════════════════════════════════════════════
-   TOKENISED UTILITY CLASSES
-   ─────────────────────────────────────────────
-   All values reference CSS custom properties.
-   No hardcoded colours, font names, or px values
-   except structural ones (50%, 100%, etc.).
-═══════════════════════════════════════════════ */
 
 /* ── Font family helpers ── */
 .font-body-family {
@@ -1250,7 +1214,7 @@ a.bento-card:hover,
   color: var(--penny-accent);
 }
 
-/* ── Icon fixed minimum size (sidebar nav icons) ── */
+/* ── Icon fixed minimum size ── */
 .icon-20 {
   min-width: 20px;
   min-height: 20px;
@@ -1265,8 +1229,8 @@ a.bento-card:hover,
 .penny-panel {
   background: var(--surface-tint);
   border-left: 1px solid var(--border);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(var(--blur-sidebar));
+  -webkit-backdrop-filter: blur(var(--blur-sidebar));
 }
 
 /* ── Penny avatar circle ── */
@@ -1284,7 +1248,7 @@ a.bento-card:hover,
   border-bottom: 1px solid var(--border);
 }
 
-/* ── Message bubbles (Penny chat) ── */
+/* ── Message bubbles ── */
 .msg-user {
   background-color: var(--accent);
   color: var(--on-accent);
@@ -1306,7 +1270,7 @@ a.bento-card:hover,
   border-bottom-left-radius: var(--radius-xs);
 }
 
-/* ── Suggestion chip (Penny quick prompts) ── */
+/* ── Suggestion chip ── */
 .suggestion-chip {
   font-family: var(--font-body);
 }
@@ -1338,14 +1302,14 @@ a.bento-card:hover,
   border: 1px solid var(--border);
 }
 
-/* ── Large numeric input (onboarding income, expenses) ── */
+/* ── Large numeric input ── */
 .input-number-large {
   background: var(--surface-tint);
   border: 2px solid var(--border);
   font-family: var(--font-display);
 }
 
-/* ── Currency/select dropdown (onboarding) ── */
+/* ── Currency/select dropdown ── */
 .currency-select {
   background: var(--surface-tint);
   border: 1px solid var(--border);
@@ -1353,13 +1317,13 @@ a.bento-card:hover,
   color: var(--card-foreground);
 }
 
-/* ── Icon-button: solid accent (send button, etc.) ── */
+/* ── Icon-button: solid accent ── */
 .btn-accent-icon {
   background-color: var(--accent);
   color: var(--on-accent);
 }
 
-/* ── Stat card (goal detail panel, journey) ── */
+/* ── Stat card ── */
 .stat-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -1409,7 +1373,7 @@ a.bento-card:hover,
   font-family: var(--font-body);
 }
 
-/* ── Info / hint banner (neutral) ── */
+/* ── Info banner ── */
 .info-banner {
   background: var(--surface-tint);
   border: 1px solid var(--border);
@@ -1439,25 +1403,25 @@ a.bento-card:hover,
   color: var(--card-foreground);
 }
 
-/* ── Breakdown toggle button (show/hide breakdown) ── */
+/* ── Breakdown toggle button ── */
 .btn-breakdown-toggle {
   background: var(--surface-hover);
   color: var(--accent-text);
 }
 
-/* ── Label — secondary text + body font ── */
+/* ── Label — secondary text ── */
 .label-secondary {
   color: var(--secondary);
   font-family: var(--font-body);
 }
 
-/* ── Priority chip (goal cards selected state) ── */
+/* ── Priority chip ── */
 .priority-chip {
   background: var(--surface-tint);
   border: 1px solid var(--border);
 }
 
-/* ── Preset card (add goal modal) ── */
+/* ── Preset card ── */
 .preset-card {
   background: var(--surface-tint);
   border: 1px solid var(--border);
@@ -1480,17 +1444,17 @@ a.bento-card:hover,
   color: var(--accent-text);
 }
 
-/* ── Custom section divider (modal, forms) ── */
+/* ── Section divider ── */
 .section-divider-top {
   border-top: 1px solid var(--border);
   padding-top: var(--space-2);
 }
 
-/* ── Journey detail panel (slide-in panel overlay) ── */
+/* ── Journey detail panel ── */
 .journey-detail-panel {
   background: var(--surface-tint);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
   border-left: 1px solid var(--border);
 }
 
@@ -1498,41 +1462,41 @@ a.bento-card:hover,
 .journey-eyebrow {
   font-size: var(--text-2xs);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   color: var(--tertiary);
-  margin-bottom: var(--space-0.5);
+  margin-bottom: var(--space-0_5);
 }
 
 .journey-stat-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: var(--gap-base);
+  padding: var(--gap-base) var(--gap-lg);
   border-radius: var(--radius-full);
 }
 
 .journey-canvas-hint {
   position: absolute;
-  bottom: 14px;
-  right: 16px;
+  bottom: var(--gap-xl);
+  right: var(--space-2);
   font-size: var(--text-2xs);
   color: var(--tertiary);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wide);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--gap-base);
   background: var(--card);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 5px 10px;
+  backdrop-filter: blur(var(--blur-xs));
+  -webkit-backdrop-filter: blur(var(--blur-xs));
+  padding: var(--gap-sm) var(--gap-md);
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
   pointer-events: none;
-  z-index: 10;
+  z-index: var(--z-raised);
 }
 
-/* ── Journey goal ring (SVG progress circle) ── */
+/* ── Journey goal ring ── */
 .journey-goal-ring-track {
   fill: none;
   stroke: var(--border);
@@ -1543,7 +1507,7 @@ a.bento-card:hover,
   fill: none;
   stroke-width: 4;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: stroke-dashoffset var(--duration-hero) var(--ease-spring);
 }
 
 /* ── Journey detail panel priority buttons ── */
@@ -1555,7 +1519,7 @@ a.bento-card:hover,
   font-weight: var(--font-weight-semibold);
   font-family: var(--font-display);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--duration-fast) var(--ease-base);
   border: 1px solid var(--border);
   background: var(--surface-tint);
   color: var(--secondary);
@@ -1596,15 +1560,15 @@ a.bento-card:hover,
   font-family: var(--font-display);
   font-size: var(--text-4xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.03em;
-  margin-top: 4px;
+  letter-spacing: var(--tracking-tightest);
+  margin-top: var(--space-0_5);
   color: var(--foreground);
 }
 
 .scenarios-subtitle {
   font-size: var(--text-sm);
   color: var(--secondary);
-  margin-top: var(--space-0.5);
+  margin-top: var(--space-0_5);
   max-width: 560px;
 }
 
@@ -1625,7 +1589,7 @@ a.bento-card:hover,
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
   margin-top: var(--space-1);
   color: var(--accent-text);
 }
@@ -1636,7 +1600,7 @@ a.bento-card:hover,
 .kpi-meta {
   font-size: var(--text-xs);
   color: var(--tertiary);
-  margin-top: 4px;
+  margin-top: var(--space-0_5);
 }
 
 .scenarios-main-grid {
@@ -1661,7 +1625,7 @@ a.bento-card:hover,
 .chart-subtitle {
   font-size: var(--text-xs);
   color: var(--tertiary);
-  margin-top: 4px;
+  margin-top: var(--space-0_5);
 }
 
 .chart-legend {
@@ -1673,20 +1637,20 @@ a.bento-card:hover,
 .chart-legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--gap-base);
 }
 
 .legend-dot {
-  width: 10px;
-  height: 10px;
+  width: var(--gap-md);
+  height: var(--gap-md);
   border-radius: var(--radius-xs);
   background: var(--accent);
   flex-shrink: 0;
 }
 
 .legend-dash {
-  width: 10px;
-  height: 2px;
+  width: var(--gap-md);
+  height: var(--h-bar-xs);
   background: var(--tertiary);
   border-radius: var(--radius-full);
   flex-shrink: 0;
@@ -1711,14 +1675,14 @@ a.bento-card:hover,
   color: var(--card-foreground);
   padding: var(--space-2) var(--space-3);
   pointer-events: none;
-  z-index: 10;
+  z-index: var(--z-raised);
   min-width: 140px;
 }
 
 .chart-tooltip-label {
   font-size: var(--text-xs);
   color: var(--tertiary);
-  margin-bottom: var(--space-0.5);
+  margin-bottom: var(--space-0_5);
 }
 
 .chart-tooltip-value {
@@ -1730,7 +1694,7 @@ a.bento-card:hover,
 .chart-tooltip-sub {
   font-size: var(--text-xs);
   color: var(--tertiary);
-  margin-top: 2px;
+  margin-top: var(--gap-2xs);
 }
 
 .knob {
@@ -1761,7 +1725,7 @@ a.bento-card:hover,
 .risk-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--gap-base);
   list-style: none;
   padding: 0;
   margin: 0;
@@ -1770,13 +1734,13 @@ a.bento-card:hover,
 .risk-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: var(--gap-lg);
+  padding: var(--gap-md) var(--gap-lg);
   border-radius: var(--radius-md);
   background: var(--surface-hover);
   border: 1.5px solid transparent;
   text-align: left;
-  transition: all 200ms ease;
+  transition: all var(--duration-base) var(--ease-base);
   width: 100%;
   cursor: pointer;
 }
@@ -1786,8 +1750,8 @@ a.bento-card:hover,
 }
 
 .risk-dot {
-  width: 8px;
-  height: 8px;
+  width: var(--h-bar-md);
+  height: var(--h-bar-md);
   border-radius: var(--radius-full);
   flex-shrink: 0;
 }
@@ -1815,7 +1779,7 @@ a.bento-card:hover,
   margin-top: var(--space-2);
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: var(--gap-lg);
   list-style: none;
   padding: 0;
   margin-left: 0;
@@ -1838,7 +1802,7 @@ a.bento-card:hover,
   box-shadow: var(--shadow-sm);
   width: 100%;
   cursor: pointer;
-  transition: all 200ms ease;
+  transition: all var(--duration-base) var(--ease-base);
 }
 
 .preset-btn.active {
@@ -1850,13 +1814,13 @@ a.bento-card:hover,
 .preset-btn-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: var(--gap-md);
+  margin-bottom: var(--gap-md);
 }
 
 .preset-icon {
-  width: 32px;
-  height: 32px;
+  width: var(--space-4);
+  height: var(--space-4);
   border-radius: var(--radius-sm);
   background: var(--accent-subtle);
   color: var(--accent);
@@ -1875,14 +1839,14 @@ a.bento-card:hover,
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
   margin: 0;
 }
 
 .preset-meta {
   font-size: var(--text-xs);
   color: var(--tertiary);
-  margin-top: 4px;
+  margin-top: var(--space-0_5);
   margin-bottom: 0;
 }
 
@@ -1896,8 +1860,7 @@ a.bento-card:hover,
 
 .month-page {
   padding: var(--space-4) var(--space-5);
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -1910,7 +1873,7 @@ a.bento-card:hover,
 .month-title {
   font-size: var(--text-3xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
   margin-top: var(--space-1);
 }
 
@@ -1918,7 +1881,7 @@ a.bento-card:hover,
 
 .mission-content {
   position: relative;
-  z-index: 10;
+  z-index: var(--z-raised);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -1938,7 +1901,7 @@ a.bento-card:hover,
 .mission-eyebrow {
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.07em;
+  letter-spacing: var(--tracking-wider);
   color: var(--tertiary);
   text-transform: uppercase;
   font-family: var(--font-body);
@@ -1951,7 +1914,7 @@ a.bento-card:hover,
   margin-bottom: var(--space-2);
   color: var(--card-foreground);
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
 }
 
 @media (min-width: 768px) {
@@ -1970,14 +1933,14 @@ a.bento-card:hover,
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   color: var(--secondary);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-0_5);
   font-family: var(--font-body);
 }
 
 .mission-stat-value {
   font-size: var(--text-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--card-foreground);
+  color: var(--tertiary);
   font-family: var(--font-display);
 }
 
@@ -2020,9 +1983,9 @@ a.bento-card:hover,
   font-weight: var(--font-weight-medium);
   color: var(--tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--tracking-wider);
   font-family: var(--font-body);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-0_5);
 }
 
 .mission-right-value {
@@ -2043,18 +2006,35 @@ a.bento-card:hover,
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-2);
+  width: 100%;
 }
 
 @media (min-width: 1024px) {
   .month-grid {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
+.month-left-col,
 .month-right-col {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
+  width: 100%;
+}
+
+.month-left-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .month-left-bottom {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ─── Lower grid ─── */
@@ -2062,11 +2042,12 @@ a.bento-card:hover,
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-2);
+  width: 100%;
 }
 
 @media (min-width: 1024px) {
   .month-lower-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -2086,7 +2067,7 @@ a.bento-card:hover,
 
 .debt-warning-title {
   font-weight: var(--font-weight-semibold);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-0_5);
 }
 
 /* ─── Checklist ─── */
@@ -2106,13 +2087,13 @@ a.bento-card:hover,
 .checklist-count {
   font-size: var(--text-xs);
   color: var(--tertiary);
-  margin-top: 4px;
+  margin-top: var(--space-0_5);
 }
 
 .checklist-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--gap-md);
   list-style: none;
   padding: 0;
   margin: 0;
@@ -2121,19 +2102,19 @@ a.bento-card:hover,
 .checklist-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px;
+  gap: var(--gap-xl);
+  padding: var(--gap-xl);
   border-radius: var(--radius-md);
   background: var(--surface-tint);
   border: 1px solid var(--border);
   text-align: left;
-  transition: all 250ms ease;
+  transition: all var(--duration-medium) var(--ease-base);
   width: 100%;
 }
 
 .checklist-item.done {
-  background: var(--green-subtle);
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--accent-subtle);
+  border-color: var(--accent-border-subtle);
 }
 
 .checklist-check {
@@ -2147,12 +2128,12 @@ a.bento-card:hover,
   align-items: center;
   justify-content: center;
   color: var(--on-accent);
-  transition: all 200ms ease;
+  transition: all var(--duration-base) var(--ease-base);
   cursor: pointer;
 }
 
 .checklist-check.done {
-  background: var(--green);
+  background: var(--accent);
   border-color: transparent;
 }
 
@@ -2175,7 +2156,7 @@ a.bento-card:hover,
 .checklist-meta {
   font-size: var(--text-xs);
   color: var(--tertiary);
-  margin-top: 2px;
+  margin-top: var(--gap-2xs);
 }
 
 .checklist-amount {
@@ -2190,7 +2171,7 @@ a.bento-card:hover,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: var(--gap-base);
   font-size: var(--text-sm);
   color: var(--card-foreground);
   font-family: var(--font-body);
@@ -2207,7 +2188,7 @@ a.bento-card:hover,
 .task-amount-input {
   width: 96px;
   text-align: center;
-  padding: 2px 8px;
+  padding: var(--gap-2xs) var(--space-1);
   border-radius: var(--radius-sm);
   outline: none;
   font-weight: var(--font-weight-semibold);
@@ -2215,7 +2196,7 @@ a.bento-card:hover,
   border: 1px solid var(--border);
   color: var(--card-foreground);
   font-family: var(--font-display);
-  transition: all 200ms ease;
+  transition: all var(--duration-base) var(--ease-base);
 }
 
 .task-amount-input.done {
@@ -2232,11 +2213,11 @@ a.bento-card:hover,
   color: var(--secondary);
 }
 
-/* ─── Impact section (goal bars) ─── */
+/* ─── Impact section ─── */
 .impact-subtitle {
   font-size: var(--text-sm);
   color: var(--secondary);
-  margin-top: 4px;
+  margin-top: var(--space-0_5);
   margin-bottom: var(--space-2);
   font-family: var(--font-body);
 }
@@ -2251,7 +2232,7 @@ a.bento-card:hover,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-1);
 }
 
 .impact-goal-name {
@@ -2260,7 +2241,7 @@ a.bento-card:hover,
   color: var(--card-foreground);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-1);
 }
 
 .impact-goal-score {
@@ -2277,24 +2258,24 @@ a.bento-card:hover,
 }
 
 .progress-bar-outer {
-  height: 12px;
+  height: var(--h-bar-xl);
   border-radius: var(--radius-full);
   overflow: hidden;
   display: flex;
   position: relative;
   background: var(--progress-inactive);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px var(--black-10);
 }
 
 .progress-fill {
   height: 100%;
-  transition: width 500ms ease;
+  transition: width var(--duration-morph) var(--ease-base);
   background-color: var(--accent);
 }
 
 .progress-fill-pending {
   height: 100%;
-  transition: width 1000ms ease;
+  transition: width 1000ms var(--ease-base);
   background-color: var(--accent);
   opacity: 0.6;
   position: relative;
@@ -2309,19 +2290,19 @@ a.bento-card:hover,
     45deg,
     transparent,
     transparent 10px,
-    rgba(255, 255, 255, 0.15) 10px,
-    rgba(255, 255, 255, 0.15) 20px
+    var(--white-15) 10px,
+    var(--white-15) 20px
   );
 }
 
 .progress-bar-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 6px;
-  font-size: 10px;
+  margin-top: var(--gap-base);
+  font-size: var(--text-2xs);
   color: var(--secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-super);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -2338,14 +2319,14 @@ a.bento-card:hover,
 /* ─── Penny suggestion (Month) ─── */
 .penny-suggest-inner {
   position: relative;
-  z-index: 10;
+  z-index: var(--z-raised);
 }
 
 .penny-suggest-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: var(--gap-md);
+  margin-bottom: var(--gap-md);
 }
 
 .penny-suggest-title {
@@ -2356,7 +2337,7 @@ a.bento-card:hover,
 
 .penny-suggest-text {
   font-size: var(--text-sm);
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
   color: var(--secondary);
   font-family: var(--font-body);
 }
@@ -2367,7 +2348,7 @@ a.bento-card:hover,
   display: flex;
   align-items: center;
   height: 36px;
-  padding: 0 4px;
+  padding: 0 var(--space-0_5);
   border-radius: var(--radius-full);
   cursor: pointer;
   user-select: none;
@@ -2382,14 +2363,14 @@ a.bento-card:hover,
   top: 2px;
   height: 32px;
   border-radius: var(--radius-full);
-  transition: all 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all var(--duration-slow) var(--ease-spring);
   background: var(--card);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  width: calc(50% - 4px);
+  box-shadow: 0 1px 3px var(--black-18);
+  width: calc(50% - var(--space-0_5));
 }
 
 .strategy-toggle-pill.left {
-  left: 4px;
+  left: var(--space-0_5);
 }
 
 .strategy-toggle-pill.right {
@@ -2398,12 +2379,12 @@ a.bento-card:hover,
 
 .strategy-toggle-label {
   position: relative;
-  z-index: 10;
+  z-index: var(--z-raised);
   flex: 1;
   text-align: center;
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
-  transition: color 200ms ease;
+  transition: color var(--duration-base) var(--ease-base);
   font-family: var(--font-body);
 }
 
@@ -2423,10 +2404,10 @@ a.bento-card:hover,
   border: 1px solid var(--border);
   color: var(--secondary);
   font-family: var(--font-body);
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
 }
 
-/* ─── Warning banner (complete) ─── */
+/* ─── Warning banner ─── */
 .warning-banner {
   background: var(--amber-subtle);
   color: var(--amber-text);
@@ -2441,8 +2422,350 @@ a.bento-card:hover,
 .lumpsum-notice {
   font-size: var(--text-xs);
   color: var(--secondary);
-  padding: 6px var(--space-2);
+  padding: var(--gap-base) var(--space-2);
   border-radius: var(--radius-sm);
+}
+
+/* ═══════════════════════════════════════════════
+   CASHFLOW BREAKDOWN (Month page)
+═══════════════════════════════════════════════ */
+
+.cashflow-section-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--card-foreground);
+  margin-bottom: var(--space-2);
+  letter-spacing: var(--tracking-heading-sm);
+}
+
+.cashflow-bar {
+  display: flex;
+  height: var(--h-bar-lg);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  gap: var(--gap-2xs);
+  margin-bottom: var(--space-1);
+}
+
+.cashflow-bar-segment {
+  height: 100%;
+  flex-shrink: 0;
+  transition: width var(--duration-bar) var(--ease-spring);
+}
+
+.cashflow-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-xs) var(--gap-lg);
+  margin-bottom: var(--space-2);
+}
+
+.cashflow-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  font-size: var(--text-2xs);
+  color: var(--secondary);
+}
+
+.cashflow-legend-dot {
+  width: var(--gap-base);
+  height: var(--gap-base);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.cashflow-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+  margin-bottom: var(--space-2);
+}
+
+.cashflow-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  padding: var(--gap-md) var(--gap-lg);
+  border-radius: var(--radius-base);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
+  transition: background var(--duration-base) var(--ease-base);
+}
+
+.cashflow-row:hover {
+  background: var(--surface-hover);
+}
+
+.cashflow-row-node {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cashflow-row-node-dot {
+  width: var(--h-bar-md);
+  height: var(--h-bar-md);
+  border-radius: var(--radius-full);
+}
+
+.cashflow-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.cashflow-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--gap-sm);
+}
+
+.cashflow-row-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--secondary);
+}
+
+.cashflow-row-amount {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--card-foreground);
+}
+
+.cashflow-row-bar-outer {
+  height: var(--h-bar-xs);
+  border-radius: var(--radius-full);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.cashflow-row-bar-inner {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--duration-bar) var(--ease-spring);
+}
+
+.cashflow-row-pct {
+  font-size: var(--text-2xs);
+  color: var(--tertiary);
+  flex-shrink: 0;
+  min-width: 28px;
+  text-align: right;
+  font-family: var(--font-display);
+}
+
+/* 6-month trend mini-chart */
+.cashflow-trend {
+  padding: var(--space-2);
+  border-radius: var(--radius-base);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
+}
+
+.cashflow-trend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-1);
+}
+
+.cashflow-trend-label {
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-widest-sm);
+  text-transform: uppercase;
+  color: var(--tertiary);
+}
+
+.cashflow-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-2xs);
+  padding: var(--gap-2xs) var(--space-1);
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-display);
+  background: var(--surface-tint);
+  color: var(--secondary);
+  border: 1px solid var(--border);
+}
+
+.cashflow-trend-months {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--gap-sm);
+}
+
+.cashflow-trend-month {
+  font-size: var(--text-2xs);
+  color: var(--tertiary);
+  font-family: var(--font-display);
+}
+
+.cashflow-trend-month.current {
+  color: var(--card-foreground);
+  font-weight: var(--font-weight-bold);
+}
+
+/* ═══════════════════════════════════════════════
+   MONTHLY EXECUTION (Checklist redesign)
+═══════════════════════════════════════════════ */
+
+.execution-header {
+  margin-bottom: var(--space-2);
+}
+
+.execution-label {
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-widest-sm);
+  text-transform: uppercase;
+  color: var(--tertiary);
+  margin-bottom: var(--space-1);
+}
+
+.execution-progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 9px;
+}
+
+.execution-count {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.execution-bar-outer {
+  height: var(--h-bar-sm);
+  border-radius: var(--radius-full);
+  background: var(--surface-hover);
+  overflow: hidden;
+}
+
+.execution-bar-inner {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  transition: width var(--duration-page) var(--ease-spring), background var(--duration-slow) var(--ease-base);
+}
+
+.execution-bar-inner.all-done {
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow-strong);
+}
+
+.execution-sub-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--tertiary);
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-1);
+}
+
+/* Goal check rows */
+.goal-check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-lg);
+  padding: 11px 13px;
+  border-radius: var(--radius-base);
+  border: 1px solid var(--border);
+  background: var(--surface-tint);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-standard);
+  margin-bottom: var(--gap-sm);
+}
+
+.goal-check-row.is-done {
+  background: var(--surface-hover);
+  border-color: var(--border);
+}
+
+.goal-check-box {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  background: transparent;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s var(--ease-standard);
+  cursor: pointer;
+}
+
+.goal-check-box.done {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.goal-check-label-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.goal-check-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--secondary);
+  transition: color 0.2s var(--ease-base);
+}
+
+.goal-check-label.done {
+  text-decoration: line-through;
+  color: var(--tertiary);
+}
+
+.goal-check-amount {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+  color: var(--card-foreground);
+  transition: color 0.2s var(--ease-base);
+}
+
+.goal-check-amount.done {
+  color: var(--tertiary);
+}
+
+/* Total committed chip */
+.execution-total-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-1) 13px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
+  margin-top: var(--gap-xs);
+  margin-bottom: var(--space-2);
+}
+
+.execution-total-label {
+  font-size: var(--text-xs);
+  color: var(--secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.execution-total-value {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--card-foreground);
 }
 
 /* ─── Color utilities ─── */
@@ -2457,8 +2780,8 @@ a.bento-card:hover,
 }
 
 /* ═══════════════════════════════════════════════
-    DEBT PAGE
-   ═══════════════════════════════════════════════ */
+   DEBT PAGE
+═══════════════════════════════════════════════ */
 
 .debt-page {
   max-width: 1400px;
@@ -2469,8 +2792,8 @@ a.bento-card:hover,
   font-family: var(--font-display);
   font-size: var(--text-4xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.03em;
-  margin-top: 4px;
+  letter-spacing: var(--tracking-tightest);
+  margin-top: var(--space-0_5);
   color: var(--foreground);
 }
 
@@ -2478,8 +2801,8 @@ a.bento-card:hover,
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.025em;
-  line-height: 1;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-none);
   color: var(--foreground);
 }
 
@@ -2543,7 +2866,7 @@ a.bento-card:hover,
 
 .debt-bar {
   width: 160px;
-  height: 8px;
+  height: var(--h-bar-md);
   background: var(--surface-tint);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -2553,7 +2876,7 @@ a.bento-card:hover,
 .debt-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  transition: width 1s ease;
+  transition: width 1s var(--ease-base);
 }
 
 .debt-row-amount {
@@ -2583,8 +2906,8 @@ a.bento-card:hover,
   font-family: var(--font-display);
   font-size: var(--text-4xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.03em;
-  margin-top: 4px;
+  letter-spacing: var(--tracking-tightest);
+  margin-top: var(--space-0_5);
   color: var(--foreground);
 }
 .dashboard-grid {
@@ -2595,40 +2918,40 @@ a.bento-card:hover,
 
 /* Goals card */
 .goals-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2); }
-.goals-subtitle { font-size: var(--text-xs); color: var(--tertiary); margin-top: 4px; }
+.goals-subtitle { font-size: var(--text-xs); color: var(--tertiary); margin-top: var(--space-0_5); }
 .goals-list { display: flex; flex-direction: column; gap: var(--space-1); }
-.goal-row { display: flex; align-items: center; gap: var(--space-2); padding: 10px var(--space-2); border-radius: var(--radius-md); }
+.goal-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--gap-md) var(--space-2); border-radius: var(--radius-md); }
 .goal-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .goal-name-col { min-width: 130px; flex-shrink: 0; }
 .goal-name { font-size: var(--text-sm); font-weight: var(--font-weight-semibold); color: var(--card-foreground); }
-.goal-sub { font-size: var(--text-xs); color: var(--tertiary); margin-top: 2px; }
-.goal-bar { flex: 1; position: relative; height: 8px; background: var(--surface-hover); border-radius: var(--radius-full); overflow: hidden; }
+.goal-sub { font-size: var(--text-xs); color: var(--tertiary); margin-top: var(--gap-2xs); }
+.goal-bar { flex: 1; position: relative; height: var(--h-bar-md); background: var(--surface-hover); border-radius: var(--radius-full); overflow: hidden; }
 .goal-bar-hatch { position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, var(--border) 0 1px, transparent 1px 5px); opacity: 0.5; }
-.goal-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: var(--radius-full); transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1); }
+.goal-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: var(--radius-full); transition: width 1.2s var(--ease-spring); }
 .goal-pct { min-width: 44px; text-align: right; flex-shrink: 0; font-family: var(--font-display); font-weight: var(--font-weight-bold); font-size: var(--text-base); color: var(--card-foreground); }
 .goal-amounts { min-width: 110px; text-align: right; flex-shrink: 0; font-size: var(--text-xs); font-weight: var(--font-weight-semibold); }
 .goal-amounts-current { color: var(--card-foreground); }
 .goal-amounts-target { color: var(--tertiary); }
 .goals-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: var(--space-4) 0; }
 .goals-empty-icon { width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--accent-subtle); color: var(--accent); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-2); }
-.goals-empty-text { font-size: var(--text-base); font-weight: var(--font-weight-semibold); color: var(--card-foreground); margin-bottom: 6px; }
+.goals-empty-text { font-size: var(--text-base); font-weight: var(--font-weight-semibold); color: var(--card-foreground); margin-bottom: var(--gap-base); }
 
 /* Next Step card */
 .next-step-header { display: flex; align-items: center; gap: var(--space-1); margin-bottom: var(--space-2); }
 .next-step-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
 .next-step-name { font-size: var(--text-base); font-weight: var(--font-weight-semibold); color: var(--card-foreground); }
-.next-step-amount { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--font-weight-bold); letter-spacing: -0.02em; color: var(--card-foreground); }
+.next-step-amount { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-tight); color: var(--card-foreground); }
 .next-step-period { font-size: var(--text-sm); color: var(--tertiary); font-weight: var(--font-weight-medium); }
-.next-step-remaining { font-size: var(--text-xs); color: var(--tertiary); margin: 4px 0 var(--space-2); }
+.next-step-remaining { font-size: var(--text-xs); color: var(--tertiary); margin: var(--space-0_5) 0 var(--space-2); }
 .next-step-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; }
 .next-step-empty-icon { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--green-subtle); color: var(--green); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-1); }
 .next-step-empty-title { font-size: var(--text-sm); font-weight: var(--font-weight-semibold); color: var(--card-foreground); }
-.next-step-empty-sub { font-size: var(--text-xs); color: var(--tertiary); margin-top: 4px; }
+.next-step-empty-sub { font-size: var(--text-xs); color: var(--tertiary); margin-top: var(--space-0_5); }
 
 /* Health + Metrics card */
 .metrics-col { flex: 1; display: flex; flex-direction: column; justify-content: space-around; padding: var(--space-1) 0; }
-.metric-label { margin-bottom: 4px; }
-.metric-value { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--font-weight-bold); letter-spacing: -0.02em; }
+.metric-label { margin-bottom: var(--space-0_5); }
+.metric-value { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-tight); }
 .health-ring-col { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: var(--space-1); }
 .health-ring-wrap { position: relative; width: 188px; height: 188px; }
 .health-ring-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
@@ -2636,22 +2959,22 @@ a.bento-card:hover,
 .health-score-num { font-family: var(--font-display); font-size: var(--text-4xl); font-weight: var(--font-weight-bold); color: var(--card-foreground); }
 .health-label { font-size: var(--text-xs); font-weight: var(--font-weight-medium); }
 
-/* Health sub-score bars — reduced visual weight */
-.sub-score-list { width: 188px; display: flex; flex-direction: column; gap: 6px; margin-top: var(--space-1); padding-top: var(--space-1); border-top: 1px solid var(--border); }
-.sub-score-item { display: flex; flex-direction: column; gap: 2px; }
+/* Health sub-score bars */
+.sub-score-list { width: 188px; display: flex; flex-direction: column; gap: var(--gap-base); margin-top: var(--space-1); padding-top: var(--space-1); border-top: 1px solid var(--border); }
+.sub-score-item { display: flex; flex-direction: column; gap: var(--gap-2xs); }
 .sub-score-header { display: flex; justify-content: space-between; align-items: center; }
 .sub-score-label { font-size: var(--text-xs); color: var(--secondary); font-weight: var(--font-weight-regular); }
 .sub-score-value { font-size: var(--text-xs); font-family: var(--font-display); font-weight: var(--font-weight-semibold); color: var(--secondary); }
-.sub-score-bar { height: 3px; background: var(--border); border-radius: var(--radius-full); overflow: hidden; }
-.sub-score-fill { height: 100%; border-radius: var(--radius-full); transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1); background: var(--accent); opacity: 0.7; }
+.sub-score-bar { height: var(--h-bar-xs); background: var(--border); border-radius: var(--radius-full); overflow: hidden; }
+.sub-score-fill { height: 100%; border-radius: var(--radius-full); transition: width 1.2s var(--ease-spring); background: var(--accent); opacity: 0.7; }
 
 /* Recent Activity card */
 .activity-header { margin-bottom: var(--space-2); }
-.activity-subtitle { font-size: var(--text-xs); color: var(--tertiary); margin-top: 4px; }
-.activity-list { display: flex; flex-direction: column; gap: 2px; }
-.activity-row { display: flex; justify-content: space-between; align-items: center; padding: 10px var(--space-2); border-radius: var(--radius-sm); }
+.activity-subtitle { font-size: var(--text-xs); color: var(--tertiary); margin-top: var(--space-0_5); }
+.activity-list { display: flex; flex-direction: column; gap: var(--gap-2xs); }
+.activity-row { display: flex; justify-content: space-between; align-items: center; padding: var(--gap-md) var(--space-2); border-radius: var(--radius-sm); }
 .activity-left { display: flex; align-items: center; gap: var(--space-1); }
-.activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.activity-dot { width: var(--h-bar-md); height: var(--h-bar-md); border-radius: 50%; flex-shrink: 0; }
 .activity-name { font-size: var(--text-sm); font-weight: var(--font-weight-medium); color: var(--card-foreground); }
 .activity-status { font-size: var(--text-xs); color: var(--tertiary); }
 .activity-amount { font-family: var(--font-display); font-weight: var(--font-weight-bold); font-size: var(--text-base); color: var(--card-foreground); flex-shrink: 0; }
@@ -2666,4 +2989,4 @@ a.bento-card:hover,
 .penny-insights-grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-1); }
 .penny-tile { display: flex; gap: var(--space-1); padding: var(--space-2); border-radius: var(--radius-md); background: var(--surface-hover); border: 1px solid var(--border); }
 .penny-tile-icon { width: 24px; height: 24px; border-radius: var(--radius-xs); background: var(--penny-accent-subtle); color: var(--penny-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.penny-tile-text { font-size: var(--text-sm); line-height: 1.5; color: var(--card-foreground); }
+.penny-tile-text { font-size: var(--text-sm); line-height: var(--leading-base); color: var(--card-foreground); }
