@@ -28,6 +28,7 @@ import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
 import { compareStrategies } from "@/lib/debt-strategies";
 import confetti from "canvas-confetti";
+import HealthScoreWidget from "@/app/components/HealthScoreWidget";
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Bike, Home, Plane, BookOpen, Users, TrendingUp, Target,
@@ -88,8 +89,6 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
   const animIncome  = useCountUp(income.total * periodMonths);
   const animSurplus = useCountUp(surplus * periodMonths);
   const animSavings = useCountUp(savings + (periodMonths > 1 ? surplus * (periodMonths - 1) : 0));
-  const healthAnim  = useCountUp(health);
-
   const activeGoals = goals.filter((g) => g.currentAmount < g.targetAmount).slice(0, 3);
   const nextGoal    = goals.find((g) => !g.checkedThisMonth && g.status !== "complete");
 
@@ -109,12 +108,6 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
     { name: "Wealth Builder", icon: Gem as LucideIcon, color: "var(--tertiary-accent)", desc: "Net worth above ₹5L", earned: currentNetWorth >= 500000 },
   ];
 
-  const healthLabel =
-    health >= 80 ? { t: "Excellent financial health",   c: "var(--tertiary-accent-text)" } :
-    health >= 60 ? { t: "Strong position — keep going", c: "var(--accent-text)" }          :
-    health >= 40 ? { t: "Steady foundation",            c: "var(--secondary)" }            :
-                   { t: "Let's build momentum",         c: "var(--amber-text)" };
-
   const debtPct = income.total > 0 ? Math.round((totalDebt / income.total) * 100) : 0;
   const debtInsight = interestSaved > 0
     ? `Debt takes ${debtPct}% of income. Switching to avalanche could save ${formatInr(interestSaved)} in interest.`
@@ -123,16 +116,6 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
     { icon: "PiggyBank",     text: `You're saving ${income.total > 0 ? Math.round((surplus / income.total) * 100) : 0}% of income — try moving ₹5,000 from lifestyle to hit 25%.` },
     { icon: "AlertTriangle", text: debtInsight },
     { icon: "Sparkles",      text: `You have ${activeGoals.length} active goal${activeGoals.length !== 1 ? "s" : ""} on track for this month.` },
-  ];
-
-  const r = 78;
-  const circum = 2 * Math.PI * r;
-
-  const subScores = [
-    { label: "Savings Rate",     score: healthScore?.savingsRate     ?? 0 },
-    { label: "Debt Load",        score: healthScore?.debtLoad        ?? 0 },
-    { label: "Emergency Fund",   score: healthScore?.emergencyFund   ?? 0 },
-    { label: "Income Stability", score: healthScore?.incomeStability ?? 0 },
   ];
 
   return (
@@ -319,50 +302,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
           </div>
 
           {/* Health ring column */}
-          <div className="health-ring-col">
-            <p className="text-label">Health Meter</p>
-            <div className="health-ring-wrap">
-              <svg
-                viewBox="0 0 200 200"
-                className="health-ring-svg"
-                role="img"
-                aria-label={`Health score: ${healthAnim} out of 100`}
-              >
-                <defs>
-                  <linearGradient id="health-grad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%"   stopColor="var(--accent)" />
-                    <stop offset="100%" stopColor="var(--secondary-accent)" />
-                  </linearGradient>
-                </defs>
-                <circle cx="100" cy="100" r={r} fill="none" stroke="var(--border)" strokeWidth="14" strokeDasharray="6 6" />
-                <circle cx="100" cy="100" r={r} fill="none" stroke="url(#health-grad)" strokeWidth="14"
-                  strokeDasharray={circum}
-                  strokeDashoffset={circum - (healthAnim / 100) * circum}
-                  strokeLinecap="round"
-                  style={{ transition: "stroke-dashoffset 1500ms cubic-bezier(0.22,1,0.36,1)", filter: "drop-shadow(0 0 var(--space-1) var(--accent-glow))" }}
-                />
-              </svg>
-              <div className="health-score-overlay">
-                <span className="slashed-zero health-score-num">{healthAnim}</span>
-                <span className="text-label">Score</span>
-              </div>
-            </div>
-            <p className="health-label" style={{ color: healthLabel.c }}>{healthLabel.t}</p>
-
-            <div className="sub-score-list">
-              {subScores.map((s) => (
-                <div key={s.label} className="sub-score-item">
-                  <div className="sub-score-header">
-                    <span className="sub-score-label">{s.label}</span>
-                    <span className="sub-score-value">{s.score}/25</span>
-                  </div>
-                  <div className="sub-score-bar">
-                    <div className="sub-score-fill" style={{ width: `${(s.score / 25) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <HealthScoreWidget variant="compact" />
         </motion.div>
 
         {/* ─ Recent Activity (5 cols) ─ */}

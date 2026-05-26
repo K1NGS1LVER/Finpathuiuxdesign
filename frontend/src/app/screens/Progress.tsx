@@ -11,6 +11,7 @@ import { useNavigate } from "react-router";
 import { useFinPathStore } from '@/lib/store';
 import { formatInr, formatInrCompact } from '@/lib/format';
 import { pageContainer, pageSection } from "@/app/components/motion-variants";
+import HealthScoreWidget from "@/app/components/HealthScoreWidget";
 
 type ChartPoint = { label: string; value: number; projected?: boolean };
 
@@ -576,62 +577,7 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
           <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
             Health Score
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {(
-              [
-                { label: "Income Stability", score: healthScore.incomeStability },
-                { label: "Debt Load", score: healthScore.debtLoad },
-                { label: "Savings Rate", score: healthScore.savingsRate },
-                { label: "Emergency Fund", score: healthScore.emergencyFund },
-              ] as const
-            ).map(({ label, score }) => {
-              const color = score >= 20 ? "var(--green-text)" : score >= 12 ? "var(--accent-text)" : "var(--amber-text)";
-              return (
-                <div
-                  key={label}
-                  className="px-4 py-3 rounded-xl text-center"
-                  style={{ background: "var(--surface-tint)", border: "1px solid var(--border)" }}
-                >
-                  <div
-                    className="text-2xl font-bold slashed-zero"
-                    style={{ fontFamily: "var(--font-display)", color }}
-                  >
-                    {score}
-                    <span style={{ fontSize: 13, color: "var(--tertiary)", fontWeight: 400 }}>/25</span>
-                  </div>
-                  <div className="text-xs text-[var(--secondary)] mt-1">{label}</div>
-                </div>
-              );
-            })}
-          </div>
-          {healthScore.actions.length > 0 && (
-            <div className="mt-4 penny-card bento-card">
-              <div className="penny-insight-blob" />
-              <div className="relative z-10 flex items-center gap-2 mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: "var(--penny-accent-subtle)", color: "var(--penny-accent)" }}
-                >
-                  <Sparkles size={16} />
-                </div>
-                <div className="text-xs font-semibold text-[var(--penny-accent)] uppercase tracking-wider">
-                  Penny's Top Actions
-                </div>
-              </div>
-              <div className="relative z-10 space-y-2">
-                {healthScore.actions.slice(0, 3).map((action, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 p-3 rounded-xl text-sm text-card-foreground"
-                    style={{ background: "var(--surface-hover)", border: "1px solid var(--border)", fontFamily: "var(--font-body)" }}
-                  >
-                    <span className="text-[var(--penny-accent)] mt-0.5 font-bold">{i + 1}.</span>
-                    {action}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <HealthScoreWidget variant="full" />
         </motion.div>
       )}
         </>

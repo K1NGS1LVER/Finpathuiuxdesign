@@ -153,3 +153,22 @@ export function calculateHealthScore(input: HealthScoreInput): HealthScore {
     actions,
   };
 }
+
+const GROWTH_CARDS: { text: string; impact: number }[] = [
+  { text: 'Increase SIP contributions to accelerate long-term wealth building', impact: 3 },
+  { text: 'Consider diversifying into index funds or PPF for tax efficiency', impact: 2 },
+];
+
+export function getActionCards(score: HealthScore): { text: string; impact: number }[] {
+  const impacts: number[] = [];
+  if (score.emergencyFund < 18)   impacts.push(25 - score.emergencyFund);
+  if (score.debtLoad < 18)        impacts.push(25 - score.debtLoad);
+  if (score.savingsRate < 20)     impacts.push(25 - score.savingsRate);
+  if (score.incomeStability < 20) impacts.push(25 - score.incomeStability);
+
+  if (impacts.length === 0) return GROWTH_CARDS;
+
+  return score.actions
+    .slice(0, 2)
+    .map((text, i) => ({ text, impact: impacts[i] ?? 0 }));
+}
