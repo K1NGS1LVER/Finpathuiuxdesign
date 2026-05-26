@@ -239,7 +239,7 @@ export function useOnboardingForm() {
       stepUpEnabled,
     });
 
-    navigate("/loading");
+    navigate("/loading", { state: { fromOnboarding: true } });
   }, [
     incomeItems, incomeCurrency, totalIncomeINR,
     expenseBreakdown, expensesCurrency, totalExpenses,

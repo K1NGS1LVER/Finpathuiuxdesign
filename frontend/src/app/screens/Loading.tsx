@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { Check, Sparkles } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
 import FinPathLogo from '@/app/components/FinPathLogo';
@@ -16,18 +16,19 @@ const TAIL_DELAY_MS = 500;
 
 export default function Loading() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromOnboarding = (location.state as { fromOnboarding?: boolean } | null)?.fromOnboarding;
   const [completed, setCompleted] = useState<number[]>([]);
   const computeHealthScore = useFinPathStore(s => s.computeHealthScore);
   const generatePlan = useFinPathStore(s => s.generatePlan);
-  const onboarded = useFinPathStore(s => s.onboarded);
   const goals = useFinPathStore(s => s.goals);
   const plan = useFinPathStore(s => s.plan);
   const healthScore = useFinPathStore(s => s.healthScore);
 
 
   useEffect(() => {
-    if (!onboarded) {
-      navigate('/');
+    if (!fromOnboarding) {
+      navigate('/onboarding', { replace: true });
       return;
     }
 
