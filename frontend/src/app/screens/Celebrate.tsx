@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Trophy, Sparkles, Share2, ArrowRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
+import { CONFETTI_COLORS } from '@/app/screens/journey/constants';
 import { useFinPathStore } from '@/lib/store';
 import { formatInr } from '@/lib/format';
 import ShareCard from '@/app/components/ShareCard';
@@ -14,6 +16,19 @@ export default function Celebrate() {
   const savings = useFinPathStore(s => s.savings);
   const investments = useFinPathStore(s => s.investments);
   const healthScore = useFinPathStore(s => s.healthScore);
+
+  useEffect(() => {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      startVelocity: 28,
+      ticks: 90,
+      origin: { x: 0.5, y: 0.2 },
+      colors: CONFETTI_COLORS,
+      scalar: 0.9,
+      gravity: 1.0,
+    });
+  }, []);
 
   const [sharing, setSharing] = useState(false);
   const [capturing, setCapturing] = useState(false);

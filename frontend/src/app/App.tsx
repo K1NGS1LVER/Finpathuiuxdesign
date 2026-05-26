@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -34,12 +34,22 @@ import { formatInr } from '@/lib/format';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageTransition from './components/PageTransition';
 import ScrollToTop from "./components/ScrollToTop";
+import confetti from "canvas-confetti";
+import { AnimatePresence } from "motion/react";
+import { TrendingUp, Wallet, Loader2 } from "lucide-react";
+import type { GoalCompletionAction } from "@/lib/types";
+import Toast from "./components/Toast";
+import { CONFETTI_COLORS } from "./screens/journey/constants";
 
 function AppContent() {
   const { isDark, setMode } = useTheme();
   const setIsDark = (next: boolean) => setMode(next ? "dark" : "light");
   const [pennyOpen, setPennyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<GoalCompletionAction | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [completionToast, setCompletionToast] = useState<string | null>(null);
+  const confettiFiredRef = useRef<Set<string>>(new Set());
   const location = useLocation();
   const navigate = useNavigate();
   const onboarded = useFinPathStore((s) => s.onboarded);
@@ -51,6 +61,8 @@ function AppContent() {
   const resolveGoalCompletionDecision = useFinPathStore(
     (s) => s.resolveGoalCompletionDecision,
   );
+  const activeDecision = pendingGoalDecisions[0];
+  const hasRemainingGoals = goals.some((goal) => goal.status !== "complete");
 
   // Auth state
   const user = useAuthStore((s) => s.user);
@@ -69,6 +81,49 @@ function AppContent() {
     computeHealthScore();
     generatePlan();
   }, [computeHealthScore, generatePlan, onboarded]);
+
+  // Fire confetti once per unique goal completion
+  useEffect(() => {
+    if (activeDecision && !confettiFiredRef.current.has(activeDecision.goalId)) {
+      confettiFiredRef.current.add(activeDecision.goalId);
+      confetti({
+        particleCount: 40,
+        spread: 55,
+        startVelocity: 20,
+        ticks: 70,
+        origin: { x: 0.5, y: 0.35 },
+        colors: CONFETTI_COLORS,
+        scalar: 0.8,
+        gravity: 1.1,
+      });
+    }
+  }, [activeDecision]);
+
+  // Reset selection when the active decision changes
+  useEffect(() => {
+    setSelectedAction(null);
+    setIsConfirming(false);
+  }, [activeDecision?.goalId]);
+
+  const handleConfirm = useCallback(async () => {
+    if (!selectedAction || !activeDecision || isConfirming) return;
+    setIsConfirming(true);
+    await new Promise<void>(r => setTimeout(r, 400));
+    const isLast = pendingGoalDecisions.length === 1;
+    const amount = activeDecision.freedMonthlyAmount;
+    resolveGoalCompletionDecision(activeDecision.goalId, selectedAction);
+    if (isLast) {
+      navigate("/celebrate");
+    } else {
+      setCompletionToast(
+        selectedAction === "reinvest"
+          ? `${formatInr(amount)}/month reinvested across your active goals`
+          : `${formatInr(amount)}/month added to your monthly surplus reserve`
+      );
+      setIsConfirming(false);
+    }
+  }, [selectedAction, activeDecision, isConfirming, pendingGoalDecisions.length,
+      resolveGoalCompletionDecision, navigate]);
 
   // Show loading spinner while checking auth session
   if (authLoading) {
@@ -109,8 +164,6 @@ function AppContent() {
     location.pathname,
   );
   const showLayout = !isPublicPage;
-  const activeDecision = pendingGoalDecisions[0];
-  const hasRemainingGoals = goals.some((goal) => goal.status !== "complete");
 
   // If authenticated + onboarded user visits landing or auth, redirect to dashboard
   if (
@@ -255,76 +308,99 @@ function AppContent() {
 
           {activeDecision && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-              <div
-                className="w-full max-w-xl rounded-2xl p-6 md:p-7 bg-card border border-border shadow-lg"
-              >
-                <div
-                  className="text-xs font-semibold tracking-wider uppercase mb-2 text-accent-text"
-                >
+              <div className="w-full max-w-xl rounded-2xl p-6 md:p-7 bg-card border border-border shadow-xl">
+                <div className="text-xs font-semibold tracking-wider uppercase mb-2"
+                     style={{ color: 'var(--accent)' }}>
                   Goal Completed
                 </div>
-                <h3
-                  className="text-2xl font-bold mb-2 text-card-foreground font-display"
-                >
+                <h3 className="text-2xl font-bold mb-1 text-card-foreground font-display">
                   {activeDecision.goalName} is done
                 </h3>
-                <p
-                  className="text-sm md:text-base text-secondary mb-4 font-body"
-                >
-                  The freed monthly allocation is{" "}
-                  {formatInr(activeDecision.freedMonthlyAmount)}. What should we
-                  do with it?
+                <p className="text-sm text-secondary mb-5 font-body">
+                  {formatInr(activeDecision.freedMonthlyAmount)}/month is now free. Where should it go?
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                   <button
-                    onClick={() => {
-                      const isLast = pendingGoalDecisions.length === 1;
-                      resolveGoalCompletionDecision(
-                        activeDecision.goalId,
-                        "reinvest",
-                      );
-                      if (isLast) navigate("/celebrate");
+                    disabled={!hasRemainingGoals}
+                    onClick={() => setSelectedAction("reinvest")}
+                    className="text-left p-4 rounded-xl border transition-all"
+                    style={{
+                      background: selectedAction === "reinvest" ? 'var(--accent-subtle)' : 'var(--surface-tint)',
+                      borderColor: selectedAction === "reinvest" ? 'var(--accent)' : 'var(--border)',
+                      borderWidth: selectedAction === "reinvest" ? '2px' : '1px',
+                      opacity: hasRemainingGoals ? 1 : 0.4,
+                      cursor: hasRemainingGoals ? 'pointer' : 'not-allowed',
                     }}
-                    className="py-3 px-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-accent text-on-accent font-body"
                   >
-                    Reinvest Into Remaining Goals
+                    <TrendingUp
+                      size={20}
+                      className="icon-wireframe mb-2"
+                      style={{ color: selectedAction === "reinvest" ? 'var(--accent)' : 'var(--card-foreground)' }}
+                    />
+                    <div className="font-semibold text-sm text-card-foreground font-body mb-1">Reinvest</div>
+                    <div className="text-xs text-secondary font-body leading-relaxed">
+                      Freed allocation is split across your active goals — they complete faster.
+                    </div>
                   </button>
+
                   <button
-                    onClick={() => {
-                      const isLast = pendingGoalDecisions.length === 1;
-                      resolveGoalCompletionDecision(
-                        activeDecision.goalId,
-                        "surplus",
-                      );
-                      if (isLast) navigate("/celebrate");
+                    onClick={() => setSelectedAction("surplus")}
+                    className="text-left p-4 rounded-xl border transition-all"
+                    style={{
+                      background: selectedAction === "surplus" ? 'var(--accent-subtle)' : 'var(--surface-tint)',
+                      borderColor: selectedAction === "surplus" ? 'var(--accent)' : 'var(--border)',
+                      borderWidth: selectedAction === "surplus" ? '2px' : '1px',
                     }}
-                    className="py-3 px-4 rounded-xl font-semibold transition-all bg-surface-tint border border-border text-card-foreground font-body"
                   >
-                    Keep As Net Worth Surplus
+                    <Wallet
+                      size={20}
+                      className="icon-wireframe mb-2"
+                      style={{ color: selectedAction === "surplus" ? 'var(--accent)' : 'var(--card-foreground)' }}
+                    />
+                    <div className="font-semibold text-sm text-card-foreground font-body mb-1">Keep as Surplus</div>
+                    <div className="text-xs text-secondary font-body leading-relaxed">
+                      Held as monthly surplus — grows your net worth directly.
+                    </div>
                   </button>
                 </div>
 
                 {!hasRemainingGoals && (
-                  <p
-                    className="text-xs mt-3 text-secondary"
-                  >
-                    No active goals left, so only surplus mode can be applied
-                    right now.
+                  <p className="text-xs mb-3 text-secondary">
+                    No active goals remain — only surplus mode applies.
                   </p>
                 )}
 
+                <button
+                  onClick={handleConfirm}
+                  disabled={!selectedAction || isConfirming}
+                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  style={{ opacity: !selectedAction ? 0.45 : 1 }}
+                >
+                  {isConfirming ? (
+                    <>
+                      <Loader2 size={16} className="icon-wireframe animate-spin" />
+                      Applying…
+                    </>
+                  ) : (
+                    "Confirm"
+                  )}
+                </button>
+
                 {monthlySurplusReserve > 0 && (
-                  <p
-                    className="text-xs mt-2 text-secondary"
-                  >
-                    Current monthly surplus reserve:{" "}
-                    {formatInr(monthlySurplusReserve)}
+                  <p className="text-xs mt-3 text-secondary text-center">
+                    Current monthly surplus: {formatInr(monthlySurplusReserve)}
                   </p>
                 )}
               </div>
             </div>
           )}
+
+          <AnimatePresence>
+            {completionToast && (
+              <Toast message={completionToast} onDismiss={() => setCompletionToast(null)} />
+            )}
+          </AnimatePresence>
         </div>
       ) : (
         <Routes>
