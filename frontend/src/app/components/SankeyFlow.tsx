@@ -36,7 +36,6 @@ export interface CustomNodeProps {
   payload?: SankeyNodePayload;
   palette: Record<string, string>;
   hoveredNodeIdx?: number | null;
-  activeNodeIdx?: number | null;
   onNodeHover?: (idx: number, x: number, y: number, w: number, h: number) => void;
   onNodeUnhover?: () => void;
   onNodeClick?: (idx: number, x: number, y: number, w: number, h: number) => void;
@@ -89,6 +88,7 @@ export function CustomNode({
           filter: `drop-shadow(0 0 8px ${color})`,
           transform: 'scaleY(1.12)',
           transformOrigin: 'center',
+          transformBox: 'fill-box',
         }
       : {}),
   };
@@ -151,8 +151,6 @@ export interface CustomLinkProps {
   };
   palette: Record<string, string>;
   hoveredNodeIdx?: number | null;
-  hoveredLinkIdx?: number | null;
-  activeNodeIdx?: number | null;
   onLinkHover?: (idx: number) => void;
   onLinkUnhover?: () => void;
 }

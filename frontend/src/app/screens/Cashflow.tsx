@@ -58,6 +58,7 @@ export default function Cashflow() {
 
   const [hoveredNode, setHoveredNode] = useState<NodePos | null>(null);
   const [hoveredLink, setHoveredLink] = useState<number | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const [activeNode, setActiveNode] = useState<NodePos | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const sankeyWrapRef = useRef<HTMLDivElement>(null);
@@ -214,7 +215,19 @@ export default function Cashflow() {
           <h3 className="text-heading slashed-zero text-[var(--card-foreground)] mb-4">Flow Diagram</h3>
           {sankeyData.links.length > 0 ? (
             <div role="img" aria-label="Cashflow Sankey diagram showing income sources, essential expenses, debt and savings, and disposable income allocation">
-              <div ref={sankeyWrapRef} style={{ position: 'relative' }}>
+              <div
+                ref={sankeyWrapRef}
+                style={{ position: 'relative' }}
+                onMouseMove={(e) => {
+                  if (!sankeyWrapRef.current) return;
+                  const rect = sankeyWrapRef.current.getBoundingClientRect();
+                  setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                }}
+                onMouseLeave={() => {
+                  setMousePos(null);
+                  setHoveredLink(null);
+                }}
+              >
                 <ResponsiveContainer width="100%" height={480}>
                   <Sankey
                     data={sankeyData}
@@ -225,10 +238,9 @@ export default function Cashflow() {
                     node={<CustomNode
                       palette={pal}
                       hoveredNodeIdx={hoveredNode?.idx ?? null}
-                      activeNodeIdx={activeNode?.idx ?? null}
                       onNodeHover={(idx, x, y, w, h) => {
                         setHoveredNode({ idx, x, y, w, h });
-                        setActiveNode(null);
+                        setActiveNode(a => a?.idx === idx ? a : null);
                       }}
                       onNodeUnhover={() => setHoveredNode(null)}
                       onNodeClick={(idx, x, y, w, h) =>
@@ -238,8 +250,6 @@ export default function Cashflow() {
                     link={<CustomLink
                       palette={pal}
                       hoveredNodeIdx={hoveredNode?.idx ?? null}
-                      hoveredLinkIdx={hoveredLink}
-                      activeNodeIdx={activeNode?.idx ?? null}
                       onLinkHover={(idx) => setHoveredLink(idx)}
                       onLinkUnhover={() => setHoveredLink(null)}
                     />}
@@ -281,6 +291,37 @@ export default function Cashflow() {
                   );
                 })()}
 
+                {/* Link hover tooltip */}
+                {hoveredLink !== null && mousePos && (() => {
+                  const link = sankeyData.links[hoveredLink];
+                  if (!link) return null;
+                  const srcName = sankeyData.nodes[link.source]?.name ?? '';
+                  const tgtName = sankeyData.nodes[link.target]?.name ?? '';
+                  return (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: mousePos.x,
+                        top: mousePos.y - 10,
+                        transform: 'translateX(-50%) translateY(-100%)',
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-sm)',
+                        boxShadow: 'var(--shadow-sm)',
+                        padding: '4px 10px',
+                        pointerEvents: 'none',
+                        zIndex: 50,
+                        whiteSpace: 'nowrap',
+                        fontSize: 'var(--text-2xs)',
+                        fontWeight: 'var(--font-weight-semibold)',
+                        color: 'var(--foreground)',
+                      }}
+                    >
+                      {srcName} → {tgtName} · {formatInr(link.value)}
+                    </div>
+                  );
+                })()}
+
                 {/* Click popover */}
                 {activeNode && (() => {
                   const nodeName = sankeyData.nodes[activeNode.idx]?.name ?? '';
@@ -296,7 +337,7 @@ export default function Cashflow() {
 
                   const badgeColors: Record<NodeKind, { bg: string; color: string; label: string }> = {
                     'income-leaf': { bg: 'var(--accent-subtle)', color: 'var(--accent)', label: 'Income' },
-                    'expense-leaf': { bg: 'rgba(245,158,11,0.1)', color: '#b45309', label: 'Expense' },
+                    'expense-leaf': { bg: 'var(--amber-subtle)', color: 'var(--amber-text)', label: 'Expense' },
                     'aggregate': { bg: 'var(--surface-hover)', color: 'var(--tertiary)', label: 'Aggregate' },
                     'readonly': { bg: 'var(--surface-hover)', color: 'var(--tertiary)', label: nodeName === 'Debt Payments' ? 'Debt' : nodeName === 'Goals Progress' ? 'Goals' : 'Info' },
                   };
@@ -387,7 +428,7 @@ export default function Cashflow() {
                                 }
                                 handleSaveExpenses(partial);
                               }}
-                              style={{ width: '100%', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '5px', fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-bold)', cursor: 'pointer', marginBottom: 4 }}
+                              style={{ width: '100%', background: 'var(--amber)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '5px', fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-bold)', cursor: 'pointer', marginBottom: 4 }}
                             >
                               Save
                             </button>
