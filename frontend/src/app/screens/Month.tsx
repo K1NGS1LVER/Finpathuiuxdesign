@@ -1,12 +1,12 @@
 import { Check, AlertTriangle, Sparkles } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
 import confetti from "canvas-confetti";
 import { pageContainer, pageSection } from "@/app/components/motion-variants";
-import type { ExpenseProfile } from "@/lib/types";
+import { AreaChart, Area, XAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 
 interface MonthTask {
   id: string;
@@ -20,16 +20,6 @@ interface MonthTask {
   suffix?: string;
 }
 
-function buildExpenseCats(expenses: ExpenseProfile) {
-  return [
-    { id: "rent",          label: "Housing",       amount: expenses.rent,          color: "var(--secondary-accent)" },
-    { id: "food",          label: "Food",           amount: expenses.food,          color: "var(--accent)" },
-    { id: "utilities",     label: "Utilities",      amount: expenses.utilities,     color: "var(--teal)" },
-    { id: "transport",     label: "Transport",      amount: expenses.transport,     color: "var(--amber)" },
-    { id: "entertainment", label: "Entertainment",  amount: expenses.entertainment, color: "var(--cobalt)" },
-    { id: "other",         label: "Other",          amount: expenses.other,         color: "var(--tertiary)" },
-  ].filter((c) => c.amount > 0);
-}
 
 export default function Month() {
   const now = new Date();
@@ -240,10 +230,6 @@ export default function Month() {
   const allDone        = doneTasks === tasks.length && tasks.length > 0;
   const totalGoalCommitted = goalTasks.reduce((s, t) => s + (t.amount || 0), 0);
 
-  // ── Cashflow expense cats ────────────────────────────────
-  const expenseCats = useMemo(() => buildExpenseCats(expenses), [expenses]);
-  const expenseTotal = expenseCats.reduce((s, c) => s + c.amount, 0) || expenses.total;
-
   // ── Impact micro-row goals ───────────────────────────────
   const impactGoals = useMemo(
     () =>
@@ -251,6 +237,16 @@ export default function Month() {
         .filter((g) => (g.monthlyAllocation || 0) > 0 || g.checkedThisMonth)
         .slice(0, 4),
     [activeGoals],
+  );
+
+  // ── Net worth 6-month chart data ─────────────────────────
+  const nwChartData = useMemo(
+    () =>
+      (plan?.months ?? []).slice(0, 6).map((m) => ({
+        label: m.date,
+        netWorth: m.netWorth,
+      })),
+    [plan],
   );
 
   // ── Penny tip text ───────────────────────────────────────
@@ -339,77 +335,100 @@ export default function Month() {
       <motion.div className="month-grid" variants={pageSection}>
         {/* ─── Left column ─── */}
         <div className="month-left-col">
-          {/* Cashflow slim */}
-          <div className="bento-card">
-            <p className="cashflow-section-title">Where did the money go?</p>
-
-            {expenseCats.length > 0 ? (
-              <>
-                <div className="cashflow-bar">
-                  {expenseCats.map((c, i) => (
-                    <div
-                      key={c.id}
-                      className="cashflow-bar-segment"
-                      style={{
-                        width: `${(c.amount / expenseTotal) * 100}%`,
-                        background: c.color,
-                        borderRadius:
-                          i === 0
-                            ? "var(--radius-full) var(--radius-xs) var(--radius-xs) var(--radius-full)"
-                            : i === expenseCats.length - 1
-                              ? "var(--radius-xs) var(--radius-full) var(--radius-full) var(--radius-xs)"
-                              : "var(--radius-xs)",
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="cashflow-total slashed-zero">{formatInr(expenseTotal)}</div>
-                <Link to="/cashflow" className="cashflow-link" aria-label="View Cashflow">
-                  View Cashflow <span aria-hidden="true">→</span>
-                </Link>
-              </>
-            ) : (
-              <p style={{ color: "var(--tertiary)", fontSize: "var(--text-sm)" }}>
-                No expense breakdown available. Add expense details in onboarding.
-              </p>
-            )}
-          </div>
-
-          {/* Impact micro-rows */}
+          {/* Impact card (full — progress bars per goal) */}
           <div className="bento-card bento-card-sm">
             <p className="text-label">This Month's Impact</p>
-            <div className="impact-micro-list">
+            <div className="impact-goals-list">
               {impactGoals.length === 0 ? (
                 <div className="month-impact-empty">
                   No goals receiving funds this month. Try adding a lumpsum!
                 </div>
               ) : (
                 impactGoals.map((goal) => {
+                  const task = tasks.find((t) => t.goalId === goal.id);
+                  const isDone = task ? task.done : !!goal.checkedThisMonth;
+                  const addition = isDone
+                    ? 0
+                    : task?.amount !== undefined
+                      ? task.amount
+                      : goal.monthlyAllocation || 0;
                   const safeTarget = Math.max(1, goal.targetAmount);
-                  const pct = Math.min(100, (goal.currentAmount / safeTarget) * 100);
+                  const basePct = Math.min(100, (goal.currentAmount / safeTarget) * 100);
+                  const additionPct = Math.min(100 - basePct, (addition / safeTarget) * 100);
                   return (
-                    <div
-                      key={goal.id}
-                      className="impact-micro-row"
-                      role="group"
-                      aria-label={`${goal.name} ${Math.round(pct)}%`}
-                    >
-                      <span className="impact-micro-name">{goal.name}</span>
-                      <div className="impact-micro-bar">
-                        <div
-                          className="impact-micro-bar-fill"
-                          style={{ width: `${pct}%` }}
-                        />
+                    <div key={goal.id}>
+                      <div className="impact-goal-header">
+                        <span className="impact-goal-name">
+                          {goal.name}
+                          {isDone && <Check size={14} className="icon-wireframe" />}
+                        </span>
+                        <span className={`impact-goal-score${isDone ? " done" : " pending"}`}>
+                          {isDone
+                            ? goal.category === "debt" ? "Paid!" : "Funded!"
+                            : `+${formatInrCompact(addition)}`}
+                        </span>
                       </div>
-                      <span className="impact-micro-pct slashed-zero tabular-nums">
-                        {Math.round(pct)}%
-                      </span>
+                      <div className="progress-bar-outer">
+                        <div className="progress-fill" style={{ width: `${basePct}%` }} />
+                        {!isDone && additionPct > 0 && (
+                          <div className="progress-fill-pending" style={{ width: `${additionPct}%` }} />
+                        )}
+                      </div>
+                      <div className="progress-bar-labels">
+                        <span>{formatInrCompact(goal.currentAmount)}</span>
+                        <span>{Math.round(basePct + additionPct)}%</span>
+                        <span>{formatInrCompact(goal.targetAmount)}</span>
+                      </div>
                     </div>
                   );
                 })
               )}
             </div>
           </div>
+
+          {/* Net Worth Outlook (6-month projection) */}
+          {nwChartData.length > 0 && (
+            <div className="bento-card bento-card-sm" style={{ flex: 1 }}>
+              <p className="text-label">Net Worth Outlook</p>
+              <p style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)", marginBottom: "var(--space-2)" }}>
+                6-month projection
+              </p>
+              <ResponsiveContainer width="100%" height={120}>
+                <AreaChart data={nwChartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                  <defs>
+                    <linearGradient id="nw-month-fill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: "var(--secondary)", fontFamily: "var(--font-body)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <RechartsTooltip
+                    contentStyle={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "var(--radius-base)",
+                      fontFamily: "var(--font-body)",
+                      color: "var(--card-foreground)",
+                    }}
+                    formatter={(v: number) => [formatInr(v), "Net Worth"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="netWorth"
+                    stroke="var(--accent)"
+                    strokeWidth={2}
+                    fill="url(#nw-month-fill)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
         {/* ─── Right column: Checklist (unchanged) ─── */}
@@ -586,42 +605,50 @@ export default function Month() {
         </div>
       </motion.div>
 
-      {/* ── Lumpsum inline ── */}
-      <motion.div className="lumpsum-inline" variants={pageSection}>
-        <select
-          value={lumpsumGoalId}
-          onChange={(e) => setLumpsumGoalId(e.target.value)}
-          className="input-surface w-full px-4 py-3 rounded-xl outline-none"
-          disabled={activeGoals.length === 0}
-          aria-label="Select goal for lumpsum"
-        >
-          {activeGoals.length === 0 ? (
-            <option value="">No active goals available</option>
-          ) : (
-            activeGoals.map((goal) => (
-              <option key={goal.id} value={goal.id}>
-                {`P${goal.priority} - ${goal.name}`}
-              </option>
-            ))
-          )}
-        </select>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={lumpsumAmount}
-          onChange={(e) => setLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))}
-          placeholder="Lumpsum amount (₹)"
-          className="input-surface w-full px-4 py-3 rounded-xl outline-none"
-          aria-label="Lumpsum amount in rupees"
-        />
-        <button
-          type="button"
-          onClick={applyLumpsum}
-          disabled={!lumpsumGoalId || !lumpsumAmount}
-          className="btn-primary justify-center py-3 disabled:opacity-50"
-        >
-          Apply Lumpsum
-        </button>
+      {/* ── Lumpsum card ── */}
+      <motion.div className="bento-card" variants={pageSection}>
+        <h3 className="text-heading" style={{ marginBottom: "var(--space-0_5)" }}>
+          One-Time Boost
+        </h3>
+        <p style={{ fontSize: "var(--text-xs)", color: "var(--secondary)", marginBottom: "var(--space-2)" }}>
+          Add a one-time amount to fast-track a goal.
+        </p>
+        <div className="lumpsum-inline">
+          <select
+            value={lumpsumGoalId}
+            onChange={(e) => setLumpsumGoalId(e.target.value)}
+            className="input-surface w-full px-4 py-3 rounded-xl outline-none"
+            disabled={activeGoals.length === 0}
+            aria-label="Select goal for lumpsum"
+          >
+            {activeGoals.length === 0 ? (
+              <option value="">No active goals available</option>
+            ) : (
+              activeGoals.map((goal) => (
+                <option key={goal.id} value={goal.id}>
+                  {`P${goal.priority} - ${goal.name}`}
+                </option>
+              ))
+            )}
+          </select>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={lumpsumAmount}
+            onChange={(e) => setLumpsumAmount(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder="Amount (₹)"
+            className="input-surface w-full px-4 py-3 rounded-xl outline-none"
+            aria-label="Lumpsum amount in rupees"
+          />
+          <button
+            type="button"
+            onClick={applyLumpsum}
+            disabled={!lumpsumGoalId || !lumpsumAmount}
+            className="btn-primary justify-center py-3 disabled:opacity-50"
+          >
+            Apply Lumpsum
+          </button>
+        </div>
         {lumpsumNotice && (
           <div className="lumpsum-notice" role="status" aria-live="polite">
             {lumpsumNotice}
