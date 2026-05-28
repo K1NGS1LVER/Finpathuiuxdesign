@@ -394,40 +394,40 @@ export default function Month() {
                 6-month projection
               </p>
               <div role="img" aria-label="Net worth projection chart">
-              <ResponsiveContainer width="100%" height={120}>
-                <AreaChart data={nwChartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="nw-month-fill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: "var(--text-2xs)", fill: "var(--secondary)", fontFamily: "var(--font-body)" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <RechartsTooltip
-                    contentStyle={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "var(--radius-base)",
-                      fontFamily: "var(--font-body)",
-                      color: "var(--card-foreground)",
-                    }}
-                    formatter={(v: number) => [formatInr(v), "Net Worth"]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="netWorth"
-                    stroke="var(--accent)"
-                    strokeWidth={2}
-                    fill="url(#nw-month-fill)"
-                    dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={120}>
+                  <AreaChart data={nwChartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                    <defs>
+                      <linearGradient id="nw-month-fill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: "var(--text-2xs)", fill: "var(--secondary)", fontFamily: "var(--font-body)" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "var(--radius-base)",
+                        fontFamily: "var(--font-body)",
+                        color: "var(--card-foreground)",
+                      }}
+                      formatter={(v: number) => [formatInr(v), "Net Worth"]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="netWorth"
+                      stroke="var(--accent)"
+                      strokeWidth={2}
+                      fill="url(#nw-month-fill)"
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           )}
