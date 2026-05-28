@@ -2158,7 +2158,7 @@ a.bento-card:hover,
 }
 
 .impact-micro-bar {
-  height: 4px;
+  height: var(--space-0_5);
   border-radius: var(--radius-full);
   background: var(--surface-tint);
   overflow: hidden;
