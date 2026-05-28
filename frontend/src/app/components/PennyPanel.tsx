@@ -217,7 +217,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
           setMessages(prev => {
             const exists = prev.some(m => m.id === assistantId);
             if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: err, toolCalls: [] }];
-            return prev.map(m => m.id === assistantId ? { ...m, text: m.text || `Error: ${err}` } : m);
+            return prev.map(m => m.id === assistantId ? { ...m, text: (m.text ? m.text + '\n\n' : '') + err } : m);
           });
         } else if (ev.event === 'done') {
           if (data?.reply) {

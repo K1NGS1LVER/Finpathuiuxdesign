@@ -356,21 +356,7 @@ function prepareApply(action: string, payload: Record<string, unknown>): Prepare
       return {
         ok: true,
         apply: () => {
-          const current = useFinPathStore.getState().debts;
-          const nextItems = [...(current.items ?? []), newDebt];
-          const nextMonthly = nextItems.reduce(
-            (sum, d) => sum + Math.max(0, d.monthlyPayment || 0),
-            0,
-          );
-          const nextPrincipal = nextItems.reduce(
-            (sum, d) => sum + Math.max(0, d.principal || 0),
-            0,
-          );
-          store.setDebts({
-            items: nextItems,
-            totalMonthly: nextMonthly,
-            totalPrincipal: nextPrincipal,
-          });
+          store.addDebtItem(newDebt);
         },
       };
     }

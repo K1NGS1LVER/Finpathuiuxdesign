@@ -381,6 +381,45 @@ def make_tools(
                 "error": f"Action '{action}' not allowed. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}",
             }
 
+        if action == "addDebt":
+            debt = payload.get("debt") if isinstance(payload.get("debt"), dict) else payload
+            name = str(debt.get("name") or "").strip()
+            raw_principal = debt.get("principal") or debt.get("amount") or 0
+            try:
+                principal = abs(float(raw_principal))
+            except (TypeError, ValueError):
+                principal = 0.0
+            if not name or principal <= 0:
+                return {
+                    "ok": False,
+                    "error": (
+                        "addDebt requires debt.name (non-empty string) and debt.principal "
+                        "(positive number). Re-read the user's message and retry with the correct values."
+                    ),
+                }
+            interest_rate = debt.get("interestRate", 12)
+            try:
+                interest_rate = float(interest_rate)
+            except (TypeError, ValueError):
+                interest_rate = 12.0
+            monthly_payment = debt.get("monthlyPayment", 0)
+            try:
+                monthly_payment = float(monthly_payment)
+            except (TypeError, ValueError):
+                monthly_payment = 0.0
+            if monthly_payment <= 0:
+                monthly_payment = round(principal / 12, 2)
+            payload = {
+                "debt": {
+                    "name": name,
+                    "principal": principal,
+                    "interestRate": interest_rate,
+                    "monthlyPayment": monthly_payment,
+                    "category": str(debt.get("category", "other")),
+                }
+            }
+            log.info("penny: addDebt payload normalized name=%s principal=%s", name, principal)
+
         if action == "updateGoal":
             normalized = _normalize_update_goal_payload(payload or {})
             if normalized != (payload or {}):

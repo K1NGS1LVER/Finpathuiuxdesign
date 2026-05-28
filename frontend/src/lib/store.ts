@@ -86,6 +86,7 @@ interface FinPathStore extends FinancialProfile {
   setIncome: (income: IncomeProfile) => void;
   setExpenses: (expenses: ExpenseProfile) => void;
   setDebts: (debts: DebtProfile) => void;
+  addDebtItem: (debt: DebtItem) => void;
   setSavings: (savings: number) => void;
   setInvestments: (investments: number) => void;
   setEmergencyFund: (fund: number) => void;
@@ -440,6 +441,27 @@ export const useFinPathStore = create<FinPathStore>()(
           debtGoalDeleted: hasDebt(nextDebts) ? (s.debtGoalDeleted ?? false) : false,
           lastUpdated: Date.now(),
         }));
+        const store = get();
+        store.computeHealthScore();
+        store.generatePlan();
+      },
+      addDebtItem: (debt) => {
+        set((s) => {
+          const nextItems = [...(s.debts.items ?? []), debt];
+          const nextDebts = normalizeDebtProfile({
+            items: nextItems,
+            totalMonthly: nextItems.reduce((sum, d) => sum + Math.max(0, d.monthlyPayment || 0), 0),
+            totalPrincipal: nextItems.reduce((sum, d) => sum + Math.max(0, d.principal || 0), 0),
+          });
+          return {
+            debts: nextDebts,
+            goals: normalizeActiveGoalPriorities(
+              syncDebtGoal(s.goals, nextDebts, false),
+            ),
+            debtGoalDeleted: false,
+            lastUpdated: Date.now(),
+          };
+        });
         const store = get();
         store.computeHealthScore();
         store.generatePlan();

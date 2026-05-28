@@ -38,12 +38,12 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; className?: str
 const CATEGORY_STYLE: Record<string, { icon: string; color: string; subtle: string; text: string }> = {
   bike:       { icon: "Bike",          color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
   home:       { icon: "Home",          color: "var(--secondary-accent)", subtle: "var(--secondary-accent-subtle)", text: "var(--secondary-accent-text)" },
-  travel:     { icon: "Plane",         color: "var(--tertiary-accent)",  subtle: "var(--tertiary-accent-subtle)",  text: "var(--tertiary-accent-text)" },
-  debt:       { icon: "AlertTriangle", color: "var(--red)",              subtle: "var(--red-subtle)",              text: "var(--red-text)" },
-  education:  { icon: "BookOpen",      color: "var(--cobalt)",           subtle: "var(--cobalt-subtle)",           text: "var(--cobalt-text)" },
-  savings:    { icon: "PiggyBank",     color: "var(--green)",            subtle: "var(--green-subtle)",            text: "var(--green-text)" },
+  travel:     { icon: "Plane",         color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
+  debt:       { icon: "AlertTriangle", color: "var(--secondary-accent)", subtle: "var(--secondary-accent-subtle)", text: "var(--secondary-accent-text)" },
+  education:  { icon: "BookOpen",      color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
+  savings:    { icon: "PiggyBank",     color: "var(--secondary-accent)", subtle: "var(--secondary-accent-subtle)", text: "var(--secondary-accent-text)" },
   family:     { icon: "Users",         color: "var(--secondary-accent)", subtle: "var(--secondary-accent-subtle)", text: "var(--secondary-accent-text)" },
-  investment: { icon: "TrendingUp",    color: "var(--amber)",            subtle: "var(--amber-subtle)",            text: "var(--amber-text)" },
+  investment: { icon: "TrendingUp",    color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
   custom:     { icon: "Target",        color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
   default:    { icon: "Target",        color: "var(--accent)",           subtle: "var(--accent-subtle)",           text: "var(--accent-text)" },
 };
@@ -288,13 +288,13 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
           {/* Metrics column */}
           <div className="metrics-col">
             {([
-              [period === "This month" ? "Monthly Income"  : `${period} Income`,  animIncome,  "var(--card-foreground)", ""],
-              [period === "This month" ? "Monthly Surplus" : `${period} Surplus`, animSurplus, surplus > 0 ? "var(--green-text)" : "var(--red-text)", surplus > 0 ? "+" : ""],
-              ["Total Savings",   animSavings, "var(--card-foreground)", ""],
-            ] as [string, number, string, string][]).map(([label, value, color, prefix]) => (
+              [period === "This month" ? "Monthly Income"  : `${period} Income`,  animIncome,  ""],
+              [period === "This month" ? "Monthly Surplus" : `${period} Surplus`, animSurplus, surplus > 0 ? "+" : ""],
+              ["Total Savings",   animSavings, ""],
+            ] as [string, number, string][]).map(([label, value, prefix]) => (
               <div key={label}>
                 <p className="text-label metric-label">{label}</p>
-                <p className="slashed-zero metric-value" style={{ color }}>
+                <p className="slashed-zero metric-value">
                   {prefix}{formatInr(value)}
                 </p>
               </div>
@@ -320,7 +320,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
               return (
                 <div key={g.id} className="activity-row">
                   <div className="activity-left">
-                    <div className="activity-dot" style={{ background: cat.color }} />
+                    <div className="activity-dot" style={{ background: "var(--foreground)" }} />
                     <div>
                       <p className="activity-name">{g.name}</p>
                       <p className="activity-status">{g.checkedThisMonth ? "Allocated" : "Pending"}</p>
@@ -340,7 +340,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
 
         {/* ─ Achievements (12 cols) ─ */}
         <motion.div className="bento-card col-span-12" variants={cardVariants}>
-          <h3 className="text-heading slashed-zero text-[var(--card-foreground)] mb-4">Achievements</h3>
+          <h3 className="text-heading slashed-zero text-[var(--secondary)] mb-4">Achievements</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {badges.map((badge) => (
               <div
