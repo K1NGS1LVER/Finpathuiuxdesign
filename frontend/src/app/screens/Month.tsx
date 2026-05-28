@@ -303,32 +303,61 @@ export default function Month() {
         </motion.div>
       )}
 
-      {/* ── Mission strip (single column) ── */}
+      {/* ── Mission strip ── */}
       <motion.div className="bento-card mission-strip" variants={pageSection}>
-        <div className="mission-eyebrow">Mission</div>
-        <h2 className="mission-title slashed-zero">
-          Save {formatInrCompact(savingsTarget)}
-          {debts.totalMonthly > 0 ? ` & pay ${formatInrCompact(debts.totalMonthly)} debt` : ""}
-        </h2>
-        <div className="mission-stats-row">
-          <div>
-            <div className="mission-stat-label">Goals + Surplus Reserve</div>
-            <div className="mission-stat-value slashed-zero">
-              {formatInr(savingsTarget)}
+        {/* Left: main content */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+          <div className="mission-eyebrow">Mission</div>
+          <h2 className="mission-title slashed-zero">
+            Save {formatInrCompact(savingsTarget)}
+            {debts.totalMonthly > 0 ? ` & pay ${formatInrCompact(debts.totalMonthly)} debt` : ""}
+          </h2>
+          <div className="mission-stats-row">
+            <div>
+              <div className="mission-stat-label">Goals + Surplus Reserve</div>
+              <div className="mission-stat-value slashed-zero">
+                {formatInr(savingsTarget)}
+              </div>
+            </div>
+            <div>
+              <div className="mission-stat-label">Debt Payments</div>
+              <div className="mission-stat-value slashed-zero">
+                {formatInr(debts.totalMonthly)}
+              </div>
             </div>
           </div>
-          <div>
-            <div className="mission-stat-label">Debt Payments</div>
-            <div className="mission-stat-value slashed-zero">
-              {formatInr(debts.totalMonthly)}
+          {pendingSurplus > 0 && (
+            <div className="mission-pending-note">
+              {formatInr(pendingSurplus)} is waiting for your reinvest/surplus decision.
             </div>
-          </div>
+          )}
         </div>
-        {pendingSurplus > 0 && (
-          <div className="mission-pending-note">
-            {formatInr(pendingSurplus)} is waiting for your reinvest/surplus decision.
-          </div>
-        )}
+
+        {/* Vertical divider */}
+        <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch", margin: "0 var(--space-3)" }} />
+
+        {/* Right: Days Left */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--space-0_5)", minWidth: 72 }}>
+          <span style={{
+            fontSize: "var(--text-2xs)",
+            fontWeight: "var(--font-weight-medium)",
+            color: "var(--tertiary)",
+            textTransform: "uppercase",
+            letterSpacing: "var(--tracking-wider)",
+            fontFamily: "var(--font-body)",
+          }}>
+            Days Left
+          </span>
+          <span style={{
+            fontSize: "var(--text-3xl)",
+            fontWeight: "var(--font-weight-bold)",
+            color: "var(--tertiary)",
+            fontFamily: "var(--font-display)",
+            lineHeight: 1,
+          }}>
+            {daysLeft}
+          </span>
+        </div>
       </motion.div>
 
       {/* ── Main grid: Cashflow + Impact (left) | Checklist (right) ── */}
@@ -658,10 +687,18 @@ export default function Month() {
         )}
       </motion.div>
 
-      {/* ── Penny tip slim ── */}
-      <motion.div className="penny-tip-slim" variants={pageSection} role="note">
-        <Sparkles size={14} className="icon-wireframe" style={{ color: "var(--accent)" }} />
-        <span>{pennyTipText}</span>
+      {/* ── Penny card ── */}
+      <motion.div className="bento-card penny-card" variants={pageSection} role="note">
+        <div className="penny-insight-blob" />
+        <div className="relative z-10 flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--penny-accent-subtle)", color: "var(--penny-accent)" }}>
+            <Sparkles size={18} className="icon-wireframe" />
+          </div>
+          <h3 className="text-heading" style={{ color: "var(--card-foreground)" }}>Penny's Tip</h3>
+        </div>
+        <p className="relative z-10" style={{ fontSize: "var(--text-sm)", color: "var(--card-foreground)", fontFamily: "var(--font-body)", lineHeight: "var(--leading-relaxed)", margin: 0 }}>
+          {pennyTipText}
+        </p>
       </motion.div>
     </motion.div>
   );
