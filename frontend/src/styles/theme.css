@@ -1879,25 +1879,14 @@ a.bento-card:hover,
   margin-top: var(--space-1);
 }
 
-/* ─── Mission card ─── */
+/* ─── Mission strip (single column hero KPI) ─── */
 
-.mission-content {
+.mission-strip {
   position: relative;
   z-index: var(--z-raised);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-}
-
-@media (min-width: 768px) {
-  .mission-content {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-}
-
-.mission-left {
-  flex: 1;
+  gap: var(--space-2);
 }
 
 .mission-eyebrow {
@@ -1911,18 +1900,12 @@ a.bento-card:hover,
 }
 
 .mission-title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--space-2);
-  color: var(--card-foreground);
+  color: var(--foreground);
   font-family: var(--font-display);
   letter-spacing: var(--tracking-tight);
-}
-
-@media (min-width: 768px) {
-  .mission-title {
-    font-size: var(--text-3xl);
-  }
 }
 
 .mission-stats-row {
@@ -1932,24 +1915,20 @@ a.bento-card:hover,
 }
 
 .mission-stat-label {
-  font-size: var(--text-xs);
+  font-size: var(--text-2xs);
   font-weight: var(--font-weight-medium);
-  color: var(--secondary);
+  color: var(--tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
   margin-bottom: var(--space-0_5);
   font-family: var(--font-body);
 }
 
 .mission-stat-value {
   font-size: var(--text-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--tertiary);
+  font-weight: var(--font-weight-semibold);
+  color: var(--secondary);
   font-family: var(--font-display);
-}
-
-@media (min-width: 768px) {
-  .mission-stat-value {
-    font-size: var(--text-3xl);
-  }
 }
 
 .mission-pending-note {
@@ -1959,51 +1938,7 @@ a.bento-card:hover,
   font-family: var(--font-body);
 }
 
-.mission-right {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  min-width: 140px;
-  gap: var(--space-2);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--border);
-}
-
-@media (min-width: 768px) {
-  .mission-right {
-    padding-top: 0;
-    padding-left: var(--space-4);
-    border-top: none;
-    border-left: 1px solid var(--border);
-  }
-}
-
-.mission-right-label {
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--tertiary);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wider);
-  font-family: var(--font-body);
-  margin-bottom: var(--space-0_5);
-}
-
-.mission-right-value {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--tertiary);
-  font-family: var(--font-display);
-}
-
-.mission-divider {
-  width: 100%;
-  border-top: 1px solid var(--border);
-  opacity: 0.5;
-}
-
-/* ─── Main grid ─── */
+/* ─── Main grid (40fr / 60fr — checklist priority) ─── */
 .month-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -2013,7 +1948,7 @@ a.bento-card:hover,
 
 @media (min-width: 1024px) {
   .month-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 40fr) minmax(0, 60fr);
   }
 }
 
@@ -2024,33 +1959,6 @@ a.bento-card:hover,
   gap: var(--space-2);
   min-width: 0;
   width: 100%;
-}
-
-.month-left-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-@media (max-width: 1023px) {
-  .month-left-bottom {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ─── Lower grid ─── */
-.month-lower-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
-  width: 100%;
-}
-
-@media (min-width: 1024px) {
-  .month-lower-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
 }
 
 /* ─── Debt warning ─── */
@@ -2224,39 +2132,52 @@ a.bento-card:hover,
   font-family: var(--font-body);
 }
 
-.impact-goals-list {
+/* ─── Impact micro-rows (Month) ─── */
+.impact-micro-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
-.impact-goal-header {
-  display: flex;
+.impact-micro-row {
+  display: grid;
+  grid-template-columns: 1fr 80px auto;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-1);
+  gap: var(--space-2);
 }
 
-.impact-goal-name {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--card-foreground);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.impact-goal-score {
+.impact-micro-name {
   font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--secondary);
+  font-family: var(--font-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.impact-micro-bar {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--surface-tint);
+  overflow: hidden;
+}
+
+.impact-micro-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-bar) var(--ease-spring);
+}
+
+.impact-micro-pct {
+  font-size: var(--text-2xs);
   font-weight: var(--font-weight-semibold);
-}
-
-.impact-goal-score.done {
-  color: var(--accent);
-}
-
-.impact-goal-score.pending {
-  color: var(--card-foreground);
+  color: var(--tertiary);
+  font-family: var(--font-display);
+  min-width: 32px;
+  text-align: right;
 }
 
 .progress-bar-outer {
@@ -2273,28 +2194,6 @@ a.bento-card:hover,
   height: 100%;
   transition: width var(--duration-morph) var(--ease-base);
   background-color: var(--accent);
-}
-
-.progress-fill-pending {
-  height: 100%;
-  transition: width 1000ms var(--ease-base);
-  background-color: var(--accent);
-  opacity: 0.6;
-  position: relative;
-  overflow: hidden;
-}
-
-.progress-fill-pending::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    var(--white-15) 10px,
-    var(--white-15) 20px
-  );
 }
 
 .progress-bar-labels {
@@ -2318,30 +2217,20 @@ a.bento-card:hover,
   font-size: var(--text-sm);
 }
 
-/* ─── Penny suggestion (Month) ─── */
-.penny-suggest-inner {
-  position: relative;
-  z-index: var(--z-raised);
-}
-
-.penny-suggest-header {
+/* ─── Penny tip (slim, Month) ─── */
+.penny-tip-slim {
   display: flex;
   align-items: center;
-  gap: var(--gap-md);
-  margin-bottom: var(--gap-md);
-}
-
-.penny-suggest-title {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--card-foreground);
-}
-
-.penny-suggest-text {
-  font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
-  color: var(--secondary);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: var(--radius-base);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--tertiary);
   font-family: var(--font-body);
+  line-height: var(--leading-relaxed);
 }
 
 /* ─── Strategy toggle ─── */
@@ -2421,6 +2310,24 @@ a.bento-card:hover,
 }
 
 /* ─── Lumpsum ─── */
+.lumpsum-inline {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: var(--space-2);
+  align-items: stretch;
+  width: 100%;
+}
+
+.lumpsum-inline .lumpsum-notice {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+  .lumpsum-inline {
+    grid-template-columns: 1fr;
+  }
+}
+
 .lumpsum-notice {
   font-size: var(--text-xs);
   color: var(--secondary);
@@ -2455,165 +2362,26 @@ a.bento-card:hover,
   transition: width var(--duration-bar) var(--ease-spring);
 }
 
-.cashflow-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap-xs) var(--gap-lg);
-  margin-bottom: var(--space-2);
-}
-
-.cashflow-legend-item {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
-  font-size: var(--text-2xs);
-  color: var(--secondary);
-}
-
-.cashflow-legend-dot {
-  width: var(--gap-base);
-  height: var(--gap-base);
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-}
-
-.cashflow-rows {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-xs);
-  margin-bottom: var(--space-2);
-}
-
-.cashflow-row {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-md);
-  padding: var(--gap-md) var(--gap-lg);
-  border-radius: var(--radius-base);
-  background: var(--surface-tint);
-  border: 1px solid var(--border);
-  transition: background var(--duration-base) var(--ease-base);
-}
-
-.cashflow-row:hover {
-  background: var(--surface-hover);
-}
-
-.cashflow-row-node {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.cashflow-row-node-dot {
-  width: var(--h-bar-md);
-  height: var(--h-bar-md);
-  border-radius: var(--radius-full);
-}
-
-.cashflow-row-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.cashflow-row-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: var(--gap-sm);
-}
-
-.cashflow-row-label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--secondary);
-}
-
-.cashflow-row-amount {
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-bold);
-  color: var(--card-foreground);
-}
-
-.cashflow-row-bar-outer {
-  height: var(--h-bar-xs);
-  border-radius: var(--radius-full);
-  background: var(--border);
-  overflow: hidden;
-}
-
-.cashflow-row-bar-inner {
-  height: 100%;
-  border-radius: var(--radius-full);
-  transition: width var(--duration-bar) var(--ease-spring);
-}
-
-.cashflow-row-pct {
-  font-size: var(--text-2xs);
-  color: var(--tertiary);
-  flex-shrink: 0;
-  min-width: 28px;
-  text-align: right;
-  font-family: var(--font-display);
-}
-
-/* 6-month trend mini-chart */
-.cashflow-trend {
-  padding: var(--space-2);
-  border-radius: var(--radius-base);
-  background: var(--surface-tint);
-  border: 1px solid var(--border);
-}
-
-.cashflow-trend-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-1);
-}
-
-.cashflow-trend-label {
-  font-size: var(--text-2xs);
+.cashflow-total {
+  font-size: var(--text-lg);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-widest-sm);
-  text-transform: uppercase;
-  color: var(--tertiary);
-}
-
-.cashflow-trend-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--gap-2xs);
-  padding: var(--gap-2xs) var(--space-1);
-  border-radius: var(--radius-full);
-  font-size: var(--text-2xs);
-  font-weight: var(--font-weight-bold);
-  font-family: var(--font-display);
-  background: var(--surface-tint);
   color: var(--secondary);
-  border: 1px solid var(--border);
-}
-
-.cashflow-trend-months {
-  display: flex;
-  justify-content: space-between;
-  margin-top: var(--gap-sm);
-}
-
-.cashflow-trend-month {
-  font-size: var(--text-2xs);
-  color: var(--tertiary);
   font-family: var(--font-display);
+  text-align: right;
+  margin-top: var(--space-1);
 }
 
-.cashflow-trend-month.current {
-  color: var(--card-foreground);
-  font-weight: var(--font-weight-bold);
+.cashflow-link {
+  display: inline-block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.cashflow-link:hover {
+  text-decoration: underline;
 }
 
 /* ═══════════════════════════════════════════════
