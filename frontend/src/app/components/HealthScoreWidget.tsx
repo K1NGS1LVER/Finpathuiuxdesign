@@ -203,7 +203,6 @@ export default function HealthScoreWidget({ variant }: Props) {
         {ring}
         <p className="health-label" style={{ color: label.color }}>{label.text}</p>
         {bars}
-        {actionSection}
       </div>
     );
   }
