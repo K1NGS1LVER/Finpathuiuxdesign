@@ -317,19 +317,13 @@ export default function Month() {
         <div className="mission-stats-row">
           <div>
             <div className="mission-stat-label">Goals + Surplus Reserve</div>
-            <div
-              className="mission-stat-value slashed-zero"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
+            <div className="mission-stat-value slashed-zero">
               {formatInr(savingsTarget)}
             </div>
           </div>
           <div>
             <div className="mission-stat-label">Debt Payments</div>
-            <div
-              className="mission-stat-value slashed-zero"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
+            <div className="mission-stat-value slashed-zero">
               {formatInr(debts.totalMonthly)}
             </div>
           </div>
@@ -370,7 +364,9 @@ export default function Month() {
                   ))}
                 </div>
                 <div className="cashflow-total slashed-zero">{formatInr(expenseTotal)}</div>
-                <Link to="/cashflow" className="cashflow-link">View Cashflow →</Link>
+                <Link to="/cashflow" className="cashflow-link" aria-label="View Cashflow">
+                  View Cashflow <span aria-hidden="true">→</span>
+                </Link>
               </>
             ) : (
               <p style={{ color: "var(--tertiary)", fontSize: "var(--text-sm)" }}>
@@ -392,7 +388,12 @@ export default function Month() {
                   const safeTarget = Math.max(1, goal.targetAmount);
                   const pct = Math.min(100, (goal.currentAmount / safeTarget) * 100);
                   return (
-                    <div key={goal.id} className="impact-micro-row">
+                    <div
+                      key={goal.id}
+                      className="impact-micro-row"
+                      role="group"
+                      aria-label={`${goal.name} ${Math.round(pct)}%`}
+                    >
                       <span className="impact-micro-name">{goal.name}</span>
                       <div className="impact-micro-bar">
                         <div
@@ -629,7 +630,7 @@ export default function Month() {
       </motion.div>
 
       {/* ── Penny tip slim ── */}
-      <motion.div className="penny-tip-slim" variants={pageSection}>
+      <motion.div className="penny-tip-slim" variants={pageSection} role="note">
         <Sparkles size={14} className="icon-wireframe" style={{ color: "var(--accent)" }} />
         <span>{pennyTipText}</span>
       </motion.div>
