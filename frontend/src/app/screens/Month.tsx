@@ -393,6 +393,7 @@ export default function Month() {
               <p style={{ fontSize: "var(--text-2xs)", color: "var(--tertiary)", marginBottom: "var(--space-2)" }}>
                 6-month projection
               </p>
+              <div role="img" aria-label="Net worth projection chart">
               <ResponsiveContainer width="100%" height={120}>
                 <AreaChart data={nwChartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
                   <defs>
@@ -403,7 +404,7 @@ export default function Month() {
                   </defs>
                   <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 10, fill: "var(--secondary)", fontFamily: "var(--font-body)" }}
+                    tick={{ fontSize: "var(--text-2xs)", fill: "var(--secondary)", fontFamily: "var(--font-body)" }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -427,6 +428,7 @@ export default function Month() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              </div>
             </div>
           )}
         </div>
