@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Sparkles, ArrowRight, TrendingUp, PiggyBank, AlertTriangle, CreditCard, Plus } from 'lucide-react';
+import { Sparkles, ArrowRight, TrendingUp, PiggyBank, AlertTriangle, CreditCard, Plus, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
 import { pageContainer, pageSection } from '@/app/components/motion-variants';
@@ -29,12 +29,27 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   const income = useFinPathStore(s => s.income);
   const expenses = useFinPathStore(s => s.expenses);
   const onboarded = useFinPathStore(s => s.onboarded);
+  const plan = useFinPathStore(s => s.plan);
+  const strategy = useFinPathStore(s => s.strategy);
+  const setStrategy = useFinPathStore(s => s.setStrategy);
   const pal = usePalette();
 
   const [extraPayment, setExtraPayment] = useState(0);
-  const [timelineStrategy, setTimelineStrategy] = useState<'avalanche' | 'snowball'>('avalanche');
 
   const debtGoal = goals.find(g => g.category === 'debt' && g.status !== 'complete');
+
+  const activeGoals = useMemo(
+    () =>
+      goals
+        .filter((goal) => goal.status !== 'complete')
+        .slice()
+        .sort((a, b) => a.priority - b.priority),
+    [goals],
+  );
+
+  const surplus         = income.total - expenses.total - debts.totalMonthly;
+  const reservedSurplus = plan?.months?.[0]?.reservedSurplus || 0;
+  const pendingSurplus  = plan?.months?.[0]?.pendingSurplus  || 0;
 
   const debtItems = useMemo(() => {
     if (debts.items.length > 0) return debts.items;
@@ -70,17 +85,17 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
 
   const timelineResult = useMemo(() => {
     if (debtItems.length === 0) return null;
-    return timelineStrategy === 'avalanche'
+    return strategy === 'avalanche'
       ? avalanche(debtItems, extraPayment)
       : snowball(debtItems, extraPayment);
-  }, [debtItems, extraPayment, timelineStrategy]);
+  }, [debtItems, extraPayment, strategy]);
 
   const otherTimelineResult = useMemo(() => {
     if (debtItems.length === 0) return null;
-    return timelineStrategy === 'avalanche'
+    return strategy === 'avalanche'
       ? snowball(debtItems, extraPayment)
       : avalanche(debtItems, extraPayment);
-  }, [debtItems, extraPayment, timelineStrategy]);
+  }, [debtItems, extraPayment, strategy]);
 
   const zeroExtraResult = useMemo(() => {
     if (debtItems.length === 0) return null;
@@ -150,9 +165,9 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   }, [debtItems, totalPrincipal]);
 
   const sortedDebts = useMemo(() => {
-    if (timelineStrategy === 'avalanche') return [...debtItems].sort((a, b) => b.interestRate - a.interestRate);
+    if (strategy === 'avalanche') return [...debtItems].sort((a, b) => b.interestRate - a.interestRate);
     return [...debtItems].sort((a, b) => a.principal - b.principal);
-  }, [debtItems, timelineStrategy]);
+  }, [debtItems, strategy]);
 
   const pennyInsights = useMemo(() => {
     if (debtItems.length === 0) return [];
@@ -244,20 +259,93 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
               </div>
               <button
                 type="button"
-                onClick={() => setTimelineStrategy(timelineStrategy === 'avalanche' ? 'snowball' : 'avalanche')}
+                onClick={() => setStrategy(strategy === 'avalanche' ? 'snowball' : 'avalanche')}
                 className="strategy-toggle"
-                aria-label={`Strategy: ${timelineStrategy}`}
-                aria-pressed={timelineStrategy === 'avalanche'}
+                aria-label={`Strategy: ${strategy}`}
+                aria-pressed={strategy === 'avalanche'}
               >
-                <span className={`strategy-toggle-pill ${timelineStrategy === 'avalanche' ? 'left' : 'right'}`} />
-                <span className={`strategy-toggle-label ${timelineStrategy === 'avalanche' ? 'active' : 'inactive'}`}>
+                <span className={`strategy-toggle-pill ${strategy === 'avalanche' ? 'left' : 'right'}`} />
+                <span className={`strategy-toggle-label ${strategy === 'avalanche' ? 'active' : 'inactive'}`}>
                   Avalanche
                 </span>
-                <span className={`strategy-toggle-label ${timelineStrategy === 'snowball' ? 'active' : 'inactive'}`}>
+                <span className={`strategy-toggle-label ${strategy === 'snowball' ? 'active' : 'inactive'}`}>
                   Snowball
                 </span>
               </button>
             </div>
+
+            <div className="strategy-info-box">
+              {strategy === 'avalanche' ? (
+                <p>
+                  <strong className="text-card-foreground">Avalanche</strong> allocates funds by
+                  goal priority — highest priority goals get funded first.{' '}
+                  {(() => {
+                    const p1 = activeGoals.find((g) => g.priority === 1);
+                    return p1 ? (
+                      <span>
+                        Your <strong className="text-card-foreground">P1: {p1.name}</strong> receives{' '}
+                        <strong className="text-card-foreground">
+                          {formatInr(p1.monthlyAllocation || 0)}/mo
+                        </strong>
+                        .
+                      </span>
+                    ) : null;
+                  })()}
+                </p>
+              ) : (
+                <p>
+                  <strong className="text-card-foreground">Snowball</strong> tackles the smallest
+                  remaining goal first for a quick win, then rolls freed-up money into the next.{' '}
+                  {(() => {
+                    const smallest = [...activeGoals].sort(
+                      (a, b) =>
+                        a.targetAmount - a.currentAmount - (b.targetAmount - b.currentAmount),
+                    )[0];
+                    return smallest ? (
+                      <span>
+                        Currently focused on{' '}
+                        <strong className="text-card-foreground">{smallest.name}</strong> with{' '}
+                        <strong className="text-card-foreground">
+                          {formatInr(smallest.monthlyAllocation || 0)}/mo
+                        </strong>
+                        .
+                      </span>
+                    ) : null;
+                  })()}
+                </p>
+              )}
+            </div>
+
+            {(() => {
+              const nonDebtGoals      = activeGoals.filter((g) => g.category !== 'debt');
+              const availableForGoals = Math.max(0, surplus - reservedSurplus - pendingSurplus);
+
+              if (nonDebtGoals.length > 0 && availableForGoals <= 0) {
+                return (
+                  <div className="warning-banner flex items-start gap-2 mt-3">
+                    <Target size={16} className="flex-shrink-0 mt-0.5 icon-wireframe" />
+                    <span>
+                      <strong>Note:</strong> No monthly surplus to distribute. Switching strategies
+                      won't change your checklist amounts right now.
+                    </span>
+                  </div>
+                );
+              }
+
+              if (nonDebtGoals.length === 1 && availableForGoals > 0) {
+                return (
+                  <div className="warning-banner flex items-start gap-2 mt-3">
+                    <Target size={16} className="flex-shrink-0 mt-0.5 icon-wireframe" />
+                    <span>
+                      <strong>Note:</strong> You only have one active goal. Strategies work across{' '}
+                      <em>multiple</em> goals — add another to see the difference.
+                    </span>
+                  </div>
+                );
+              }
+
+              return null;
+            })()}
 
             <div style={{ marginBottom: 'var(--space-4)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 'var(--space-2)' }}>
@@ -307,7 +395,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                         strokeWidth={1.5}
                         dot={false}
                         opacity={0.45}
-                        name={timelineStrategy === 'avalanche' ? 'Snowball total' : 'Avalanche total'}
+                        name={strategy === 'avalanche' ? 'Snowball total' : 'Avalanche total'}
                       />
                     )}
                   </AreaChart>
