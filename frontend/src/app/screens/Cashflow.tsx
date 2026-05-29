@@ -41,6 +41,7 @@ export default function Cashflow() {
   const [hoveredLink, setHoveredLink] = useState<number | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const [activeNode, setActiveNode] = useState<NodePos | null>(null);
+  const [activeLink, setActiveLink] = useState<{ idx: number; x: number; y: number } | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const sankeyWrapRef = useRef<HTMLDivElement>(null);
 
@@ -82,6 +83,7 @@ export default function Cashflow() {
     function handleMouseDown(e: MouseEvent) {
       if (sankeyWrapRef.current && !sankeyWrapRef.current.contains(e.target as Node)) {
         setActiveNode(null);
+        setActiveLink(null);
         setHoveredNode(null);
       }
     }
@@ -92,7 +94,7 @@ export default function Cashflow() {
   // Escape key handler
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setActiveNode(null); }
+      if (e.key === 'Escape') { setActiveNode(null); setActiveLink(null); }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -225,15 +227,23 @@ export default function Cashflow() {
                       }}
                       onNodeUnhover={() => setHoveredNode(null)}
                       onNodeClick={(idx, x, y, w, h) => {
-                        setHoveredNode(null)
-                        setActiveNode(a => a?.idx === idx ? null : { idx, x, y, w, h })
+                        setHoveredNode(null);
+                        setActiveLink(null);
+                        setActiveNode(a => a?.idx === idx ? null : { idx, x, y, w, h });
                       }}
                     />}
                     link={<CustomLink
                       palette={pal}
                       hoveredNodeIdx={hoveredNode?.idx ?? null}
+                      activeLinkIdx={activeLink?.idx ?? null}
                       onLinkHover={(idx) => setHoveredLink(idx)}
                       onLinkUnhover={() => setHoveredLink(null)}
+                      onLinkClick={(idx) => {
+                        if (!mousePos) return;
+                        setHoveredNode(null);
+                        setActiveNode(null);
+                        setActiveLink(a => a?.idx === idx ? null : { idx, x: mousePos.x, y: mousePos.y });
+                      }}
                     />}
                   />
                 </ResponsiveContainer>
@@ -245,16 +255,25 @@ export default function Cashflow() {
                   const outgoingAmount = sankeyData.links.filter(l => l.source === hoveredNode.idx).reduce((s, l) => s + l.value, 0);
                   const displayAmount = incomingAmount > 0 ? incomingAmount : outgoingAmount;
                   const pct = income?.total ? Math.round((displayAmount / income.total) * 100) : 0;
-                  const tipLeft = SANKEY_MARGIN.left + hoveredNode.x + hoveredNode.w / 2;
-                  const tipTop = SANKEY_MARGIN.top + hoveredNode.y;
-                  const showBelow = hoveredNode.y < 80;
+                  const isLeftCol = hoveredNode.x < 20;
+                  const tipLeft = isLeftCol
+                    ? SANKEY_MARGIN.left + hoveredNode.x + hoveredNode.w + 8
+                    : SANKEY_MARGIN.left + hoveredNode.x + hoveredNode.w / 2;
+                  const tipTop = isLeftCol
+                    ? SANKEY_MARGIN.top + hoveredNode.y + hoveredNode.h / 2
+                    : hoveredNode.y < 80
+                      ? SANKEY_MARGIN.top + hoveredNode.y + hoveredNode.h + 8
+                      : SANKEY_MARGIN.top + hoveredNode.y - 8;
+                  const tipTransform = isLeftCol
+                    ? 'translateY(-50%)'
+                    : hoveredNode.y < 80 ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)';
                   return (
                     <div
                       style={{
                         position: 'absolute',
                         left: tipLeft,
-                        top: showBelow ? tipTop + hoveredNode.h + 8 : tipTop - 8,
-                        transform: showBelow ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)',
+                        top: tipTop,
+                        transform: tipTransform,
                         background: 'var(--card-solid)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-base)',
@@ -273,8 +292,8 @@ export default function Cashflow() {
                   );
                 })()}
 
-                {/* Link hover tooltip */}
-                {hoveredLink !== null && mousePos && (() => {
+                {/* Link hover tooltip — suppress if that link is actively clicked */}
+                {hoveredLink !== null && mousePos && hoveredLink !== activeLink?.idx && (() => {
                   const link = sankeyData.links[hoveredLink];
                   if (!link) return null;
                   const srcName = sankeyData.nodes[link.source]?.name ?? '';
@@ -312,10 +331,27 @@ export default function Cashflow() {
                   const outgoingAmount = sankeyData.links.filter(l => l.source === activeNode.idx).reduce((s, l) => s + l.value, 0);
                   const displayAmount = incomingAmount > 0 ? incomingAmount : outgoingAmount;
                   const pct = income?.total ? Math.round((displayAmount / income.total) * 100) : 0;
-                  const popLeft = SANKEY_MARGIN.left + activeNode.x + activeNode.w / 2;
-                  const popTop = SANKEY_MARGIN.top + activeNode.y;
-                  const showBelow = activeNode.y < 80;
                   const childLinks = sankeyData.links.filter(l => l.source === activeNode.idx);
+
+                  const CHART_H = 480;
+                  const POPOVER_EST_H = 240;
+                  const wrapperW = sankeyWrapRef.current?.offsetWidth ?? 800;
+                  const isLeftCol = activeNode.x < 20;
+                  const nodeTopPx = SANKEY_MARGIN.top + activeNode.y;
+                  const nodeBottomPx = nodeTopPx + activeNode.h;
+                  const nodeCenterY = nodeTopPx + activeNode.h / 2;
+
+                  let popLeft: number, popTop: number, popTransform: string;
+                  if (isLeftCol) {
+                    popLeft = SANKEY_MARGIN.left + activeNode.x + activeNode.w + 16;
+                    popTop = Math.min(Math.max(nodeCenterY, POPOVER_EST_H / 2 + 10), CHART_H - POPOVER_EST_H / 2 - 10);
+                    popTransform = 'translateY(-50%)';
+                  } else {
+                    const canFitBelow = CHART_H - nodeBottomPx >= POPOVER_EST_H;
+                    popLeft = Math.min(Math.max(SANKEY_MARGIN.left + activeNode.x + activeNode.w / 2, 140), wrapperW - 140);
+                    popTop = canFitBelow ? nodeBottomPx + 12 : nodeTopPx - 12;
+                    popTransform = canFitBelow ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)';
+                  }
 
                   const badgeColors: Record<NodeKind, { bg: string; color: string; label: string }> = {
                     'income-leaf':  { bg: 'var(--accent-subtle)',           color: 'var(--accent)',               label: 'Income' },
@@ -343,12 +379,16 @@ export default function Cashflow() {
                   const isReadonly = kind === 'debt-item' || kind === 'goal-item' || kind === 'surplus' || kind === 'free-cash';
 
                   return (
-                    <div
+                    <motion.div
+                      key={activeNode.idx}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.12 }}
                       style={{
                         position: 'absolute',
-                        left: Math.min(Math.max(popLeft, 140), (sankeyWrapRef.current?.offsetWidth ?? 600) - 140),
-                        top: showBelow ? popTop + activeNode.h + 12 : popTop - 12,
-                        transform: showBelow ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)',
+                        left: popLeft,
+                        top: popTop,
+                        transform: popTransform,
                         background: 'var(--card-solid)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-md)',
@@ -462,7 +502,45 @@ export default function Cashflow() {
                           </div>
                         </>
                       )}
-                    </div>
+                    </motion.div>
+                  );
+                })()}
+
+                {/* Link click popover */}
+                {activeLink && (() => {
+                  const link = sankeyData.links[activeLink.idx];
+                  if (!link) return null;
+                  const srcName = sankeyData.nodes[link.source]?.name ?? '';
+                  const tgtName = sankeyData.nodes[link.target]?.name ?? '';
+                  const pct = income?.total ? Math.round((link.value / income.total) * 100) : 0;
+                  const CHART_H = 480;
+                  const atBottom = activeLink.y > CHART_H - 100;
+                  return (
+                    <motion.div
+                      key={activeLink.idx}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.12 }}
+                      style={{
+                        position: 'absolute',
+                        left: activeLink.x,
+                        top: atBottom ? activeLink.y - 10 : activeLink.y - 10,
+                        transform: atBottom ? 'translateX(-50%) translateY(-100%)' : 'translateX(-50%) translateY(-100%)',
+                        background: 'var(--card-solid)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-lg)',
+                        padding: '10px 14px',
+                        zIndex: 60,
+                        minWidth: 160,
+                        maxWidth: 200,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)', fontWeight: 'var(--font-weight-semibold)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{srcName} → {tgtName}</div>
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--font-weight-bold)', color: 'var(--foreground)', marginBottom: 2 }}>{formatInr(link.value)}</div>
+                      <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--accent)' }}>{pct}% of income</div>
+                    </motion.div>
                   );
                 })()}
               </div>

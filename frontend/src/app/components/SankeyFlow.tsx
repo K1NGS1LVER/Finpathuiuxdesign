@@ -155,8 +155,10 @@ export interface CustomLinkProps {
   };
   palette: Record<string, string>;
   hoveredNodeIdx?: number | null;
+  activeLinkIdx?: number | null;
   onLinkHover?: (idx: number) => void;
   onLinkUnhover?: () => void;
+  onLinkClick?: (idx: number) => void;
 }
 
 export function CustomLink({
@@ -171,8 +173,10 @@ export function CustomLink({
   payload = {},
   palette,
   hoveredNodeIdx = null,
+  activeLinkIdx = null,
   onLinkHover,
   onLinkUnhover,
+  onLinkClick,
 }: CustomLinkProps) {
   let strokeColor = palette.slate;
   const srcName = payload.source?.name ?? '';
@@ -224,12 +228,15 @@ export function CustomLink({
 
   const isActive = hoveredNodeIdx !== null &&
     (sourceIdx === hoveredNodeIdx || targetIdx === hoveredNodeIdx);
+  const isClickedLink = activeLinkIdx !== null && activeLinkIdx === index;
 
-  const fillOpacity = isActive
-    ? 0.72
-    : hoveredNodeIdx !== null
-      ? 0.08
-      : 0.35;
+  const fillOpacity = isClickedLink
+    ? 0.88
+    : isActive
+      ? 0.72
+      : hoveredNodeIdx !== null
+        ? 0.08
+        : 0.35;
 
   const hw = linkWidth / 2;
   const bandPath = [
@@ -246,9 +253,10 @@ export function CustomLink({
       fill={strokeColor}
       fillOpacity={fillOpacity}
       stroke="none"
-      style={{ cursor: 'pointer', transition: 'fill-opacity 0.15s ease' }}
+      style={{ cursor: 'pointer', transition: 'fill-opacity 0.15s ease', mixBlendMode: 'multiply' }}
       onMouseEnter={() => onLinkHover?.(index)}
       onMouseLeave={() => onLinkUnhover?.()}
+      onClick={() => onLinkClick?.(index)}
     />
   );
 }
