@@ -334,7 +334,8 @@ export default function Cashflow() {
                   const childLinks = sankeyData.links.filter(l => l.source === activeNode.idx);
 
                   const CHART_H = 480;
-                  const POPOVER_EST_H = 240;
+                  const POPOVER_EST_H = 220;
+                  const POPOVER_MAX_W = 260;
                   const wrapperW = sankeyWrapRef.current?.offsetWidth ?? 800;
                   const isLeftCol = activeNode.x < 20;
                   const nodeTopPx = SANKEY_MARGIN.top + activeNode.y;
@@ -343,9 +344,14 @@ export default function Cashflow() {
 
                   let popLeft: number, popTop: number, popTransform: string;
                   if (isLeftCol) {
-                    popLeft = SANKEY_MARGIN.left + activeNode.x + activeNode.w + 16;
-                    popTop = Math.min(Math.max(nodeCenterY, POPOVER_EST_H / 2 + 10), CHART_H - POPOVER_EST_H / 2 - 10);
-                    popTransform = 'translateY(-50%)';
+                    // Position to the right of the node; compute absolute top (no CSS transform)
+                    // so motion scale animation doesn't conflict with translateY(-50%)
+                    popLeft = Math.min(
+                      SANKEY_MARGIN.left + activeNode.x + activeNode.w + 16,
+                      wrapperW - POPOVER_MAX_W - 8,
+                    );
+                    popTop = Math.min(Math.max(nodeCenterY - POPOVER_EST_H / 2, 10), CHART_H - POPOVER_EST_H - 10);
+                    popTransform = 'none';
                   } else {
                     const canFitBelow = CHART_H - nodeBottomPx >= POPOVER_EST_H;
                     popLeft = Math.min(Math.max(SANKEY_MARGIN.left + activeNode.x + activeNode.w / 2, 140), wrapperW - 140);
@@ -381,8 +387,8 @@ export default function Cashflow() {
                   return (
                     <motion.div
                       key={activeNode.idx}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
                       transition={{ duration: 0.12 }}
                       style={{
                         position: 'absolute',
@@ -395,8 +401,8 @@ export default function Cashflow() {
                         boxShadow: 'var(--shadow-lg)',
                         padding: '12px 14px',
                         zIndex: 60,
-                        minWidth: 180,
-                        maxWidth: 220,
+                        minWidth: 200,
+                        maxWidth: 260,
                       }}
                     >
                       {/* Badge */}
@@ -518,8 +524,8 @@ export default function Cashflow() {
                   return (
                     <motion.div
                       key={activeLink.idx}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
                       transition={{ duration: 0.12 }}
                       style={{
                         position: 'absolute',
