@@ -243,9 +243,10 @@ export default function Cashflow() {
                         setActiveNode(a => a?.idx === idx ? a : null);
                       }}
                       onNodeUnhover={() => setHoveredNode(null)}
-                      onNodeClick={(idx, x, y, w, h) =>
+                      onNodeClick={(idx, x, y, w, h) => {
+                        setHoveredNode(null)
                         setActiveNode(a => a?.idx === idx ? null : { idx, x, y, w, h })
-                      }
+                      }}
                     />}
                     link={<CustomLink
                       palette={pal}
@@ -273,7 +274,7 @@ export default function Cashflow() {
                         left: tipLeft,
                         top: showBelow ? tipTop + hoveredNode.h + 8 : tipTop - 8,
                         transform: showBelow ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)',
-                        background: 'var(--card)',
+                        background: 'var(--card-solid)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-base)',
                         boxShadow: 'var(--shadow-md)',
@@ -357,7 +358,7 @@ export default function Cashflow() {
                         left: Math.min(Math.max(popLeft, 140), (sankeyWrapRef.current?.offsetWidth ?? 600) - 140),
                         top: showBelow ? popTop + activeNode.h + 12 : popTop - 12,
                         transform: showBelow ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)',
-                        background: 'var(--card)',
+                        background: 'var(--card-solid)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-md)',
                         boxShadow: 'var(--shadow-lg)',
