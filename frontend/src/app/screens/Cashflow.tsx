@@ -4,7 +4,7 @@ import {
   Sparkles,
   AlertTriangle,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
 import { pageContainer, pageSection } from '@/app/components/motion-variants';
 import { Sankey, ResponsiveContainer } from 'recharts';
@@ -23,6 +23,10 @@ const MONTH_NAMES = ['January','February','March','April','May','June','July','A
 const SANKEY_MARGIN = { top: 10, left: 120, right: 160, bottom: 10 };
 
 type NodePos = { idx: number; x: number; y: number; w: number; h: number; vx: number; vy: number };
+
+type ConfirmState =
+  | { type: 'income'; nodeName: string; newVal: number }
+  | { type: 'expense'; nodeName: string; partial: Partial<ExpenseProfile>; displayTotal: number };
 
 export default function Cashflow() {
   const income = useFinPathStore(s => s.income);
@@ -44,6 +48,9 @@ export default function Cashflow() {
   const [activeNode, setActiveNode] = useState<NodePos | null>(null);
   const [activeLink, setActiveLink] = useState<{ idx: number; x: number; y: number } | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [pendingConfirm, setPendingConfirm] = useState<ConfirmState | null>(null);
+  const [toasts, setToasts] = useState<Array<{ id: number; message: string }>>([]);
+  const toastIdRef = useRef(0);
   const sankeyWrapRef = useRef<HTMLDivElement>(null);
 
   const pal = usePalette();
@@ -88,6 +95,18 @@ export default function Cashflow() {
     };
   }
 
+  function showToast(message: string) {
+    const id = ++toastIdRef.current;
+    setToasts(t => [...t, { id, message }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
+  }
+
+  // Clear confirm state + edit values when switching nodes
+  useEffect(() => {
+    setPendingConfirm(null);
+    setEditValues({});
+  }, [activeNode?.idx]);
+
   // Click-outside: exclude portal content from closing popovers
   useEffect(() => {
     function handleMouseDown(e: MouseEvent) {
@@ -106,11 +125,18 @@ export default function Cashflow() {
   // Escape key handler
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setActiveNode(null); setActiveLink(null); }
+      if (e.key === 'Escape') {
+        if (pendingConfirm) {
+          setPendingConfirm(null);
+        } else {
+          setActiveNode(null);
+          setActiveLink(null);
+        }
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [pendingConfirm]);
 
   // Dismiss popovers on scroll (fixed-position elements shift with scroll)
   useEffect(() => {
@@ -128,15 +154,20 @@ export default function Cashflow() {
       const newVariable = Math.round(newVal * income.variablePercent / 100);
       setIncome({ ...income, passive: newVal, variable: newVariable, total: income.primary + income.secondary + newVal + newVariable });
     }
+    showToast(`${nodeName} updated to ${formatInr(newVal)}`);
     setActiveNode(null);
+    setPendingConfirm(null);
     setEditValues({});
   }
 
-  function handleSaveExpenses(fields: Partial<ExpenseProfile>) {
+  function handleSaveExpenses(nodeName: string, fields: Partial<ExpenseProfile>) {
     const next = { ...expenses, ...fields };
     next.total = next.rent + next.utilities + next.food + next.transport + next.entertainment + next.other;
     setExpenses(next);
+    const changedTotal = Object.values(fields).reduce((s: number, v) => s + (v ?? 0), 0);
+    showToast(`${nodeName} updated to ${formatInr(changedTotal)}`);
     setActiveNode(null);
+    setPendingConfirm(null);
     setEditValues({});
   }
 
@@ -204,6 +235,30 @@ export default function Cashflow() {
       })),
     [goals, plan]
   );
+
+  // Shared button styles
+  const confirmBtnStyle: React.CSSProperties = {
+    flex: 1,
+    background: 'var(--accent)',
+    color: 'var(--on-accent)',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    padding: '5px 8px',
+    fontSize: 'var(--text-2xs)',
+    fontWeight: 'var(--font-weight-bold)',
+    cursor: 'pointer',
+  };
+  const cancelBtnStyle: React.CSSProperties = {
+    flex: 1,
+    background: 'var(--surface-hover)',
+    color: 'var(--foreground)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '5px 8px',
+    fontSize: 'var(--text-2xs)',
+    fontWeight: 'var(--font-weight-semibold)',
+    cursor: 'pointer',
+  };
 
   return (
     <motion.div className="max-w-7xl mx-auto relative text-[var(--foreground)]" variants={pageContainer} initial="hidden" animate="visible">
@@ -408,6 +463,13 @@ export default function Cashflow() {
                   const isAggregate = kind === 'expense-agg' || kind === 'debt-agg' || kind === 'goal-agg' || kind === 'income-merge' || kind === 'disposable';
                   const isReadonly = kind === 'debt-item' || kind === 'goal-item' || kind === 'surplus' || kind === 'free-cash';
 
+                  // Inline helpers for input parsing
+                  const parseField = (key: string, fallback: number): number => {
+                    const raw = editValues[key] ?? String(fallback);
+                    const v = Number(raw.replace(/,/g, ''));
+                    return isNaN(v) ? 0 : v;
+                  };
+
                   return (
                     <motion.div
                       key={activeNode.idx}
@@ -437,61 +499,148 @@ export default function Cashflow() {
                       <div style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-bold)', color: 'var(--foreground)', marginBottom: 2 }}>{nodeName}</div>
                       <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)', marginBottom: 10 }}>{pct}% of monthly income</div>
 
-                      {/* Income leaf: single editable input */}
-                      {kind === 'income-leaf' && (
-                        <>
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
-                            <input
-                              style={{ flex: 1, border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-bold)', color: 'var(--foreground)', background: 'var(--surface-hover)', fontFamily: 'inherit', outline: 'none' }}
-                              value={editValues[nodeName] ?? String(displayAmount)}
-                              onChange={e => setEditValues(v => ({ ...v, [nodeName]: e.target.value }))}
-                              onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                  const v = Number(String(editValues[nodeName] ?? displayAmount).replace(/,/g, ''));
-                                  if (!isNaN(v) && v > 0) handleSaveIncome(nodeName, v);
-                                }
-                              }}
-                            />
-                            <button
-                              onClick={() => {
-                                const v = Number(String(editValues[nodeName] ?? displayAmount).replace(/,/g, ''));
-                                if (!isNaN(v) && v > 0) handleSaveIncome(nodeName, v);
-                              }}
-                              style={{ background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '4px 10px', fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-bold)', cursor: 'pointer' }}
-                            >
-                              Save
-                            </button>
-                          </div>
-                          <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)' }}>Plan recalculates on save</div>
-                        </>
-                      )}
+                      {/* Income leaf: numeric-only input with confirmation step */}
+                      {kind === 'income-leaf' && (() => {
+                        const inputVal = editValues[nodeName] ?? String(displayAmount);
+                        const parsed = Number(inputVal.replace(/,/g, ''));
+                        const isValid = !isNaN(parsed) && parsed > 0;
+                        const confirmIncome = pendingConfirm?.type === 'income' && pendingConfirm.nodeName === nodeName ? pendingConfirm : null;
 
-                      {/* Expense leaf: one or two editable inputs */}
-                      {kind === 'expense-leaf' && (() => {
-                        const fields = fieldMap[nodeName] ?? [];
+                        if (confirmIncome) {
+                          return (
+                            <>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--foreground)', marginBottom: 10, lineHeight: 1.5 }}>
+                                Change <strong>{nodeName}</strong> to <strong style={{ color: 'var(--accent)' }}>{formatInr(confirmIncome.newVal)}</strong>?
+                              </div>
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={() => handleSaveIncome(nodeName, confirmIncome.newVal)} style={confirmBtnStyle}>
+                                  Confirm
+                                </button>
+                                <button onClick={() => setPendingConfirm(null)} style={cancelBtnStyle}>
+                                  Cancel
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
+
                         return (
                           <>
-                            {fields.map(f => (
-                              <div key={String(f.key)} style={{ marginBottom: 6 }}>
-                                <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)', marginBottom: 2 }}>{f.label}</div>
-                                <input
-                                  style={{ width: '100%', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-bold)', color: 'var(--foreground)', background: 'var(--surface-hover)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                                  value={editValues[String(f.key)] ?? String((expenses as Record<string, number>)[String(f.key)] ?? 0)}
-                                  onChange={e => setEditValues(v => ({ ...v, [String(f.key)]: e.target.value }))}
-                                />
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                              <input
+                                inputMode="numeric"
+                                style={{ flex: 1, border: `1.5px solid ${isValid ? 'var(--border)' : 'var(--red)'}`, borderRadius: 'var(--radius-sm)', padding: '4px 8px', fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-bold)', color: 'var(--foreground)', background: 'var(--surface-hover)', fontFamily: 'inherit', outline: 'none' }}
+                                value={inputVal}
+                                onChange={e => {
+                                  const clean = e.target.value.replace(/[^0-9]/g, '');
+                                  setEditValues(v => ({ ...v, [nodeName]: clean }));
+                                }}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter' && isValid) {
+                                    setPendingConfirm({ type: 'income', nodeName, newVal: parsed });
+                                  }
+                                }}
+                              />
+                              <button
+                                disabled={!isValid}
+                                onClick={() => {
+                                  if (isValid) setPendingConfirm({ type: 'income', nodeName, newVal: parsed });
+                                }}
+                                style={{ background: isValid ? 'var(--accent)' : 'var(--surface-tint)', color: isValid ? 'var(--on-accent)' : 'var(--tertiary)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '4px 10px', fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-bold)', cursor: isValid ? 'pointer' : 'not-allowed' }}
+                              >
+                                Save
+                              </button>
+                            </div>
+                            {!isValid && inputVal.length > 0 && (
+                              <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--red-text)', marginBottom: 4 }}>Enter a valid amount greater than 0</div>
+                            )}
+                            <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)' }}>Plan recalculates on save</div>
+                          </>
+                        );
+                      })()}
+
+                      {/* Expense leaf: numeric-only inputs with confirmation step */}
+                      {kind === 'expense-leaf' && (() => {
+                        const fields = fieldMap[nodeName] ?? [];
+                        const confirmExpense = pendingConfirm?.type === 'expense' && pendingConfirm.nodeName === nodeName ? pendingConfirm : null;
+
+                        if (confirmExpense) {
+                          return (
+                            <>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--foreground)', marginBottom: 10, lineHeight: 1.5 }}>
+                                Update <strong>{nodeName}</strong> to <strong style={{ color: 'var(--amber-text)' }}>{formatInr(confirmExpense.displayTotal)}</strong>?
                               </div>
-                            ))}
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button
+                                  onClick={() => handleSaveExpenses(nodeName, confirmExpense.partial)}
+                                  style={{ ...confirmBtnStyle, background: 'var(--amber)', color: 'var(--on-accent)' }}
+                                >
+                                  Confirm
+                                </button>
+                                <button onClick={() => setPendingConfirm(null)} style={cancelBtnStyle}>
+                                  Cancel
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
+
+                        const allParsed = fields.map(f => ({
+                          key: f.key,
+                          val: parseField(String(f.key), (expenses as Record<string, number>)[String(f.key)] ?? 0),
+                        }));
+                        const allValid = allParsed.every(({ val }) => !isNaN(val) && val >= 0);
+
+                        return (
+                          <>
+                            {fields.map((f, fi) => {
+                              const currentVal = (expenses as Record<string, number>)[String(f.key)] ?? 0;
+                              const fieldKey = String(f.key);
+                              const fieldInput = editValues[fieldKey] ?? String(currentVal);
+                              const fieldParsed = Number(fieldInput.replace(/,/g, ''));
+                              const fieldValid = !isNaN(fieldParsed) && fieldParsed >= 0;
+                              return (
+                                <div key={fieldKey} style={{ marginBottom: 6 }}>
+                                  <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)', marginBottom: 2 }}>{f.label}</div>
+                                  <input
+                                    inputMode="numeric"
+                                    style={{ width: '100%', border: `1.5px solid ${fieldValid ? 'var(--border)' : 'var(--red)'}`, borderRadius: 'var(--radius-sm)', padding: '4px 8px', fontSize: 'var(--text-xs)', fontWeight: 'var(--font-weight-bold)', color: 'var(--foreground)', background: 'var(--surface-hover)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                    value={fieldInput}
+                                    onChange={e => {
+                                      const clean = e.target.value.replace(/[^0-9]/g, '');
+                                      setEditValues(v => ({ ...v, [fieldKey]: clean }));
+                                    }}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter' && fi === fields.length - 1 && allValid) {
+                                        const partial: Partial<ExpenseProfile> = {};
+                                        let total = 0;
+                                        for (const p of allParsed) {
+                                          (partial as Record<string, number>)[String(p.key)] = p.val;
+                                          total += p.val;
+                                        }
+                                        setPendingConfirm({ type: 'expense', nodeName, partial, displayTotal: total });
+                                      }
+                                    }}
+                                  />
+                                  {!fieldValid && fieldInput.length > 0 && (
+                                    <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--red-text)', marginTop: 2 }}>Numbers only</div>
+                                  )}
+                                </div>
+                              );
+                            })}
                             <button
+                              disabled={!allValid}
                               onClick={() => {
+                                if (!allValid) return;
                                 const partial: Partial<ExpenseProfile> = {};
-                                for (const f of fields) {
-                                  const raw = editValues[String(f.key)] ?? String((expenses as Record<string, number>)[String(f.key)] ?? 0);
-                                  const v = Number(String(raw).replace(/,/g, ''));
-                                  if (!isNaN(v) && v >= 0) (partial as Record<string, number>)[String(f.key)] = v;
+                                let total = 0;
+                                for (const p of allParsed) {
+                                  (partial as Record<string, number>)[String(p.key)] = p.val;
+                                  total += p.val;
                                 }
-                                handleSaveExpenses(partial);
+                                setPendingConfirm({ type: 'expense', nodeName, partial, displayTotal: total });
                               }}
-                              style={{ width: '100%', background: 'var(--amber)', color: 'var(--on-accent)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '5px', fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-bold)', cursor: 'pointer', marginBottom: 4 }}
+                              style={{ width: '100%', background: allValid ? 'var(--amber)' : 'var(--surface-tint)', color: allValid ? 'var(--on-accent)' : 'var(--tertiary)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '5px', fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-bold)', cursor: allValid ? 'pointer' : 'not-allowed', marginBottom: 4 }}
                             >
                               Save
                             </button>
@@ -672,6 +821,53 @@ export default function Cashflow() {
           </ul>
         </div>
       </motion.div>
+
+      {/* Toast stack — portalled so nothing clips it */}
+      {createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            zIndex: 99999,
+            pointerEvents: 'none',
+          }}
+        >
+          <AnimatePresence>
+            {toasts.map(t => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                transition={{ duration: 0.18 }}
+                style={{
+                  background: 'var(--card-solid)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-base)',
+                  boxShadow: 'var(--shadow-md)',
+                  padding: '10px 14px',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--foreground)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  maxWidth: 300,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{ color: 'var(--green)', fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--text-sm)' }}>✓</span>
+                {t.message}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>,
+        document.body
+      )}
     </motion.div>
   );
 }
