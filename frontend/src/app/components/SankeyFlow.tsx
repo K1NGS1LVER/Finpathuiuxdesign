@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { Rectangle, Layer } from 'recharts';
 import { formatInr } from '@/lib/format';
+import type { NodeKind } from '@/lib/sankey-data';
 
 export type SankeyNodePayload = {
   name: string;
   value?: number;
+  kind?: NodeKind;
 };
 
 export function resolveCssVar(name: string): string {
@@ -49,14 +51,13 @@ const NODE_COLOR_KEYS: Record<string, keyof ReturnType<typeof usePalette>> = {
   'Variable Income':     'blue-soft',
   'Total Income':        'blue',
   'Essential Expenses':  'amber',
-  'Debt & Savings':      'red',
   'Disposable':          'green',
   'Housing & Utilities': 'amber',
   'Food':                'amber',
   'Transport':           'amber',
   'Other Expenses':      'amber',
-  'Debt Payments':       'red',
-  'Goals Progress':      'lime',
+  'Debt':                'red',
+  'Goals':               'lime',
   'Surplus Reserve':     'purple',
   'Free Cash':           'green',
 };
@@ -74,7 +75,10 @@ export function CustomNode({
   onNodeUnhover,
   onNodeClick,
 }: CustomNodeProps) {
-  const colorKey = NODE_COLOR_KEYS[payload.name] ?? 'slate';
+  const colorKey =
+    NODE_COLOR_KEYS[payload.name] ??
+    (payload.kind === 'goal-item' ? 'lime' :
+     payload.kind === 'debt-item' ? 'red' : 'slate');
   const color = palette[colorKey];
   const isLeft = x < 280;
 
@@ -173,24 +177,35 @@ export function CustomLink({
   let strokeColor = palette.slate;
   const srcName = payload.source?.name ?? '';
   const tgtName = payload.target?.name ?? '';
-  if (srcName.includes('Income')) {
-    const tgtAlsoIncome = tgtName.includes('Income');
-    if (tgtAlsoIncome) {
+  const srcKind = (payload.source as (SankeyNodePayload & { kind?: NodeKind }) | undefined)?.kind;
+  const tgtKind = (payload.target as (SankeyNodePayload & { kind?: NodeKind }) | undefined)?.kind;
+  if (srcKind === 'income-leaf' || srcKind === 'income-merge' || srcName.includes('Income')) {
+    if (tgtKind === 'income-merge' || tgtName.includes('Income')) {
       const srcKey = NODE_COLOR_KEYS[srcName] ?? 'blue';
       strokeColor = palette[srcKey];
-    } else if (tgtName === 'Essential Expenses') {
+    } else if (tgtKind === 'expense-agg' || tgtName === 'Essential Expenses') {
       strokeColor = palette.amber;
-    } else if (tgtName === 'Debt & Savings') {
+    } else if (tgtKind === 'debt-agg' || tgtName === 'Debt') {
       strokeColor = palette.red;
-    } else if (tgtName === 'Disposable') {
+    } else if (tgtKind === 'goal-agg' || tgtName === 'Goals') {
+      strokeColor = palette.lime;
+    } else if (tgtKind === 'disposable' || tgtName === 'Disposable') {
       strokeColor = palette.green;
+    } else if (tgtKind === 'surplus' || tgtName === 'Surplus Reserve') {
+      strokeColor = palette.purple;
     }
-  } else if (srcName === 'Essential Expenses') {
+  } else if (srcKind === 'expense-agg' || srcName === 'Essential Expenses') {
     strokeColor = palette.amber;
-  } else if (srcName === 'Debt & Savings') {
+  } else if (srcKind === 'debt-agg' || srcName === 'Debt') {
     strokeColor = palette.red;
-  } else if (srcName === 'Disposable') {
+  } else if (srcKind === 'goal-agg' || srcName === 'Goals') {
+    strokeColor = palette.lime;
+  } else if (srcKind === 'disposable' || srcName === 'Disposable') {
     strokeColor = palette.green;
+  } else if (srcKind === 'debt-item') {
+    strokeColor = palette.red;
+  } else if (srcKind === 'goal-item') {
+    strokeColor = palette.lime;
   }
 
   // Recharts may pass source/target as node objects with .index or as numbers
