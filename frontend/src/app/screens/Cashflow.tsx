@@ -14,32 +14,13 @@ import {
 } from '@/app/components/SankeyFlow';
 import { formatInr } from '@/lib/format';
 import { buildSankeyData, computeGoalAllocationsTotal } from '@/lib/sankey-data';
+import type { NodeKind } from '@/lib/sankey-data';
 import { ExpenseProfile } from '@/lib/types';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const SANKEY_MARGIN = { top: 10, left: 120, right: 160, bottom: 10 };
 
-type NodeKind = 'income-leaf' | 'expense-leaf' | 'aggregate' | 'readonly';
-
-const NODE_KIND: Record<string, NodeKind> = {
-  'Primary Income': 'income-leaf',
-  'Secondary Income': 'income-leaf',
-  'Passive Income': 'income-leaf',
-  'Variable Income': 'readonly',
-  'Total Income': 'aggregate',
-  'Essential Expenses': 'aggregate',
-  'Debt & Savings': 'aggregate',
-  'Disposable': 'aggregate',
-  'Housing & Utilities': 'expense-leaf',
-  'Food': 'expense-leaf',
-  'Transport': 'expense-leaf',
-  'Other Expenses': 'expense-leaf',
-  'Debt Payments': 'readonly',
-  'Goals Progress': 'readonly',
-  'Surplus Reserve': 'readonly',
-  'Free Cash': 'readonly',
-};
 
 type NodePos = { idx: number; x: number; y: number; w: number; h: number };
 
@@ -326,7 +307,7 @@ export default function Cashflow() {
                 {/* Click popover */}
                 {activeNode && (() => {
                   const nodeName = sankeyData.nodes[activeNode.idx]?.name ?? '';
-                  const kind = NODE_KIND[nodeName] ?? 'readonly';
+                  const kind: NodeKind = (sankeyData.nodes[activeNode.idx] as { kind?: NodeKind })?.kind ?? 'free-cash';
                   const incomingAmount = sankeyData.links.filter(l => l.target === activeNode.idx).reduce((s, l) => s + l.value, 0);
                   const outgoingAmount = sankeyData.links.filter(l => l.source === activeNode.idx).reduce((s, l) => s + l.value, 0);
                   const displayAmount = incomingAmount > 0 ? incomingAmount : outgoingAmount;
@@ -337,10 +318,17 @@ export default function Cashflow() {
                   const childLinks = sankeyData.links.filter(l => l.source === activeNode.idx);
 
                   const badgeColors: Record<NodeKind, { bg: string; color: string; label: string }> = {
-                    'income-leaf': { bg: 'var(--accent-subtle)', color: 'var(--accent)', label: 'Income' },
-                    'expense-leaf': { bg: 'var(--amber-subtle)', color: 'var(--amber-text)', label: 'Expense' },
-                    'aggregate': { bg: 'var(--surface-hover)', color: 'var(--tertiary)', label: 'Aggregate' },
-                    'readonly': { bg: 'var(--surface-hover)', color: 'var(--tertiary)', label: nodeName === 'Debt Payments' ? 'Debt' : nodeName === 'Goals Progress' ? 'Goals' : 'Info' },
+                    'income-leaf':  { bg: 'var(--accent-subtle)',           color: 'var(--accent)',               label: 'Income' },
+                    'income-merge': { bg: 'var(--accent-subtle)',           color: 'var(--accent)',               label: 'Income' },
+                    'expense-agg':  { bg: 'var(--amber-subtle)',            color: 'var(--amber-text)',           label: 'Expenses' },
+                    'expense-leaf': { bg: 'var(--amber-subtle)',            color: 'var(--amber-text)',           label: 'Expense' },
+                    'debt-agg':     { bg: 'var(--red-subtle)',              color: 'var(--red-text)',             label: 'Debt' },
+                    'debt-item':    { bg: 'var(--red-subtle)',              color: 'var(--red-text)',             label: 'Debt' },
+                    'goal-agg':     { bg: 'var(--tertiary-accent-subtle)',  color: 'var(--tertiary-accent-text)', label: 'Goals' },
+                    'goal-item':    { bg: 'var(--tertiary-accent-subtle)',  color: 'var(--tertiary-accent-text)', label: 'Goal' },
+                    'surplus':      { bg: 'var(--secondary-accent-subtle)', color: 'var(--secondary-accent)',     label: 'Surplus' },
+                    'disposable':   { bg: 'var(--surface-hover)',           color: 'var(--tertiary)',             label: 'Disposable' },
+                    'free-cash':    { bg: 'var(--green-subtle)',            color: 'var(--green-text)',           label: 'Free Cash' },
                   };
                   const badge = badgeColors[kind];
 
@@ -350,6 +338,9 @@ export default function Cashflow() {
                     'Transport': [{ key: 'transport', label: 'Transport' }],
                     'Other Expenses': [{ key: 'entertainment', label: 'Entertainment' }, { key: 'other', label: 'Other' }],
                   };
+
+                  const isAggregate = kind === 'expense-agg' || kind === 'debt-agg' || kind === 'goal-agg' || kind === 'income-merge' || kind === 'disposable';
+                  const isReadonly = kind === 'debt-item' || kind === 'goal-item' || kind === 'surplus' || kind === 'free-cash';
 
                   return (
                     <div
@@ -439,7 +430,7 @@ export default function Cashflow() {
                       })()}
 
                       {/* Aggregate: child breakdown list */}
-                      {kind === 'aggregate' && (
+                      {isAggregate && (
                         <>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
                             {childLinks.map(l => (
@@ -453,22 +444,21 @@ export default function Cashflow() {
                             <span>Total</span>
                             <span>{formatInr(displayAmount)}</span>
                           </div>
-                          {childLinks.length > 0 && (
+                          {childLinks.length > 0 && kind === 'expense-agg' && (
                             <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)', marginTop: 6 }}>Click a sub-node to edit amounts</div>
                           )}
                         </>
                       )}
 
                       {/* Read-only nodes */}
-                      {kind === 'readonly' && (
+                      {isReadonly && (
                         <>
                           <div style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--font-weight-bold)', color: 'var(--foreground)', marginBottom: 4 }}>{formatInr(displayAmount)}</div>
                           <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)' }}>
-                            {nodeName === 'Debt Payments' && 'Manage debt on the Debt screen →'}
-                            {nodeName === 'Goals Progress' && 'Manage goals on the Journey screen →'}
-                            {nodeName === 'Surplus Reserve' && 'Adjust in Settings → Surplus Reserve'}
-                            {nodeName === 'Free Cash' && 'Disposable income after all allocations'}
-                            {nodeName === 'Variable Income' && 'Computed from passive income × variable %'}
+                            {kind === 'debt-item' && 'Manage debt on the Debt screen →'}
+                            {kind === 'goal-item' && 'Manage goals on the Journey screen →'}
+                            {kind === 'surplus' && 'Adjust in Settings → Surplus Reserve'}
+                            {kind === 'free-cash' && 'Disposable income after all allocations'}
                           </div>
                         </>
                       )}
@@ -493,7 +483,7 @@ export default function Cashflow() {
                 <strong>Essential Expenses</strong> {formatInr(totalExpensesDeduped)} ({Math.round((totalExpensesDeduped / totalIncome) * 100)}% of income): Housing, Food, Transport, Other
               </p>
               <p className="text-xs text-[var(--card-foreground)]">
-                <strong>Debt & Savings</strong> {formatInr(debtAndSavings)} ({Math.round((debtAndSavings / totalIncome) * 100)}% of income): Debt Payments, Goals, Surplus Reserve
+                <strong>Debt & Goals</strong> {formatInr(debtAndSavings)} ({Math.round((debtAndSavings / totalIncome) * 100)}% of income): Debt Payments, Goals, Surplus Reserve
               </p>
               <p className="text-xs text-[var(--card-foreground)]">
                 <strong>Disposable</strong> {formatInr(disposable)} ({Math.round((disposable / totalIncome) * 100)}% of income): Unallocated free cash

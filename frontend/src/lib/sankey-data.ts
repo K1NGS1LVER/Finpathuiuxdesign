@@ -1,7 +1,21 @@
-import type { FinancialProfile } from "./types";
+import type { FinancialProfile, Goal, DebtItem } from "./types";
+
+export type NodeKind =
+  | 'income-leaf'
+  | 'income-merge'
+  | 'expense-agg'
+  | 'expense-leaf'
+  | 'debt-agg'
+  | 'debt-item'
+  | 'goal-agg'
+  | 'goal-item'
+  | 'surplus'
+  | 'disposable'
+  | 'free-cash'
 
 export interface SankeyNode {
   name: string;
+  kind?: NodeKind;
 }
 
 export interface SankeyLink {
@@ -38,16 +52,23 @@ export function buildSankeyData(profile: SankeyProfileSlice): SankeyData {
   const totalIncome = income?.total || 0;
   if (totalIncome <= 0) return { nodes: [], links: [] };
 
-  const goalAllocationsTotal = computeGoalAllocationsTotal(profile);
-  const debtPayments = debts?.totalMonthly || 0;
+  // Dynamic debt/goal items
+  const debtItems = (debts?.items ?? []).filter((d: DebtItem) => (d.monthlyPayment ?? 0) > 0);
+  const activeGoals = (profile.goals ?? []).filter((g: Goal) => g.status !== 'complete');
+  function goalAmt(g: Goal): number {
+    return profile.plan?.months?.[0]?.goalAllocations?.[g.id] ?? g.monthlyAllocation ?? 0;
+  }
+  const activeGoalsWithAmt = activeGoals.filter((g: Goal) => goalAmt(g) > 0);
+  const debtTotal = debtItems.reduce((s: number, d: DebtItem) => s + d.monthlyPayment, 0);
+  const goalsTotal = activeGoalsWithAmt.reduce((s: number, g: Goal) => s + goalAmt(g), 0);
+
   const housing = (expenses?.rent || 0) + (expenses?.utilities || 0);
   const food = expenses?.food || 0;
   const transport = expenses?.transport || 0;
   const otherExp = (expenses?.entertainment || 0) + (expenses?.other || 0);
   const totalExpensesDeduped = housing + food + transport + otherExp;
   const surplusReserve = monthlySurplusReserve || 0;
-  const goalsProgress = Math.max(0, goalAllocationsTotal);
-  const debtAndSavings = debtPayments + goalsProgress + surplusReserve;
+  const debtAndSavings = debtTotal + goalsTotal + surplusReserve;
   const disposable = Math.max(
     0,
     totalIncome - totalExpensesDeduped - debtAndSavings,
@@ -61,77 +82,142 @@ export function buildSankeyData(profile: SankeyProfileSlice): SankeyData {
     .filter((v) => v > 0).length;
   const hasMerger = activeSources > 1;
 
-  let allNodes: SankeyNode[];
-  let allLinks: SankeyLink[];
+  const allNodes: SankeyNode[] = [];
+  const allLinks: SankeyLink[] = [];
 
   if (hasMerger) {
-    allNodes = [
-      { name: "Primary Income" },
-      { name: "Secondary Income" },
-      { name: "Passive Income" },
-      { name: "Variable Income" },
-      { name: "Total Income" },
-      { name: "Essential Expenses" },
-      { name: "Debt & Savings" },
-      { name: "Disposable" },
-      { name: "Housing & Utilities" },
-      { name: "Food" },
-      { name: "Transport" },
-      { name: "Other Expenses" },
-      { name: "Debt Payments" },
-      { name: "Goals Progress" },
-      { name: "Surplus Reserve" },
-      { name: "Free Cash" },
-    ];
-    allLinks = [
-      { source: 0, target: 4, value: primaryInc },
-      { source: 1, target: 4, value: secondaryInc },
-      { source: 2, target: 4, value: passiveInc },
-      { source: 3, target: 4, value: variableInc },
-      { source: 4, target: 5, value: totalExpensesDeduped },
-      { source: 4, target: 6, value: debtAndSavings },
-      { source: 4, target: 7, value: disposable },
-      { source: 5, target: 8, value: housing },
-      { source: 5, target: 9, value: food },
-      { source: 5, target: 10, value: transport },
-      { source: 5, target: 11, value: otherExp },
-      { source: 6, target: 12, value: debtPayments },
-      { source: 6, target: 13, value: goalsProgress },
-      { source: 6, target: 14, value: surplusReserve },
-      { source: 7, target: 15, value: disposable },
-    ].filter((l) => l.value > 0);
+    // Indices 0-3: income sources (only used ones matter due to filter+reindex)
+    allNodes.push({ name: "Primary Income",   kind: 'income-leaf' });  // 0
+    allNodes.push({ name: "Secondary Income", kind: 'income-leaf' });  // 1
+    allNodes.push({ name: "Passive Income",   kind: 'income-leaf' });  // 2
+    allNodes.push({ name: "Variable Income",  kind: 'income-leaf' });  // 3
+    allNodes.push({ name: "Total Income",     kind: 'income-merge' }); // 4
+    allNodes.push({ name: "Essential Expenses", kind: 'expense-agg' }); // 5
+    allNodes.push({ name: "Disposable",       kind: 'disposable' });   // 6
+    allNodes.push({ name: "Housing & Utilities", kind: 'expense-leaf' }); // 7
+    allNodes.push({ name: "Food",             kind: 'expense-leaf' }); // 8
+    allNodes.push({ name: "Transport",        kind: 'expense-leaf' }); // 9
+    allNodes.push({ name: "Other Expenses",   kind: 'expense-leaf' }); // 10
+
+    // Static links (income sources → merger, merger → expense/disposable)
+    allLinks.push({ source: 0, target: 4, value: primaryInc });
+    allLinks.push({ source: 1, target: 4, value: secondaryInc });
+    allLinks.push({ source: 2, target: 4, value: passiveInc });
+    allLinks.push({ source: 3, target: 4, value: variableInc });
+    allLinks.push({ source: 4, target: 5, value: totalExpensesDeduped });
+    allLinks.push({ source: 4, target: 6, value: disposable });
+    allLinks.push({ source: 5, target: 7, value: housing });
+    allLinks.push({ source: 5, target: 8, value: food });
+    allLinks.push({ source: 5, target: 9, value: transport });
+    allLinks.push({ source: 5, target: 10, value: otherExp });
+
+    // Dynamic section starting at index 11
+    let nextIdx = 11;
+
+    // Free Cash node (Disposable passthrough)
+    const freeCashIdx = nextIdx++;
+    allNodes.push({ name: "Free Cash", kind: 'free-cash' });
+    allLinks.push({ source: 6, target: freeCashIdx, value: disposable });
+
+    // Debt aggregate + items
+    let debtAggIdx = -1;
+    if (debtTotal > 0) {
+      debtAggIdx = nextIdx++;
+      allNodes.push({ name: "Debt", kind: 'debt-agg' });
+      allLinks.push({ source: 4, target: debtAggIdx, value: debtTotal });
+      debtItems.forEach((d: DebtItem) => {
+        const itemIdx = nextIdx++;
+        allNodes.push({ name: d.name, kind: 'debt-item' });
+        allLinks.push({ source: debtAggIdx, target: itemIdx, value: d.monthlyPayment });
+      });
+    }
+
+    // Goals aggregate + items
+    let goalAggIdx = -1;
+    if (goalsTotal > 0) {
+      goalAggIdx = nextIdx++;
+      allNodes.push({ name: "Goals", kind: 'goal-agg' });
+      allLinks.push({ source: 4, target: goalAggIdx, value: goalsTotal });
+      activeGoalsWithAmt.forEach((g: Goal) => {
+        const itemIdx = nextIdx++;
+        allNodes.push({ name: g.name, kind: 'goal-item' });
+        allLinks.push({ source: goalAggIdx, target: itemIdx, value: goalAmt(g) });
+      });
+    }
+
+    // Surplus Reserve
+    if (surplusReserve > 0) {
+      const surplusIdx = nextIdx++;
+      allNodes.push({ name: "Surplus Reserve", kind: 'surplus' });
+      allLinks.push({ source: 4, target: surplusIdx, value: surplusReserve });
+    }
+
   } else {
-    allNodes = [
-      { name: "Primary Income" },
-      { name: "Essential Expenses" },
-      { name: "Debt & Savings" },
-      { name: "Disposable" },
-      { name: "Housing & Utilities" },
-      { name: "Food" },
-      { name: "Transport" },
-      { name: "Other Expenses" },
-      { name: "Debt Payments" },
-      { name: "Goals Progress" },
-      { name: "Surplus Reserve" },
-      { name: "Free Cash" },
-    ];
-    allLinks = [
-      { source: 0, target: 1, value: totalExpensesDeduped },
-      { source: 0, target: 2, value: debtAndSavings },
-      { source: 0, target: 3, value: disposable },
-      { source: 1, target: 4, value: housing },
-      { source: 1, target: 5, value: food },
-      { source: 1, target: 6, value: transport },
-      { source: 1, target: 7, value: otherExp },
-      { source: 2, target: 8, value: debtPayments },
-      { source: 2, target: 9, value: goalsProgress },
-      { source: 2, target: 10, value: surplusReserve },
-      { source: 3, target: 11, value: disposable },
-    ].filter((l) => l.value > 0);
+    // Single income source
+    allNodes.push({ name: "Primary Income",    kind: 'income-leaf' }); // 0
+    allNodes.push({ name: "Essential Expenses", kind: 'expense-agg' }); // 1
+    allNodes.push({ name: "Disposable",         kind: 'disposable' });  // 2
+    allNodes.push({ name: "Housing & Utilities", kind: 'expense-leaf' }); // 3
+    allNodes.push({ name: "Food",               kind: 'expense-leaf' }); // 4
+    allNodes.push({ name: "Transport",          kind: 'expense-leaf' }); // 5
+    allNodes.push({ name: "Other Expenses",     kind: 'expense-leaf' }); // 6
+
+    // Static links
+    allLinks.push({ source: 0, target: 1, value: totalExpensesDeduped });
+    allLinks.push({ source: 0, target: 2, value: disposable });
+    allLinks.push({ source: 1, target: 3, value: housing });
+    allLinks.push({ source: 1, target: 4, value: food });
+    allLinks.push({ source: 1, target: 5, value: transport });
+    allLinks.push({ source: 1, target: 6, value: otherExp });
+
+    // Dynamic section starting at index 7
+    let nextIdx = 7;
+
+    // Free Cash node (Disposable passthrough)
+    const freeCashIdx = nextIdx++;
+    allNodes.push({ name: "Free Cash", kind: 'free-cash' });
+    allLinks.push({ source: 2, target: freeCashIdx, value: disposable });
+
+    // Debt aggregate + items
+    let debtAggIdx = -1;
+    if (debtTotal > 0) {
+      debtAggIdx = nextIdx++;
+      allNodes.push({ name: "Debt", kind: 'debt-agg' });
+      allLinks.push({ source: 0, target: debtAggIdx, value: debtTotal });
+      debtItems.forEach((d: DebtItem) => {
+        const itemIdx = nextIdx++;
+        allNodes.push({ name: d.name, kind: 'debt-item' });
+        allLinks.push({ source: debtAggIdx, target: itemIdx, value: d.monthlyPayment });
+      });
+    }
+
+    // Goals aggregate + items
+    let goalAggIdx = -1;
+    if (goalsTotal > 0) {
+      goalAggIdx = nextIdx++;
+      allNodes.push({ name: "Goals", kind: 'goal-agg' });
+      allLinks.push({ source: 0, target: goalAggIdx, value: goalsTotal });
+      activeGoalsWithAmt.forEach((g: Goal) => {
+        const itemIdx = nextIdx++;
+        allNodes.push({ name: g.name, kind: 'goal-item' });
+        allLinks.push({ source: goalAggIdx, target: itemIdx, value: goalAmt(g) });
+      });
+    }
+
+    // Surplus Reserve
+    if (surplusReserve > 0) {
+      const surplusIdx = nextIdx++;
+      allNodes.push({ name: "Surplus Reserve", kind: 'surplus' });
+      allLinks.push({ source: 0, target: surplusIdx, value: surplusReserve });
+    }
   }
 
+  // Filter zero-value links
+  const filteredAllLinks = allLinks.filter((l) => l.value > 0);
+
+  // Reindex: remove orphan nodes
   const referenced = new Set<number>();
-  for (const link of allLinks) {
+  for (const link of filteredAllLinks) {
     referenced.add(link.source);
     referenced.add(link.target);
   }
@@ -143,7 +229,7 @@ export function buildSankeyData(profile: SankeyProfileSlice): SankeyData {
     return allNodes[oldIdx];
   });
 
-  const filteredLinks = allLinks.map((link) => ({
+  const filteredLinks = filteredAllLinks.map((link) => ({
     ...link,
     source: oldToNew.get(link.source)!,
     target: oldToNew.get(link.target)!,
