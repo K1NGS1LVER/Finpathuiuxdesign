@@ -36,8 +36,13 @@ export type SankeyProfileSlice = Pick<
 
 export function computeGoalAllocationsTotal(profile: SankeyProfileSlice): number {
   const month0 = profile.plan?.months?.[0];
+  const activeGoalIds = new Set(
+    (profile.goals ?? []).filter((g) => g.status !== "complete").map((g) => g.id)
+  );
   if (month0?.goalAllocations) {
-    return Object.values(month0.goalAllocations).reduce((sum, v) => sum + v, 0);
+    return Object.entries(month0.goalAllocations)
+      .filter(([id]) => activeGoalIds.has(id))
+      .reduce((sum, [, v]) => sum + v, 0);
   }
   return (profile.goals ?? [])
     .filter((g) => g.status !== "complete")

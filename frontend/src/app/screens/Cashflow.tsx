@@ -482,9 +482,21 @@ export default function Cashflow() {
               <p className="text-xs text-[var(--card-foreground)]">
                 <strong>Essential Expenses</strong> {formatInr(totalExpensesDeduped)} ({Math.round((totalExpensesDeduped / totalIncome) * 100)}% of income): Housing, Food, Transport, Other
               </p>
-              <p className="text-xs text-[var(--card-foreground)]">
-                <strong>Debt & Goals</strong> {formatInr(debtAndSavings)} ({Math.round((debtAndSavings / totalIncome) * 100)}% of income): Debt Payments, Goals, Surplus Reserve
-              </p>
+              {debtPayments > 0 && (
+                <p className="text-xs text-[var(--card-foreground)]">
+                  <strong>Debt</strong> {formatInr(debtPayments)} ({Math.round((debtPayments / totalIncome) * 100)}% of income): Debt Payments
+                </p>
+              )}
+              {goalAllocationsTotal > 0 && (
+                <p className="text-xs text-[var(--card-foreground)]">
+                  <strong>Goals</strong> {formatInr(goalAllocationsTotal)} ({Math.round((goalAllocationsTotal / totalIncome) * 100)}% of income): Goal Allocations
+                </p>
+              )}
+              {surplusReserve > 0 && (
+                <p className="text-xs text-[var(--card-foreground)]">
+                  <strong>Surplus Reserve</strong> {formatInr(surplusReserve)} ({Math.round((surplusReserve / totalIncome) * 100)}% of income)
+                </p>
+              )}
               <p className="text-xs text-[var(--card-foreground)]">
                 <strong>Disposable</strong> {formatInr(disposable)} ({Math.round((disposable / totalIncome) * 100)}% of income): Unallocated free cash
               </p>
