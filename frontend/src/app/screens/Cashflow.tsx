@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Sparkles,
   AlertTriangle,
@@ -21,8 +22,7 @@ const MONTH_NAMES = ['January','February','March','April','May','June','July','A
 
 const SANKEY_MARGIN = { top: 10, left: 120, right: 160, bottom: 10 };
 
-
-type NodePos = { idx: number; x: number; y: number; w: number; h: number };
+type NodePos = { idx: number; x: number; y: number; w: number; h: number; vx: number; vy: number };
 
 export default function Cashflow() {
   const income = useFinPathStore(s => s.income);
@@ -40,6 +40,7 @@ export default function Cashflow() {
   const [hoveredNode, setHoveredNode] = useState<NodePos | null>(null);
   const [hoveredLink, setHoveredLink] = useState<number | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [mousePosViewport, setMousePosViewport] = useState<{ x: number; y: number } | null>(null);
   const [activeNode, setActiveNode] = useState<NodePos | null>(null);
   const [activeLink, setActiveLink] = useState<{ idx: number; x: number; y: number } | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
@@ -78,10 +79,21 @@ export default function Cashflow() {
     ? Math.floor(emergencyFund / (totalExpenses + debtPayments))
     : 0;
 
-  // Click-outside handler
+  function computeViewport(x: number, y: number, w: number, h: number) {
+    const rect = sankeyWrapRef.current?.getBoundingClientRect();
+    if (!rect) return { vx: 0, vy: 0 };
+    return {
+      vx: rect.left + SANKEY_MARGIN.left + x + w / 2,
+      vy: rect.top + SANKEY_MARGIN.top + y,
+    };
+  }
+
+  // Click-outside: exclude portal content from closing popovers
   useEffect(() => {
     function handleMouseDown(e: MouseEvent) {
-      if (sankeyWrapRef.current && !sankeyWrapRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement;
+      if (target.closest?.('[data-sankey-portal]')) return;
+      if (sankeyWrapRef.current && !sankeyWrapRef.current.contains(target)) {
         setActiveNode(null);
         setActiveLink(null);
         setHoveredNode(null);
@@ -98,6 +110,13 @@ export default function Cashflow() {
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Dismiss popovers on scroll (fixed-position elements shift with scroll)
+  useEffect(() => {
+    function onScroll() { setActiveNode(null); setActiveLink(null); setHoveredNode(null); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   function handleSaveIncome(nodeName: string, newVal: number) {
@@ -205,10 +224,12 @@ export default function Cashflow() {
                   if (!sankeyWrapRef.current) return;
                   const rect = sankeyWrapRef.current.getBoundingClientRect();
                   setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                  setMousePosViewport({ x: e.clientX, y: e.clientY });
                 }}
                 onMouseLeave={() => {
                   setMousePos(null);
                   setHoveredLink(null);
+                  setMousePosViewport(null);
                 }}
               >
                 <ResponsiveContainer width="100%" height={480}>
@@ -222,14 +243,16 @@ export default function Cashflow() {
                       palette={pal}
                       hoveredNodeIdx={hoveredNode?.idx ?? null}
                       onNodeHover={(idx, x, y, w, h) => {
-                        setHoveredNode({ idx, x, y, w, h });
+                        const { vx, vy } = computeViewport(x, y, w, h);
+                        setHoveredNode({ idx, x, y, w, h, vx, vy });
                         setActiveNode(a => a?.idx === idx ? a : null);
                       }}
                       onNodeUnhover={() => setHoveredNode(null)}
                       onNodeClick={(idx, x, y, w, h) => {
                         setHoveredNode(null);
                         setActiveLink(null);
-                        setActiveNode(a => a?.idx === idx ? null : { idx, x, y, w, h });
+                        const { vx, vy } = computeViewport(x, y, w, h);
+                        setActiveNode(a => a?.idx === idx ? null : { idx, x, y, w, h, vx, vy });
                       }}
                     />}
                     link={<CustomLink
@@ -239,38 +262,41 @@ export default function Cashflow() {
                       onLinkHover={(idx) => setHoveredLink(idx)}
                       onLinkUnhover={() => setHoveredLink(null)}
                       onLinkClick={(idx) => {
-                        if (!mousePos) return;
+                        if (!mousePosViewport) return;
                         setHoveredNode(null);
                         setActiveNode(null);
-                        setActiveLink(a => a?.idx === idx ? null : { idx, x: mousePos.x, y: mousePos.y });
+                        setActiveLink(a => a?.idx === idx ? null : { idx, x: mousePosViewport.x, y: mousePosViewport.y });
                       }}
                     />}
                   />
                 </ResponsiveContainer>
 
-                {/* Hover tooltip */}
-                {hoveredNode && (() => {
+                {/* Hover tooltip — portalled so bento-card overflow:hidden never clips it */}
+                {hoveredNode && createPortal((() => {
                   const nodeName = sankeyData.nodes[hoveredNode.idx]?.name ?? '';
                   const incomingAmount = sankeyData.links.filter(l => l.target === hoveredNode.idx).reduce((s, l) => s + l.value, 0);
                   const outgoingAmount = sankeyData.links.filter(l => l.source === hoveredNode.idx).reduce((s, l) => s + l.value, 0);
                   const displayAmount = incomingAmount > 0 ? incomingAmount : outgoingAmount;
                   const pct = income?.total ? Math.round((displayAmount / income.total) * 100) : 0;
                   const isLeftCol = hoveredNode.x < 20;
-                  const tipLeft = isLeftCol
-                    ? SANKEY_MARGIN.left + hoveredNode.x + hoveredNode.w + 8
-                    : SANKEY_MARGIN.left + hoveredNode.x + hoveredNode.w / 2;
-                  const tipTop = isLeftCol
-                    ? SANKEY_MARGIN.top + hoveredNode.y + hoveredNode.h / 2
-                    : hoveredNode.y < 80
-                      ? SANKEY_MARGIN.top + hoveredNode.y + hoveredNode.h + 8
-                      : SANKEY_MARGIN.top + hoveredNode.y - 8;
-                  const tipTransform = isLeftCol
-                    ? 'translateY(-50%)'
-                    : hoveredNode.y < 80 ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)';
+
+                  let tipLeft: number, tipTop: number, tipTransform: string;
+                  if (isLeftCol) {
+                    tipLeft = hoveredNode.vx + hoveredNode.w / 2 + 8;
+                    tipTop = hoveredNode.vy + hoveredNode.h / 2;
+                    tipTransform = 'translateY(-50%)';
+                  } else {
+                    const nearTop = hoveredNode.vy < 80;
+                    tipLeft = hoveredNode.vx;
+                    tipTop = nearTop ? hoveredNode.vy + hoveredNode.h + 8 : hoveredNode.vy - 8;
+                    tipTransform = nearTop ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)';
+                  }
+
                   return (
                     <div
+                      data-sankey-portal
                       style={{
-                        position: 'absolute',
+                        position: 'fixed',
                         left: tipLeft,
                         top: tipTop,
                         transform: tipTransform,
@@ -280,7 +306,7 @@ export default function Cashflow() {
                         boxShadow: 'var(--shadow-md)',
                         padding: '8px 12px',
                         pointerEvents: 'none',
-                        zIndex: 50,
+                        zIndex: 9999,
                         minWidth: 120,
                         whiteSpace: 'nowrap',
                       }}
@@ -290,28 +316,29 @@ export default function Cashflow() {
                       <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--accent)' }}>{pct}% of income</div>
                     </div>
                   );
-                })()}
+                })(), document.body)}
 
-                {/* Link hover tooltip — suppress if that link is actively clicked */}
-                {hoveredLink !== null && mousePos && hoveredLink !== activeLink?.idx && (() => {
+                {/* Link hover tooltip — portalled, suppressed when that link is clicked */}
+                {hoveredLink !== null && mousePosViewport && hoveredLink !== activeLink?.idx && createPortal((() => {
                   const link = sankeyData.links[hoveredLink];
                   if (!link) return null;
                   const srcName = sankeyData.nodes[link.source]?.name ?? '';
                   const tgtName = sankeyData.nodes[link.target]?.name ?? '';
                   return (
                     <div
+                      data-sankey-portal
                       style={{
-                        position: 'absolute',
-                        left: mousePos.x,
-                        top: mousePos.y - 10,
+                        position: 'fixed',
+                        left: mousePosViewport.x,
+                        top: mousePosViewport.y - 10,
                         transform: 'translateX(-50%) translateY(-100%)',
-                        background: 'var(--card)',
+                        background: 'var(--card-solid)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-sm)',
                         boxShadow: 'var(--shadow-sm)',
                         padding: '4px 10px',
                         pointerEvents: 'none',
-                        zIndex: 50,
+                        zIndex: 9999,
                         whiteSpace: 'nowrap',
                         fontSize: 'var(--text-2xs)',
                         fontWeight: 'var(--font-weight-semibold)',
@@ -321,10 +348,10 @@ export default function Cashflow() {
                       {srcName} → {tgtName} · {formatInr(link.value)}
                     </div>
                   );
-                })()}
+                })(), document.body)}
 
-                {/* Click popover */}
-                {activeNode && (() => {
+                {/* Node click popover — portalled with viewport-clamped fixed positioning */}
+                {activeNode && createPortal((() => {
                   const nodeName = sankeyData.nodes[activeNode.idx]?.name ?? '';
                   const kind: NodeKind = (sankeyData.nodes[activeNode.idx] as { kind?: NodeKind })?.kind ?? 'free-cash';
                   const incomingAmount = sankeyData.links.filter(l => l.target === activeNode.idx).reduce((s, l) => s + l.value, 0);
@@ -333,29 +360,26 @@ export default function Cashflow() {
                   const pct = income?.total ? Math.round((displayAmount / income.total) * 100) : 0;
                   const childLinks = sankeyData.links.filter(l => l.source === activeNode.idx);
 
-                  const CHART_H = 480;
-                  const POPOVER_EST_H = 220;
-                  const POPOVER_MAX_W = 260;
-                  const wrapperW = sankeyWrapRef.current?.offsetWidth ?? 800;
+                  const POPOVER_H = 220;
+                  const POPOVER_W = 260;
                   const isLeftCol = activeNode.x < 20;
-                  const nodeTopPx = SANKEY_MARGIN.top + activeNode.y;
-                  const nodeBottomPx = nodeTopPx + activeNode.h;
-                  const nodeCenterY = nodeTopPx + activeNode.h / 2;
 
                   let popLeft: number, popTop: number, popTransform: string;
                   if (isLeftCol) {
-                    // Position to the right of the node; compute absolute top (no CSS transform)
-                    // so motion scale animation doesn't conflict with translateY(-50%)
                     popLeft = Math.min(
-                      SANKEY_MARGIN.left + activeNode.x + activeNode.w + 16,
-                      wrapperW - POPOVER_MAX_W - 8,
+                      activeNode.vx + activeNode.w / 2 + 16,
+                      window.innerWidth - POPOVER_W - 8,
                     );
-                    popTop = Math.min(Math.max(nodeCenterY - POPOVER_EST_H / 2, 10), CHART_H - POPOVER_EST_H - 10);
+                    popTop = Math.min(
+                      Math.max(activeNode.vy + activeNode.h / 2 - POPOVER_H / 2, 8),
+                      window.innerHeight - POPOVER_H - 8,
+                    );
                     popTransform = 'none';
                   } else {
-                    const canFitBelow = CHART_H - nodeBottomPx >= POPOVER_EST_H;
-                    popLeft = Math.min(Math.max(SANKEY_MARGIN.left + activeNode.x + activeNode.w / 2, 140), wrapperW - 140);
-                    popTop = canFitBelow ? nodeBottomPx + 12 : nodeTopPx - 12;
+                    const nodeBottomVy = activeNode.vy + activeNode.h;
+                    const canFitBelow = window.innerHeight - nodeBottomVy >= POPOVER_H + 12;
+                    popLeft = Math.min(Math.max(activeNode.vx, POPOVER_W / 2 + 8), window.innerWidth - POPOVER_W / 2 - 8);
+                    popTop = canFitBelow ? nodeBottomVy + 12 : activeNode.vy - 12;
                     popTransform = canFitBelow ? 'translateX(-50%)' : 'translateX(-50%) translateY(-100%)';
                   }
 
@@ -387,11 +411,12 @@ export default function Cashflow() {
                   return (
                     <motion.div
                       key={activeNode.idx}
+                      data-sankey-portal
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.12 }}
                       style={{
-                        position: 'absolute',
+                        position: 'fixed',
                         left: popLeft,
                         top: popTop,
                         transform: popTransform,
@@ -400,7 +425,7 @@ export default function Cashflow() {
                         borderRadius: 'var(--radius-md)',
                         boxShadow: 'var(--shadow-lg)',
                         padding: '12px 14px',
-                        zIndex: 60,
+                        zIndex: 9999,
                         minWidth: 200,
                         maxWidth: 260,
                       }}
@@ -510,34 +535,33 @@ export default function Cashflow() {
                       )}
                     </motion.div>
                   );
-                })()}
+                })(), document.body)}
 
-                {/* Link click popover */}
-                {activeLink && (() => {
+                {/* Link click popover — portalled at viewport cursor position */}
+                {activeLink && createPortal((() => {
                   const link = sankeyData.links[activeLink.idx];
                   if (!link) return null;
                   const srcName = sankeyData.nodes[link.source]?.name ?? '';
                   const tgtName = sankeyData.nodes[link.target]?.name ?? '';
                   const pct = income?.total ? Math.round((link.value / income.total) * 100) : 0;
-                  const CHART_H = 480;
-                  const atBottom = activeLink.y > CHART_H - 100;
                   return (
                     <motion.div
                       key={activeLink.idx}
+                      data-sankey-portal
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.12 }}
                       style={{
-                        position: 'absolute',
+                        position: 'fixed',
                         left: activeLink.x,
-                        top: atBottom ? activeLink.y - 10 : activeLink.y - 10,
-                        transform: atBottom ? 'translateX(-50%) translateY(-100%)' : 'translateX(-50%) translateY(-100%)',
+                        top: activeLink.y - 10,
+                        transform: 'translateX(-50%) translateY(-100%)',
                         background: 'var(--card-solid)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-md)',
                         boxShadow: 'var(--shadow-lg)',
                         padding: '10px 14px',
-                        zIndex: 60,
+                        zIndex: 9999,
                         minWidth: 160,
                         maxWidth: 200,
                         whiteSpace: 'nowrap',
@@ -548,7 +572,7 @@ export default function Cashflow() {
                       <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--accent)' }}>{pct}% of income</div>
                     </motion.div>
                   );
-                })()}
+                })(), document.body)}
               </div>
             </div>
           ) : (
