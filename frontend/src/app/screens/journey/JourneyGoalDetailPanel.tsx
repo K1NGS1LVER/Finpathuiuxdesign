@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { X, CheckCircle, Trash2, Trophy, Pencil } from "lucide-react";
+import { motion } from "motion/react";
 import type { Goal } from '@/lib/types';
 import { getGoalIcon } from "./icon-map";
 import { useFinPathStore } from "@/lib/store";
+import { cardEntry } from "@/app/components/motion-variants";
 
 function monthsToYYYYMM(months: number): string {
   const d = new Date();
@@ -245,12 +247,15 @@ export default function JourneyGoalDetailPanel({
   };
 
   return (
-    <div
+    <motion.div
       className="absolute top-0 right-0 h-full w-full md:w-[300px] shadow-2xl z-30 overflow-hidden journey-detail-panel"
       style={{ display: "flex", flexDirection: "column" }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
+      variants={cardEntry}
+      initial="initial"
+      animate="animate"
     >
       {/* Panel header */}
       <div
@@ -745,6 +750,6 @@ export default function JourneyGoalDetailPanel({
           {confirmDelete ? "Confirm delete?" : "Delete goal"}
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
