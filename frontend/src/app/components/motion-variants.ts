@@ -34,7 +34,7 @@ export const cardEntry: Variants = {
 export const cardHover = {
   y: -4,
   transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
-};
+} as const;
 
 /**
  * Returns a `transition`-compatible stagger config that caps the total
@@ -47,9 +47,8 @@ export const cardHover = {
 export function cappedStagger(
   count: number,
   max: number = 0.5
-): { staggerChildren: number; delayChildren?: number } {
-  const perChild = Math.min(0.08, max / Math.max(count, 1));
-  return { staggerChildren: perChild };
+): { staggerChildren: number } {
+  return { staggerChildren: Math.min(0.08, max / Math.max(count, 1)) };
 }
 
 /**
