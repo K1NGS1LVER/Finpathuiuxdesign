@@ -23,6 +23,7 @@ import type {
 } from "./types";
 import { calculateHealthScore } from "./health-score";
 import { generatePlan } from "./plan-engine";
+import { appendMilestone } from "./sparks";
 import {
   demoFinancialProfile,
   demoMilestones,
@@ -595,12 +596,28 @@ export const useFinPathStore = create<FinPathStore>()(
               ? emptyDebtProfile()
               : s.debts;
 
+          // Mint a ledger milestone on the not-complete → complete transition.
+          // Skip the synthetic debt-payoff goal: it's a derived view, not an
+          // achievement the user earned and shouldn't clutter the chain.
+          const nextMilestones =
+            becameComplete && existingGoal.category !== "debt"
+              ? appendMilestone(s.milestones, {
+                goalId: existingGoal.id,
+                title: existingGoal.name,
+                category: existingGoal.category,
+                completedAt: new Date().toISOString(),
+                amount: existingGoal.targetAmount,
+                priority: existingGoal.priority,
+              })
+              : s.milestones;
+
           return {
             debts: nextDebts,
             goals: normalizeActiveGoalPriorities(
               syncDebtGoal(nextGoals, nextDebts, s.debtGoalDeleted),
             ),
             pendingGoalDecisions,
+            milestones: nextMilestones,
             lastUpdated: Date.now(),
           };
         });
@@ -690,12 +707,29 @@ export const useFinPathStore = create<FinPathStore>()(
             ? emptyDebtProfile()
             : s.debts;
 
+          const completedGoalForMilestone = completedGoalId
+            ? nextGoals.find((g) => g.id === completedGoalId)
+            : undefined;
+          const nextMilestones =
+            completedGoalForMilestone &&
+            completedGoalForMilestone.category !== "debt"
+              ? appendMilestone(s.milestones, {
+                goalId: completedGoalForMilestone.id,
+                title: completedGoalForMilestone.name,
+                category: completedGoalForMilestone.category,
+                completedAt: new Date().toISOString(),
+                amount: completedGoalForMilestone.targetAmount,
+                priority: completedGoalForMilestone.priority,
+              })
+              : s.milestones;
+
           return {
             debts: nextDebts,
             goals: normalizeActiveGoalPriorities(
               syncDebtGoal(nextGoals, nextDebts, s.debtGoalDeleted),
             ),
             pendingGoalDecisions,
+            milestones: nextMilestones,
             lastUpdated: Date.now(),
           };
         });
