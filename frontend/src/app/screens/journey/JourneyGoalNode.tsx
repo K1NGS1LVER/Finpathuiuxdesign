@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import type { Goal } from '@/lib/types';
 import { getGoalIcon } from "./icon-map";
@@ -50,7 +50,7 @@ interface JourneyGoalNodeProps {
   formatCurrency: (amount: number) => string;
 }
 
-export default function JourneyGoalNode({
+function JourneyGoalNode({
   goal,
   index,
   x,
@@ -199,3 +199,27 @@ export default function JourneyGoalNode({
     </motion.div>
   );
 }
+
+function areEqual(prev: JourneyGoalNodeProps, next: JourneyGoalNodeProps) {
+  if (prev.isDragging !== next.isDragging) return false;
+  if (prev.index !== next.index) return false;
+  if (prev.x !== next.x) return false;
+  if (prev.y !== next.y) return false;
+  // Pointer/click handlers are stable refs from the canvas/goals hooks.
+  // We intentionally ignore identity so hover state changes in the parent
+  // don't cascade re-renders through every node.
+  const a = prev.goal;
+  const b = next.goal;
+  return (
+    a.id === b.id &&
+    a.status === b.status &&
+    a.currentAmount === b.currentAmount &&
+    a.targetAmount === b.targetAmount &&
+    a.color === b.color &&
+    a.priority === b.priority &&
+    a.icon === b.icon &&
+    a.name === b.name
+  );
+}
+
+export default memo(JourneyGoalNode, areEqual);

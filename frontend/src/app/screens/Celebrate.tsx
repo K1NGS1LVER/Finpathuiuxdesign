@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Trophy, Sparkles, Share2, ArrowRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import confetti from 'canvas-confetti';
+import { fireConfetti, prefetchConfetti } from '@/lib/confetti';
 import { CONFETTI_COLORS } from '@/app/screens/journey/constants';
 import { useFinPathStore } from '@/lib/store';
 import { formatInr } from '@/lib/format';
@@ -17,8 +17,16 @@ export default function Celebrate() {
   const investments = useFinPathStore(s => s.investments);
   const healthScore = useFinPathStore(s => s.healthScore);
 
+  // Prefetch confetti chunk synchronously on mount so Step 3's beat-timed
+  // bursts land on schedule (the first fireConfetti call below also kicks
+  // off the same import, but the explicit prefetch survives future refactors
+  // that move the lock-in beat off the mount frame).
   useEffect(() => {
-    confetti({
+    prefetchConfetti();
+  }, []);
+
+  useEffect(() => {
+    void fireConfetti({
       particleCount: 80,
       spread: 70,
       startVelocity: 28,

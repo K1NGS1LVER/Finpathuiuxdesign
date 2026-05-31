@@ -3,6 +3,7 @@ import { GitCompare, Wallet, TrendingUp, Sparkles, PiggyBank, ArrowRight } from 
 import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { pageContainer, pageSection } from "../components/motion-variants";
 
 type RiskKey = "conservative" | "balanced" | "aggressive";
@@ -101,6 +102,9 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
   const [horizon, setHorizon] = useState(10);
   const [returnRate, setReturnRate] = useState(investmentReturnRate);
   const [showCompare, setShowCompare] = useState(true);
+  // Debounced slider values feed the curve memo — drag stays smooth, recompute settles on release.
+  const debouncedMonthlySavings = useDebouncedValue(monthlySavings, 80);
+  const debouncedHorizon = useDebouncedValue(horizon, 80);
   const [svgTooltip, setSvgTooltip] = useState<{
     svgX: number; svgY: number; scenarioVal: number; baseVal: number; yearLabel: string;
   } | null>(null);
@@ -121,8 +125,8 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
   const diff = scenarioTotal - baselineTotal;
 
   const { curveS, curveB, maxY, toPathFn, endY } = useMemo(() => {
-    const s = buildCurvePoints(monthlySavings, returnRate, horizon);
-    const b = buildCurvePoints(baselineMonthly, 9, horizon);
+    const s = buildCurvePoints(debouncedMonthlySavings, returnRate, debouncedHorizon);
+    const b = buildCurvePoints(baselineMonthly, 9, debouncedHorizon);
     const my = Math.max(...s, ...b, 1);
     const W = 760;
     const H = 280;
@@ -135,7 +139,7 @@ export default function Scenarios({ onPennyClick }: { onPennyClick?: () => void 
         .join(" ");
     const ey = H - (s[s.length - 1] / my) * (H - 20) - 10;
     return { curveS: s, curveB: b, maxY: my, toPathFn: tp, endY: ey };
-  }, [monthlySavings, returnRate, horizon, baselineMonthly]);
+  }, [debouncedMonthlySavings, returnRate, debouncedHorizon, baselineMonthly]);
 
   const W = 760;
   const H = 280;
