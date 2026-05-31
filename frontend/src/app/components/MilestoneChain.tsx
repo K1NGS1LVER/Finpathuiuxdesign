@@ -61,7 +61,7 @@ export default function MilestoneChain({ milestones }: Props) {
       {/* Header: level + total sparks */}
       <div
         className="flex items-center justify-between"
-        style={{ marginBottom: "var(--space-3)" }}
+        style={{ marginBottom: "var(--space-2)" }}
       >
         <div>
           <div
@@ -96,6 +96,41 @@ export default function MilestoneChain({ milestones }: Props) {
           {totalSparks.toLocaleString("en-IN")} sparks
         </div>
       </div>
+
+      {/* Level progress bar */}
+      {(() => {
+        const rangeSize = Math.max(1, level.nextThreshold - level.prevThreshold);
+        const progress = Math.min(1, (totalSparks - level.prevThreshold) / rangeSize);
+        const nextLabel = computeLevel(level.nextThreshold).label;
+        return (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <div
+              className="h-2 rounded-full overflow-hidden"
+              style={{ background: "var(--surface-hover)" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.round(progress * 100)}%`,
+                  background: "linear-gradient(90deg, var(--accent), var(--secondary-accent))",
+                  transition: "width 0.8s ease",
+                }}
+              />
+            </div>
+            <div
+              className="flex justify-between mt-1"
+              style={{
+                fontSize: "var(--text-2xs)",
+                fontFamily: "var(--font-body)",
+                color: "var(--secondary)",
+              }}
+            >
+              <span>{level.toNext.toLocaleString("en-IN")} sparks to {nextLabel}</span>
+              <span>{Math.round(progress * 100)}%</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Chain */}
       <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>

@@ -96,6 +96,10 @@
   --blob-secondary: rgba(172, 73, 255, 0.07);
   --blob-primary-sm: rgba(73, 91, 255, 0.04);
 
+  /* ─── Landing Hero Blob Opacities ─── */
+  --landing-blob-opacity-primary: 0.6;
+  --landing-blob-opacity-secondary: 0.5;
+
   /* Main dashboard background — full blob system */
   --background:
     radial-gradient(circle at 45% 35%, rgba(73, 91, 255, 0.24) 0, rgba(73, 91, 255, 0) 50%),
@@ -300,6 +304,10 @@
   --blob-primary: rgba(123, 140, 255, 0.06);
   --blob-secondary: rgba(199, 125, 255, 0.04);
   --blob-primary-sm: rgba(123, 140, 255, 0.02);
+
+  /* ─── Landing Hero Blob Opacities ─── */
+  --landing-blob-opacity-primary: 0.4;
+  --landing-blob-opacity-secondary: 0.35;
 
   /* Main dashboard background */
   --background:
@@ -1129,6 +1137,16 @@ a.bento-card:hover,
   background: var(--card);
   border: 2.5px solid var(--accent);
   cursor: grab;
+}
+
+/* Landing hero background blobs */
+.landing-blob-hero-primary {
+  opacity: var(--landing-blob-opacity-primary);
+  pointer-events: none;
+}
+.landing-blob-hero-secondary {
+  opacity: var(--landing-blob-opacity-secondary);
+  pointer-events: none;
 }
 
 /* Penny blob */

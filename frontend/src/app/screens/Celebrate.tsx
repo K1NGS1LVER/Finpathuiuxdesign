@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { Trophy, Sparkles, Share2, ArrowRight, Loader2 } from 'lucide-react';
+import { Trophy, Sparkles, Share2, ArrowRight, Loader2, Award } from 'lucide-react';
 import { motion, AnimatePresence, animate as animateElement } from 'motion/react';
 import { fireConfetti, prefetchConfetti } from '@/lib/confetti';
 import { CONFETTI_COLORS } from '@/app/screens/journey/constants';
@@ -8,6 +8,7 @@ import { useFinPathStore } from '@/lib/store';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { cappedStagger, cardEntry } from '@/app/components/motion-variants';
 import { formatInr } from '@/lib/format';
+import { computeSparks } from '@/lib/sparks';
 import CountUp from '@/app/components/CountUp';
 import ShareCard from '@/app/components/ShareCard';
 import { captureNodeToPng, tryShareImage, type ShareOutcome } from '@/lib/share-card';
@@ -198,6 +199,20 @@ export default function Celebrate() {
                     <div>
                       <div className="text-xs font-semibold tracking-wider text-[var(--secondary-accent-text)] uppercase mb-1">Goal Complete</div>
                       <h3 className="text-2xl font-bold text-[var(--card-foreground)]" style={{ fontFamily: 'var(--font-display)' }}>{goal.name}</h3>
+                      <div
+                        className="inline-flex items-center gap-1 mt-2 pill"
+                        style={{
+                          background: 'var(--surface-tint)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--accent-text)',
+                          fontSize: 'var(--text-xs)',
+                          fontFamily: 'var(--font-body)',
+                          fontWeight: 'var(--font-weight-semibold)',
+                        }}
+                      >
+                        <Award size={12} style={{ color: 'var(--accent)' }} />
+                        +{computeSparks(goal.targetAmount, goal.priority).toLocaleString('en-IN')} sparks
+                      </div>
                     </div>
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--accent)', color: 'var(--on-secondary-accent)' }}>
                       <Sparkles size={28} />

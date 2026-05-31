@@ -3,8 +3,11 @@ import { createPortal } from 'react-dom';
 import {
   Sparkles,
   AlertTriangle,
+  ArrowLeftRight,
+  ArrowRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router';
 import { useFinPathStore } from '@/lib/store';
 import { pageContainer, pageSection } from '@/app/components/motion-variants';
 import { Sankey, ResponsiveContainer } from 'recharts';
@@ -29,6 +32,7 @@ type ConfirmState =
   | { type: 'expense'; nodeName: string; partial: Partial<ExpenseProfile>; displayTotal: number };
 
 export default function Cashflow() {
+  const navigate = useNavigate();
   const income = useFinPathStore(s => s.income);
   const expenses = useFinPathStore(s => s.expenses);
   const setIncome = useFinPathStore(s => s.setIncome);
@@ -725,14 +729,66 @@ export default function Cashflow() {
               </div>
             </div>
           ) : (
-            <div
-              role="status"
-              className="flex items-center justify-center h-48 text-sm text-[var(--secondary)] rounded-xl bg-[var(--surface-hover)] border border-[var(--border)]"
+            <motion.div
+              className="bento-card text-center"
+              style={{ padding: 'var(--space-8) var(--space-4)' }}
+              variants={pageSection}
+              initial="hidden"
+              animate="visible"
             >
-              {totalIncome <= 0
-                ? 'Income data not available. Complete onboarding to see your cashflow.'
-                : 'No cashflow data available.'}
-            </div>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 'var(--radius-base)',
+                  background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+                  color: 'var(--accent-text)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto var(--space-3)',
+                }}
+              >
+                <ArrowLeftRight size={24} className="icon-wireframe" />
+              </div>
+              <h3
+                style={{
+                  fontSize: 'var(--text-xl)',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 'var(--font-weight-bold)',
+                  color: 'var(--card-foreground)',
+                  marginBottom: 'var(--space-2)',
+                }}
+              >
+                {totalIncome <= 0 ? 'Add income to see your flow' : 'No cashflow data yet'}
+              </h3>
+              <p
+                style={{
+                  fontSize: 'var(--text-sm)',
+                  color: 'var(--secondary)',
+                  fontFamily: 'var(--font-body)',
+                  lineHeight: 1.6,
+                  maxWidth: 400,
+                  margin: '0 auto var(--space-4)',
+                }}
+              >
+                {totalIncome <= 0
+                  ? 'Set up your income in Dashboard and your Sankey diagram will map every rupee to goals, debts, and savings.'
+                  : 'Add expenses or goals so FinPath can map your monthly money flow.'}
+              </p>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="pill button-press inline-flex items-center gap-2"
+                style={{
+                  background: 'var(--accent)',
+                  color: 'var(--on-accent)',
+                  border: 'none',
+                  fontWeight: 'var(--font-weight-semibold)',
+                }}
+              >
+                Go to Dashboard <ArrowRight size={14} />
+              </button>
+            </motion.div>
           )}
           {totalIncome > 0 && (
             <div className="mt-4 pt-4 border-t border-[var(--border)] flex flex-col gap-2">
