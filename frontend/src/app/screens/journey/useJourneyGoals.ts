@@ -122,6 +122,14 @@ export function useJourneyGoals() {
     [activeGoals, storeGoals, setGoals],
   );
 
+  const closeAddModal = useCallback(() => {
+    setCustomName("");
+    setCustomTarget("");
+    setCustomMonths("12");
+    setAddGoalError("");
+    setShowAddModal(false);
+  }, []);
+
   const handleAddPreset = useCallback(
     (preset: (typeof GOAL_PRESETS)[0]) => {
       if (storeGoals.some((g) => g.name === preset.name)) return;
@@ -162,14 +170,6 @@ export function useJourneyGoals() {
     },
     [storeGoals, monthlySurplus, existingMonthlyNeed, activeGoals, addGoal, closeAddModal],
   );
-
-  const closeAddModal = useCallback(() => {
-    setCustomName("");
-    setCustomTarget("");
-    setCustomMonths("12");
-    setAddGoalError("");
-    setShowAddModal(false);
-  }, []);
 
   const handleAddCustom = useCallback(() => {
     if (!customName.trim() || !customTarget.trim()) return;
