@@ -152,11 +152,6 @@ export const demoFinancialProfile: FinancialProfile = {
   demoMode: true,
 };
 
-export type DemoProfileSeed = {
-  profile: FinancialProfile;
-  milestones: Milestone[];
-};
-
 export async function loadDemoProfile(): Promise<void> {
   useFinPathStore.getState().loadDemoProfile();
 }
