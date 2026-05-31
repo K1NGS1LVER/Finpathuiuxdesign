@@ -178,6 +178,8 @@ export interface Milestone {
 export interface FinancialProfile {
   /** Has the user completed onboarding? */
   onboarded: boolean;
+  /** True when ?demo=1 seeded this profile; bypasses auth gate. */
+  demoMode?: boolean;
   income: IncomeProfile;
   expenses: ExpenseProfile;
   debts: DebtProfile;
@@ -221,9 +223,4 @@ export interface FinancialProfile {
   debtGoalDeleted?: boolean;
   /** Hash-chained ledger of completed-goal achievements (Sparks). */
   milestones: Milestone[];
-  /**
-   * True when the seeded demo profile is loaded via `?demo=1`. Routing uses
-   * this to grant read-only access to app screens without a real auth user.
-   */
-  demoMode?: boolean;
 }
