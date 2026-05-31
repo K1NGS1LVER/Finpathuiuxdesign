@@ -158,10 +158,18 @@ export function useJourneyGoals() {
         monthlyAllocation: 0,
         color: "var(--accent)",
       });
-      setShowAddModal(false);
+      closeAddModal();
     },
-    [storeGoals, monthlySurplus, existingMonthlyNeed, activeGoals, addGoal],
+    [storeGoals, monthlySurplus, existingMonthlyNeed, activeGoals, addGoal, closeAddModal],
   );
+
+  const closeAddModal = useCallback(() => {
+    setCustomName("");
+    setCustomTarget("");
+    setCustomMonths("12");
+    setAddGoalError("");
+    setShowAddModal(false);
+  }, []);
 
   const handleAddCustom = useCallback(() => {
     if (!customName.trim() || !customTarget.trim()) return;
@@ -210,11 +218,8 @@ export function useJourneyGoals() {
       monthlyAllocation: 0,
       color: "var(--accent)",
     });
-    setCustomName("");
-    setCustomTarget("");
-    setCustomMonths("12");
-    setShowAddModal(false);
-  }, [customName, customTarget, customMonths, monthlySurplus, existingMonthlyNeed, activeGoals, addGoal]);
+    closeAddModal();
+  }, [customName, customTarget, customMonths, monthlySurplus, existingMonthlyNeed, activeGoals, addGoal, closeAddModal]);
 
   const selectedGoal = sortedGoals.find((g) => g.id === selectedGoalId) ?? null;
 
@@ -238,6 +243,7 @@ export function useJourneyGoals() {
     handleAddCustom,
     showAddModal,
     setShowAddModal,
+    closeAddModal,
     addGoalError,
     setAddGoalError,
     customName,

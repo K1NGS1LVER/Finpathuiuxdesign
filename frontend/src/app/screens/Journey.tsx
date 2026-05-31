@@ -609,7 +609,7 @@ export default function Journey() {
 
         <JourneyAddGoalModal
           show={goals.showAddModal}
-          onClose={() => goals.setShowAddModal(false)}
+          onClose={goals.closeAddModal}
           storeGoals={goals.storeGoals}
           activeGoals={goals.activeGoals}
           monthlySurplus={goals.monthlySurplus}
