@@ -1,10 +1,15 @@
 // Grid layout for goal nodes
 export const GOAL_COL0_X = 350;
-export const GOAL_COL_GAP = 250;
+export const GOAL_COL_GAP = 210;
 export const GOAL_ROW0_Y = 60;
-export const GOAL_ROW_GAP = 320; // > tallest card so same-column slots never overlap
-export const NODE_CENTER = 80; // half of 160px goal node width
-export const INCOME_NODE_POS = { x: 80, y: 200 } as const;
+export const GOAL_ROW_GAP = 260; // > tallest card so same-column slots never overlap
+export const NODE_WIDTH = 132;
+export const NODE_HEIGHT = 168;
+export const NODE_CENTER_X = NODE_WIDTH / 2;
+export const NODE_CENTER_Y = NODE_HEIGHT / 2;
+/** @deprecated use NODE_CENTER_X / NODE_CENTER_Y */
+export const NODE_CENTER = NODE_CENTER_X;
+export const INCOME_NODE_POS = { x: 80, y: 180 } as const;
 
 // Interaction
 export const DRAG_CLICK_THRESHOLD = 4; // px of pointer movement above which click is suppressed

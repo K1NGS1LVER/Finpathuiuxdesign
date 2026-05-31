@@ -17,7 +17,8 @@ import {
   COMPLETION_RING_SIZE,
   CONFETTI_COLORS,
   CONFIRM_TIMEOUT_MS,
-  NODE_CENTER,
+  NODE_CENTER_X,
+  NODE_CENTER_Y,
   TRAVELING_DOT_OPACITY,
 } from "./journey/constants";
 
@@ -62,10 +63,10 @@ function getDotProps(priority: number): { size: number; dur: number } {
 
 function edgeEnd(from: { x: number; y: number }, to: { x: number; y: number }) {
   return {
-    x1: from.x + NODE_CENTER,
-    y1: from.y + NODE_CENTER,
-    x2: to.x + NODE_CENTER,
-    y2: to.y + NODE_CENTER,
+    x1: from.x + NODE_CENTER_X,
+    y1: from.y + NODE_CENTER_Y,
+    x2: to.x + NODE_CENTER_X,
+    y2: to.y + NODE_CENTER_Y,
   };
 }
 
@@ -376,8 +377,8 @@ export default function Journey() {
                       key={id}
                       className="absolute rounded-full"
                       style={{
-                        left: pos.x + NODE_CENTER,
-                        top: pos.y + NODE_CENTER,
+                        left: pos.x + NODE_CENTER_X,
+                        top: pos.y + NODE_CENTER_Y,
                         translateX: "-50%",
                         translateY: "-50%",
                         border: "1.5px solid var(--accent)",
