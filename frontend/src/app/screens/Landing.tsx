@@ -321,8 +321,8 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
       {/* ── HERO ── */}
       <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '100px 48px 60px', position: 'relative' }}>
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-          <div style={{ position: 'absolute', top: '15%', left: '10%', width: '55vw', height: '55vh', borderRadius: '50%', background: 'var(--accent-glow)', filter: 'blur(100px)', opacity: 0.6 }} />
-          <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: '40vw', height: '45vh', borderRadius: '50%', background: 'var(--secondary-accent-glow)', filter: 'blur(80px)', opacity: 0.5 }} />
+          <div className="landing-blob-hero-primary" style={{ position: 'absolute', top: '15%', left: '10%', width: '55vw', height: '55vh', borderRadius: '50%', background: 'var(--accent-glow)', filter: 'blur(100px)' }} />
+          <div className="landing-blob-hero-secondary" style={{ position: 'absolute', bottom: '20%', right: '10%', width: '40vw', height: '45vh', borderRadius: '50%', background: 'var(--secondary-accent-glow)', filter: 'blur(80px)' }} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-[60px] items-center w-full max-w-[1280px] mx-auto relative z-10">

@@ -1,4 +1,4 @@
-import { Check, AlertTriangle, Sparkles } from "lucide-react";
+import { Check, AlertTriangle, Sparkles, Calendar } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
@@ -262,13 +262,43 @@ export default function Month() {
     return (
       <div className="month-page">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 icon-accent-subtle">
-            <AlertTriangle size={32} className="icon-wireframe" />
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 'var(--radius-lg)',
+              background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+              color: 'var(--accent-text)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 'var(--space-3)',
+            }}
+          >
+            <Calendar size={32} className="icon-wireframe" />
           </div>
-          <h2 className="text-display mb-2">No plan generated</h2>
-          <p className="impact-subtitle max-w-md mb-8">
-            We couldn't find an active financial plan. Head to Journey to set your goals and
-            generate your path.
+          <h2
+            style={{
+              fontSize: 'var(--text-2xl)',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 'var(--font-weight-bold)',
+              color: 'var(--card-foreground)',
+              marginBottom: 'var(--space-1)',
+            }}
+          >
+            No active plan yet
+          </h2>
+          <p
+            style={{
+              fontSize: 'var(--text-sm)',
+              color: 'var(--secondary)',
+              fontFamily: 'var(--font-body)',
+              lineHeight: 1.6,
+              maxWidth: 400,
+              marginBottom: 'var(--space-5)',
+            }}
+          >
+            Add your first goal in Journey and FinPath will generate your month-by-month plan automatically.
           </p>
           <button onClick={() => navigate("/journey")} className="btn-primary">
             Build Your Plan

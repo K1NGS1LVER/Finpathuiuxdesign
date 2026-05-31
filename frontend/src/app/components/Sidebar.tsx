@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router';
-import { LayoutDashboard, Map, Calendar, GitBranch, Sparkles, ChevronLeft, ChevronRight, X, BarChart3, CreditCard, ArrowLeftRight, FileDown } from 'lucide-react';
+import { LayoutDashboard, Map, Calendar, GitBranch, Sparkles, ChevronLeft, ChevronRight, X, BarChart3, CreditCard, ArrowLeftRight, FileDown, Palette } from 'lucide-react';
 import FinPathLogo from './FinPathLogo';
 import { useState, useEffect } from 'react';
 import { useFinPathStore } from '@/lib/store';
@@ -64,6 +64,12 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
       title: 'Wins',
       items: [
         { icon: BarChart3, label: 'Progress', path: '/progress' },
+      ],
+    },
+    {
+      title: 'Dev',
+      items: [
+        { icon: Palette, label: 'Design System', path: '/design' },
       ],
     },
   ];

@@ -155,7 +155,7 @@ export default function HealthScoreWidget({ variant }: Props) {
   );
 
   const actionSection = actionCards.length > 0 ? (
-    <div className="penny-card bento-card" style={{ marginTop: 14 }}>
+    <div className="penny-card bento-card" style={{ marginTop: 'var(--space-2)' }}>
       <div className="penny-insight-blob" />
       <div className="relative z-10 flex items-center gap-2 mb-3">
         <div
@@ -209,7 +209,7 @@ export default function HealthScoreWidget({ variant }: Props) {
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
         {ring}
         <div>
           <p
@@ -226,7 +226,7 @@ export default function HealthScoreWidget({ variant }: Props) {
           {deltaPill}
         </div>
       </div>
-      <div style={{ marginBottom: 16 }}>{bars}</div>
+      <div style={{ marginBottom: 'var(--space-2)' }}>{bars}</div>
       {actionSection}
     </>
   );

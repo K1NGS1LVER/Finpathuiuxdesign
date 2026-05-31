@@ -184,7 +184,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
 
                     <div className="goal-bar">
                       <div className="goal-bar-hatch" />
-                      <div className="goal-bar-fill" style={{ width: `${progress}%`, background: cat.color, boxShadow: `0 0 10px ${cat.color}` }} />
+                      <div className="goal-bar-fill" style={{ width: `${progress}%`, background: cat.color, boxShadow: `0 0 var(--space-1) ${cat.color}` }} />
                     </div>
 
                     <p className="slashed-zero goal-pct">{progress}%</p>

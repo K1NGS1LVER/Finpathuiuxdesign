@@ -20,6 +20,7 @@ import Settings from "./screens/Settings";
 import Auth from "./screens/Auth";
 
 // Heavier secondary routes are lazy-loaded behind a RouteFallback skeleton.
+const DesignSystem = lazy(() => import("./screens/DesignSystem"));
 const Debt = lazy(() => import("./screens/Debt"));
 const Cashflow = lazy(() => import("./screens/Cashflow"));
 const Month = lazy(() => import("./screens/Month"));
@@ -83,14 +84,14 @@ function AppContent() {
   }, [initialize]);
 
   // ?demo=1 — seed the demo profile and jump to the dashboard.
-  // Guarded by !onboarded so a real user's data is never clobbered.
+  // Only guard against overwriting a real authenticated user's data.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (!params.has("demo")) return;
-    if (useFinPathStore.getState().onboarded) return;
+    if (user && useFinPathStore.getState().onboarded) return;
     useFinPathStore.getState().loadDemoProfile();
     navigate("/dashboard", { replace: true });
-  }, [location.search, navigate]);
+  }, [location.search, navigate, user]);
 
   useEffect(() => {
     if (!onboarded) return;
@@ -325,6 +326,18 @@ function AppContent() {
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
                         <Settings />
+                      </PageTransition>
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/design"
+                  element={
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Suspense fallback={<RouteFallback />}>
+                          <DesignSystem />
+                        </Suspense>
                       </PageTransition>
                     </ErrorBoundary>
                   }
