@@ -50,3 +50,28 @@ export function buildMilestoneChain(seeds: MilestoneSeed[]): Milestone[] {
 
   return chain;
 }
+
+/**
+ * Append a single milestone to an existing chain. Used at runtime when a
+ * goal completes — keeps the chain's hash linkage identical to the fixture
+ * builder so seeded and live data render the same shape.
+ */
+export function appendMilestone(milestones: Milestone[], seed: MilestoneSeed): Milestone[] {
+  const prev = milestones[milestones.length - 1];
+  const id = hashId(seed.goalId + seed.completedAt);
+  const hash = hashId(id);
+  return [
+    ...milestones,
+    {
+      id,
+      goalId: seed.goalId,
+      title: seed.title,
+      category: seed.category,
+      completedAt: seed.completedAt,
+      amount: seed.amount,
+      sparks: computeSparks(seed.amount, seed.priority),
+      hash,
+      prevHash: prev?.hash ?? null,
+    },
+  ];
+}
