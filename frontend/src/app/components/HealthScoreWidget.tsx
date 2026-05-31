@@ -4,7 +4,7 @@ import { useFinPathStore } from '@/lib/store';
 import { getActionCards } from '@/lib/health-score';
 
 interface Props {
-  variant: 'compact' | 'full';
+  variant: 'compact' | 'full' | 'strip';
 }
 
 let prevOverall: number | null = null;
@@ -60,7 +60,7 @@ export default function HealthScoreWidget({ variant }: Props) {
 
   if (!healthScore) return null;
 
-  const ringSize    = variant === 'compact' ? 140 : 180;
+  const ringSize    = variant === 'compact' ? 140 : variant === 'strip' ? 80 : 180;
   const scoreOffset = CIRCUM - (animScore / 100) * CIRCUM;
   const label       = getHealthLabel(healthScore.overall);
   const actionCards = getActionCards(healthScore).slice(0, variant === 'compact' ? 1 : 2);
@@ -192,6 +192,55 @@ export default function HealthScoreWidget({ variant }: Props) {
       </div>
     </div>
   ) : null;
+
+  if (variant === 'strip') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+        {/* Small ring */}
+        <div style={{ position: 'relative', width: ringSize, height: ringSize, flexShrink: 0 }}>
+          <svg viewBox="0 0 200 200" style={{ width: '100%', height: '100%' }} role="img" aria-label={`Health score: ${healthScore.overall}`}>
+            <defs>
+              <linearGradient id="hs-strip-grad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stopColor="var(--accent)" />
+                <stop offset="100%" stopColor="var(--secondary-accent)" />
+              </linearGradient>
+            </defs>
+            <circle cx="100" cy="100" r={R} fill="none" stroke="var(--border)" strokeWidth="18" strokeDasharray="4 4" />
+            <circle
+              cx="100" cy="100" r={R} fill="none"
+              stroke="url(#hs-strip-grad)" strokeWidth="18"
+              strokeDasharray={CIRCUM} strokeDashoffset={scoreOffset} strokeLinecap="round"
+              style={{ transition: 'stroke-dashoffset 1500ms cubic-bezier(0.22,1,0.36,1)', filter: 'drop-shadow(0 0 var(--space-1) var(--accent-glow))' }}
+            />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <span className="slashed-zero" style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--font-weight-bold)', fontFamily: 'var(--font-display)', color: 'var(--card-foreground)', lineHeight: 1 }}>{animScore}</span>
+            <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--secondary)', fontFamily: 'var(--font-body)' }}>Score</span>
+          </div>
+        </div>
+        {/* Label */}
+        <div style={{ flexShrink: 0 }}>
+          <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--font-weight-semibold)', color: label.color, fontFamily: 'var(--font-display)', marginBottom: 2 }}>{label.text}</p>
+          {deltaPill}
+        </div>
+        {/* Bars */}
+        <div style={{ flex: 1, minWidth: 180, display: 'flex', flexDirection: 'column', gap: 5 }}>
+          {SUB_SCORES.map((s, i) => {
+            const score = healthScore[s.key];
+            return (
+              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--secondary)', width: 100, flexShrink: 0 }}>{s.label}</span>
+                <div className="sub-score-bar" style={{ flex: 1 }}>
+                  <div className="sub-score-fill" style={{ width: mounted ? `${(score / 25) * 100}%` : 0, transitionDelay: `${i * 80}ms` }} />
+                </div>
+                <span className="slashed-zero" style={{ fontSize: 'var(--text-2xs)', fontWeight: 'var(--font-weight-semibold)', color: subScoreColor(score), width: 28, textAlign: 'right', flexShrink: 0, fontFamily: 'var(--font-display)' }}>{score}/25</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   if (variant === 'compact') {
     return (
