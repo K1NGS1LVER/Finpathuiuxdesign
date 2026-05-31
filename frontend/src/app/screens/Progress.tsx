@@ -575,11 +575,8 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
 
       {/* Health Score Strip */}
       {healthScore && (
-        <motion.div className="bento-card p-6 md:p-8 relative z-10" variants={pageSection}>
-          <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
-            Health Score
-          </h3>
-          <HealthScoreWidget variant="full" />
+        <motion.div className="bento-card p-4 md:p-5 relative z-10" variants={pageSection}>
+          <HealthScoreWidget variant="strip" />
         </motion.div>
       )}
 
