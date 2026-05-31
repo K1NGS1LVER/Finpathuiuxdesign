@@ -19,9 +19,14 @@ import type {
   GoalCompletionAction,
   GoalCompletionDecision,
   StorageMode,
+  Milestone,
 } from "./types";
 import { calculateHealthScore } from "./health-score";
 import { generatePlan } from "./plan-engine";
+import {
+  demoFinancialProfile,
+  demoMilestones,
+} from "./fixtures/demoProfile";
 
 /** Default empty profile */
 const defaultProfile: FinancialProfile = {
@@ -52,6 +57,8 @@ const defaultProfile: FinancialProfile = {
   investmentReturnRate: 12,
   storageMode: "local",
   debtGoalDeleted: false,
+  milestones: [],
+  demoMode: false,
 };
 
 const safeStorage = createJSONStorage(() => ({
@@ -154,6 +161,12 @@ interface FinPathStore extends FinancialProfile {
     expenses?: Partial<ExpenseProfile>;
     salaryHike?: number; // percentage
   }) => void;
+
+  // ── Milestones (Sparks ledger) ───────────────────
+  setMilestones: (milestones: Milestone[]) => void;
+
+  // ── Demo path ────────────────────────────────────
+  loadDemoProfile: () => void;
 
   // ── Reset ────────────────────────────────────────
   resetProfile: () => void;
@@ -962,11 +975,19 @@ export const useFinPathStore = create<FinPathStore>()(
         store.generatePlan();
       },
 
+      setMilestones: (milestones) => set({ milestones, lastUpdated: Date.now() }),
+
+      loadDemoProfile: () => {
+        const { milestones, ...profileFields } = demoFinancialProfile;
+        get().replaceProfile(profileFields);
+        set({ milestones, demoMode: true, lastUpdated: Date.now() });
+      },
+
       resetProfile: () => set({ ...defaultProfile }),
     }),
     {
       name: "finpath-store",
-      version: 5,
+      version: 6,
       storage: safeStorage,
       partialize: (state) => {
         const { pdfExporting: _exporting, ...rest } = state;
@@ -999,6 +1020,9 @@ export const useFinPathStore = create<FinPathStore>()(
         if (version < 5 && persistedState) {
           // Existing users default to 'local' — cloud sync is opt-in.
           persistedState.storageMode = persistedState.storageMode ?? "local";
+        }
+        if (version < 6 && persistedState) {
+          persistedState.milestones = persistedState.milestones ?? [];
         }
         return persistedState;
       },

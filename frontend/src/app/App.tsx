@@ -53,6 +53,7 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const onboarded = useFinPathStore((s) => s.onboarded);
+  const demoMode = useFinPathStore((s) => s.demoMode ?? false);
   const goals = useFinPathStore((s) => s.goals);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
@@ -74,6 +75,16 @@ function AppContent() {
     initialize();
     initCloudSync();
   }, [initialize]);
+
+  // ?demo=1 — seed the demo profile and jump to the dashboard.
+  // Guarded by !onboarded so a real user's data is never clobbered.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has("demo")) return;
+    if (useFinPathStore.getState().onboarded) return;
+    useFinPathStore.getState().loadDemoProfile();
+    navigate("/dashboard", { replace: true });
+  }, [location.search, navigate]);
 
   useEffect(() => {
     if (!onboarded) return;
@@ -155,7 +166,10 @@ function AppContent() {
   const isAuthPage = location.pathname === "/auth";
   const isLandingPage = location.pathname === "/";
 
-  if (!user && !isLandingPage && !isAuthPage) {
+  // Demo mode unlocks read-only app access without a real auth user.
+  const effectivelyAuthed = !!user || demoMode;
+
+  if (!effectivelyAuthed && !isLandingPage && !isAuthPage) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -167,7 +181,7 @@ function AppContent() {
 
   // If authenticated + onboarded user visits landing or auth, redirect to dashboard
   if (
-    user &&
+    effectivelyAuthed &&
     onboarded &&
     (location.pathname === "/" || location.pathname === "/auth")
   ) {
@@ -185,7 +199,7 @@ function AppContent() {
   }
 
   // If non-authenticated visits dashboard pages, redirect to auth
-  if (!user && showLayout) {
+  if (!effectivelyAuthed && showLayout) {
     return <Navigate to="/auth" replace />;
   }
 

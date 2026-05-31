@@ -349,6 +349,12 @@ export default function Landing({ isDark, setIsDark }: LandingProps) {
                 onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 6px 24px var(--accent-glow)'; }}>
                 Start My Journey <ArrowRight size={16} strokeWidth={2} />
               </button>
+              <button onClick={() => navigate('/?demo=1')}
+                style={{ padding: '14px 28px', borderRadius: 99, fontSize: 15, fontWeight: 500, background: 'var(--surface-tint)', color: 'var(--foreground)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', transition: 'all 200ms ease' }}
+                onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor = 'var(--accent-glow)'; el.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor = 'var(--border)'; el.style.transform = ''; }}>
+                View demo <ArrowRight size={14} strokeWidth={2} />
+              </button>
               <a href="#features" onClick={e => { e.preventDefault(); scrollTo('#features'); }}
                 style={{ padding: '14px 28px', borderRadius: 99, fontSize: 15, fontWeight: 500, background: 'transparent', color: 'var(--secondary)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', transition: 'all 200ms ease' }}
                 onMouseEnter={e => { const el = e.currentTarget; el.style.color = 'var(--foreground)'; el.style.borderColor = 'var(--accent-glow)'; el.style.transform = 'translateY(-2px)'; }}
