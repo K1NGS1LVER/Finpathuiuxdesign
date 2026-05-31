@@ -4,10 +4,9 @@
 // Extracts salary, debt, and deduction data using regex patterns
 // ============================================================
 
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Set up the PDF.js worker from CDN
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+// pdfjs-dist is loaded dynamically inside `extractTextFromPDF` so the ~1MB
+// chunk only ships to users who actually upload a PDF during onboarding.
+let pdfjsWorkerConfigured = false;
 
 // ── Result Types ────────────────────────────────────────
 export interface ExtractionResult {
@@ -43,9 +42,18 @@ export interface ExtractionResult {
 
 // ── PDF Text Extraction ─────────────────────────────────
 async function extractTextFromPDF(file: File): Promise<string> {
+  const pdfjsLib = await import('pdfjs-dist');
+
+  // Configure the worker once on first use — re-assigning on every call
+  // would churn the worker pool.
+  if (!pdfjsWorkerConfigured) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    pdfjsWorkerConfigured = true;
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  
+
   let fullText = '';
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -55,7 +63,7 @@ async function extractTextFromPDF(file: File): Promise<string> {
       .join(' ');
     fullText += pageText + '\n';
   }
-  
+
   return fullText;
 }
 

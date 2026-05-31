@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentType, CSSProperties } from "react";
 import { Target, Plus, Trash2, Coins, CheckCircle, Info } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import confetti from "canvas-confetti";
+import { fireConfetti, prefetchConfetti } from "@/lib/confetti";
 import { useFinPathStore } from "@/lib/store";
 import { formatInrCompact } from "@/lib/format";
 import { useJourneyCanvas } from "./journey/useJourneyCanvas";
@@ -117,6 +117,24 @@ export default function Journey() {
   const income = useFinPathStore((s) => s.income);
   const updateGoal = useFinPathStore((s) => s.updateGoal);
 
+  // Warm the confetti chunk during idle time after the canvas mounts so the
+  // first goal-completion beat lands without a network round-trip.
+  useEffect(() => {
+    const warm = () => {
+      prefetchConfetti();
+    };
+    type IdleScheduler = (cb: () => void) => number;
+    type IdleCanceller = (id: number) => void;
+    const ric = (window as unknown as { requestIdleCallback?: IdleScheduler }).requestIdleCallback;
+    const cic = (window as unknown as { cancelIdleCallback?: IdleCanceller }).cancelIdleCallback;
+    if (ric) {
+      const id = ric(warm);
+      return () => cic?.(id);
+    }
+    const id = window.setTimeout(warm, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
   const goals = useJourneyGoals();
   const canvas = useJourneyCanvas(goals.sortedGoals);
   const monthlyTotal = useMemo(
@@ -145,7 +163,7 @@ export default function Journey() {
           y: (rect.top + rect.height / 2) / window.innerHeight,
         }
       : { x: 0.5, y: 0.4 };
-    confetti({
+    void fireConfetti({
       particleCount: 55,
       spread: 50,
       startVelocity: 22,
@@ -275,7 +293,15 @@ export default function Journey() {
         <div
           ref={canvas.canvasRef}
           className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? "cursor-grabbing" : "cursor-grab"}`}
-          style={{ borderColor: "var(--canvas-border)", backgroundColor: "var(--card)" }}
+          style={{
+            borderColor: "var(--canvas-border)",
+            backgroundColor: "var(--card)",
+            // Dot grid as CSS radial-gradient — single repaint per zoom change,
+            // no SVG <pattern> recalculation on every pan tick.
+            backgroundImage: "radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px)",
+            backgroundSize: `${20 * canvas.zoom}px ${20 * canvas.zoom}px`,
+            backgroundPosition: `${canvas.panOffset.x * canvas.zoom}px ${canvas.panOffset.y * canvas.zoom}px`,
+          }}
           onMouseDown={canvas.handleCanvasPointerDown}
           onMouseMove={canvas.handlePointerMove}
           onMouseUp={canvas.handlePointerUp}
@@ -284,22 +310,8 @@ export default function Journey() {
           onTouchMove={canvas.handlePointerMove}
           onTouchEnd={canvas.handlePointerUp}
         >
-          {/* Layer 0 — dot grid (untransformed) + SVG edges (world-transformed) */}
+          {/* SVG edges (world-transformed). Dot grid moved to the wrapper's background-image. */}
           <svg className="canvas-bg absolute inset-0 w-full h-full pointer-events-none">
-            <defs>
-              <pattern
-                id="dots"
-                x={canvas.panOffset.x * canvas.zoom}
-                y={canvas.panOffset.y * canvas.zoom}
-                width={20 * canvas.zoom}
-                height={20 * canvas.zoom}
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} fill="var(--canvas-dot)" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dots)" />
-
             <g transform={svgWorldTransform}>
               {goals.sortedGoals.map((goal) => {
                 const goalPos = canvas.getNodePos(goal.id);
