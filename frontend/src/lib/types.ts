@@ -161,6 +161,19 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+/** Completed-goal achievement block in the Sparks ledger (hash-chained). */
+export interface Milestone {
+  id: string;
+  goalId: string;
+  title: string;
+  category: Goal["category"];
+  completedAt: string;       // ISO
+  amount: number;            // goal target amount
+  sparks: number;            // from computeSparks
+  hash: string;              // 6-char, deterministic from id
+  prevHash: string | null;   // chains to previous block; null for first
+}
+
 /** Complete user financial profile stored in Zustand */
 export interface FinancialProfile {
   /** Has the user completed onboarding? */
@@ -206,4 +219,11 @@ export interface FinancialProfile {
    * Reset to false when the debt profile transitions to zero.
    */
   debtGoalDeleted?: boolean;
+  /** Hash-chained ledger of completed-goal achievements (Sparks). */
+  milestones: Milestone[];
+  /**
+   * True when the seeded demo profile is loaded via `?demo=1`. Routing uses
+   * this to grant read-only access to app screens without a real auth user.
+   */
+  demoMode?: boolean;
 }
