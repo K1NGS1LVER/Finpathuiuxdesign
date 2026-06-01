@@ -108,8 +108,17 @@ _FUNCTION_OPEN_FULL_RE = re.compile(r"<function=([A-Za-z_][A-Za-z0-9_]*)([^>]*)>
 
 _MAX_RATE_LIMIT_RETRIES = 2
 _MAX_BACKOFF_SLEEP_S = 30.0
-_GROQ_PRIMARY_MODEL = "llama-3.3-70b-versatile"
-_GROQ_FALLBACK_MODEL = "llama-3.1-8b-instant"
+_GPT_OSS_PREFIX = "openai/gpt-oss"
+_REASONING_PREFIXES = ("deepseek-r1", "qwq", "qwen-qwq")
+
+
+def _reasoning_kwargs(model: str) -> dict[str, Any]:
+    m = model.lower()
+    if m.startswith(_GPT_OSS_PREFIX):
+        return {"model_kwargs": {"include_reasoning": False}}
+    if any(m.startswith(p) for p in _REASONING_PREFIXES):
+        return {"model_kwargs": {"reasoning_format": "hidden"}}
+    return {}
 
 
 def _parse_rate_limit(exc: Exception) -> tuple[float, bool]:
@@ -249,23 +258,29 @@ _PROPOSAL_LANGUAGE = re.compile(
 # Cached base instance. LangGraph's bind_tools() returns a fresh Runnable per request,
 # so per-turn tool isolation is preserved while the underlying httpx pool stays warm.
 @lru_cache(maxsize=4)
-def _llm(model: str = _GROQ_PRIMARY_MODEL) -> ChatGroq:
+def _llm(model: str) -> ChatGroq:
     if not settings.groq_api_key:
         raise RuntimeError("GROQ_API_KEY not set on backend")
     return ChatGroq(
         api_key=settings.groq_api_key,
         model=model,
         temperature=0,
-        max_tokens=500,
+        max_tokens=1500,
         timeout=httpx.Timeout(connect=5.0, read=60.0, write=5.0, pool=5.0),
+        **_reasoning_kwargs(model),
     )
+
+
+def clear_llm_cache() -> None:
+    _llm.cache_clear()
 
 
 def build_graph(
     profile: dict[str, Any],
     propose: Callable[[str, dict[str, Any], str], dict[str, Any]],
-    model: str = _GROQ_PRIMARY_MODEL,
+    model: str | None = None,
 ):
+    model = model or settings.groq_primary_model
     tools = make_tools(profile, propose)
     return create_react_agent(_llm(model), ToolNode(tools, handle_tool_errors=True)), tools
 
@@ -313,7 +328,7 @@ async def stream_agent(
             {"event": "tool_result", "data": {"name": name, "output": payload, "_recovered": True}},
         ]
 
-    current_model = _GROQ_PRIMARY_MODEL
+    current_model = settings.groq_primary_model
     used_fallback = False
     attempt = 0
     any_tokens_emitted = False
@@ -323,7 +338,7 @@ async def stream_agent(
         graph, tools = build_graph(profile, propose, current_model)
         tools_by_name = {t.name: t for t in tools}
 
-        suffix = FALLBACK_SYSTEM_SUFFIX if current_model == _GROQ_FALLBACK_MODEL else SYSTEM_SUFFIX
+        suffix = FALLBACK_SYSTEM_SUFFIX if current_model == settings.groq_fallback_model else SYSTEM_SUFFIX
         sys_prompt = build_system_prompt(profile, context) + suffix
         messages: list[Any] = [SystemMessage(content=sys_prompt)]
         for m in (history or [])[-20:]:
@@ -436,9 +451,9 @@ async def stream_agent(
             if not used_fallback and not any_tokens_emitted:
                 log.warning(
                     "penny: switching to fallback model %s (daily=%s attempt=%d)",
-                    _GROQ_FALLBACK_MODEL, is_daily, attempt,
+                    settings.groq_fallback_model, is_daily, attempt,
                 )
-                current_model = _GROQ_FALLBACK_MODEL
+                current_model = settings.groq_fallback_model
                 used_fallback = True
                 attempt = 0
                 token_buffer = ""
@@ -524,6 +539,11 @@ async def stream_agent(
         yield {"event": "token", "data": correction}
         yield {"event": "error", "data": correction.strip()}
 
+    if tool_calls_log:
+        log.info(
+            "penny turn complete",
+            extra={"tool_calls": tool_calls_log, "tool_results": tool_results_log, "model": current_model},
+        )
     yield {
         "event": "done",
         "data": {
