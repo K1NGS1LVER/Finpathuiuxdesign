@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from app.agents.penny import stream_agent
 from app.auth import CurrentUser, get_current_user
+from app.config import settings
 from app.services.cache import cache_key, response_cache
 from app.services.groq_client import get_groq_client
 from app.services.prompt import build_system_prompt
@@ -27,8 +28,6 @@ from app.services.supabase_db import (
     list_chat_history,
     update_proposal_status,
 )
-
-PENNY_MODEL = "llama-3.3-70b-versatile"
 
 log = logging.getLogger(__name__)
 router = APIRouter()
@@ -73,10 +72,10 @@ async def chat(
 
     try:
         completion = get_groq_client().chat.completions.create(
-            model=PENNY_MODEL,
+            model=settings.groq_primary_model,
             messages=messages,
             temperature=0.3,
-            max_tokens=500,
+            max_tokens=800,
             stream=False,
         )
     except Exception as exc:
