@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     )
 
     groq_api_key: str = ""
+    groq_primary_model: str = "llama-3.3-70b-versatile"
+    groq_fallback_model: str = "llama-3.1-8b-instant"
     host: str = "127.0.0.1"
     port: int = 8000
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
