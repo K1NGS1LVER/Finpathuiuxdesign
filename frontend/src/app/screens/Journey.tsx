@@ -2,8 +2,10 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentType, CSSProperties } from "react";
 import { Target, Plus, Trash2, Coins, CheckCircle, Info } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import confetti from "canvas-confetti";
+import { fireConfetti, prefetchConfetti } from "@/lib/confetti";
 import { useFinPathStore } from "@/lib/store";
+import { useReducedMotion } from "@/lib/useReducedMotion";
+import { cardEntry, cardHover } from "@/app/components/motion-variants";
 import { formatInrCompact } from "@/lib/format";
 import { useJourneyCanvas } from "./journey/useJourneyCanvas";
 import { useJourneyGoals } from "./journey/useJourneyGoals";
@@ -17,7 +19,8 @@ import {
   COMPLETION_RING_SIZE,
   CONFETTI_COLORS,
   CONFIRM_TIMEOUT_MS,
-  NODE_CENTER,
+  NODE_CENTER_X,
+  NODE_CENTER_Y,
   TRAVELING_DOT_OPACITY,
 } from "./journey/constants";
 
@@ -62,10 +65,10 @@ function getDotProps(priority: number): { size: number; dur: number } {
 
 function edgeEnd(from: { x: number; y: number }, to: { x: number; y: number }) {
   return {
-    x1: from.x + NODE_CENTER,
-    y1: from.y + NODE_CENTER,
-    x2: to.x + NODE_CENTER,
-    y2: to.y + NODE_CENTER,
+    x1: from.x + NODE_CENTER_X,
+    y1: from.y + NODE_CENTER_Y,
+    x2: to.x + NODE_CENTER_X,
+    y2: to.y + NODE_CENTER_Y,
   };
 }
 
@@ -92,30 +95,102 @@ const TravelingDot = memo(function TravelingDot({
   delay,
   color,
 }: TravelingDotProps) {
+  const reduced = useReducedMotion();
   const half = size / 2;
   const xs = useMemo(() => [fromX - half, toX - half], [fromX, toX, half]);
   const ys = useMemo(() => [fromY - half, toY - half], [fromY, toY, half]);
+
+  // Reduced motion: render a single static dot at the midpoint, no animation,
+  // no trailers, no infinite repeat.
+  if (reduced) {
+    const midX = (fromX + toX) / 2 - half;
+    const midY = (fromY + toY) / 2 - half;
+    return (
+      <div
+        className="absolute rounded-full"
+        style={{
+          width: size,
+          height: size,
+          top: 0,
+          left: 0,
+          background: color,
+          boxShadow: `0 0 ${size * 2}px ${color}, 0 0 ${size}px ${color}`,
+          opacity: TRAVELING_DOT_OPACITY,
+          transform: `translate(${midX}px, ${midY}px)`,
+        }}
+      />
+    );
+  }
+
   return (
-    <motion.div
-      className="absolute rounded-full"
-      style={{
-        width: size,
-        height: size,
-        top: 0,
-        left: 0,
-        background: color,
-        boxShadow: `0 0 ${size * 2}px ${color}, 0 0 ${size}px ${color}`,
-        opacity: TRAVELING_DOT_OPACITY,
-      }}
-      animate={{ x: xs, y: ys }}
-      transition={{ duration, repeat: Infinity, ease: "linear", delay }}
-    />
+    <>
+      {/* Leader dot */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: size,
+          height: size,
+          top: 0,
+          left: 0,
+          background: color,
+          boxShadow: `0 0 ${size * 2}px ${color}, 0 0 ${size}px ${color}`,
+          opacity: TRAVELING_DOT_OPACITY,
+        }}
+        animate={{ x: xs, y: ys }}
+        transition={{ duration, repeat: Infinity, ease: "linear", delay }}
+      />
+      {/* Trailing fade tail — 3 trailers each lagging 60ms behind the previous */}
+      {[1, 2, 3].map((i) => {
+        const trailSize = size * (1 - i * 0.18);
+        const trailOpacity = TRAVELING_DOT_OPACITY * (1 - i * 0.28);
+        return (
+          <motion.div
+            key={`trail-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: trailSize,
+              height: trailSize,
+              top: 0,
+              left: 0,
+              background: color,
+              boxShadow: `0 0 ${trailSize * 2}px ${color}, 0 0 ${trailSize}px ${color}`,
+              opacity: trailOpacity,
+            }}
+            animate={{ x: xs, y: ys }}
+            transition={{
+              duration,
+              repeat: Infinity,
+              ease: "linear",
+              delay: delay + i * 0.06,
+            }}
+          />
+        );
+      })}
+    </>
   );
 });
 
 export default function Journey() {
   const income = useFinPathStore((s) => s.income);
   const updateGoal = useFinPathStore((s) => s.updateGoal);
+
+  // Warm the confetti chunk during idle time after the canvas mounts so the
+  // first goal-completion beat lands without a network round-trip.
+  useEffect(() => {
+    const warm = () => {
+      prefetchConfetti();
+    };
+    type IdleScheduler = (cb: () => void) => number;
+    type IdleCanceller = (id: number) => void;
+    const ric = (window as unknown as { requestIdleCallback?: IdleScheduler }).requestIdleCallback;
+    const cic = (window as unknown as { cancelIdleCallback?: IdleCanceller }).cancelIdleCallback;
+    if (ric) {
+      const id = ric(warm);
+      return () => cic?.(id);
+    }
+    const id = window.setTimeout(warm, 0);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const goals = useJourneyGoals();
   const canvas = useJourneyCanvas(goals.sortedGoals);
@@ -145,7 +220,7 @@ export default function Journey() {
           y: (rect.top + rect.height / 2) / window.innerHeight,
         }
       : { x: 0.5, y: 0.4 };
-    confetti({
+    void fireConfetti({
       particleCount: 55,
       spread: 50,
       startVelocity: 22,
@@ -275,7 +350,15 @@ export default function Journey() {
         <div
           ref={canvas.canvasRef}
           className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? "cursor-grabbing" : "cursor-grab"}`}
-          style={{ borderColor: "var(--canvas-border)", backgroundColor: "var(--card)" }}
+          style={{
+            borderColor: "var(--canvas-border)",
+            backgroundColor: "var(--card)",
+            // Dot grid as CSS radial-gradient — single repaint per zoom change,
+            // no SVG <pattern> recalculation on every pan tick.
+            backgroundImage: "radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px)",
+            backgroundSize: `${20 * canvas.zoom}px ${20 * canvas.zoom}px`,
+            backgroundPosition: `${canvas.panOffset.x * canvas.zoom}px ${canvas.panOffset.y * canvas.zoom}px`,
+          }}
           onMouseDown={canvas.handleCanvasPointerDown}
           onMouseMove={canvas.handlePointerMove}
           onMouseUp={canvas.handlePointerUp}
@@ -284,22 +367,8 @@ export default function Journey() {
           onTouchMove={canvas.handlePointerMove}
           onTouchEnd={canvas.handlePointerUp}
         >
-          {/* Layer 0 — dot grid (untransformed) + SVG edges (world-transformed) */}
+          {/* SVG edges (world-transformed). Dot grid moved to the wrapper's background-image. */}
           <svg className="canvas-bg absolute inset-0 w-full h-full pointer-events-none">
-            <defs>
-              <pattern
-                id="dots"
-                x={canvas.panOffset.x * canvas.zoom}
-                y={canvas.panOffset.y * canvas.zoom}
-                width={20 * canvas.zoom}
-                height={20 * canvas.zoom}
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx={1 * canvas.zoom} cy={1 * canvas.zoom} r={1 * canvas.zoom} fill="var(--canvas-dot)" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dots)" />
-
             <g transform={svgWorldTransform}>
               {goals.sortedGoals.map((goal) => {
                 const goalPos = canvas.getNodePos(goal.id);
@@ -364,8 +433,8 @@ export default function Journey() {
                       key={id}
                       className="absolute rounded-full"
                       style={{
-                        left: pos.x + NODE_CENTER,
-                        top: pos.y + NODE_CENTER,
+                        left: pos.x + NODE_CENTER_X,
+                        top: pos.y + NODE_CENTER_Y,
                         translateX: "-50%",
                         translateY: "-50%",
                         border: "1.5px solid var(--accent)",
@@ -437,9 +506,9 @@ export default function Journey() {
           <motion.div
             className="flex-1 rounded-2xl flex items-center justify-center p-6 border"
             style={{ borderColor: "var(--canvas-border)", backgroundColor: "var(--card)" }}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            variants={cardEntry}
+            initial="initial"
+            animate="animate"
           >
             <div
               className="flex flex-col items-center text-center"
@@ -521,25 +590,26 @@ export default function Journey() {
               >
                 Every goal you add becomes a node on your map, fed by the income you already track. Start with something close &mdash; a phone, a trip, an emergency cushion.
               </p>
-              <button
+              <motion.button
                 type="button"
                 onClick={() => {
                   goals.setAddGoalError("");
                   goals.setShowAddModal(true);
                 }}
                 aria-label="Add your first goal"
-                className="px-5 py-3 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg bg-accent text-on-accent"
+                className="px-5 py-3 rounded-xl flex items-center gap-2 justify-center shadow-lg bg-accent text-on-accent"
+                whileHover={cardHover}
               >
                 <Plus size={18} />
                 <span className="font-semibold text-sm font-body">Add your first goal</span>
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         )}
 
         <JourneyAddGoalModal
           show={goals.showAddModal}
-          onClose={() => goals.setShowAddModal(false)}
+          onClose={goals.closeAddModal}
           storeGoals={goals.storeGoals}
           activeGoals={goals.activeGoals}
           monthlySurplus={goals.monthlySurplus}

@@ -161,10 +161,25 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+/** Completed-goal achievement block in the Sparks ledger (hash-chained). */
+export interface Milestone {
+  id: string;
+  goalId: string;
+  title: string;
+  category: Goal["category"];
+  completedAt: string;       // ISO
+  amount: number;            // goal target amount
+  sparks: number;            // from computeSparks
+  hash: string;              // 6-char, deterministic from id
+  prevHash: string | null;   // chains to previous block; null for first
+}
+
 /** Complete user financial profile stored in Zustand */
 export interface FinancialProfile {
   /** Has the user completed onboarding? */
   onboarded: boolean;
+  /** True when ?demo=1 seeded this profile; bypasses auth gate. */
+  demoMode?: boolean;
   income: IncomeProfile;
   expenses: ExpenseProfile;
   debts: DebtProfile;
@@ -206,4 +221,6 @@ export interface FinancialProfile {
    * Reset to false when the debt profile transitions to zero.
    */
   debtGoalDeleted?: boolean;
+  /** Hash-chained ledger of completed-goal achievements (Sparks). */
+  milestones: Milestone[];
 }

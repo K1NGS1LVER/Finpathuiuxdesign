@@ -16,6 +16,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { usePalette } from '@/app/components/SankeyFlow';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
 
 type ChartEntry = Record<string, string | number>;
 
@@ -35,6 +36,9 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   const pal = usePalette();
 
   const [extraPayment, setExtraPayment] = useState(0);
+  // Debounced copy drives expensive memos (compareStrategies/avalanche/snowball/chart-data)
+  // so the slider stays responsive while the user drags.
+  const debouncedExtraPayment = useDebouncedValue(extraPayment, 80);
 
   const debtGoal = goals.find(g => g.category === 'debt' && g.status !== 'complete');
 
@@ -80,22 +84,22 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
 
   const comparison = useMemo(() => {
     if (debtItems.length === 0) return null;
-    return compareStrategies(debtItems, extraPayment);
-  }, [debtItems, extraPayment]);
+    return compareStrategies(debtItems, debouncedExtraPayment);
+  }, [debtItems, debouncedExtraPayment]);
 
   const timelineResult = useMemo(() => {
     if (debtItems.length === 0) return null;
     return strategy === 'avalanche'
-      ? avalanche(debtItems, extraPayment)
-      : snowball(debtItems, extraPayment);
-  }, [debtItems, extraPayment, strategy]);
+      ? avalanche(debtItems, debouncedExtraPayment)
+      : snowball(debtItems, debouncedExtraPayment);
+  }, [debtItems, debouncedExtraPayment, strategy]);
 
   const otherTimelineResult = useMemo(() => {
     if (debtItems.length === 0) return null;
     return strategy === 'avalanche'
-      ? snowball(debtItems, extraPayment)
-      : avalanche(debtItems, extraPayment);
-  }, [debtItems, extraPayment, strategy]);
+      ? snowball(debtItems, debouncedExtraPayment)
+      : avalanche(debtItems, debouncedExtraPayment);
+  }, [debtItems, debouncedExtraPayment, strategy]);
 
   const zeroExtraResult = useMemo(() => {
     if (debtItems.length === 0) return null;
@@ -195,16 +199,16 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
       }
     }
 
-    if (extraPayment > 0 && zeroExtraResult && timelineResult) {
+    if (debouncedExtraPayment > 0 && zeroExtraResult && timelineResult) {
       const monthsSaved = zeroExtraResult.totalMonths - timelineResult.totalMonths;
       const interestDiff = zeroExtraResult.totalInterestPaid - timelineResult.totalInterestPaid;
       if (monthsSaved > 0 || interestDiff > 0) {
         tips.push({
           icon: 'PiggyBank',
-          text: `Adding ${formatInr(extraPayment)}/mo extra pays off all debt ${monthsSaved > 0 ? `${monthsSaved} month${monthsSaved !== 1 ? 's' : ''} sooner` : 'on schedule'}, saving ${formatInr(interestDiff)} in interest.`,
+          text: `Adding ${formatInr(debouncedExtraPayment)}/mo extra pays off all debt ${monthsSaved > 0 ? `${monthsSaved} month${monthsSaved !== 1 ? 's' : ''} sooner` : 'on schedule'}, saving ${formatInr(interestDiff)} in interest.`,
         });
       }
-    } else if (extraPayment === 0) {
+    } else if (debouncedExtraPayment === 0) {
       tips.push({
         icon: 'PiggyBank',
         text: 'Even ₹500/mo extra can shave months off your payoff timeline and save significant interest.',
@@ -221,7 +225,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
     }
 
     return tips;
-  }, [debtItems, comparison, extraPayment, zeroExtraResult, timelineResult]);
+  }, [debtItems, comparison, debouncedExtraPayment, zeroExtraResult, timelineResult]);
 
   return (
     <motion.div className="debt-page" variants={pageContainer} initial="hidden" animate="visible">

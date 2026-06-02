@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { lazy, Suspense, useState, useEffect, useRef, useCallback } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -13,19 +13,26 @@ import Loading from "./screens/Loading";
 import Dashboard from "./screens/Dashboard";
 import Journey from "./screens/Journey";
 
-import Debt from "./screens/Debt";
-import Cashflow from "./screens/Cashflow";
-import Month from "./screens/Month";
-import Scenarios from "./screens/Scenarios";
-import Progress from "./screens/Progress";
+// Celebrate stays EAGER — it's the showpiece, a Suspense fallback would
+// ruin the motion sequence the moment a reviewer navigates to it.
 import Celebrate from "./screens/Celebrate";
 import Settings from "./screens/Settings";
 import Auth from "./screens/Auth";
+
+// Heavier secondary routes are lazy-loaded behind a RouteFallback skeleton.
+const DesignSystem = lazy(() => import("./screens/DesignSystem"));
+const Debt = lazy(() => import("./screens/Debt"));
+const Cashflow = lazy(() => import("./screens/Cashflow"));
+const Month = lazy(() => import("./screens/Month"));
+const Scenarios = lazy(() => import("./screens/Scenarios"));
+const Progress = lazy(() => import("./screens/Progress"));
+
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import PennyPanel from "./components/PennyPanel";
 import PdfExportOverlay from "./components/PdfExportOverlay";
 import DemoControlPanel from "./components/DemoControlPanel";
+import RouteFallback from "./components/RouteFallback";
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import { initCloudSync } from '@/lib/cloud-sync';
@@ -34,7 +41,7 @@ import { formatInr } from '@/lib/format';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageTransition from './components/PageTransition';
 import ScrollToTop from "./components/ScrollToTop";
-import confetti from "canvas-confetti";
+import { fireConfetti } from "@/lib/confetti";
 import { AnimatePresence } from "motion/react";
 import { TrendingUp, Wallet, Loader2 } from "lucide-react";
 import type { GoalCompletionAction } from "@/lib/types";
@@ -53,6 +60,7 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const onboarded = useFinPathStore((s) => s.onboarded);
+  const demoMode = useFinPathStore((s) => s.demoMode ?? false);
   const goals = useFinPathStore((s) => s.goals);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
@@ -75,6 +83,16 @@ function AppContent() {
     initCloudSync();
   }, [initialize]);
 
+  // ?demo=1 — seed the demo profile and jump to the dashboard.
+  // Only guard against overwriting a real authenticated user's data.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has("demo")) return;
+    if (user && useFinPathStore.getState().onboarded) return;
+    useFinPathStore.getState().loadDemoProfile();
+    navigate("/dashboard", { replace: true });
+  }, [location.search, navigate, user]);
+
   useEffect(() => {
     if (!onboarded) return;
 
@@ -86,7 +104,7 @@ function AppContent() {
   useEffect(() => {
     if (activeDecision && !confettiFiredRef.current.has(activeDecision.goalId)) {
       confettiFiredRef.current.add(activeDecision.goalId);
-      confetti({
+      void fireConfetti({
         particleCount: 40,
         spread: 55,
         startVelocity: 20,
@@ -155,7 +173,10 @@ function AppContent() {
   const isAuthPage = location.pathname === "/auth";
   const isLandingPage = location.pathname === "/";
 
-  if (!user && !isLandingPage && !isAuthPage) {
+  // Demo mode unlocks read-only app access without a real auth user.
+  const effectivelyAuthed = !!user || demoMode;
+
+  if (!effectivelyAuthed && !isLandingPage && !isAuthPage) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -167,7 +188,7 @@ function AppContent() {
 
   // If authenticated + onboarded user visits landing or auth, redirect to dashboard
   if (
-    user &&
+    effectivelyAuthed &&
     onboarded &&
     (location.pathname === "/" || location.pathname === "/auth")
   ) {
@@ -185,7 +206,7 @@ function AppContent() {
   }
 
   // If non-authenticated visits dashboard pages, redirect to auth
-  if (!user && showLayout) {
+  if (!effectivelyAuthed && showLayout) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -234,7 +255,9 @@ function AppContent() {
                   element={
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
-                        <Month />
+                        <Suspense fallback={<RouteFallback />}>
+                          <Month />
+                        </Suspense>
                       </PageTransition>
                     </ErrorBoundary>
                   }
@@ -244,7 +267,9 @@ function AppContent() {
                   element={
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
-                        <Scenarios onPennyClick={() => setPennyOpen(true)} />
+                        <Suspense fallback={<RouteFallback />}>
+                          <Scenarios onPennyClick={() => setPennyOpen(true)} />
+                        </Suspense>
                       </PageTransition>
                     </ErrorBoundary>
                   }
@@ -254,7 +279,9 @@ function AppContent() {
                   element={
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
-                        <Progress onPennyClick={() => setPennyOpen(true)} />
+                        <Suspense fallback={<RouteFallback />}>
+                          <Progress onPennyClick={() => setPennyOpen(true)} />
+                        </Suspense>
                       </PageTransition>
                     </ErrorBoundary>
                   }
@@ -264,7 +291,9 @@ function AppContent() {
                   element={
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
-                        <Debt onPennyClick={() => setPennyOpen(true)} />
+                        <Suspense fallback={<RouteFallback />}>
+                          <Debt onPennyClick={() => setPennyOpen(true)} />
+                        </Suspense>
                       </PageTransition>
                     </ErrorBoundary>
                   }
@@ -274,7 +303,9 @@ function AppContent() {
                   element={
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
-                        <Cashflow />
+                        <Suspense fallback={<RouteFallback />}>
+                          <Cashflow />
+                        </Suspense>
                       </PageTransition>
                     </ErrorBoundary>
                   }
@@ -295,6 +326,18 @@ function AppContent() {
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
                         <Settings />
+                      </PageTransition>
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/design"
+                  element={
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Suspense fallback={<RouteFallback />}>
+                          <DesignSystem />
+                        </Suspense>
                       </PageTransition>
                     </ErrorBoundary>
                   }

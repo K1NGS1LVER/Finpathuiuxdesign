@@ -12,6 +12,7 @@ import { useFinPathStore } from '@/lib/store';
 import { formatInr, formatInrCompact } from '@/lib/format';
 import { pageContainer, pageSection } from "@/app/components/motion-variants";
 import HealthScoreWidget from "@/app/components/HealthScoreWidget";
+import MilestoneChain from "@/app/components/MilestoneChain";
 
 type ChartPoint = { label: string; value: number; projected?: boolean };
 
@@ -25,6 +26,7 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
   const goals = useFinPathStore((s) => s.goals) || [];
   const plan = useFinPathStore((s) => s.plan);
   const healthScore = useFinPathStore((s) => s.healthScore);
+  const ledgerMilestones = useFinPathStore((s) => s.milestones);
   const savings = useFinPathStore((s) => s.savings);
   const investments = useFinPathStore((s) => s.investments);
   const navigate = useNavigate();
@@ -573,13 +575,15 @@ export default function Progress({ onPennyClick }: { onPennyClick?: () => void }
 
       {/* Health Score Strip */}
       {healthScore && (
-        <motion.div className="bento-card p-6 md:p-8 relative z-10" variants={pageSection}>
-          <h3 className="text-xl font-bold mb-4 text-[var(--card-foreground)]" style={{ fontFamily: "var(--font-display)" }}>
-            Health Score
-          </h3>
-          <HealthScoreWidget variant="full" />
+        <motion.div className="bento-card p-4 md:p-5 relative z-10" variants={pageSection}>
+          <HealthScoreWidget variant="strip" />
         </motion.div>
       )}
+
+      {/* Achievement Ledger */}
+      <motion.div className="bento-card p-6 md:p-8 relative z-10" variants={pageSection}>
+        <MilestoneChain milestones={ledgerMilestones} />
+      </motion.div>
         </>
       )}
     </motion.div>

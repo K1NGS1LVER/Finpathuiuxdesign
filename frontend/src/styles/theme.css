@@ -96,6 +96,10 @@
   --blob-secondary: rgba(172, 73, 255, 0.07);
   --blob-primary-sm: rgba(73, 91, 255, 0.04);
 
+  /* ─── Landing Hero Blob Opacities ─── */
+  --landing-blob-opacity-primary: 0.6;
+  --landing-blob-opacity-secondary: 0.5;
+
   /* Main dashboard background — full blob system */
   --background:
     radial-gradient(circle at 45% 35%, rgba(73, 91, 255, 0.24) 0, rgba(73, 91, 255, 0) 50%),
@@ -301,6 +305,10 @@
   --blob-secondary: rgba(199, 125, 255, 0.04);
   --blob-primary-sm: rgba(123, 140, 255, 0.02);
 
+  /* ─── Landing Hero Blob Opacities ─── */
+  --landing-blob-opacity-primary: 0.4;
+  --landing-blob-opacity-secondary: 0.35;
+
   /* Main dashboard background */
   --background:
     radial-gradient(circle at 45% 38%, rgba(123, 140, 255, 0.2) 0, rgba(123, 140, 255, 0) 50%),
@@ -377,10 +385,11 @@
   /* ═══════════════════════════════════════════════
      PENNY ACCENT — Lighter Blue (dark mode)
   ═══════════════════════════════════════════════ */
-  --penny-accent: #8e9bff;
-  --penny-accent-subtle: rgba(142, 155, 255, 0.15);
-  --penny-accent-glow: rgba(142, 155, 255, 0.25);
-  --penny-insight-border: rgba(142, 155, 255, 0.5);
+  --penny-accent: #7a88e8;
+  --penny-accent-subtle: rgba(122, 136, 232, 0.10);
+  --penny-accent-glow: rgba(122, 136, 232, 0.16);
+  --penny-insight-border: rgba(122, 136, 232, 0.30);
+  --penny-gradient: linear-gradient(135deg, rgba(122, 136, 232, 0.7), rgba(168, 122, 232, 0.7));
 
   /* ═══════════════════════════════════════════════
      SEMANTIC COLORS — Dark Mode
@@ -809,7 +818,7 @@ body {
 }
 
 .dark .penny-insight-blob {
-  opacity: 0.3;
+  opacity: 0.12;
   mix-blend-mode: screen;
 }
 
@@ -1129,6 +1138,16 @@ a.bento-card:hover,
   background: var(--card);
   border: 2.5px solid var(--accent);
   cursor: grab;
+}
+
+/* Landing hero background blobs */
+.landing-blob-hero-primary {
+  opacity: var(--landing-blob-opacity-primary);
+  pointer-events: none;
+}
+.landing-blob-hero-secondary {
+  opacity: var(--landing-blob-opacity-secondary);
+  pointer-events: none;
 }
 
 /* Penny blob */
