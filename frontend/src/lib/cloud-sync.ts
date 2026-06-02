@@ -47,6 +47,7 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let lastSerialized = "";
 let lastPushedAt = 0;
 let subscribed = false;
+let hydrateInFlight: Promise<"no-auth" | "no-remote" | "remote-newer" | "local-newer" | "equal" | "error"> | null = null;
 
 function isAuthed(): boolean {
   return !!useAuthStore.getState().user;
@@ -112,6 +113,14 @@ export async function flushCloudSync(opts: { force?: boolean } = {}): Promise<bo
  * (compared by `data.lastUpdated`). Returns the action taken.
  */
 export async function hydrateFromRemote(): Promise<
+  "no-auth" | "no-remote" | "remote-newer" | "local-newer" | "equal" | "error"
+> {
+  if (hydrateInFlight) return hydrateInFlight;
+  hydrateInFlight = _hydrateFromRemote();
+  try { return await hydrateInFlight; } finally { hydrateInFlight = null; }
+}
+
+async function _hydrateFromRemote(): Promise<
   "no-auth" | "no-remote" | "remote-newer" | "local-newer" | "equal" | "error"
 > {
   if (!isAuthed()) return "no-auth";
