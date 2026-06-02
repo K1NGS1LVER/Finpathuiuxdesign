@@ -144,10 +144,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (event === 'SIGNED_IN' && session?.user) {
           void (async () => {
             await migrateLocalToCloud(session.user.id);
-            // Phase 4: if user already opted into cloud, pull latest from remote.
-            if (useFinPathStore.getState().storageMode === 'cloud') {
-              await hydrateFromRemote();
-            }
+            await hydrateFromRemote();
           })();
         }
         if (event === 'SIGNED_OUT') {
@@ -156,8 +153,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
     }
 
-    // Phase 4: if we already have a session at boot, kick a hydrate.
-    if (data.session?.user && useFinPathStore.getState().storageMode === 'cloud') {
+    // Hydrate profile from remote on boot if session exists.
+    if (data.session?.user) {
       void hydrateFromRemote();
     }
   },
@@ -215,6 +212,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       session: data.session ?? null,
       loading: false,
     });
+    await hydrateFromRemote();
     return { success: true };
   },
 
