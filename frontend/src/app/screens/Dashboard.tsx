@@ -27,7 +27,7 @@ import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
 import { compareStrategies } from "@/lib/debt-strategies";
-import confetti from "canvas-confetti";
+import { fireConfetti } from "@/lib/confetti";
 import HealthScoreWidget from "@/app/components/HealthScoreWidget";
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -184,7 +184,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
 
                     <div className="goal-bar">
                       <div className="goal-bar-hatch" />
-                      <div className="goal-bar-fill" style={{ width: `${progress}%`, background: cat.color, boxShadow: `0 0 10px ${cat.color}` }} />
+                      <div className="goal-bar-fill" style={{ width: `${progress}%`, background: cat.color, boxShadow: `0 0 var(--space-1) ${cat.color}` }} />
                     </div>
 
                     <p className="slashed-zero goal-pct">{progress}%</p>
@@ -256,13 +256,13 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
                     if (justCompleted) {
                       const end = Date.now() + 2000;
                       const frame = () => {
-                        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: [accent, secondary, accent] });
-                        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: [accent, lime, green] });
+                        void fireConfetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: [accent, secondary, accent] });
+                        void fireConfetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: [accent, lime, green] });
                         if (Date.now() < end) requestAnimationFrame(frame);
                       };
                       frame();
                     } else {
-                      confetti({ particleCount: 60, spread: 70, origin: { y: 0.7 }, colors: [accent, secondary, lime] });
+                      void fireConfetti({ particleCount: 60, spread: 70, origin: { y: 0.7 }, colors: [accent, secondary, lime] });
                     }
                   }}
                 >

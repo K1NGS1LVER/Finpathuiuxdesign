@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Sun, Moon, Menu, LogOut, User, Settings as SettingsIcon } from "lucide-react";
+import { Sun, Moon, Menu, LogOut, User, Settings as SettingsIcon, Award } from "lucide-react";
 import { useAuthStore } from '@/lib/auth-store';
 import { useFinPathStore } from '@/lib/store';
 import { formatInr } from '@/lib/format';
+import { computeLevel } from '@/lib/levels';
 import { useNavigate } from "react-router";
 
 interface HeaderProps {
@@ -21,6 +22,9 @@ export default function Header({
   const resetStore = useFinPathStore((s) => s.resetProfile);
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
+  const milestones = useFinPathStore((s) => s.milestones);
+  const totalSparks = milestones.reduce((sum, m) => sum + m.sparks, 0);
+  const levelInfo = computeLevel(totalSparks);
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,6 +70,24 @@ export default function Header({
       </button>
 
       <div className="flex items-center gap-3 md:gap-4">
+        <button
+          onClick={() => navigate("/progress")}
+          title={`${levelInfo.label} · ${totalSparks.toLocaleString("en-IN")} sparks`}
+          className="hidden md:inline-flex items-center gap-2 rounded-full transition-transform hover:scale-105 active:scale-95"
+          style={{
+            padding: "var(--space-1) var(--space-2)",
+            background: "var(--surface-tint)",
+            border: "1px solid var(--border)",
+            color: "var(--card-foreground)",
+            fontSize: "var(--text-xs)",
+            fontFamily: "var(--font-body)",
+            fontWeight: "var(--font-weight-semibold)",
+          }}
+        >
+          <Award size={14} style={{ color: "var(--accent)" }} />
+          {levelInfo.label}
+        </button>
+
         {(monthlySurplusReserve > 0 || pendingGoalDecisions.length > 0) && (
           <div
             className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-tint border border-border text-secondary"

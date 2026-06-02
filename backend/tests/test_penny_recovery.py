@@ -111,7 +111,7 @@ async def test_stream_agent_recovers_leaked_propose_change(
         },
     ]
 
-    def fake_build_graph(profile: dict, propose):
+    def fake_build_graph(profile: dict, propose, model=None):
         return _FakeGraph(fake_events), make_tools(profile, propose)
 
     monkeypatch.setattr(penny_mod, "build_graph", fake_build_graph)
@@ -185,7 +185,7 @@ async def test_stream_agent_unknown_tool_name_dropped(
         },
     ]
 
-    def fake_build_graph(profile: dict, propose):
+    def fake_build_graph(profile: dict, propose, model=None):
         return _FakeGraph(fake_events), make_tools(profile, propose)
 
     monkeypatch.setattr(penny_mod, "build_graph", fake_build_graph)
@@ -234,7 +234,7 @@ async def test_stream_agent_dedup_recovered_call_not_refired(
         },
     ]
 
-    def fake_build_graph(profile: dict, propose):
+    def fake_build_graph(profile: dict, propose, model=None):
         return _FakeGraph(fake_events), make_tools(profile, propose)
 
     monkeypatch.setattr(penny_mod, "build_graph", fake_build_graph)
@@ -311,7 +311,7 @@ async def test_propose_change_rejects_updategoal_on_completed_goal(
         ],
     }
 
-    def fake_build_graph(profile: dict, propose):
+    def fake_build_graph(profile: dict, propose, model=None):
         return _FakeGraph(fake_events), make_tools(profile, propose)
 
     monkeypatch.setattr(penny_mod, "build_graph", fake_build_graph)
@@ -379,7 +379,7 @@ async def test_stream_agent_recovers_open_only_propose_change(
         },
     ]
 
-    def fake_build_graph(profile: dict, propose):
+    def fake_build_graph(profile: dict, propose, model=None):
         return _FakeGraph(fake_events), make_tools(profile, propose)
 
     monkeypatch.setattr(penny_mod, "build_graph", fake_build_graph)
@@ -439,7 +439,7 @@ async def test_stream_agent_dedup_across_closed_and_open_passes(
         },
     ]
 
-    def fake_build_graph(profile: dict, propose):
+    def fake_build_graph(profile: dict, propose, model=None):
         return _FakeGraph(fake_events), make_tools(profile, propose)
 
     monkeypatch.setattr(penny_mod, "build_graph", fake_build_graph)

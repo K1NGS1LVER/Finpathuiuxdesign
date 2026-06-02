@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import type { Goal } from '@/lib/types';
 import { getGoalIcon } from "./icon-map";
@@ -33,12 +33,6 @@ function getStatusGlow(status: string) {
   }
 }
 
-function getPriorityGlow(priority: number) {
-  if (priority <= 1) return "0 0 40px var(--accent-glow)";
-  if (priority === 2) return "0 0 26px var(--accent-glow)";
-  return "0 0 16px var(--accent-glow)";
-}
-
 interface JourneyGoalNodeProps {
   goal: Goal;
   index: number;
@@ -50,7 +44,7 @@ interface JourneyGoalNodeProps {
   formatCurrency: (amount: number) => string;
 }
 
-export default function JourneyGoalNode({
+function JourneyGoalNode({
   goal,
   index,
   x,
@@ -83,7 +77,7 @@ export default function JourneyGoalNode({
     <motion.div
       data-goal-id={goal.id}
       className="absolute cursor-pointer pointer-events-auto"
-      style={{ left: x, top: y, width: 160 }}
+      style={{ left: x, top: y, width: 132 }}
       variants={nodeVariants}
       initial="hidden"
       animate={isActiveGoal ? "visible" : "visibleStatic"}
@@ -128,15 +122,15 @@ export default function JourneyGoalNode({
         }}
       >
         <div
-          className="p-4 rounded-2xl bento-card"
+          className="p-3 rounded-2xl bento-card"
           style={{
             border: `2px solid ${statusColor}`,
             boxShadow: isActiveGoal
-              ? `${getPriorityGlow(goal.priority)}, var(--shadow-md)`
+              ? "var(--shadow-md)"
               : `0 0 20px ${statusGlow}, var(--shadow-md)`,
             position: "relative",
             overflow: "hidden",
-            minHeight: 200,
+            minHeight: 168,
           }}
         >
           {/* Ripple */}
@@ -162,30 +156,42 @@ export default function JourneyGoalNode({
           {/* Content — above ripple */}
           <div style={{ position: "relative", zIndex: 1 }}>
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-2"
               style={{
                 background: "color-mix(in srgb, var(--surface-hover) 80%, transparent)",
                 color: statusColor,
               }}
             >
-              <Icon size={24} className="icon-wireframe" />
+              <Icon size={18} className="icon-wireframe" />
             </div>
-            <div className="font-bold mb-1 text-[var(--card-foreground)] font-body-family">
+            <div
+              className="font-semibold mb-1 text-[var(--card-foreground)] font-body-family"
+              style={{ fontSize: 'var(--text-sm)', lineHeight: 1.2 }}
+            >
               {goal.name}
             </div>
             {isActiveGoal && (
-              <div className="font-bold mb-1 text-accent-color" style={{ fontSize: "var(--text-2xs)" }}>
+              <div
+                className="font-medium mb-1 text-accent-color"
+                style={{ fontSize: 'var(--text-2xs)', letterSpacing: '0.04em', textTransform: 'uppercase' }}
+              >
                 Priority P{goal.priority}
               </div>
             )}
-            <div className="text-2xl font-bold mb-2 text-[var(--card-foreground)] font-display-family">
+            <div
+              className="font-bold mb-2 text-[var(--card-foreground)] font-display-family"
+              style={{ fontSize: 'var(--text-lg)' }}
+            >
               {formatCurrency(goal.targetAmount)}
             </div>
-            <div className="text-xs mb-2 text-[var(--secondary)] font-body-family">
+            <div
+              className="text-xs mb-1.5 text-[var(--secondary)] font-body-family"
+              style={{ fontSize: 'var(--text-2xs)' }}
+            >
               {progress}% complete
             </div>
             <div
-              className="h-1.5 rounded-full overflow-hidden"
+              className="h-1 rounded-full overflow-hidden"
               style={{ backgroundColor: "var(--progress-inactive)" }}
             >
               <div
@@ -199,3 +205,27 @@ export default function JourneyGoalNode({
     </motion.div>
   );
 }
+
+function areEqual(prev: JourneyGoalNodeProps, next: JourneyGoalNodeProps) {
+  if (prev.isDragging !== next.isDragging) return false;
+  if (prev.index !== next.index) return false;
+  if (prev.x !== next.x) return false;
+  if (prev.y !== next.y) return false;
+  // Pointer/click handlers are stable refs from the canvas/goals hooks.
+  // We intentionally ignore identity so hover state changes in the parent
+  // don't cascade re-renders through every node.
+  const a = prev.goal;
+  const b = next.goal;
+  return (
+    a.id === b.id &&
+    a.status === b.status &&
+    a.currentAmount === b.currentAmount &&
+    a.targetAmount === b.targetAmount &&
+    a.color === b.color &&
+    a.priority === b.priority &&
+    a.icon === b.icon &&
+    a.name === b.name
+  );
+}
+
+export default memo(JourneyGoalNode, areEqual);
