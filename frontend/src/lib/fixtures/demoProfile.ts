@@ -1,11 +1,6 @@
-import type {
-  FinancialProfile,
-  Goal,
-  DebtItem,
-  Milestone,
-} from "@/lib/types";
-import { buildMilestoneChain } from "@/lib/sparks";
-import { useFinPathStore } from "@/lib/store";
+import type { FinancialProfile, Goal, DebtItem, Milestone } from '@/lib/types';
+import { buildMilestoneChain } from '@/lib/sparks';
+import { useFinPathStore } from '@/lib/store';
 
 const PRIMARY = 120_000;
 const SECONDARY = 15_000;
@@ -31,81 +26,75 @@ const EXPENSES_TOTAL =
 
 const DEBT_ITEMS: DebtItem[] = [
   {
-    id: "demo-debt-cc",
-    name: "HDFC Credit Card",
-    category: "creditCard",
+    id: 'demo-debt-cc',
+    name: 'HDFC Credit Card',
+    category: 'creditCard',
     principal: 85_000,
     interestRate: 18,
     monthlyPayment: 6_000,
     remainingMonths: 18,
   },
   {
-    id: "demo-debt-edu",
-    name: "Education Loan",
-    category: "educationLoan",
+    id: 'demo-debt-edu',
+    name: 'Education Loan',
+    category: 'educationLoan',
     principal: 4_50_000,
     interestRate: 9,
     monthlyPayment: 8_500,
     remainingMonths: 60,
   },
 ];
-const DEBT_TOTAL_MONTHLY = DEBT_ITEMS.reduce(
-  (sum, d) => sum + d.monthlyPayment,
-  0,
-);
-const DEBT_TOTAL_PRINCIPAL = DEBT_ITEMS.reduce(
-  (sum, d) => sum + d.principal,
-  0,
-);
+const DEBT_TOTAL_MONTHLY = DEBT_ITEMS.reduce((sum, d) => sum + d.monthlyPayment, 0);
+const DEBT_TOTAL_PRINCIPAL = DEBT_ITEMS.reduce((sum, d) => sum + d.principal, 0);
 
 const GOALS: Goal[] = [
   {
-    id: "demo-goal-emergency",
-    name: "Emergency fund",
-    icon: "Umbrella",
-    category: "savings",
+    id: 'demo-goal-emergency',
+    name: 'Emergency fund',
+    icon: 'Umbrella',
+    category: 'savings',
     targetAmount: 3_00_000,
     currentAmount: 3_00_000,
     timelineMonths: 0,
     priority: 1,
-    status: "complete",
+    status: 'complete',
     monthlyAllocation: 0,
-    color: "var(--green)",
+    color: 'var(--green)',
   },
   {
-    id: "demo-goal-home",
-    name: "House down payment",
-    icon: "Home",
-    category: "home",
+    id: 'demo-goal-home',
+    name: 'House down payment',
+    icon: 'Home',
+    category: 'home',
     targetAmount: 15_00_000,
     currentAmount: 2_40_000,
     timelineMonths: 48,
     priority: 1,
-    status: "in-progress",
+    status: 'in-progress',
     monthlyAllocation: 0,
-    color: "var(--accent)",
+    color: 'var(--accent)',
   },
   {
-    id: "demo-goal-japan",
-    name: "Vacation — Japan",
-    icon: "Plane",
-    category: "travel",
+    id: 'demo-goal-japan',
+    name: 'Vacation — Japan',
+    icon: 'Plane',
+    category: 'travel',
     targetAmount: 2_50_000,
     currentAmount: 65_000,
     timelineMonths: 14,
     priority: 2,
-    status: "in-progress",
+    status: 'in-progress',
     monthlyAllocation: 0,
-    color: "var(--secondary-accent)",
+    color: 'var(--secondary-accent)',
   },
 ];
 
 export const demoMilestones: Milestone[] = buildMilestoneChain([
   {
-    goalId: "demo-goal-emergency",
-    title: "Emergency fund",
-    category: "savings",
-    completedAt: "2026-03-15T00:00:00.000Z",
+    goalId: 'demo-goal-emergency',
+    title: 'Emergency fund',
+    category: 'savings',
+    completedAt: '2026-03-15T00:00:00.000Z',
     amount: 3_00_000,
     priority: 1,
   },
@@ -123,6 +112,8 @@ export const demoFinancialProfile: FinancialProfile = {
     primaryIncrement: 8,
     secondaryIncrement: 5,
     passiveIncrement: 4,
+    netRate: 1.0,
+    netMonthly: PRIMARY + SECONDARY + PASSIVE + VARIABLE,
   },
   expenses: {
     ...EXPENSES,
@@ -140,14 +131,14 @@ export const demoFinancialProfile: FinancialProfile = {
   healthScore: null,
   plan: null,
   chatHistory: [],
-  currency: "INR",
-  strategy: "avalanche",
+  currency: 'INR',
+  strategy: 'avalanche',
   monthlySurplusReserve: 0,
   pendingGoalDecisions: [],
   lastUpdated: Date.now(),
   stepUpEnabled: true,
   investmentReturnRate: 12,
-  storageMode: "local",
+  storageMode: 'local',
   milestones: demoMilestones,
   demoMode: true,
 };
