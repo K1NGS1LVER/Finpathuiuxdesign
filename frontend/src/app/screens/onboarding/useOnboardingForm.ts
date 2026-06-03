@@ -153,10 +153,11 @@ export function useOnboardingForm() {
     [exchangeRates],
   );
 
-  const totalIncomeINR = incomeItems.reduce(
-    (s, i) => s + (parseFloat(convertToINR(i.amount, incomeCurrency)) || 0),
-    0,
-  );
+  const firstSalaryIdx = incomeItems.findIndex((i) => i.type === 'salary');
+  const totalIncomeINR = incomeItems.reduce((s, i, idx) => {
+    const raw = parseFloat(convertToINR(i.amount, incomeCurrency)) || 0;
+    return s + (idx === firstSalaryIdx ? raw * netRate : raw);
+  }, 0);
 
   const totalDebtINR = debtItems.reduce(
     (s, d) => s + (parseFloat(convertToINR(d.monthlyPayment, debtCurrency)) || 0),
