@@ -283,6 +283,45 @@ export default function Affordability() {
   const healthScore = useFinPathStore((s) => s.healthScore);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
+  const emergencyFund = useFinPathStore((s) => s.emergencyFund);
+
+  const crossGoalProfile = useMemo<FinancialProfile>(
+    () =>
+      ({
+        onboarded: true,
+        income,
+        expenses,
+        debts,
+        savings,
+        investments,
+        emergencyFund: emergencyFund,
+        goals,
+        healthScore,
+        plan: null,
+        chatHistory: [],
+        currency: 'INR',
+        strategy: 'avalanche',
+        monthlySurplusReserve,
+        pendingGoalDecisions,
+        lastUpdated: 0,
+        investmentReturnRate,
+        storageMode: 'local',
+        milestones: [],
+      }) as FinancialProfile,
+    [
+      income,
+      expenses,
+      debts,
+      savings,
+      investments,
+      emergencyFund,
+      goals,
+      healthScore,
+      monthlySurplusReserve,
+      pendingGoalDecisions,
+      investmentReturnRate,
+    ],
+  );
 
   // Pre-fill from URL params, or demo seed when no params present
   const paramName = searchParams.get('name');
@@ -799,33 +838,7 @@ export default function Affordability() {
 
       {/* ── Cross-goal insights ── */}
       {hasInput && (
-        <CrossGoalInsightsPanel
-          dreamName={dreamName}
-          goals={goals}
-          profile={
-            {
-              onboarded: true,
-              income,
-              expenses,
-              debts,
-              savings,
-              investments,
-              emergencyFund: 0,
-              goals,
-              healthScore,
-              plan: null,
-              chatHistory: [],
-              currency: 'INR',
-              strategy: 'avalanche',
-              monthlySurplusReserve,
-              pendingGoalDecisions,
-              lastUpdated: 0,
-              investmentReturnRate,
-              storageMode: 'local',
-              milestones: [],
-            } as FinancialProfile
-          }
-        />
+        <CrossGoalInsightsPanel dreamName={dreamName} goals={goals} profile={crossGoalProfile} />
       )}
     </motion.div>
   );

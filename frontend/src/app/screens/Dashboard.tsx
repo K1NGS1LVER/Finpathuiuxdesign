@@ -197,7 +197,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
       icon: Zap as LucideIcon,
       color: 'var(--amber)',
       desc: 'Pay off first debt',
-      earned: debts.items.some((d) => d.remainingMonths <= 0),
+      earned: (debts.items ?? []).some((d) => d.remainingMonths <= 0),
     },
     {
       name: 'Goal Achiever',
