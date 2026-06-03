@@ -662,7 +662,7 @@ export default function Affordability() {
 
       {/* ── Levers zone ── */}
       {result && result.levers.length > 0 && (
-        <motion.div variants={pageSection}>
+        <motion.div variants={pageSection} className="bento-card" style={{ marginBottom: '1rem' }}>
           <p className="text-label" style={{ marginBottom: '0.75rem' }}>
             Ways to close the gap
           </p>

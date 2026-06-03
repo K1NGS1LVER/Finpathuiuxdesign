@@ -56,7 +56,7 @@ export default function RecommendationCard({
 
   return (
     <div
-      className={['penny-insight-card', interactive ? 'card-hover cursor-pointer' : '', className]
+      className={['penny-card', interactive ? 'card-hover cursor-pointer' : '', className]
         .filter(Boolean)
         .join(' ')}
       onClick={onClick}
