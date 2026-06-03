@@ -1,5 +1,19 @@
 import { useNavigate, useLocation } from 'react-router';
-import { LayoutDashboard, Map, Calendar, GitBranch, Sparkles, ChevronLeft, ChevronRight, X, BarChart3, CreditCard, ArrowLeftRight, FileDown } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Map,
+  Calendar,
+  GitBranch,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  BarChart3,
+  CreditCard,
+  ArrowLeftRight,
+  FileDown,
+  BadgeCheck,
+} from 'lucide-react';
 import FinPathLogo from './FinPathLogo';
 import { useState, useEffect } from 'react';
 import { useFinPathStore } from '@/lib/store';
@@ -58,13 +72,12 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
         { icon: ArrowLeftRight, label: 'Cashflow', path: '/cashflow' },
         { icon: CreditCard, label: 'Debt', path: '/debt' },
         { icon: Map, label: 'Scenarios', path: '/scenarios' },
+        { icon: BadgeCheck, label: 'Affordability', path: '/afford' },
       ],
     },
     {
       title: 'Wins',
-      items: [
-        { icon: BarChart3, label: 'Progress', path: '/progress' },
-      ],
+      items: [{ icon: BarChart3, label: 'Progress', path: '/progress' }],
     },
   ];
 
@@ -77,12 +90,12 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
     <>
       {/* Mobile Overlay */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
-      
+
       <aside
         className={`h-full flex flex-col z-50 fixed md:relative ${mobileMenuOpen ? 'left-0 shadow-[var(--shadow-lg)]' : '-left-[240px] md:left-0 shadow-none'}`}
         style={{
@@ -101,9 +114,20 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
         }}
       >
         {/* Header */}
-        <div style={{ padding: 'var(--space-3) var(--space-3)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)', position: 'relative' }}>
+        <div
+          style={{
+            padding: 'var(--space-3) var(--space-3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-1)',
+            position: 'relative',
+          }}
+        >
           <button
-            onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+            onClick={() => {
+              navigate('/');
+              setMobileMenuOpen(false);
+            }}
             style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', padding: 0 }}
           >
             <FinPathLogo size={32} />
@@ -115,7 +139,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                 letterSpacing: '-0.025em',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '200px',
-                transition: 'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                transition:
+                  'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
                 overflow: 'hidden',
                 whiteSpace: 'nowrap',
                 color: 'var(--foreground)',
@@ -182,40 +207,60 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
             e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
           }}
         >
-          {collapsed ? <ChevronRight size={14} className="icon-wireframe" /> : <ChevronLeft size={14} className="icon-wireframe" />}
+          {collapsed ? (
+            <ChevronRight size={14} className="icon-wireframe" />
+          ) : (
+            <ChevronLeft size={14} className="icon-wireframe" />
+          )}
         </button>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: `0 var(--space-1)`, display: 'flex', flexDirection: 'column', gap: 0, overflowY: 'auto' }}>
+        <nav
+          style={{
+            flex: 1,
+            padding: `0 var(--space-1)`,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0,
+            overflowY: 'auto',
+          }}
+        >
           {sections.map((section, idx) => (
             <div key={section.title}>
               {/* Divider between sections (not before first) */}
               {idx > 0 && (
-                <div style={{
-                  height: 1,
-                  background: 'var(--border)',
-                  margin: `var(--space-2) 0 var(--space-1) 0`,
-                }} />
+                <div
+                  style={{
+                    height: 1,
+                    background: 'var(--border)',
+                    margin: `var(--space-2) 0 var(--space-1) 0`,
+                  }}
+                />
               )}
 
               {/* Section header — hides when collapsed */}
-              <div style={{
-                overflow: 'hidden',
-                opacity: collapsed ? 0 : 1,
-                maxHeight: collapsed ? 0 : '32px',
-                transition: 'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-height 450ms cubic-bezier(0.22, 1, 0.36, 1)',
-                paddingLeft: 'var(--space-2)',
-                paddingBottom: 2,
-                paddingTop: 0,
-              }}>
-                <span style={{
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 'var(--font-weight-medium)',
-                  color: 'var(--tertiary)',
-                  letterSpacing: 0,
-                  whiteSpace: 'nowrap',
-                  opacity: 0.5,
-                }}>
+              <div
+                style={{
+                  overflow: 'hidden',
+                  opacity: collapsed ? 0 : 1,
+                  maxHeight: collapsed ? 0 : '32px',
+                  transition:
+                    'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-height 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                  paddingLeft: 'var(--space-2)',
+                  paddingBottom: 2,
+                  paddingTop: 0,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    fontWeight: 'var(--font-weight-medium)',
+                    color: 'var(--tertiary)',
+                    letterSpacing: 0,
+                    whiteSpace: 'nowrap',
+                    opacity: 0.5,
+                  }}
+                >
                   {section.title}
                 </span>
               </div>
@@ -244,7 +289,9 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                         overflow: 'hidden',
                         background: 'transparent',
                         color: active ? 'var(--accent-text)' : 'var(--tertiary)',
-                        fontWeight: active ? 'var(--font-weight-semibold)' : 'var(--font-weight-medium)',
+                        fontWeight: active
+                          ? 'var(--font-weight-semibold)'
+                          : 'var(--font-weight-medium)',
                         fontSize: 'var(--text-base)',
                         transition: 'all 250ms ease',
                         width: '100%',
@@ -292,7 +339,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                           whiteSpace: 'nowrap',
                           opacity: collapsed ? 0 : 1,
                           maxWidth: collapsed ? '0px' : '150px',
-                          transition: 'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                          transition:
+                            'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
                         }}
                       >
                         {item.label}
@@ -307,18 +355,20 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
 
         {/* Penny Toast */}
         {showPennyToast && (
-          <div style={{
-            position: 'relative',
-            padding: `var(--space-1) var(--space-2)`,
-            margin: `0 var(--space-1) var(--space-2)`,
-            background: 'var(--accent-subtle)',
-            border: 'none',
-            borderRadius: 'var(--radius-sm)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 'var(--space-1)',
-          }}>
+          <div
+            style={{
+              position: 'relative',
+              padding: `var(--space-1) var(--space-2)`,
+              margin: `0 var(--space-1) var(--space-2)`,
+              background: 'var(--accent-subtle)',
+              border: 'none',
+              borderRadius: 'var(--radius-sm)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 'var(--space-1)',
+            }}
+          >
             {/* Comic-bubble tail — V cutout pointing down at Ask Penny button */}
             <div
               aria-hidden="true"
@@ -333,13 +383,15 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                 clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
               }}
             />
-            <span style={{
-              fontSize: 'var(--text-xs)',
-              color: 'var(--accent-text)',
-              fontWeight: 'var(--font-weight-medium)',
-              lineHeight: 1.4,
-              flex: 1,
-            }}>
+            <span
+              style={{
+                fontSize: 'var(--text-xs)',
+                color: 'var(--accent-text)',
+                fontWeight: 'var(--font-weight-medium)',
+                lineHeight: 1.4,
+                flex: 1,
+              }}
+            >
               Hi, I'm Penny — your AI assistant
             </span>
             <button
@@ -406,7 +458,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                 whiteSpace: 'nowrap',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '120px',
-                transition: 'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                transition:
+                  'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
               }}
             >
               Export Plan
@@ -418,7 +471,10 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
         <div style={{ padding: 'var(--space-2)' }}>
           <button
             title={collapsed ? 'Ask Penny' : undefined}
-            onClick={() => { onPennyClick(); setMobileMenuOpen(false); }}
+            onClick={() => {
+              onPennyClick();
+              setMobileMenuOpen(false);
+            }}
             style={{
               width: '100%',
               display: 'flex',
@@ -452,7 +508,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
                 whiteSpace: 'nowrap',
                 opacity: collapsed ? 0 : 1,
                 maxWidth: collapsed ? '0px' : '100px',
-                transition: 'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                transition:
+                  'opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), max-width 450ms cubic-bezier(0.22, 1, 0.36, 1)',
               }}
             >
               Ask Penny
