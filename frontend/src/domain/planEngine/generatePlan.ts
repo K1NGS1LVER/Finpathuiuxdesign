@@ -16,6 +16,7 @@ import type {
   FinancialPlan,
   InvestmentStrategy,
 } from '@/lib/types';
+import { monthlyCompound } from '@/lib/math/finance';
 
 export interface PlanInput {
   income: IncomeProfile;
@@ -114,7 +115,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     investmentReturnRate = 12,
   } = input;
 
-  const monthlyInvestmentFactor = 1 + investmentReturnRate / 100 / 12;
+  // Compounding is applied per-month via monthlyCompound(cumulativeInvestments, investmentReturnRate, 1)
 
   const effectiveIncome = income.netMonthly || income.total;
   const monthlyExpensesDeduplicated = Math.max(0, expenses.total - debts.totalMonthly);
@@ -209,7 +210,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     cumulativeSavings += Math.max(0, unallocatedSurplus);
     cumulativeSavings += monthlyReservedSurplus;
 
-    cumulativeInvestments *= monthlyInvestmentFactor;
+    cumulativeInvestments = monthlyCompound(cumulativeInvestments, investmentReturnRate, 1);
 
     let nonDebtGoalProgress = 0;
     let outstandingDebt = 0;
