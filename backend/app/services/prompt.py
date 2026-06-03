@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from app.services.anonymize import anonymize_profile
@@ -69,7 +70,9 @@ def build_cross_signals(profile: dict[str, Any]) -> str:
         val = int((asset.get("currentAmount") or 0) * 0.6)
         alloc = tg.get("monthlyAllocation") or 0
         if val >= 1000 and alloc > 0:
-            mo = round(val / alloc)
+            remaining = max(0, (tg.get("targetAmount") or 0) - (tg.get("currentAmount") or 0))
+            max_months = math.ceil(remaining / alloc) if alloc > 0 else 999
+            mo = min(round(val / alloc), max_months)
             if mo >= 1:
                 signals.append(
                     f"- SELL ASSET: Completed {asset.get('category')} goal → sell est. ₹{_inr(val)}"
@@ -121,7 +124,8 @@ def build_cross_signals(profile: dict[str, Any]) -> str:
     primary = income.get("primary") or 0
     net_rate = income.get("netRate") or 0.88
     if inc_pct > 0 and active:
-        boost = int(primary * net_rate * inc_pct / 100) // 12
+        annual = round(primary * net_rate * inc_pct / 100)
+        boost = round(annual / 12)
         if boost >= 500:
             tg = active[0]
             signals.append(
