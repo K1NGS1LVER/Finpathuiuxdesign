@@ -172,6 +172,20 @@ export interface Milestone {
   prevHash: string | null; // chains to previous block; null for first
 }
 
+/** A saved affordability scenario ("dream") */
+export interface Dream {
+  id: string;
+  name: string;
+  targetCost: number;
+  route: 'cash' | 'emi';
+  annualInterestRate: number;
+  tenureMonths: number;
+  /** Cached verdict — refreshed live on /afford screen */
+  verdict: 'affordable_now' | 'affordable_later' | 'not_affordable';
+  monthsToAfford: number | null;
+  savedAt: number;
+}
+
 /** Complete user financial profile stored in Zustand */
 export interface FinancialProfile {
   /** Has the user completed onboarding? */
@@ -221,4 +235,6 @@ export interface FinancialProfile {
   debtGoalDeleted?: boolean;
   /** Hash-chained ledger of completed-goal achievements (Sparks). */
   milestones: Milestone[];
+  /** Saved affordability scenarios */
+  dreams?: Dream[];
 }

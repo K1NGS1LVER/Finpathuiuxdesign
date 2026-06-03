@@ -1,4 +1,4 @@
-import type { FinancialProfile, Goal, DebtItem, Milestone } from '@/lib/types';
+import type { FinancialProfile, Goal, DebtItem, Milestone, Dream } from '@/lib/types';
 import { buildMilestoneChain } from '@/lib/sparks';
 import { useFinPathStore } from '@/lib/store';
 
@@ -101,12 +101,49 @@ export const demoMilestones: Milestone[] = buildMilestoneChain([
 ]);
 
 // Pre-seeded dream for /afford first-paint — car at ₹8L, cash route
-// Surplus = 138180 - 63000 - 14500 - 0 = 60680/mo → affordable in ~12 months
+// Surplus = 138180 - 63000 - 14500 - 0 = 60680/mo → affordable in ~13 months
 export const demoDream = {
   name: 'New Car',
   targetCost: 800_000,
   route: 'cash' as const,
 };
+
+// Pre-seeded saved dreams — 3 verdicts so dashboard tile shows all states
+export const demoDreams: Dream[] = [
+  {
+    id: 'demo-dream-vacation',
+    name: 'Japan Vacation',
+    targetCost: 2_50_000,
+    route: 'cash',
+    annualInterestRate: 9,
+    tenureMonths: 60,
+    verdict: 'affordable_later',
+    monthsToAfford: 5,
+    savedAt: 1_748_000_000_000,
+  },
+  {
+    id: 'demo-dream-car',
+    name: 'New Car',
+    targetCost: 8_00_000,
+    route: 'cash',
+    annualInterestRate: 9,
+    tenureMonths: 60,
+    verdict: 'affordable_later',
+    monthsToAfford: 13,
+    savedAt: 1_747_900_000_000,
+  },
+  {
+    id: 'demo-dream-home',
+    name: 'Dream Home (EMI)',
+    targetCost: 1_00_00_000,
+    route: 'emi',
+    annualInterestRate: 8.5,
+    tenureMonths: 240,
+    verdict: 'not_affordable',
+    monthsToAfford: null,
+    savedAt: 1_747_800_000_000,
+  },
+];
 
 export const demoFinancialProfile: FinancialProfile = {
   onboarded: true,
@@ -148,6 +185,7 @@ export const demoFinancialProfile: FinancialProfile = {
   investmentReturnRate: 12,
   storageMode: 'local',
   milestones: demoMilestones,
+  dreams: demoDreams,
   demoMode: true,
 };
 

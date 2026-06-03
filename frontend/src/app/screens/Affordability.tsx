@@ -15,8 +15,13 @@ import {
   Clock,
   XCircle,
   ChevronRight,
+  Bookmark,
+  BookmarkCheck,
+  X,
+  Star,
 } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
+import type { Dream } from '@/lib/types';
 import { demoDream } from '@/lib/fixtures/demoProfile';
 import { runAffordability } from '@/lib/math/affordability';
 import type { AffordabilityResult, Lever } from '@/lib/math/affordability';
@@ -216,6 +221,9 @@ export default function Affordability() {
   const monthlyReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const investmentReturnRate = useFinPathStore((s) => s.investmentReturnRate);
   const demoMode = useFinPathStore((s) => s.demoMode ?? false);
+  const dreams = useFinPathStore((s) => s.dreams ?? []);
+  const saveDream = useFinPathStore((s) => s.saveDream);
+  const removeDream = useFinPathStore((s) => s.removeDream);
 
   // Pre-fill from URL params, or demo seed when no params present
   const paramName = searchParams.get('name');
@@ -241,6 +249,66 @@ export default function Affordability() {
   const tenure = parseInt(debouncedTenure) || 60;
 
   const hasInput = targetCost > 0;
+
+  // Re-run engine for each saved dream against current profile
+  const rankedDreams = useMemo(() => {
+    const VERDICT_ORDER = { affordable_now: 0, affordable_later: 1, not_affordable: 2 } as const;
+    return dreams
+      .map((d) => ({
+        ...d,
+        liveResult: runAffordability({
+          targetCost: d.targetCost,
+          route: d.route,
+          netMonthlyIncome,
+          monthlyExpenses,
+          monthlyReserve,
+          existingEmiTotal,
+          investmentReturnRate,
+          annualInterestRate: d.annualInterestRate,
+          tenureMonths: d.tenureMonths,
+        }),
+      }))
+      .sort((a, b) => VERDICT_ORDER[a.liveResult.verdict] - VERDICT_ORDER[b.liveResult.verdict]);
+  }, [
+    dreams,
+    netMonthlyIncome,
+    monthlyExpenses,
+    monthlyReserve,
+    existingEmiTotal,
+    investmentReturnRate,
+  ]);
+
+  const currentDreamId = useMemo(
+    () =>
+      dreams.find((d) => d.name === dreamName && d.targetCost === targetCost && d.route === route)
+        ?.id ?? null,
+    [dreams, dreamName, targetCost, route],
+  );
+
+  function handleSaveDream() {
+    if (!result || !dreamName || !targetCost) return;
+    const id = currentDreamId ?? `dream-${Date.now()}`;
+    saveDream({
+      id,
+      name: dreamName,
+      targetCost,
+      route,
+      annualInterestRate: annualRate,
+      tenureMonths: tenure,
+      verdict: result.verdict,
+      monthsToAfford: result.monthsToAfford,
+      savedAt: Date.now(),
+    });
+  }
+
+  function loadDream(d: Dream) {
+    setDreamName(d.name);
+    setCostRaw(String(d.targetCost));
+    setRoute(d.route);
+    setRateRaw(String(d.annualInterestRate));
+    setTenureRaw(String(d.tenureMonths));
+    setActiveChip(null);
+  }
 
   // Run engine (memoised on debounced inputs only — pp2 #2: suppress re-run between keystrokes)
   const result = useMemo<AffordabilityResult | null>(() => {
@@ -657,6 +725,49 @@ export default function Affordability() {
           {(result.gap > 0 || result.monthlySurplus > 0) && (
             <GapBar surplus={Math.max(0, result.monthlySurplus)} gap={result.gap} />
           )}
+
+          {/* Save dream */}
+          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
+            {currentDreamId ? (
+              <button
+                onClick={() => removeDream(currentDreamId)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '5px 12px',
+                  borderRadius: 99,
+                  border: '1px solid var(--green)',
+                  background: 'color-mix(in srgb, var(--green) 10%, transparent)',
+                  color: 'var(--green)',
+                  fontSize: 'var(--text-xs)',
+                  cursor: 'pointer',
+                }}
+              >
+                <BookmarkCheck size={13} /> Saved
+              </button>
+            ) : (
+              <button
+                onClick={handleSaveDream}
+                disabled={!dreamName}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '5px 12px',
+                  borderRadius: 99,
+                  border: '1px solid var(--border)',
+                  background: 'transparent',
+                  color: 'var(--secondary)',
+                  fontSize: 'var(--text-xs)',
+                  cursor: dreamName ? 'pointer' : 'not-allowed',
+                  opacity: dreamName ? 1 : 0.5,
+                }}
+              >
+                <Bookmark size={13} /> Save dream
+              </button>
+            )}
+          </div>
         </motion.div>
       )}
 
@@ -695,7 +806,7 @@ export default function Affordability() {
         <motion.div
           variants={pageSection}
           className="bento-card"
-          style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}
+          style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: '1rem' }}
         >
           <div
             style={{
@@ -726,6 +837,98 @@ export default function Affordability() {
               {route === 'emi' ? `the ${formatInr(result.emi ?? 0)}/mo EMI` : 'the savings target'}.
               No tradeoffs needed.
             </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Saved Dreams pane ── */}
+      {rankedDreams.length > 0 && (
+        <motion.div variants={pageSection} className="bento-card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.75rem' }}>
+            <Star size={14} style={{ color: 'var(--accent)' }} />
+            <p className="text-label">Saved Dreams</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {rankedDreams.map((d) => {
+              const live = d.liveResult;
+              const verdictCfg = {
+                affordable_now: { label: 'Now', color: 'var(--green)' },
+                affordable_later: {
+                  label: live.monthsToAfford ? formatMonths(live.monthsToAfford) : 'Later',
+                  color: 'var(--amber)',
+                },
+                not_affordable: { label: 'Not yet', color: 'var(--secondary)' },
+              }[live.verdict];
+              const isActive = d.id === currentDreamId;
+              return (
+                <div
+                  key={d.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => loadDream(d)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') loadDream(d);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+                    background: isActive ? 'var(--accent-subtle)' : 'var(--surface-tint)',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.15s ease, background 0.15s ease',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p
+                      style={{
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 'var(--font-weight-semibold)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {d.name}
+                    </p>
+                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--secondary)' }}>
+                      {formatInr(d.targetCost)} · {d.route === 'emi' ? 'EMI' : 'Cash'}
+                    </p>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 'var(--text-xs)',
+                      fontWeight: 'var(--font-weight-semibold)',
+                      color: verdictCfg.color,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {verdictCfg.label}
+                  </span>
+                  <button
+                    aria-label={`Remove ${d.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeDream(d.id);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 2,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       )}
