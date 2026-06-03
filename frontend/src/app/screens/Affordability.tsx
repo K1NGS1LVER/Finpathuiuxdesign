@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
+import { demoDream } from '@/lib/fixtures/demoProfile';
 import { runAffordability } from '@/lib/math/affordability';
 import type { AffordabilityResult, Lever } from '@/lib/math/affordability';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
@@ -214,10 +215,17 @@ export default function Affordability() {
   const existingEmiTotal = useFinPathStore((s) => s.debts.totalMonthly);
   const monthlyReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const investmentReturnRate = useFinPathStore((s) => s.investmentReturnRate);
+  const demoMode = useFinPathStore((s) => s.demoMode ?? false);
+
+  // Pre-fill from URL params, or demo seed when no params present
+  const paramName = searchParams.get('name');
+  const paramCost = searchParams.get('cost');
+  const seedName = paramName ?? (demoMode ? demoDream.name : '');
+  const seedCost = paramCost ?? (demoMode ? String(demoDream.targetCost) : '');
 
   // Input state
-  const [dreamName, setDreamName] = useState(searchParams.get('name') ?? '');
-  const [costRaw, setCostRaw] = useState(searchParams.get('cost') ?? '');
+  const [dreamName, setDreamName] = useState(seedName);
+  const [costRaw, setCostRaw] = useState(seedCost);
   const [route, setRoute] = useState<'cash' | 'emi'>('cash');
   const [rateRaw, setRateRaw] = useState('9');
   const [tenureRaw, setTenureRaw] = useState('60');

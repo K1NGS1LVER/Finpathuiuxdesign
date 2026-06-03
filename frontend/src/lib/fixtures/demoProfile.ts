@@ -100,6 +100,14 @@ export const demoMilestones: Milestone[] = buildMilestoneChain([
   },
 ]);
 
+// Pre-seeded dream for /afford first-paint — car at ₹8L, cash route
+// Surplus = 138180 - 63000 - 14500 - 0 = 60680/mo → affordable in ~12 months
+export const demoDream = {
+  name: 'New Car',
+  targetCost: 800_000,
+  route: 'cash' as const,
+};
+
 export const demoFinancialProfile: FinancialProfile = {
   onboarded: true,
   income: {
