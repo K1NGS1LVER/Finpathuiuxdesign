@@ -87,6 +87,19 @@ const GOALS: Goal[] = [
     monthlyAllocation: 0,
     color: 'var(--secondary-accent)',
   },
+  {
+    id: 'demo-goal-bike',
+    name: 'Royal Enfield',
+    icon: 'Bike',
+    category: 'bike',
+    targetAmount: 2_00_000,
+    currentAmount: 2_00_000,
+    timelineMonths: 0,
+    priority: 3,
+    status: 'complete',
+    monthlyAllocation: 0,
+    color: 'var(--accent)',
+  },
 ];
 
 export const demoMilestones: Milestone[] = buildMilestoneChain([
