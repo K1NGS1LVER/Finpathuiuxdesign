@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from app.services.anonymize import anonymize_profile
@@ -42,6 +43,100 @@ ROUTE_HINTS: dict[str, str] = {
     "afford": "Affordability advisory view. The user is evaluating whether they can afford a specific purchase. Lead with a concrete verdict (can/can't afford, by when), then prescribe the single highest-leverage action to close the gap. Prefer selling a depreciating asset over a new loan when both are options.",
 }
 
+_DEPRECIATING = {"bike"}
+_SAVINGS_CAT = {"savings"}
+
+
+def build_cross_signals(profile: dict[str, Any]) -> str:
+    """Mirror of TS buildCrossGoalInsights — injects cross-goal signals into Penny's prompt."""
+    goals = profile.get("goals") or []
+    debts = (profile.get("debts") or {}).get("items") or []
+    income = profile.get("income") or {}
+    pending = profile.get("pendingGoalDecisions") or []
+
+    completed = [g for g in goals if g.get("status") == "complete"]
+    active = sorted(
+        [g for g in goals if g.get("status") != "complete"],
+        key=lambda g: g.get("priority", 99),
+    )
+
+    signals: list[str] = []
+
+    # Rule 1 — sell depreciating asset
+    assets = [g for g in completed if g.get("category") in _DEPRECIATING]
+    if assets and active:
+        asset = max(assets, key=lambda g: g.get("currentAmount") or 0)
+        tg = active[0]
+        val = int((asset.get("currentAmount") or 0) * 0.6)
+        alloc = tg.get("monthlyAllocation") or 0
+        if val >= 1000 and alloc > 0:
+            remaining = max(0, (tg.get("targetAmount") or 0) - (tg.get("currentAmount") or 0))
+            max_months = math.ceil(remaining / alloc) if alloc > 0 else 999
+            mo = min(round(val / alloc), max_months)
+            if mo >= 1:
+                signals.append(
+                    f"- SELL ASSET: Completed {asset.get('category')} goal → sell est. ₹{_inr(val)}"
+                    f" → lumpsum into '{tg.get('name')}' → saves ~{mo} months."
+                )
+
+    # Rule 2 — redeploy savings
+    sv = [g for g in completed if g.get("category") in _SAVINGS_CAT and (g.get("currentAmount") or 0) > 5000]
+    if sv and active:
+        sg = sv[0]
+        tg = active[0]
+        cash = sg.get("currentAmount") or 0
+        alloc = tg.get("monthlyAllocation") or 0
+        mo = round(cash / alloc) if alloc > 0 else 0
+        signals.append(
+            f"- REDEPLOY SAVINGS: ₹{_inr(cash)} idle in completed savings goal"
+            f" → lumpsum into '{tg.get('name')}'"
+            + (f" → saves ~{mo} months." if mo > 0 else ".")
+        )
+
+    # Rule 3 — pending decision
+    if pending and active:
+        dec = pending[0]
+        tg = active[0]
+        freed = dec.get("freedMonthlyAmount") or 0
+        if freed > 0:
+            signals.append(
+                f"- FREE ALLOCATION: ₹{_inr(freed)}/mo freed from completed goal"
+                f" → redirect to '{tg.get('name')}'."
+            )
+
+    # Rule 4 — debt near payoff
+    near = sorted(
+        [d for d in debts if 0 < (d.get("remainingMonths") or 99) <= 6],
+        key=lambda d: -(d.get("monthlyPayment") or 0),
+    )
+    if near and active:
+        d = near[0]
+        tg = active[0]
+        freed = d.get("monthlyPayment") or 0
+        if freed > 0:
+            signals.append(
+                f"- DEBT PAYOFF: '{d.get('name')}' clears in {d.get('remainingMonths')} mo,"
+                f" frees ₹{_inr(freed)}/mo → channel into '{tg.get('name')}'."
+            )
+
+    # Rule 5 — step-up income
+    inc_pct = income.get("primaryIncrement") or 0
+    primary = income.get("primary") or 0
+    net_rate = income.get("netRate") or 0.88
+    if inc_pct > 0 and active:
+        annual = round(primary * net_rate * inc_pct / 100)
+        boost = round(annual / 12)
+        if boost >= 500:
+            tg = active[0]
+            signals.append(
+                f"- STEP-UP: A {inc_pct}% raise adds ₹{_inr(boost)}/mo (net)"
+                f" → earmark for '{tg.get('name')}'."
+            )
+
+    if not signals:
+        return ""
+    return "CROSS-GOAL SIGNALS (use for hyper-specific advice):\n" + "\n".join(signals)
+
 
 def build_system_prompt(profile: dict[str, Any], context: str | None = None) -> str:
     a = anonymize_profile(profile)
@@ -60,6 +155,8 @@ def build_system_prompt(profile: dict[str, Any], context: str | None = None) -> 
             f"{g['timelineMonths']}mo timeline, Priority {g['priority']}"
         )
     goals_text = "\n".join(goal_lines) if goal_lines else "No goals set yet."
+
+    cross_signals = build_cross_signals(profile)  # raw profile, before anonymize
 
     health_line = ""
     if a["healthScore"]:
@@ -86,6 +183,8 @@ def build_system_prompt(profile: dict[str, Any], context: str | None = None) -> 
             )
 
     net_monthly = income.get("netMonthly") or income["total"]
+
+    cross_block = f"\n{cross_signals}" if cross_signals else ""
 
     return f"""You are Penny, an AI personal finance companion for Indian professionals in the FinPath app.
 {context_line}
@@ -132,7 +231,7 @@ USER'S ANONYMOUS FINANCIAL SNAPSHOT:
 {health_line}
 
 GOALS:
-{goals_text}
+{goals_text}{cross_block}
 
 RULES:
 1. Every response = [observation from their data] → [recommended action] → [projected impact]. If your response can't name an action and its impact in numbers, it is not done.
