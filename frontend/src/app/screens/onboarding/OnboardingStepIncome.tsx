@@ -61,8 +61,10 @@ export default function OnboardingStepIncome({
 
   const handleToggleCTC = (toCTC: boolean) => {
     if (toCTC) {
-      const pct = parseFloat(takeHomePct) || 88;
-      onChangeNetRate(pct / 100);
+      const pct = parseFloat(takeHomePct);
+      const effectivePct = !isNaN(pct) && pct < 100 ? pct : 88;
+      setTakeHomePct(String(effectivePct));
+      onChangeNetRate(effectivePct / 100);
     } else {
       onChangeNetRate(1.0);
     }
@@ -123,6 +125,10 @@ export default function OnboardingStepIncome({
           const isFirstSalary =
             item.type === 'salary' &&
             itemIndex === incomeItems.findIndex((i) => i.type === 'salary');
+          const hasSalary = incomeItems.some((i) => i.type === 'salary');
+          const availableTypes = INCOME_TYPES.filter(
+            (t) => t.value !== 'salary' || item.type === 'salary' || !hasSalary,
+          );
           return (
             <div
               key={item.id}
@@ -150,7 +156,7 @@ export default function OnboardingStepIncome({
                     border: '1px solid var(--border)',
                   }}
                 >
-                  {INCOME_TYPES.map((t) => (
+                  {availableTypes.map((t) => (
                     <option key={t.value} value={t.value}>
                       {t.label}
                     </option>

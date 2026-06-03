@@ -1,38 +1,32 @@
-import { lazy, Suspense, useState, useEffect, useRef, useCallback } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  useLocation,
-  useNavigate,
-  Navigate,
-} from "react-router";
-import Landing from "./screens/Landing";
-import Onboarding from "./screens/Onboarding";
-import Loading from "./screens/Loading";
-import Dashboard from "./screens/Dashboard";
-import Journey from "./screens/Journey";
+import { lazy, Suspense, useState, useEffect, useRef, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router';
+import Landing from './screens/Landing';
+import Onboarding from './screens/Onboarding';
+import Loading from './screens/Loading';
+import Dashboard from './screens/Dashboard';
+import Journey from './screens/Journey';
 
 // Celebrate stays EAGER — it's the showpiece, a Suspense fallback would
 // ruin the motion sequence the moment a reviewer navigates to it.
-import Celebrate from "./screens/Celebrate";
-import Settings from "./screens/Settings";
-import Auth from "./screens/Auth";
+import Celebrate from './screens/Celebrate';
+import Settings from './screens/Settings';
+import Auth from './screens/Auth';
 
 // Heavier secondary routes are lazy-loaded behind a RouteFallback skeleton.
-const DesignSystem = lazy(() => import("./screens/DesignSystem"));
-const Debt = lazy(() => import("./screens/Debt"));
-const Cashflow = lazy(() => import("./screens/Cashflow"));
-const Month = lazy(() => import("./screens/Month"));
-const Scenarios = lazy(() => import("./screens/Scenarios"));
-const Progress = lazy(() => import("./screens/Progress"));
+const DesignSystem = lazy(() => import('./screens/DesignSystem'));
+const Debt = lazy(() => import('./screens/Debt'));
+const Cashflow = lazy(() => import('./screens/Cashflow'));
+const Month = lazy(() => import('./screens/Month'));
+const Scenarios = lazy(() => import('./screens/Scenarios'));
+const Progress = lazy(() => import('./screens/Progress'));
+const Affordability = lazy(() => import('./screens/Affordability'));
 
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
-import PennyPanel from "./components/PennyPanel";
-import PdfExportOverlay from "./components/PdfExportOverlay";
-import DemoControlPanel from "./components/DemoControlPanel";
-import RouteFallback from "./components/RouteFallback";
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
+import PennyPanel from './components/PennyPanel';
+import PdfExportOverlay from './components/PdfExportOverlay';
+import DemoControlPanel from './components/DemoControlPanel';
+import RouteFallback from './components/RouteFallback';
 import { useFinPathStore } from '@/lib/store';
 import { useAuthStore } from '@/lib/auth-store';
 import { initCloudSync } from '@/lib/cloud-sync';
@@ -40,17 +34,17 @@ import { useTheme } from '@/lib/theme';
 import { formatInr } from '@/lib/format';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageTransition from './components/PageTransition';
-import ScrollToTop from "./components/ScrollToTop";
-import { fireConfetti } from "@/lib/confetti";
-import { AnimatePresence } from "motion/react";
-import { TrendingUp, Wallet, Loader2 } from "lucide-react";
-import type { GoalCompletionAction } from "@/lib/types";
-import Toast from "./components/Toast";
-import { CONFETTI_COLORS } from "./screens/journey/constants";
+import ScrollToTop from './components/ScrollToTop';
+import { fireConfetti } from '@/lib/confetti';
+import { AnimatePresence } from 'motion/react';
+import { TrendingUp, Wallet, Loader2 } from 'lucide-react';
+import type { GoalCompletionAction } from '@/lib/types';
+import Toast from './components/Toast';
+import { CONFETTI_COLORS } from './screens/journey/constants';
 
 function AppContent() {
   const { isDark, setMode } = useTheme();
-  const setIsDark = (next: boolean) => setMode(next ? "dark" : "light");
+  const setIsDark = (next: boolean) => setMode(next ? 'dark' : 'light');
   const [pennyOpen, setPennyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<GoalCompletionAction | null>(null);
@@ -66,11 +60,9 @@ function AppContent() {
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const computeHealthScore = useFinPathStore((s) => s.computeHealthScore);
   const generatePlan = useFinPathStore((s) => s.generatePlan);
-  const resolveGoalCompletionDecision = useFinPathStore(
-    (s) => s.resolveGoalCompletionDecision,
-  );
+  const resolveGoalCompletionDecision = useFinPathStore((s) => s.resolveGoalCompletionDecision);
   const activeDecision = pendingGoalDecisions[0];
-  const hasRemainingGoals = goals.some((goal) => goal.status !== "complete");
+  const hasRemainingGoals = goals.some((goal) => goal.status !== 'complete');
 
   // Auth state
   const user = useAuthStore((s) => s.user);
@@ -87,10 +79,10 @@ function AppContent() {
   // Only guard against overwriting a real authenticated user's data.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (!params.has("demo")) return;
+    if (!params.has('demo')) return;
     if (user && useFinPathStore.getState().onboarded) return;
     useFinPathStore.getState().loadDemoProfile();
-    navigate("/dashboard", { replace: true });
+    navigate('/dashboard', { replace: true });
   }, [location.search, navigate, user]);
 
   useEffect(() => {
@@ -126,41 +118,47 @@ function AppContent() {
   const handleConfirm = useCallback(async () => {
     if (!selectedAction || !activeDecision || isConfirming) return;
     setIsConfirming(true);
-    await new Promise<void>(r => setTimeout(r, 400));
+    await new Promise<void>((r) => setTimeout(r, 400));
     const isLast = pendingGoalDecisions.length === 1;
     const amount = activeDecision.freedMonthlyAmount;
     resolveGoalCompletionDecision(activeDecision.goalId, selectedAction);
     if (isLast) {
-      navigate("/celebrate");
+      navigate('/celebrate');
     } else {
       setCompletionToast(
-        selectedAction === "reinvest"
+        selectedAction === 'reinvest'
           ? `${formatInr(amount)}/month reinvested across your active goals`
-          : `${formatInr(amount)}/month added to your monthly surplus reserve`
+          : `${formatInr(amount)}/month added to your monthly surplus reserve`,
       );
       setIsConfirming(false);
     }
-  }, [selectedAction, activeDecision, isConfirming, pendingGoalDecisions.length,
-      resolveGoalCompletionDecision, navigate]);
+  }, [
+    selectedAction,
+    activeDecision,
+    isConfirming,
+    pendingGoalDecisions.length,
+    resolveGoalCompletionDecision,
+    navigate,
+  ]);
 
   // Show loading spinner while checking auth session
   if (authLoading) {
     return (
       <div
         className="h-screen w-screen flex items-center justify-center"
-        style={{ background: "var(--background)", color: "var(--foreground)" }}
+        style={{ background: 'var(--background)', color: 'var(--foreground)' }}
       >
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-12 h-12 border-4 rounded-full animate-spin"
             style={{
-              borderColor: "var(--border)",
-              borderTopColor: "var(--accent)",
+              borderColor: 'var(--border)',
+              borderTopColor: 'var(--accent)',
             }}
           />
           <span
             className="text-sm text-[var(--secondary)]"
-            style={{ fontFamily: "var(--font-body)" }}
+            style={{ fontFamily: 'var(--font-body)' }}
           >
             Loading...
           </span>
@@ -170,8 +168,8 @@ function AppContent() {
   }
 
   // If not authenticated, show auth screen (except for landing)
-  const isAuthPage = location.pathname === "/auth";
-  const isLandingPage = location.pathname === "/";
+  const isAuthPage = location.pathname === '/auth';
+  const isLandingPage = location.pathname === '/';
 
   // Demo mode unlocks read-only app access without a real auth user.
   const effectivelyAuthed = !!user || demoMode;
@@ -181,22 +179,20 @@ function AppContent() {
   }
 
   // Redirect logic for authenticated users
-  const isPublicPage = ["/", "/onboarding", "/loading", "/auth"].includes(
-    location.pathname,
-  );
+  const isPublicPage = ['/', '/onboarding', '/loading', '/auth'].includes(location.pathname);
   const showLayout = !isPublicPage;
 
   // If authenticated + onboarded user visits landing or auth, redirect to dashboard
   if (
     effectivelyAuthed &&
     onboarded &&
-    (location.pathname === "/" || location.pathname === "/auth")
+    (location.pathname === '/' || location.pathname === '/auth')
   ) {
     return <Navigate to="/dashboard" replace />;
   }
 
   // If authenticated but not onboarded and on auth page, go to onboarding
-  if (user && !onboarded && location.pathname === "/auth") {
+  if (user && !onboarded && location.pathname === '/auth') {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -211,9 +207,7 @@ function AppContent() {
   }
 
   return (
-    <div
-      className="h-screen w-screen overflow-hidden bg-background text-foreground font-body"
-    >
+    <div className="h-screen w-screen overflow-hidden bg-background text-foreground font-body">
       {showLayout ? (
         <div className="flex h-full">
           <Sidebar
@@ -311,6 +305,18 @@ function AppContent() {
                   }
                 />
                 <Route
+                  path="/afford"
+                  element={
+                    <ErrorBoundary key={location.pathname} animate={false}>
+                      <PageTransition>
+                        <Suspense fallback={<RouteFallback />}>
+                          <Affordability />
+                        </Suspense>
+                      </PageTransition>
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
                   path="/celebrate"
                   element={
                     <ErrorBoundary key={location.pathname} animate={false}>
@@ -352,26 +358,33 @@ function AppContent() {
           {activeDecision && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="w-full max-w-xl rounded-2xl p-6 md:p-7 bg-card border border-border shadow-xl">
-                <div className="text-xs font-semibold tracking-wider uppercase mb-2"
-                     style={{ color: 'var(--accent)' }}>
+                <div
+                  className="text-xs font-semibold tracking-wider uppercase mb-2"
+                  style={{ color: 'var(--accent)' }}
+                >
                   Goal Completed
                 </div>
                 <h3 className="text-2xl font-bold mb-1 text-card-foreground font-display">
                   {activeDecision.goalName} is done
                 </h3>
                 <p className="text-sm text-secondary mb-5 font-body">
-                  {formatInr(activeDecision.freedMonthlyAmount)}/month is now free. Where should it go?
+                  {formatInr(activeDecision.freedMonthlyAmount)}/month is now free. Where should it
+                  go?
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                   <button
                     disabled={!hasRemainingGoals}
-                    onClick={() => setSelectedAction("reinvest")}
+                    onClick={() => setSelectedAction('reinvest')}
                     className="text-left p-4 rounded-xl border transition-all"
                     style={{
-                      background: selectedAction === "reinvest" ? 'var(--accent-subtle)' : 'var(--surface-tint)',
-                      borderColor: selectedAction === "reinvest" ? 'var(--accent)' : 'var(--border)',
-                      borderWidth: selectedAction === "reinvest" ? '2px' : '1px',
+                      background:
+                        selectedAction === 'reinvest'
+                          ? 'var(--accent-subtle)'
+                          : 'var(--surface-tint)',
+                      borderColor:
+                        selectedAction === 'reinvest' ? 'var(--accent)' : 'var(--border)',
+                      borderWidth: selectedAction === 'reinvest' ? '2px' : '1px',
                       opacity: hasRemainingGoals ? 1 : 0.4,
                       cursor: hasRemainingGoals ? 'pointer' : 'not-allowed',
                     }}
@@ -379,29 +392,44 @@ function AppContent() {
                     <TrendingUp
                       size={20}
                       className="icon-wireframe mb-2"
-                      style={{ color: selectedAction === "reinvest" ? 'var(--accent)' : 'var(--card-foreground)' }}
+                      style={{
+                        color:
+                          selectedAction === 'reinvest'
+                            ? 'var(--accent)'
+                            : 'var(--card-foreground)',
+                      }}
                     />
-                    <div className="font-semibold text-sm text-card-foreground font-body mb-1">Reinvest</div>
+                    <div className="font-semibold text-sm text-card-foreground font-body mb-1">
+                      Reinvest
+                    </div>
                     <div className="text-xs text-secondary font-body leading-relaxed">
                       Freed allocation is split across your active goals — they complete faster.
                     </div>
                   </button>
 
                   <button
-                    onClick={() => setSelectedAction("surplus")}
+                    onClick={() => setSelectedAction('surplus')}
                     className="text-left p-4 rounded-xl border transition-all"
                     style={{
-                      background: selectedAction === "surplus" ? 'var(--accent-subtle)' : 'var(--surface-tint)',
-                      borderColor: selectedAction === "surplus" ? 'var(--accent)' : 'var(--border)',
-                      borderWidth: selectedAction === "surplus" ? '2px' : '1px',
+                      background:
+                        selectedAction === 'surplus'
+                          ? 'var(--accent-subtle)'
+                          : 'var(--surface-tint)',
+                      borderColor: selectedAction === 'surplus' ? 'var(--accent)' : 'var(--border)',
+                      borderWidth: selectedAction === 'surplus' ? '2px' : '1px',
                     }}
                   >
                     <Wallet
                       size={20}
                       className="icon-wireframe mb-2"
-                      style={{ color: selectedAction === "surplus" ? 'var(--accent)' : 'var(--card-foreground)' }}
+                      style={{
+                        color:
+                          selectedAction === 'surplus' ? 'var(--accent)' : 'var(--card-foreground)',
+                      }}
                     />
-                    <div className="font-semibold text-sm text-card-foreground font-body mb-1">Keep as Surplus</div>
+                    <div className="font-semibold text-sm text-card-foreground font-body mb-1">
+                      Keep as Surplus
+                    </div>
                     <div className="text-xs text-secondary font-body leading-relaxed">
                       Held as monthly surplus — grows your net worth directly.
                     </div>
@@ -426,7 +454,7 @@ function AppContent() {
                       Applying…
                     </>
                   ) : (
-                    "Confirm"
+                    'Confirm'
                   )}
                 </button>
 
