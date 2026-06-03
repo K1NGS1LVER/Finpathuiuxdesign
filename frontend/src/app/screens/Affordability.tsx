@@ -19,6 +19,7 @@ import {
   BookmarkCheck,
   X,
   Star,
+  Tag,
 } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
 import type { Dream } from '@/lib/types';
@@ -221,9 +222,14 @@ export default function Affordability() {
   const monthlyReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const investmentReturnRate = useFinPathStore((s) => s.investmentReturnRate);
   const demoMode = useFinPathStore((s) => s.demoMode ?? false);
+  const ageYears = useFinPathStore((s) => s.ageYears);
+  const primaryIncome = useFinPathStore((s) => s.income.primary);
   const dreams = useFinPathStore((s) => s.dreams ?? []);
   const saveDream = useFinPathStore((s) => s.saveDream);
   const removeDream = useFinPathStore((s) => s.removeDream);
+
+  // Infer employment type: has primary salary → salaried, else self-employed
+  const employmentType = primaryIncome > 0 ? ('salaried' as const) : ('self_employed' as const);
 
   // Pre-fill from URL params, or demo seed when no params present
   const paramName = searchParams.get('name');
@@ -250,6 +256,13 @@ export default function Affordability() {
 
   const hasInput = targetCost > 0;
 
+  // Contextual asset offset (local state — not persisted)
+  const [assetName, setAssetName] = useState('');
+  const [assetValueRaw, setAssetValueRaw] = useState('');
+  const debouncedAssetValue = useDebouncedValue(assetValueRaw, 150);
+  const assetValue = parseFloat(debouncedAssetValue) || 0;
+  const effectiveTargetCost = Math.max(0, targetCost - assetValue);
+
   // Re-run engine for each saved dream against current profile
   const rankedDreams = useMemo(() => {
     const VERDICT_ORDER = { affordable_now: 0, affordable_later: 1, not_affordable: 2 } as const;
@@ -266,6 +279,8 @@ export default function Affordability() {
           investmentReturnRate,
           annualInterestRate: d.annualInterestRate,
           tenureMonths: d.tenureMonths,
+          ageYears,
+          employmentType,
         }),
       }))
       .sort((a, b) => VERDICT_ORDER[a.liveResult.verdict] - VERDICT_ORDER[b.liveResult.verdict]);
@@ -314,7 +329,7 @@ export default function Affordability() {
   const result = useMemo<AffordabilityResult | null>(() => {
     if (!hasInput) return null;
     return runAffordability({
-      targetCost,
+      targetCost: effectiveTargetCost,
       route,
       netMonthlyIncome,
       monthlyExpenses,
@@ -323,9 +338,11 @@ export default function Affordability() {
       investmentReturnRate,
       annualInterestRate: annualRate,
       tenureMonths: tenure,
+      ageYears,
+      employmentType,
     });
   }, [
-    targetCost,
+    effectiveTargetCost,
     route,
     netMonthlyIncome,
     monthlyExpenses,
@@ -334,6 +351,8 @@ export default function Affordability() {
     investmentReturnRate,
     annualRate,
     tenure,
+    ageYears,
+    employmentType,
     hasInput,
   ]);
 
@@ -721,6 +740,73 @@ export default function Affordability() {
             </p>
           )}
 
+          {/* Asset offset — shown when there's a gap */}
+          {result.gap > 0 && (
+            <div
+              style={{
+                marginTop: '0.75rem',
+                padding: '10px 12px',
+                borderRadius: 10,
+                background: 'var(--surface-tint)',
+                border: '1px solid var(--border)',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--secondary)',
+                  marginBottom: 8,
+                  fontWeight: 'var(--font-weight-semibold)',
+                  textTransform: 'uppercase',
+                  letterSpacing: 'var(--tracking-widest-sm)',
+                }}
+              >
+                Selling an asset?
+              </p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Asset name (e.g. Old Bike)"
+                  value={assetName}
+                  onChange={(e) => setAssetName(e.target.value)}
+                  style={{
+                    flex: '2 1 140px',
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--card)',
+                    color: 'var(--foreground)',
+                    fontSize: 'var(--text-sm)',
+                    outline: 'none',
+                  }}
+                />
+                <input
+                  type="number"
+                  placeholder="Value (₹)"
+                  min={0}
+                  value={assetValueRaw}
+                  onChange={(e) => setAssetValueRaw(e.target.value)}
+                  style={{
+                    flex: '1 1 100px',
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--card)',
+                    color: 'var(--foreground)',
+                    fontSize: 'var(--text-sm)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+              {assetValue > 0 && (
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--green)', marginTop: 6 }}>
+                  Reduces target by {formatInr(assetValue)} → effective cost{' '}
+                  {formatInr(effectiveTargetCost)}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Gap bar */}
           {(result.gap > 0 || result.monthlySurplus > 0) && (
             <GapBar surplus={Math.max(0, result.monthlySurplus)} gap={result.gap} />
@@ -772,17 +858,33 @@ export default function Affordability() {
       )}
 
       {/* ── Levers zone ── */}
-      {result && result.levers.length > 0 && (
+      {result && (result.levers.length > 0 || assetValue > 0) && (
         <motion.div variants={pageSection} className="bento-card" style={{ marginBottom: '1rem' }}>
           <p className="text-label" style={{ marginBottom: '0.75rem' }}>
             Ways to close the gap
           </p>
           <motion.div
-            variants={{ animate: cappedStagger(result.levers.length) }}
+            variants={{ animate: cappedStagger(result.levers.length + (assetValue > 0 ? 1 : 0)) }}
             initial="initial"
             animate="animate"
             style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
           >
+            {/* Sell asset lever — synthetic, always first */}
+            {assetValue > 0 && (
+              <motion.div variants={cardEntry}>
+                <RecommendationCard
+                  observation={`${assetName || 'An asset'} worth ${formatInr(assetValue)} can offset the cost directly.`}
+                  action={`Sell ${assetName || 'the asset'} and put ${formatInr(assetValue)} toward ${dreamName || 'this dream'}.`}
+                  impact={
+                    effectiveTargetCost <= 0
+                      ? 'Fully covers the cost — no savings needed.'
+                      : `Reduces the target to ${formatInr(effectiveTargetCost)}.`
+                  }
+                  tone="positive"
+                  icon="Tag"
+                />
+              </motion.div>
+            )}
             {result.levers.map((lever, i) => {
               const copy = leverCopy(lever, netMonthlyIncome);
               return (

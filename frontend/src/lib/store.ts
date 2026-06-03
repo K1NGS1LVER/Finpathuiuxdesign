@@ -71,6 +71,7 @@ const defaultProfile: FinancialProfile = {
   milestones: [],
   demoMode: false,
   dreams: [],
+  ageYears: undefined,
 };
 
 const safeStorage = createJSONStorage(() => ({
@@ -175,6 +176,9 @@ interface FinPathStore extends FinancialProfile {
   // ── Dreams ───────────────────────────────────────
   saveDream: (dream: Dream) => void;
   removeDream: (id: string) => void;
+
+  // ── Profile ──────────────────────────────────────
+  setAgeYears: (age: number | undefined) => void;
 
   // ── Demo path ────────────────────────────────────
   loadDemoProfile: () => void;
@@ -1006,6 +1010,8 @@ export const useFinPathStore = create<FinPathStore>()(
           lastUpdated: Date.now(),
         })),
 
+      setAgeYears: (age) => set({ ageYears: age, lastUpdated: Date.now() }),
+
       loadDemoProfile: () => {
         const { milestones, dreams, ...profileFields } = demoFinancialProfile;
         get().replaceProfile(profileFields);
@@ -1016,7 +1022,7 @@ export const useFinPathStore = create<FinPathStore>()(
     }),
     {
       name: 'finpath-store',
-      version: 8,
+      version: 9,
       storage: safeStorage,
       partialize: (state) => {
         const { pdfExporting: _exporting, ...rest } = state;
@@ -1067,6 +1073,9 @@ export const useFinPathStore = create<FinPathStore>()(
         }
         if (version < 8 && persistedState) {
           persistedState.dreams = persistedState.dreams ?? [];
+        }
+        if (version < 9 && persistedState) {
+          persistedState.ageYears = persistedState.ageYears ?? undefined;
         }
         return persistedState;
       },
