@@ -20,11 +20,12 @@ import type {
   GoalCompletionDecision,
   StorageMode,
   Milestone,
+  Dream,
 } from './types';
 import { calculateHealthScore } from './health-score';
 import { generatePlan } from './plan-engine';
 import { appendMilestone } from './sparks';
-import { demoFinancialProfile, demoMilestones } from './fixtures/demoProfile';
+import { demoFinancialProfile, demoMilestones, demoDreams } from './fixtures/demoProfile';
 
 /** Default empty profile */
 const defaultProfile: FinancialProfile = {
@@ -69,6 +70,7 @@ const defaultProfile: FinancialProfile = {
   debtGoalDeleted: false,
   milestones: [],
   demoMode: false,
+  dreams: [],
 };
 
 const safeStorage = createJSONStorage(() => ({
@@ -169,6 +171,10 @@ interface FinPathStore extends FinancialProfile {
 
   // ── Milestones (Sparks ledger) ───────────────────
   setMilestones: (milestones: Milestone[]) => void;
+
+  // ── Dreams ───────────────────────────────────────
+  saveDream: (dream: Dream) => void;
+  removeDream: (id: string) => void;
 
   // ── Demo path ────────────────────────────────────
   loadDemoProfile: () => void;
@@ -989,17 +995,28 @@ export const useFinPathStore = create<FinPathStore>()(
 
       setMilestones: (milestones) => set({ milestones, lastUpdated: Date.now() }),
 
+      saveDream: (dream) =>
+        set((s) => ({
+          dreams: [dream, ...(s.dreams ?? []).filter((d) => d.id !== dream.id)].slice(0, 10),
+          lastUpdated: Date.now(),
+        })),
+      removeDream: (id) =>
+        set((s) => ({
+          dreams: (s.dreams ?? []).filter((d) => d.id !== id),
+          lastUpdated: Date.now(),
+        })),
+
       loadDemoProfile: () => {
-        const { milestones, ...profileFields } = demoFinancialProfile;
+        const { milestones, dreams, ...profileFields } = demoFinancialProfile;
         get().replaceProfile(profileFields);
-        set({ milestones, demoMode: true, lastUpdated: Date.now() });
+        set({ milestones, dreams: dreams ?? demoDreams, demoMode: true, lastUpdated: Date.now() });
       },
 
       resetProfile: () => set({ ...defaultProfile }),
     }),
     {
       name: 'finpath-store',
-      version: 7,
+      version: 8,
       storage: safeStorage,
       partialize: (state) => {
         const { pdfExporting: _exporting, ...rest } = state;
@@ -1047,6 +1064,9 @@ export const useFinPathStore = create<FinPathStore>()(
                 (inc.passive || 0) +
                 (inc.variable || 0),
             );
+        }
+        if (version < 8 && persistedState) {
+          persistedState.dreams = persistedState.dreams ?? [];
         }
         return persistedState;
       },
