@@ -116,7 +116,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
 
   const monthlyInvestmentFactor = 1 + investmentReturnRate / 100 / 12;
 
-  const effectiveIncome = income.netMonthly ?? income.total;
+  const effectiveIncome = income.netMonthly || income.total;
   const monthlyExpensesDeduplicated = Math.max(0, expenses.total - debts.totalMonthly);
   const monthlySurplus = effectiveIncome - monthlyExpensesDeduplicated - debts.totalMonthly;
   const reservedSurplus = Math.max(0, monthlySurplusReserve);
@@ -128,7 +128,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
 
   let cumulativeSavings = savings;
   let cumulativeInvestments = investments;
-  let currentIncomeTotal = income.netMonthly ?? income.total;
+  let currentIncomeTotal = income.netMonthly || income.total;
   let curPrimary = income.primary;
   let curSecondary = income.secondary;
   let curPassive = income.passive;
@@ -144,7 +144,7 @@ export function generatePlan(input: PlanInput): FinancialPlan {
   const allGoalsComplete = () =>
     goals.every((g) => goalProgress[g.id] >= g.targetAmount || g.status === 'complete');
 
-  const isDebtOverIncome = debts.totalMonthly > income.total - expenses.total;
+  const isDebtOverIncome = debts.totalMonthly > effectiveIncome - expenses.total;
 
   for (let m = 0; m < maxMonths; m++) {
     const milestones: string[] = [];

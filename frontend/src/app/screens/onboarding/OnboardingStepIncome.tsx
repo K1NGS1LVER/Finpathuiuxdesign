@@ -184,7 +184,7 @@ export default function OnboardingStepIncome({
                         fontSize: 'var(--text-xs)',
                         fontWeight: 'var(--font-weight-semibold)',
                         background: !isCTC ? 'var(--accent)' : 'transparent',
-                        color: !isCTC ? '#fff' : 'var(--secondary)',
+                        color: !isCTC ? 'var(--on-accent)' : 'var(--secondary)',
                       }}
                     >
                       In-hand
@@ -197,7 +197,7 @@ export default function OnboardingStepIncome({
                         fontSize: 'var(--text-xs)',
                         fontWeight: 'var(--font-weight-semibold)',
                         background: isCTC ? 'var(--accent)' : 'transparent',
-                        color: isCTC ? '#fff' : 'var(--secondary)',
+                        color: isCTC ? 'var(--on-accent)' : 'var(--secondary)',
                       }}
                     >
                       CTC
