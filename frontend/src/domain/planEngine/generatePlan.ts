@@ -15,7 +15,8 @@ import type {
   MonthlyPlan,
   FinancialPlan,
   InvestmentStrategy,
-} from "@/lib/types";
+} from '@/lib/types';
+import { monthlyCompound } from '@/lib/math/finance';
 
 export interface PlanInput {
   income: IncomeProfile;
@@ -36,7 +37,7 @@ export interface PlanInput {
 function monthToDateStr(offset: number): string {
   const now = new Date();
   const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-  return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+  return d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
 }
 
 /**
@@ -46,14 +47,12 @@ function monthToDateStr(offset: number): string {
 function allocateSurplus(
   surplus: number,
   goals: Goal[],
-  strategy: InvestmentStrategy = "avalanche",
+  strategy: InvestmentStrategy = 'avalanche',
 ): Record<string, number> {
   const allocations: Record<string, number> = {};
 
   // Debt goals track required debt payments that are already removed from surplus.
-  const activeGoals = goals.filter(
-    (g) => g.status !== "complete" && g.category !== "debt",
-  );
+  const activeGoals = goals.filter((g) => g.status !== 'complete' && g.category !== 'debt');
   if (activeGoals.length === 0 || surplus <= 0) return allocations;
 
   // Calculate weight for each goal based on strategy, priority and urgency
@@ -68,15 +67,14 @@ function allocateSurplus(
     const priorityWeight = 1 / (goal.priority || 1);
 
     // Urgency weight: shorter timeline = more urgent
-    const urgencyWeight =
-      goal.timelineMonths > 0 ? 1 / Math.sqrt(goal.timelineMonths) : 0.5;
+    const urgencyWeight = goal.timelineMonths > 0 ? 1 / Math.sqrt(goal.timelineMonths) : 0.5;
 
     // Strategy modifier
     let strategyModifier = 1;
-    if (strategy === "snowball") {
+    if (strategy === 'snowball') {
       // Snowball: prioritize smaller remaining balances (quick wins)
       strategyModifier = 100000 / (remaining + 1000);
-    } else if (strategy === "avalanche") {
+    } else if (strategy === 'avalanche') {
       // Avalanche: prioritize high priority and high urgency
       strategyModifier = priorityWeight > 0.5 ? 2 : 1;
     }
@@ -110,30 +108,28 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     goals,
     savings,
     investments,
-    strategy = "avalanche",
+    strategy = 'avalanche',
     monthlySurplusReserve = 0,
     pendingReallocationReserve = 0,
     stepUpEnabled = false,
     investmentReturnRate = 12,
   } = input;
 
-  const monthlyInvestmentFactor = 1 + (investmentReturnRate / 100) / 12;
+  // Compounding is applied per-month via monthlyCompound(cumulativeInvestments, investmentReturnRate, 1)
 
+  const effectiveIncome = income.netMonthly || income.total;
   const monthlyExpensesDeduplicated = Math.max(0, expenses.total - debts.totalMonthly);
-  const monthlySurplus = income.total - monthlyExpensesDeduplicated - debts.totalMonthly;
+  const monthlySurplus = effectiveIncome - monthlyExpensesDeduplicated - debts.totalMonthly;
   const reservedSurplus = Math.max(0, monthlySurplusReserve);
   const pendingSurplus = Math.max(0, pendingReallocationReserve);
-  const availableForGoals = Math.max(
-    0,
-    monthlySurplus - reservedSurplus - pendingSurplus,
-  );
+  const availableForGoals = Math.max(0, monthlySurplus - reservedSurplus - pendingSurplus);
   const maxMonths = 120;
   const months: MonthlyPlan[] = [];
   const goalCompletionDates: Record<string, string> = {};
 
   let cumulativeSavings = savings;
   let cumulativeInvestments = investments;
-  let currentIncomeTotal = income.total;
+  let currentIncomeTotal = income.netMonthly || income.total;
   let curPrimary = income.primary;
   let curSecondary = income.secondary;
   let curPassive = income.passive;
@@ -144,49 +140,45 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     goalProgress[goal.id] = goal.currentAmount;
   }
 
-  const recommendedAllocations = allocateSurplus(
-    availableForGoals,
-    goals,
-    strategy,
-  );
+  const recommendedAllocations = allocateSurplus(availableForGoals, goals, strategy);
 
   const allGoalsComplete = () =>
-    goals.every(
-      (g) => goalProgress[g.id] >= g.targetAmount || g.status === "complete",
-    );
+    goals.every((g) => goalProgress[g.id] >= g.targetAmount || g.status === 'complete');
 
-  const isDebtOverIncome = debts.totalMonthly > income.total - expenses.total;
+  const isDebtOverIncome = debts.totalMonthly > effectiveIncome - expenses.total;
 
   for (let m = 0; m < maxMonths; m++) {
     const milestones: string[] = [];
     if (m === 0 && isDebtOverIncome) {
-      milestones.push(`Warning: Your debt payments (₹${debts.totalMonthly.toLocaleString("en-IN")}/mo) exceed your available income. Consider restructuring.`);
+      milestones.push(
+        `Warning: Your debt payments (₹${debts.totalMonthly.toLocaleString('en-IN')}/mo) exceed your available income. Consider restructuring.`,
+      );
     }
 
     if (m > 0 && m % 12 === 0) {
       const pInc = income.primaryIncrement || income.expectedAnnualIncrement || 0;
       const sInc = income.secondaryIncrement || 0;
       const paInc = income.passiveIncrement || 0;
-      if (pInc > 0) curPrimary *= (1 + pInc / 100);
-      if (sInc > 0) curSecondary *= (1 + sInc / 100);
-      if (paInc > 0) curPassive *= (1 + paInc / 100);
-      const curVariable = Math.round(curPassive * income.variablePercent / 100);
-      currentIncomeTotal = curPrimary + curSecondary + curPassive + curVariable;
+      if (pInc > 0) curPrimary *= 1 + pInc / 100;
+      if (sInc > 0) curSecondary *= 1 + sInc / 100;
+      if (paInc > 0) curPassive *= 1 + paInc / 100;
+      const curVariable = Math.round((curPassive * income.variablePercent) / 100);
+      const netRate = income.netRate ?? 1.0;
+      currentIncomeTotal =
+        Math.round(curPrimary * netRate) + curSecondary + curPassive + curVariable;
       if (pInc > 0 || sInc > 0 || paInc > 0) {
         milestones.push(`Annual income increment applied`);
       }
     }
 
-    const currentMonthlySurplus = currentIncomeTotal - monthlyExpensesDeduplicated - debts.totalMonthly;
+    const currentMonthlySurplus =
+      currentIncomeTotal - monthlyExpensesDeduplicated - debts.totalMonthly;
     const surplus = Math.max(0, currentMonthlySurplus);
     const monthlyReservedSurplus = Math.min(surplus, reservedSurplus);
     const afterReserved = Math.max(0, surplus - monthlyReservedSurplus);
     const monthlyPendingSurplus = Math.min(afterReserved, pendingSurplus);
 
-    let allocatableSurplus = Math.max(
-      0,
-      afterReserved - monthlyPendingSurplus,
-    );
+    let allocatableSurplus = Math.max(0, afterReserved - monthlyPendingSurplus);
 
     if (!stepUpEnabled) {
       allocatableSurplus = Math.min(allocatableSurplus, baseAllocatableSurplus);
@@ -201,16 +193,13 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     let totalAllocated = 0;
     for (const goal of goals) {
       let allocation = allocations[goal.id] || 0;
-      if (goal.category === "debt") {
+      if (goal.category === 'debt') {
         allocation += goal.monthlyAllocation;
       }
       goalProgress[goal.id] += allocation;
-      totalAllocated += (goal.category === "debt" ? 0 : allocation);
+      totalAllocated += goal.category === 'debt' ? 0 : allocation;
 
-      if (
-        goalProgress[goal.id] >= goal.targetAmount &&
-        !goalCompletionDates[goal.id]
-      ) {
+      if (goalProgress[goal.id] >= goal.targetAmount && !goalCompletionDates[goal.id]) {
         goalProgress[goal.id] = goal.targetAmount;
         goalCompletionDates[goal.id] = monthToDateStr(m + 1);
         milestones.push(`${goal.name} completed!`);
@@ -221,12 +210,12 @@ export function generatePlan(input: PlanInput): FinancialPlan {
     cumulativeSavings += Math.max(0, unallocatedSurplus);
     cumulativeSavings += monthlyReservedSurplus;
 
-    cumulativeInvestments *= monthlyInvestmentFactor;
+    cumulativeInvestments = monthlyCompound(cumulativeInvestments, investmentReturnRate, 1);
 
     let nonDebtGoalProgress = 0;
     let outstandingDebt = 0;
     for (const goal of goals) {
-      if (goal.category === "debt") {
+      if (goal.category === 'debt') {
         outstandingDebt += Math.max(0, goal.targetAmount - goalProgress[goal.id]);
       } else {
         nonDebtGoalProgress += goalProgress[goal.id];

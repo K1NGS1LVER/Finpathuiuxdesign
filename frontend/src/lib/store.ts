@@ -3,8 +3,8 @@
 // Single source of truth for the entire app
 // ============================================================
 
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
   FinancialProfile,
   IncomeProfile,
@@ -20,19 +20,28 @@ import type {
   GoalCompletionDecision,
   StorageMode,
   Milestone,
-} from "./types";
-import { calculateHealthScore } from "./health-score";
-import { generatePlan } from "./plan-engine";
-import { appendMilestone } from "./sparks";
-import {
-  demoFinancialProfile,
-  demoMilestones,
-} from "./fixtures/demoProfile";
+} from './types';
+import { calculateHealthScore } from './health-score';
+import { generatePlan } from './plan-engine';
+import { appendMilestone } from './sparks';
+import { demoFinancialProfile, demoMilestones } from './fixtures/demoProfile';
 
 /** Default empty profile */
 const defaultProfile: FinancialProfile = {
   onboarded: false,
-  income: { primary: 0, secondary: 0, passive: 0, variablePercent: 0, variable: 0, total: 0, primaryIncrement: 0, secondaryIncrement: 0, passiveIncrement: 0 },
+  income: {
+    primary: 0,
+    secondary: 0,
+    passive: 0,
+    variablePercent: 0,
+    variable: 0,
+    total: 0,
+    primaryIncrement: 0,
+    secondaryIncrement: 0,
+    passiveIncrement: 0,
+    netRate: 1.0,
+    netMonthly: 0,
+  },
   expenses: {
     rent: 0,
     food: 0,
@@ -50,13 +59,13 @@ const defaultProfile: FinancialProfile = {
   healthScore: null,
   plan: null,
   chatHistory: [],
-  currency: "INR",
-  strategy: "avalanche",
+  currency: 'INR',
+  strategy: 'avalanche',
   monthlySurplusReserve: 0,
   pendingGoalDecisions: [],
   lastUpdated: Date.now(),
   investmentReturnRate: 12,
-  storageMode: "local",
+  storageMode: 'local',
   debtGoalDeleted: false,
   milestones: [],
   demoMode: false,
@@ -67,7 +76,7 @@ const safeStorage = createJSONStorage(() => ({
     try {
       return localStorage.getItem(name);
     } catch (e) {
-      console.warn("localStorage.getItem failed", e);
+      console.warn('localStorage.getItem failed', e);
       return null;
     }
   },
@@ -75,19 +84,19 @@ const safeStorage = createJSONStorage(() => ({
     try {
       localStorage.setItem(name, value);
     } catch (e) {
-      console.warn("localStorage.setItem failed (quota exceeded?)", e);
+      console.warn('localStorage.setItem failed (quota exceeded?)', e);
     }
   },
   removeItem: (name: string) => {
     try {
       localStorage.removeItem(name);
     } catch (e) {
-      console.warn("localStorage.removeItem failed", e);
+      console.warn('localStorage.removeItem failed', e);
     }
   },
 }));
 
-const DEBT_GOAL_ID = "goal-debt-payoff";
+const DEBT_GOAL_ID = 'goal-debt-payoff';
 
 interface FinPathStore extends FinancialProfile {
   // ── Profile setters ────────────────────────────────────
@@ -109,10 +118,7 @@ interface FinPathStore extends FinancialProfile {
    * Replace the financial profile wholesale (used by remote hydration
    * and JSON import). Skips recompute when `recompute=false`.
    */
-  replaceProfile: (
-    next: Partial<FinancialProfile>,
-    opts?: { recompute?: boolean },
-  ) => void;
+  replaceProfile: (next: Partial<FinancialProfile>, opts?: { recompute?: boolean }) => void;
 
   // ── Goal management ──────────────────────────────────
   setGoals: (goals: Goal[]) => void;
@@ -121,10 +127,7 @@ interface FinPathStore extends FinancialProfile {
   removeGoal: (id: string) => void;
   completeGoal: (id: string) => void;
   addLumpsum: (goalId: string, amount: number) => void;
-  resolveGoalCompletionDecision: (
-    goalId: string,
-    action: GoalCompletionAction,
-  ) => void;
+  resolveGoalCompletionDecision: (goalId: string, action: GoalCompletionAction) => void;
 
   // ── Engines ──────────────────────────────────────
   computeHealthScore: () => HealthScore;
@@ -143,6 +146,7 @@ interface FinPathStore extends FinancialProfile {
     primaryIncrement?: number;
     secondaryIncrement?: number;
     passiveIncrement?: number;
+    netRate?: number;
     expenses: number;
     debts: number;
     goals: { name: string; targetAmount?: number; priority?: number }[];
@@ -180,71 +184,71 @@ interface FinPathStore extends FinancialProfile {
 /** Map goal name from onboarding to a Goal object */
 function goalNameToGoal(name: string, index: number): Goal {
   const goalConfigs: Record<string, Partial<Goal>> = {
-    "Dream Bike": {
-      category: "bike",
-      icon: "Bike",
+    'Dream Bike': {
+      category: 'bike',
+      icon: 'Bike',
       targetAmount: 120000,
       timelineMonths: 18,
-      color: "var(--accent)",
+      color: 'var(--accent)',
     },
     Investment: {
-      category: "investment",
-      icon: "TrendingUp",
+      category: 'investment',
+      icon: 'TrendingUp',
       targetAmount: 500000,
       timelineMonths: 36,
-      color: "var(--tertiary-accent)",
+      color: 'var(--tertiary-accent)',
     },
-    "Emergency Fund": {
-      category: "savings",
-      icon: "Shield",
+    'Emergency Fund': {
+      category: 'savings',
+      icon: 'Shield',
       targetAmount: 300000,
       timelineMonths: 24,
-      color: "var(--tertiary-accent)",
+      color: 'var(--tertiary-accent)',
     },
     Wedding: {
-      category: "family",
-      icon: "Heart",
+      category: 'family',
+      icon: 'Heart',
       targetAmount: 500000,
       timelineMonths: 24,
-      color: "var(--amber)",
+      color: 'var(--amber)',
     },
     Vacation: {
-      category: "travel",
-      icon: "Plane",
+      category: 'travel',
+      icon: 'Plane',
       targetAmount: 50000,
       timelineMonths: 6,
-      color: "var(--accent)",
+      color: 'var(--accent)',
     },
-    "Upskill Course": {
-      category: "education",
-      icon: "GraduationCap",
+    'Upskill Course': {
+      category: 'education',
+      icon: 'GraduationCap',
       targetAmount: 100000,
       timelineMonths: 12,
-      color: "var(--tertiary-accent)",
+      color: 'var(--tertiary-accent)',
     },
     Custom: {
-      category: "custom",
-      icon: "Target",
+      category: 'custom',
+      icon: 'Target',
       targetAmount: 100000,
       timelineMonths: 12,
-      color: "var(--tertiary-accent)",
+      color: 'var(--tertiary-accent)',
     },
   };
 
-  const config = goalConfigs[name] || goalConfigs["Custom"]!;
+  const config = goalConfigs[name] || goalConfigs['Custom']!;
 
   return {
     id: `goal-${Date.now()}-${index}`,
     name,
-    icon: config.icon || "Target",
-    category: config.category || "custom",
+    icon: config.icon || 'Target',
+    category: config.category || 'custom',
     targetAmount: config.targetAmount || 100000,
     currentAmount: 0,
     timelineMonths: config.timelineMonths || 12,
     priority: index + 1,
-    status: "not-started",
+    status: 'not-started',
     monthlyAllocation: 0,
-    color: config.color || "var(--accent)",
+    color: config.color || 'var(--accent)',
   };
 }
 
@@ -290,9 +294,7 @@ function normalizeDebtProfile(debts: DebtProfile): DebtProfile {
   const totalMonthly = Math.max(0, debts.totalMonthly || 0);
 
   if (debts.items.length === 0) {
-    return totalMonthly > 0
-      ? { items: [], totalMonthly }
-      : emptyDebtProfile();
+    return totalMonthly > 0 ? { items: [], totalMonthly } : emptyDebtProfile();
   }
 
   const activeItems = debts.items.filter(
@@ -319,42 +321,31 @@ function normalizeDebtProfile(debts: DebtProfile): DebtProfile {
 }
 
 function isDebtGoalComplete(goal: Goal | undefined): boolean {
-  return !!(goal && goal.category === "debt" && goal.status === "complete");
+  return !!(goal && goal.category === 'debt' && goal.status === 'complete');
 }
 
 function resolveDebtsFromGoals(debts: DebtProfile, _goals: Goal[]): DebtProfile {
   return normalizeDebtProfile(debts);
 }
 
-function makeDebtGoal(
-  debts: DebtProfile,
-  existingGoal: Goal | undefined,
-  priority: number,
-): Goal {
+function makeDebtGoal(debts: DebtProfile, existingGoal: Goal | undefined, priority: number): Goal {
   const targetAmount = Math.max(1, getDebtGoalTarget(debts));
-  const currentAmount = Math.min(
-    targetAmount,
-    Math.max(0, existingGoal?.currentAmount || 0),
-  );
-  const status: Goal["status"] =
-    currentAmount >= targetAmount
-      ? "complete"
-      : currentAmount > 0
-        ? "in-progress"
-        : "not-started";
+  const currentAmount = Math.min(targetAmount, Math.max(0, existingGoal?.currentAmount || 0));
+  const status: Goal['status'] =
+    currentAmount >= targetAmount ? 'complete' : currentAmount > 0 ? 'in-progress' : 'not-started';
 
   return {
     id: DEBT_GOAL_ID,
-    name: "Debt Payoff (1yr Est.)",
-    icon: "CreditCard",
-    category: "debt",
+    name: 'Debt Payoff (1yr Est.)',
+    icon: 'CreditCard',
+    category: 'debt',
     targetAmount,
     currentAmount,
     timelineMonths: Math.max(1, getDebtGoalTimeline(debts)),
     priority: existingGoal?.priority || priority,
     status,
     monthlyAllocation: Math.max(0, debts.totalMonthly || 0),
-    color: "var(--red)",
+    color: 'var(--red)',
     checkedThisMonth: existingGoal?.checkedThisMonth,
     lumpsumAdded: existingGoal?.lumpsumAdded,
   };
@@ -368,25 +359,18 @@ function syncDebtGoal(goals: Goal[], debts: DebtProfile, debtGoalDeleted?: boole
     return goalsWithoutDebt;
   }
 
-  const activeCount = goalsWithoutDebt.filter(
-    (goal) => goal.status !== "complete",
-  ).length;
+  const activeCount = goalsWithoutDebt.filter((goal) => goal.status !== 'complete').length;
 
-  return [
-    makeDebtGoal(debts, existingDebtGoal, activeCount + 1),
-    ...goalsWithoutDebt,
-  ];
+  return [makeDebtGoal(debts, existingDebtGoal, activeCount + 1), ...goalsWithoutDebt];
 }
 
 /** Keep active goal priorities contiguous (1..N) after add/remove/reorder actions. */
 function normalizeActiveGoalPriorities(goals: Goal[]): Goal[] {
   const activeGoals = goals
-    .filter((g) => g.status !== "complete")
+    .filter((g) => g.status !== 'complete')
     .slice()
     .sort(
-      (a, b) =>
-        (a.priority || Number.MAX_SAFE_INTEGER) -
-        (b.priority || Number.MAX_SAFE_INTEGER),
+      (a, b) => (a.priority || Number.MAX_SAFE_INTEGER) - (b.priority || Number.MAX_SAFE_INTEGER),
     );
 
   const priorityById = new Map<string, number>();
@@ -396,7 +380,7 @@ function normalizeActiveGoalPriorities(goals: Goal[]): Goal[] {
 
   return goals.map((goal) => {
     const nextPriority = priorityById.get(goal.id);
-    return typeof nextPriority === "number"
+    return typeof nextPriority === 'number'
       ? { ...goal, priority: nextPriority }
       : { ...goal, priority: 0 };
   });
@@ -434,7 +418,11 @@ export const useFinPathStore = create<FinPathStore>()(
       setPdfExporting: (b: boolean) => set({ pdfExporting: b }),
 
       setIncome: (income) => {
-        set({ income, lastUpdated: Date.now() });
+        const netRate = income.netRate ?? get().income.netRate ?? 1.0;
+        const netMonthly = Math.round(
+          income.primary * netRate + income.secondary + income.passive + income.variable,
+        );
+        set({ income: { ...income, netRate, netMonthly }, lastUpdated: Date.now() });
         const store = get();
         store.computeHealthScore();
         store.generatePlan();
@@ -450,7 +438,11 @@ export const useFinPathStore = create<FinPathStore>()(
         set((s) => ({
           debts: nextDebts,
           goals: normalizeActiveGoalPriorities(
-            syncDebtGoal(s.goals, nextDebts, hasDebt(nextDebts) ? (s.debtGoalDeleted ?? false) : false),
+            syncDebtGoal(
+              s.goals,
+              nextDebts,
+              hasDebt(nextDebts) ? (s.debtGoalDeleted ?? false) : false,
+            ),
           ),
           debtGoalDeleted: hasDebt(nextDebts) ? (s.debtGoalDeleted ?? false) : false,
           lastUpdated: Date.now(),
@@ -469,9 +461,7 @@ export const useFinPathStore = create<FinPathStore>()(
           });
           return {
             debts: nextDebts,
-            goals: normalizeActiveGoalPriorities(
-              syncDebtGoal(s.goals, nextDebts, false),
-            ),
+            goals: normalizeActiveGoalPriorities(syncDebtGoal(s.goals, nextDebts, false)),
             debtGoalDeleted: false,
             lastUpdated: Date.now(),
           };
@@ -504,9 +494,7 @@ export const useFinPathStore = create<FinPathStore>()(
           const nextDebts = resolveDebtsFromGoals(s.debts, goals);
           return {
             debts: nextDebts,
-            goals: normalizeActiveGoalPriorities(
-              syncDebtGoal(goals, nextDebts, s.debtGoalDeleted),
-            ),
+            goals: normalizeActiveGoalPriorities(syncDebtGoal(goals, nextDebts, s.debtGoalDeleted)),
             lastUpdated: Date.now(),
           };
         });
@@ -515,9 +503,7 @@ export const useFinPathStore = create<FinPathStore>()(
       },
       addGoal: (goal) => {
         set((s) => {
-          const activeCount = s.goals.filter(
-            (g) => g.status !== "complete",
-          ).length;
+          const activeCount = s.goals.filter((g) => g.status !== 'complete').length;
           const goalWithPriority = {
             ...goal,
             priority: goal.priority > 0 ? goal.priority : activeCount + 1,
@@ -542,33 +528,26 @@ export const useFinPathStore = create<FinPathStore>()(
 
           const mergedGoal = { ...existingGoal, ...updates };
           const nextTarget =
-            typeof mergedGoal.targetAmount === "number" &&
-            mergedGoal.targetAmount > 0
+            typeof mergedGoal.targetAmount === 'number' && mergedGoal.targetAmount > 0
               ? mergedGoal.targetAmount
               : existingGoal.targetAmount;
           const nextAmount = Math.min(
             nextTarget,
             Math.max(
               0,
-              typeof mergedGoal.currentAmount === "number"
+              typeof mergedGoal.currentAmount === 'number'
                 ? mergedGoal.currentAmount
                 : existingGoal.currentAmount,
             ),
           );
-          const shouldComplete =
-            mergedGoal.status === "complete" || nextAmount >= nextTarget;
+          const shouldComplete = mergedGoal.status === 'complete' || nextAmount >= nextTarget;
 
-          const nextStatus: Goal["status"] = shouldComplete
-            ? "complete"
-            : mergedGoal.status ||
-              (nextAmount > 0 ? "in-progress" : "not-started");
+          const nextStatus: Goal['status'] = shouldComplete
+            ? 'complete'
+            : mergedGoal.status || (nextAmount > 0 ? 'in-progress' : 'not-started');
 
-          const previousAllocation = Math.max(
-            0,
-            existingGoal.monthlyAllocation || 0,
-          );
-          const becameComplete =
-            existingGoal.status !== "complete" && shouldComplete;
+          const previousAllocation = Math.max(0, existingGoal.monthlyAllocation || 0);
+          const becameComplete = existingGoal.status !== 'complete' && shouldComplete;
 
           const nextGoals = s.goals.map((goal) => {
             if (goal.id !== id) return goal;
@@ -582,17 +561,17 @@ export const useFinPathStore = create<FinPathStore>()(
           });
 
           const pendingGoalDecisions = becameComplete
-            ? existingGoal.category === "debt"
+            ? existingGoal.category === 'debt'
               ? removeDecisionFromQueue(s.pendingGoalDecisions, id)
               : upsertDecision(s.pendingGoalDecisions, {
-                goalId: id,
-                goalName: existingGoal.name,
-                freedMonthlyAmount: previousAllocation,
-                createdAt: Date.now(),
-              })
+                  goalId: id,
+                  goalName: existingGoal.name,
+                  freedMonthlyAmount: previousAllocation,
+                  createdAt: Date.now(),
+                })
             : removeDecisionFromQueue(s.pendingGoalDecisions, id);
           const nextDebts =
-            existingGoal.category === "debt" && shouldComplete && !hasDebt(s.debts)
+            existingGoal.category === 'debt' && shouldComplete && !hasDebt(s.debts)
               ? emptyDebtProfile()
               : s.debts;
 
@@ -600,15 +579,15 @@ export const useFinPathStore = create<FinPathStore>()(
           // Skip the synthetic debt-payoff goal: it's a derived view, not an
           // achievement the user earned and shouldn't clutter the chain.
           const nextMilestones =
-            becameComplete && existingGoal.category !== "debt"
+            becameComplete && existingGoal.category !== 'debt'
               ? appendMilestone(s.milestones, {
-                goalId: existingGoal.id,
-                title: existingGoal.name,
-                category: existingGoal.category,
-                completedAt: new Date().toISOString(),
-                amount: existingGoal.targetAmount,
-                priority: existingGoal.priority,
-              })
+                  goalId: existingGoal.id,
+                  title: existingGoal.name,
+                  category: existingGoal.category,
+                  completedAt: new Date().toISOString(),
+                  amount: existingGoal.targetAmount,
+                  priority: existingGoal.priority,
+                })
               : s.milestones;
 
           return {
@@ -635,10 +614,7 @@ export const useFinPathStore = create<FinPathStore>()(
             ),
           ),
           debtGoalDeleted: id === DEBT_GOAL_ID ? true : (s.debtGoalDeleted ?? false),
-          pendingGoalDecisions: removeDecisionFromQueue(
-            s.pendingGoalDecisions,
-            id,
-          ),
+          pendingGoalDecisions: removeDecisionFromQueue(s.pendingGoalDecisions, id),
           lastUpdated: Date.now(),
         }));
         const store = get();
@@ -648,7 +624,7 @@ export const useFinPathStore = create<FinPathStore>()(
         const goal = get().goals.find((g) => g.id === id);
         if (!goal) return;
         get().updateGoal(id, {
-          status: "complete",
+          status: 'complete',
           currentAmount: goal.targetAmount,
         });
       },
@@ -658,24 +634,18 @@ export const useFinPathStore = create<FinPathStore>()(
 
         set((s) => {
           let completedGoalId: string | null = null;
-          let completedGoalName = "";
+          let completedGoalName = '';
           let completedGoalAllocation = 0;
 
           const nextGoals = s.goals.map((goal) => {
             if (goal.id !== goalId) return goal;
 
-            const nextAmount = Math.min(
-              goal.targetAmount,
-              goal.currentAmount + amount,
-            );
+            const nextAmount = Math.min(goal.targetAmount, goal.currentAmount + amount);
             const completed = nextAmount >= goal.targetAmount;
             if (completed) {
               completedGoalId = goal.id;
               completedGoalName = goal.name;
-              completedGoalAllocation = Math.max(
-                0,
-                goal.monthlyAllocation || 0,
-              );
+              completedGoalAllocation = Math.max(0, goal.monthlyAllocation || 0);
             }
 
             return {
@@ -683,44 +653,41 @@ export const useFinPathStore = create<FinPathStore>()(
               currentAmount: nextAmount,
               lumpsumAdded: (goal.lumpsumAdded || 0) + amount,
               status: completed
-                ? "complete"
-                : goal.status === "not-started"
-                  ? "in-progress"
+                ? 'complete'
+                : goal.status === 'not-started'
+                  ? 'in-progress'
                   : goal.status,
             };
           });
 
           const pendingGoalDecisions = completedGoalId
-            ? nextGoals.find((goal) => goal.id === completedGoalId)?.category ===
-              "debt"
+            ? nextGoals.find((goal) => goal.id === completedGoalId)?.category === 'debt'
               ? removeDecisionFromQueue(s.pendingGoalDecisions, completedGoalId)
               : upsertDecision(s.pendingGoalDecisions, {
-                goalId: completedGoalId,
-                goalName: completedGoalName,
-                freedMonthlyAmount: completedGoalAllocation,
-                createdAt: Date.now(),
-              })
+                  goalId: completedGoalId,
+                  goalName: completedGoalName,
+                  freedMonthlyAmount: completedGoalAllocation,
+                  createdAt: Date.now(),
+                })
             : s.pendingGoalDecisions;
-          const nextDebts = isDebtGoalComplete(
-            nextGoals.find((goal) => goal.id === goalId),
-          ) && !hasDebt(s.debts)
-            ? emptyDebtProfile()
-            : s.debts;
+          const nextDebts =
+            isDebtGoalComplete(nextGoals.find((goal) => goal.id === goalId)) && !hasDebt(s.debts)
+              ? emptyDebtProfile()
+              : s.debts;
 
           const completedGoalForMilestone = completedGoalId
             ? nextGoals.find((g) => g.id === completedGoalId)
             : undefined;
           const nextMilestones =
-            completedGoalForMilestone &&
-            completedGoalForMilestone.category !== "debt"
+            completedGoalForMilestone && completedGoalForMilestone.category !== 'debt'
               ? appendMilestone(s.milestones, {
-                goalId: completedGoalForMilestone.id,
-                title: completedGoalForMilestone.name,
-                category: completedGoalForMilestone.category,
-                completedAt: new Date().toISOString(),
-                amount: completedGoalForMilestone.targetAmount,
-                priority: completedGoalForMilestone.priority,
-              })
+                  goalId: completedGoalForMilestone.id,
+                  title: completedGoalForMilestone.name,
+                  category: completedGoalForMilestone.category,
+                  completedAt: new Date().toISOString(),
+                  amount: completedGoalForMilestone.targetAmount,
+                  priority: completedGoalForMilestone.priority,
+                })
               : s.milestones;
 
           return {
@@ -740,24 +707,16 @@ export const useFinPathStore = create<FinPathStore>()(
 
       resolveGoalCompletionDecision: (goalId, action) => {
         set((s) => {
-          const decision = s.pendingGoalDecisions.find(
-            (item) => item.goalId === goalId,
-          );
-          const freedMonthlyAmount = Math.max(
-            0,
-            decision?.freedMonthlyAmount || 0,
-          );
+          const decision = s.pendingGoalDecisions.find((item) => item.goalId === goalId);
+          const freedMonthlyAmount = Math.max(0, decision?.freedMonthlyAmount || 0);
 
           const nextReserve =
-            action === "surplus"
+            action === 'surplus'
               ? s.monthlySurplusReserve + freedMonthlyAmount
               : s.monthlySurplusReserve;
 
           return {
-            pendingGoalDecisions: removeDecisionFromQueue(
-              s.pendingGoalDecisions,
-              goalId,
-            ),
+            pendingGoalDecisions: removeDecisionFromQueue(s.pendingGoalDecisions, goalId),
             monthlySurplusReserve: nextReserve,
             lastUpdated: Date.now(),
           };
@@ -841,25 +800,24 @@ export const useFinPathStore = create<FinPathStore>()(
         // Update goal monthly allocations
         const updatedGoals = normalizeActiveGoalPriorities(
           syncedGoals.map((g) => {
-            const isComplete =
-              g.status === "complete" || g.currentAmount >= g.targetAmount;
-            const nextStatus: Goal["status"] = isComplete
-              ? "complete"
+            const isComplete = g.status === 'complete' || g.currentAmount >= g.targetAmount;
+            const nextStatus: Goal['status'] = isComplete
+              ? 'complete'
               : g.currentAmount > 0 ||
-                  g.category === "debt" ||
+                  g.category === 'debt' ||
                   (plan.recommendedAllocations[g.id] || 0) > 0
-                ? "in-progress"
-                : "not-started";
+                ? 'in-progress'
+                : 'not-started';
 
             return {
               ...g,
               currentAmount: isComplete ? g.targetAmount : g.currentAmount,
               monthlyAllocation:
-                g.category === "debt"
+                g.category === 'debt'
                   ? Math.max(0, debts.totalMonthly || 0)
                   : g.checkedThisMonth
-                    ? (g.monthlyAllocation || plan.recommendedAllocations[g.id] || 0)
-                    : (plan.recommendedAllocations[g.id] || 0),
+                    ? g.monthlyAllocation || plan.recommendedAllocations[g.id] || 0
+                    : plan.recommendedAllocations[g.id] || 0,
               status: nextStatus,
             };
           }),
@@ -880,7 +838,11 @@ export const useFinPathStore = create<FinPathStore>()(
         const secondaryIncome = data.secondaryIncome || 0;
         const passiveIncome = data.passiveIncome || 0;
         const variablePercent = data.variablePercent || 0;
-        const variable = Math.round(passiveIncome * variablePercent / 100);
+        const variable = Math.round((passiveIncome * variablePercent) / 100);
+        const netRate = data.netRate ?? 1.0;
+        const netMonthly = Math.round(
+          primaryIncome * netRate + secondaryIncome + passiveIncome + variable,
+        );
         const income: IncomeProfile = {
           primary: primaryIncome,
           secondary: secondaryIncome,
@@ -891,6 +853,8 @@ export const useFinPathStore = create<FinPathStore>()(
           primaryIncrement: data.primaryIncrement || 0,
           secondaryIncrement: data.secondaryIncrement || 0,
           passiveIncrement: data.passiveIncrement || 0,
+          netRate,
+          netMonthly,
         };
 
         const eb = data.expenseBreakdown || {};
@@ -926,7 +890,7 @@ export const useFinPathStore = create<FinPathStore>()(
                   })),
                 totalMonthly: data.debts,
                 totalPrincipal: data.totalDebtPrincipal,
-              }
+              },
         );
 
         const goals = data.goals.map((g, i) => {
@@ -951,7 +915,7 @@ export const useFinPathStore = create<FinPathStore>()(
           savings: 0,
           investments: 0,
           emergencyFund: 0,
-          strategy: data.strategy || "avalanche",
+          strategy: data.strategy || 'avalanche',
           stepUpEnabled: data.stepUpEnabled || false,
           monthlySurplusReserve: Math.max(0, data.surplus || 0),
           pendingGoalDecisions: [],
@@ -970,24 +934,38 @@ export const useFinPathStore = create<FinPathStore>()(
 
         if (data.income !== undefined) {
           const newPrimary = data.income;
-          const newVariable = Math.round(state.income.passive * state.income.variablePercent / 100);
+          const newVariable = Math.round(
+            (state.income.passive * state.income.variablePercent) / 100,
+          );
+          const nr = state.income.netRate ?? 1.0;
           updates.income = {
             ...state.income,
             primary: newPrimary,
             variable: newVariable,
             total: newPrimary + state.income.secondary + state.income.passive + newVariable,
+            netRate: nr,
+            netMonthly: Math.round(
+              newPrimary * nr + state.income.secondary + state.income.passive + newVariable,
+            ),
           };
         }
 
         if (data.salaryHike !== undefined) {
           const factor = 1 + data.salaryHike / 100;
           const newPrimary = Math.round(state.income.primary * factor);
-          const newVariable = Math.round(state.income.passive * state.income.variablePercent / 100);
+          const newVariable = Math.round(
+            (state.income.passive * state.income.variablePercent) / 100,
+          );
+          const nr = state.income.netRate ?? 1.0;
           updates.income = {
             ...state.income,
             primary: newPrimary,
             variable: newVariable,
             total: Math.round(state.income.total * factor),
+            netRate: nr,
+            netMonthly: Math.round(
+              newPrimary * nr + state.income.secondary + state.income.passive + newVariable,
+            ),
           };
         }
 
@@ -996,8 +974,8 @@ export const useFinPathStore = create<FinPathStore>()(
             ...state.expenses,
             ...data.expenses,
             total: Object.entries({ ...state.expenses, ...data.expenses })
-              .filter(([k]) => k !== "total")
-              .reduce((sum, [, v]) => sum + (typeof v === "number" ? v : 0), 0),
+              .filter(([k]) => k !== 'total')
+              .reduce((sum, [, v]) => sum + (typeof v === 'number' ? v : 0), 0),
           };
         }
 
@@ -1020,8 +998,8 @@ export const useFinPathStore = create<FinPathStore>()(
       resetProfile: () => set({ ...defaultProfile }),
     }),
     {
-      name: "finpath-store",
-      version: 6,
+      name: 'finpath-store',
+      version: 7,
       storage: safeStorage,
       partialize: (state) => {
         const { pdfExporting: _exporting, ...rest } = state;
@@ -1043,7 +1021,7 @@ export const useFinPathStore = create<FinPathStore>()(
           inc.secondaryIncrement = inc.secondaryIncrement ?? 0;
           inc.passiveIncrement = inc.passiveIncrement ?? 0;
           // Fix variable base: recompute from passive
-          inc.variable = Math.round((inc.passive || 0) * (inc.variablePercent || 0) / 100);
+          inc.variable = Math.round(((inc.passive || 0) * (inc.variablePercent || 0)) / 100);
           inc.total = (inc.primary || 0) + (inc.secondary || 0) + (inc.passive || 0) + inc.variable;
         }
         if (version < 4 && persistedState) {
@@ -1053,10 +1031,22 @@ export const useFinPathStore = create<FinPathStore>()(
         }
         if (version < 5 && persistedState) {
           // Existing users default to 'local' — cloud sync is opt-in.
-          persistedState.storageMode = persistedState.storageMode ?? "local";
+          persistedState.storageMode = persistedState.storageMode ?? 'local';
         }
         if (version < 6 && persistedState) {
           persistedState.milestones = persistedState.milestones ?? [];
+        }
+        if (version < 7 && persistedState?.income) {
+          const inc = persistedState.income;
+          inc.netRate = inc.netRate ?? 1.0;
+          inc.netMonthly =
+            inc.netMonthly ??
+            Math.round(
+              (inc.primary || 0) * inc.netRate +
+                (inc.secondary || 0) +
+                (inc.passive || 0) +
+                (inc.variable || 0),
+            );
         }
         return persistedState;
       },
