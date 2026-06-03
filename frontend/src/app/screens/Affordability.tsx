@@ -15,14 +15,8 @@ import {
   Clock,
   XCircle,
   ChevronRight,
-  Bookmark,
-  BookmarkCheck,
-  X,
-  Star,
-  Tag,
 } from 'lucide-react';
 import { useFinPathStore } from '@/lib/store';
-import type { Dream } from '@/lib/types';
 import { demoDream } from '@/lib/fixtures/demoProfile';
 import { runAffordability } from '@/lib/math/affordability';
 import type { AffordabilityResult, Lever } from '@/lib/math/affordability';
@@ -37,6 +31,9 @@ import {
   countUpTransition,
 } from '../components/motion-variants';
 import RecommendationCard from '../components/RecommendationCard';
+import { buildCrossGoalInsights } from '@/lib/math/recommendations';
+import type { CrossGoalInsightTone } from '@/lib/types';
+import type { FinancialProfile } from '@/lib/types';
 
 // ── Quick-pick chips ──────────────────────────────────────────────────────────
 const QUICK_PICKS = [
@@ -210,6 +207,59 @@ function GapBar({ surplus, gap }: { surplus: number; gap: number }) {
   );
 }
 
+// ── Tone mapper ───────────────────────────────────────────────────────────────
+function toCardTone(t: CrossGoalInsightTone): 'positive' | 'warning' | 'blocked' {
+  return t === 'warning' ? 'warning' : 'positive';
+}
+
+// ── Cross-goal insights panel ─────────────────────────────────────────────────
+function CrossGoalInsightsPanel({
+  dreamName,
+  goals,
+  profile,
+}: {
+  dreamName: string;
+  goals: FinancialProfile['goals'];
+  profile: FinancialProfile;
+}) {
+  const relevant = useMemo(() => {
+    const all = buildCrossGoalInsights(profile);
+    if (!dreamName.trim()) return all.slice(0, 2);
+    const lower = dreamName.toLowerCase();
+    const matchedGoal = goals.find(
+      (g) => g.name.toLowerCase().includes(lower) || lower.includes(g.name.toLowerCase()),
+    );
+    if (matchedGoal) {
+      const specific = all.filter((ci) => ci.relatedGoalIds.includes(matchedGoal.id));
+      const global = all.filter((ci) => ci.relatedGoalIds.length === 0);
+      return [...specific, ...global].slice(0, 2);
+    }
+    return all.slice(0, 2);
+  }, [profile, dreamName, goals]);
+
+  if (relevant.length === 0) return null;
+
+  return (
+    <motion.div variants={pageSection}>
+      <p className="text-label" style={{ marginBottom: '0.75rem' }}>
+        Cross-goal opportunities
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {relevant.map((ci) => (
+          <RecommendationCard
+            key={ci.id}
+            observation={ci.observation}
+            action={ci.action}
+            impact={ci.impact}
+            tone={toCardTone(ci.tone)}
+            icon={ci.icon}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function Affordability() {
   const [searchParams] = useSearchParams();
@@ -222,14 +272,56 @@ export default function Affordability() {
   const monthlyReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const investmentReturnRate = useFinPathStore((s) => s.investmentReturnRate);
   const demoMode = useFinPathStore((s) => s.demoMode ?? false);
-  const ageYears = useFinPathStore((s) => s.ageYears);
-  const primaryIncome = useFinPathStore((s) => s.income.primary);
-  const dreams = useFinPathStore((s) => s.dreams ?? []);
-  const saveDream = useFinPathStore((s) => s.saveDream);
-  const removeDream = useFinPathStore((s) => s.removeDream);
 
-  // Infer employment type: has primary salary → salaried, else self-employed
-  const employmentType = primaryIncome > 0 ? ('salaried' as const) : ('self_employed' as const);
+  // Full profile objects for CrossGoalInsightsPanel
+  const income = useFinPathStore((s) => s.income);
+  const expenses = useFinPathStore((s) => s.expenses);
+  const debts = useFinPathStore((s) => s.debts);
+  const savings = useFinPathStore((s) => s.savings);
+  const investments = useFinPathStore((s) => s.investments);
+  const goals = useFinPathStore((s) => s.goals);
+  const healthScore = useFinPathStore((s) => s.healthScore);
+  const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
+  const emergencyFund = useFinPathStore((s) => s.emergencyFund);
+
+  const crossGoalProfile = useMemo<FinancialProfile>(
+    () =>
+      ({
+        onboarded: true,
+        income,
+        expenses,
+        debts,
+        savings,
+        investments,
+        emergencyFund: emergencyFund,
+        goals,
+        healthScore,
+        plan: null,
+        chatHistory: [],
+        currency: 'INR',
+        strategy: 'avalanche',
+        monthlySurplusReserve,
+        pendingGoalDecisions,
+        lastUpdated: 0,
+        investmentReturnRate,
+        storageMode: 'local',
+        milestones: [],
+      }) as FinancialProfile,
+    [
+      income,
+      expenses,
+      debts,
+      savings,
+      investments,
+      emergencyFund,
+      goals,
+      healthScore,
+      monthlySurplusReserve,
+      pendingGoalDecisions,
+      investmentReturnRate,
+    ],
+  );
 
   // Pre-fill from URL params, or demo seed when no params present
   const paramName = searchParams.get('name');
@@ -256,80 +348,11 @@ export default function Affordability() {
 
   const hasInput = targetCost > 0;
 
-  // Contextual asset offset (local state — not persisted)
-  const [assetName, setAssetName] = useState('');
-  const [assetValueRaw, setAssetValueRaw] = useState('');
-  const debouncedAssetValue = useDebouncedValue(assetValueRaw, 150);
-  const assetValue = parseFloat(debouncedAssetValue) || 0;
-  const effectiveTargetCost = Math.max(0, targetCost - assetValue);
-
-  // Re-run engine for each saved dream against current profile
-  const rankedDreams = useMemo(() => {
-    const VERDICT_ORDER = { affordable_now: 0, affordable_later: 1, not_affordable: 2 } as const;
-    return dreams
-      .map((d) => ({
-        ...d,
-        liveResult: runAffordability({
-          targetCost: d.targetCost,
-          route: d.route,
-          netMonthlyIncome,
-          monthlyExpenses,
-          monthlyReserve,
-          existingEmiTotal,
-          investmentReturnRate,
-          annualInterestRate: d.annualInterestRate,
-          tenureMonths: d.tenureMonths,
-          ageYears,
-          employmentType,
-        }),
-      }))
-      .sort((a, b) => VERDICT_ORDER[a.liveResult.verdict] - VERDICT_ORDER[b.liveResult.verdict]);
-  }, [
-    dreams,
-    netMonthlyIncome,
-    monthlyExpenses,
-    monthlyReserve,
-    existingEmiTotal,
-    investmentReturnRate,
-  ]);
-
-  const currentDreamId = useMemo(
-    () =>
-      dreams.find((d) => d.name === dreamName && d.targetCost === targetCost && d.route === route)
-        ?.id ?? null,
-    [dreams, dreamName, targetCost, route],
-  );
-
-  function handleSaveDream() {
-    if (!result || !dreamName || !targetCost) return;
-    const id = currentDreamId ?? `dream-${Date.now()}`;
-    saveDream({
-      id,
-      name: dreamName,
-      targetCost,
-      route,
-      annualInterestRate: annualRate,
-      tenureMonths: tenure,
-      verdict: result.verdict,
-      monthsToAfford: result.monthsToAfford,
-      savedAt: Date.now(),
-    });
-  }
-
-  function loadDream(d: Dream) {
-    setDreamName(d.name);
-    setCostRaw(String(d.targetCost));
-    setRoute(d.route);
-    setRateRaw(String(d.annualInterestRate));
-    setTenureRaw(String(d.tenureMonths));
-    setActiveChip(null);
-  }
-
   // Run engine (memoised on debounced inputs only — pp2 #2: suppress re-run between keystrokes)
   const result = useMemo<AffordabilityResult | null>(() => {
     if (!hasInput) return null;
     return runAffordability({
-      targetCost: effectiveTargetCost,
+      targetCost,
       route,
       netMonthlyIncome,
       monthlyExpenses,
@@ -338,11 +361,9 @@ export default function Affordability() {
       investmentReturnRate,
       annualInterestRate: annualRate,
       tenureMonths: tenure,
-      ageYears,
-      employmentType,
     });
   }, [
-    effectiveTargetCost,
+    targetCost,
     route,
     netMonthlyIncome,
     monthlyExpenses,
@@ -351,8 +372,6 @@ export default function Affordability() {
     investmentReturnRate,
     annualRate,
     tenure,
-    ageYears,
-    employmentType,
     hasInput,
   ]);
 
@@ -740,151 +759,25 @@ export default function Affordability() {
             </p>
           )}
 
-          {/* Asset offset — shown when there's a gap */}
-          {result.gap > 0 && (
-            <div
-              style={{
-                marginTop: '0.75rem',
-                padding: '10px 12px',
-                borderRadius: 10,
-                background: 'var(--surface-tint)',
-                border: '1px solid var(--border)',
-              }}
-            >
-              <p
-                style={{
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--secondary)',
-                  marginBottom: 8,
-                  fontWeight: 'var(--font-weight-semibold)',
-                  textTransform: 'uppercase',
-                  letterSpacing: 'var(--tracking-widest-sm)',
-                }}
-              >
-                Selling an asset?
-              </p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <input
-                  type="text"
-                  placeholder="Asset name (e.g. Old Bike)"
-                  value={assetName}
-                  onChange={(e) => setAssetName(e.target.value)}
-                  style={{
-                    flex: '2 1 140px',
-                    padding: '6px 10px',
-                    borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    background: 'var(--card)',
-                    color: 'var(--foreground)',
-                    fontSize: 'var(--text-sm)',
-                    outline: 'none',
-                  }}
-                />
-                <input
-                  type="number"
-                  placeholder="Value (₹)"
-                  min={0}
-                  value={assetValueRaw}
-                  onChange={(e) => setAssetValueRaw(e.target.value)}
-                  style={{
-                    flex: '1 1 100px',
-                    padding: '6px 10px',
-                    borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    background: 'var(--card)',
-                    color: 'var(--foreground)',
-                    fontSize: 'var(--text-sm)',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-              {assetValue > 0 && (
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--green)', marginTop: 6 }}>
-                  Reduces target by {formatInr(assetValue)} → effective cost{' '}
-                  {formatInr(effectiveTargetCost)}
-                </p>
-              )}
-            </div>
-          )}
-
           {/* Gap bar */}
           {(result.gap > 0 || result.monthlySurplus > 0) && (
             <GapBar surplus={Math.max(0, result.monthlySurplus)} gap={result.gap} />
           )}
-
-          {/* Save dream */}
-          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
-            {currentDreamId ? (
-              <button
-                onClick={() => removeDream(currentDreamId)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 12px',
-                  borderRadius: 99,
-                  border: '1px solid var(--green)',
-                  background: 'color-mix(in srgb, var(--green) 10%, transparent)',
-                  color: 'var(--green)',
-                  fontSize: 'var(--text-xs)',
-                  cursor: 'pointer',
-                }}
-              >
-                <BookmarkCheck size={13} /> Saved
-              </button>
-            ) : (
-              <button
-                onClick={handleSaveDream}
-                disabled={!dreamName}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 12px',
-                  borderRadius: 99,
-                  border: '1px solid var(--border)',
-                  background: 'transparent',
-                  color: 'var(--secondary)',
-                  fontSize: 'var(--text-xs)',
-                  cursor: dreamName ? 'pointer' : 'not-allowed',
-                  opacity: dreamName ? 1 : 0.5,
-                }}
-              >
-                <Bookmark size={13} /> Save dream
-              </button>
-            )}
-          </div>
         </motion.div>
       )}
 
       {/* ── Levers zone ── */}
-      {result && (result.levers.length > 0 || assetValue > 0) && (
-        <motion.div variants={pageSection} className="bento-card" style={{ marginBottom: '1rem' }}>
+      {result && result.levers.length > 0 && (
+        <motion.div variants={pageSection}>
           <p className="text-label" style={{ marginBottom: '0.75rem' }}>
             Ways to close the gap
           </p>
           <motion.div
-            variants={{ animate: cappedStagger(result.levers.length + (assetValue > 0 ? 1 : 0)) }}
+            variants={{ animate: cappedStagger(result.levers.length) }}
             initial="initial"
             animate="animate"
             style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
           >
-            {/* Sell asset lever — synthetic, always first */}
-            {assetValue > 0 && (
-              <motion.div variants={cardEntry}>
-                <RecommendationCard
-                  observation={`${assetName || 'An asset'} worth ${formatInr(assetValue)} can offset the cost directly.`}
-                  action={`Sell ${assetName || 'the asset'} and put ${formatInr(assetValue)} toward ${dreamName || 'this dream'}.`}
-                  impact={
-                    effectiveTargetCost <= 0
-                      ? 'Fully covers the cost — no savings needed.'
-                      : `Reduces the target to ${formatInr(effectiveTargetCost)}.`
-                  }
-                  tone="positive"
-                  icon="Tag"
-                />
-              </motion.div>
-            )}
             {result.levers.map((lever, i) => {
               const copy = leverCopy(lever, netMonthlyIncome);
               return (
@@ -908,7 +801,7 @@ export default function Affordability() {
         <motion.div
           variants={pageSection}
           className="bento-card"
-          style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: '1rem' }}
+          style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}
         >
           <div
             style={{
@@ -943,96 +836,9 @@ export default function Affordability() {
         </motion.div>
       )}
 
-      {/* ── Saved Dreams pane ── */}
-      {rankedDreams.length > 0 && (
-        <motion.div variants={pageSection} className="bento-card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.75rem' }}>
-            <Star size={14} style={{ color: 'var(--accent)' }} />
-            <p className="text-label">Saved Dreams</p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {rankedDreams.map((d) => {
-              const live = d.liveResult;
-              const verdictCfg = {
-                affordable_now: { label: 'Now', color: 'var(--green)' },
-                affordable_later: {
-                  label: live.monthsToAfford ? formatMonths(live.monthsToAfford) : 'Later',
-                  color: 'var(--amber)',
-                },
-                not_affordable: { label: 'Not yet', color: 'var(--secondary)' },
-              }[live.verdict];
-              const isActive = d.id === currentDreamId;
-              return (
-                <div
-                  key={d.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => loadDream(d)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') loadDream(d);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '8px 10px',
-                    borderRadius: 10,
-                    border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-                    background: isActive ? 'var(--accent-subtle)' : 'var(--surface-tint)',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.15s ease, background 0.15s ease',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
-                      style={{
-                        fontSize: 'var(--text-sm)',
-                        fontWeight: 'var(--font-weight-semibold)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {d.name}
-                    </p>
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--secondary)' }}>
-                      {formatInr(d.targetCost)} · {d.route === 'emi' ? 'EMI' : 'Cash'}
-                    </p>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 'var(--text-xs)',
-                      fontWeight: 'var(--font-weight-semibold)',
-                      color: verdictCfg.color,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {verdictCfg.label}
-                  </span>
-                  <button
-                    aria-label={`Remove ${d.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeDream(d.id);
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--secondary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: 2,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
+      {/* ── Cross-goal insights ── */}
+      {hasInput && (
+        <CrossGoalInsightsPanel dreamName={dreamName} goals={goals} profile={crossGoalProfile} />
       )}
     </motion.div>
   );

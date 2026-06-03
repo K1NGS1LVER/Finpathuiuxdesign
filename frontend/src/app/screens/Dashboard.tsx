@@ -16,20 +16,20 @@ import {
   Crosshair,
   Leaf,
   Zap,
+  ArrowUpRight,
   Trophy,
   Flame,
   Gem,
-  Star,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
 import { formatInr, formatInrCompact } from '@/lib/format';
-import { compareStrategies } from '@/lib/debt-strategies';
 import { fireConfetti } from '@/lib/confetti';
 import HealthScoreWidget from '@/app/components/HealthScoreWidget';
+import { buildCrossGoalInsights } from '@/lib/math/recommendations';
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Bike,
@@ -44,6 +44,8 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; className?: str
   Sparkles,
   Check,
   ArrowRight,
+  ArrowUpRight,
+  Zap,
 };
 
 const CATEGORY_STYLE: Record<
@@ -140,8 +142,8 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
   const healthScore = useFinPathStore((s) => s.healthScore);
   const updateGoal = useFinPathStore((s) => s.updateGoal);
   const investments = useFinPathStore((s) => s.investments);
-
-  const dreams = useFinPathStore((s) => s.dreams ?? []);
+  const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
 
   const [period, setPeriod] = useState<'This month' | 'Quarter' | 'YTD'>('This month');
 
@@ -160,9 +162,6 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
 
   const currentNetWorth =
     savings + investments + goals.reduce((sum, g) => sum + Math.max(0, g.currentAmount), 0);
-
-  const debtComparison = debts.items.length > 0 ? compareStrategies(debts.items, 0) : null;
-  const interestSaved = debtComparison?.interestSaved ?? 0;
 
   const badges = [
     {
@@ -198,7 +197,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
       icon: Zap as LucideIcon,
       color: 'var(--amber)',
       desc: 'Pay off first debt',
-      earned: debts.items.some((d) => d.remainingMonths <= 0),
+      earned: (debts.items ?? []).some((d) => d.remainingMonths <= 0),
     },
     {
       name: 'Goal Achiever',
@@ -223,28 +222,52 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
     },
   ];
 
-  const dreamCounts = {
-    affordable: dreams.filter((d) => d.verdict === 'affordable_now').length,
-    later: dreams.filter((d) => d.verdict === 'affordable_later').length,
-    blocked: dreams.filter((d) => d.verdict === 'not_affordable').length,
-  };
-
-  const debtPct = income.total > 0 ? Math.round((totalDebt / income.total) * 100) : 0;
-  const debtInsight =
-    interestSaved > 0
-      ? `Debt takes ${debtPct}% of income. Switching to avalanche could save ${formatInr(interestSaved)} in interest.`
-      : `Debt takes ${debtPct}% of income. Add interest rates to debt items to see strategy comparisons.`;
-  const insights = [
-    {
-      icon: 'PiggyBank',
-      text: `You're saving ${income.total > 0 ? Math.round((surplus / income.total) * 100) : 0}% of income — try moving ₹5,000 from lifestyle to hit 25%.`,
-    },
-    { icon: 'AlertTriangle', text: debtInsight },
-    {
-      icon: 'Sparkles',
-      text: `You have ${activeGoals.length} active goal${activeGoals.length !== 1 ? 's' : ''} on track for this month.`,
-    },
-  ];
+  const crossInsights = useMemo(
+    () =>
+      buildCrossGoalInsights({
+        onboarded: true,
+        income,
+        expenses,
+        debts,
+        savings,
+        investments,
+        emergencyFund: 0,
+        goals,
+        healthScore,
+        plan: null,
+        chatHistory: [],
+        currency: 'INR',
+        strategy: 'avalanche',
+        monthlySurplusReserve,
+        pendingGoalDecisions,
+        lastUpdated: 0,
+        investmentReturnRate: 12,
+        storageMode: 'local',
+        milestones: [],
+      } as import('@/lib/types').FinancialProfile),
+    [
+      income,
+      expenses,
+      debts,
+      goals,
+      savings,
+      investments,
+      healthScore,
+      pendingGoalDecisions,
+      monthlySurplusReserve,
+    ],
+  );
+  const insights =
+    crossInsights.length > 0
+      ? crossInsights
+          .slice(0, 3)
+          .map((ci) => ({ icon: ci.icon, text: `${ci.action} ${ci.impact}` }))
+      : [
+          {
+            icon: 'Sparkles',
+            text: 'Track your goals this month to surface personalized insights.',
+          },
+        ];
 
   return (
     <div className="dashboard-page">
@@ -552,64 +575,6 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
             {goals.length === 0 && <p className="activity-empty">No goals yet.</p>}
           </div>
         </motion.div>
-
-        {/* ─ Dreams tile (12 cols, conditional) ─ */}
-        {dreams.length > 0 && (
-          <motion.div
-            className="bento-card col-span-12 card-hover"
-            variants={cardVariants}
-            role="button"
-            tabIndex={0}
-            onClick={() => navigate('/afford')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') navigate('/afford');
-            }}
-            style={{ cursor: 'pointer' }}
-            aria-label="View your saved dreams"
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
-                  }}
-                >
-                  <Star size={16} style={{ color: 'var(--accent)' }} />
-                </div>
-                <div>
-                  <p className="text-label" style={{ marginBottom: 2 }}>
-                    Your Dreams
-                  </p>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--secondary)' }}>
-                    {dreamCounts.affordable > 0 && (
-                      <span style={{ color: 'var(--green)', marginRight: 8 }}>
-                        {dreamCounts.affordable} affordable
-                      </span>
-                    )}
-                    {dreamCounts.later > 0 && (
-                      <span style={{ color: 'var(--amber)', marginRight: 8 }}>
-                        {dreamCounts.later} in progress
-                      </span>
-                    )}
-                    {dreamCounts.blocked > 0 && (
-                      <span style={{ color: 'var(--secondary)' }}>
-                        {dreamCounts.blocked} blocked
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <ArrowRight size={16} style={{ color: 'var(--secondary)', flexShrink: 0 }} />
-            </div>
-          </motion.div>
-        )}
 
         {/* ─ Achievements (12 cols) ─ */}
         <motion.div className="bento-card col-span-12" variants={cardVariants}>
