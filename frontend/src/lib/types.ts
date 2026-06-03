@@ -3,13 +3,13 @@
 // ============================================================
 
 /** Investment/debt payoff strategy */
-export type InvestmentStrategy = "avalanche" | "snowball";
+export type InvestmentStrategy = 'avalanche' | 'snowball';
 
 /** Where the user's FinancialProfile is persisted */
-export type StorageMode = "local" | "cloud";
+export type StorageMode = 'local' | 'cloud';
 
 /** How to handle freed allocation when a goal completes */
-export type GoalCompletionAction = "reinvest" | "surplus";
+export type GoalCompletionAction = 'reinvest' | 'surplus';
 
 /** Pending user decision for a completed goal's freed monthly amount */
 export interface GoalCompletionDecision {
@@ -41,6 +41,10 @@ export interface IncomeProfile {
   passiveIncrement: number;
   /** @deprecated use primaryIncrement */
   expectedAnnualIncrement?: number;
+  /** Take-home rate applied to primary salary only (0–1). Default 0.88 (88%). Use 1.0 if user entered net directly. */
+  netRate: number;
+  /** Derived: primary * netRate + secondary + passive + variable. Use this for all affordability/surplus math. */
+  netMonthly: number;
 }
 
 /** Expense category breakdown */
@@ -59,13 +63,7 @@ export interface ExpenseProfile {
 export interface DebtItem {
   id: string;
   name: string;
-  category:
-    | "homeLoan"
-    | "carLoan"
-    | "personalLoan"
-    | "creditCard"
-    | "educationLoan"
-    | "other";
+  category: 'homeLoan' | 'carLoan' | 'personalLoan' | 'creditCard' | 'educationLoan' | 'other';
   principal: number;
   interestRate: number; // Annual %
   monthlyPayment: number;
@@ -87,20 +85,20 @@ export interface Goal {
   name: string;
   icon: string; // Lucide icon name
   category:
-    | "bike"
-    | "home"
-    | "travel"
-    | "debt"
-    | "education"
-    | "savings"
-    | "family"
-    | "investment"
-    | "custom";
+    | 'bike'
+    | 'home'
+    | 'travel'
+    | 'debt'
+    | 'education'
+    | 'savings'
+    | 'family'
+    | 'investment'
+    | 'custom';
   targetAmount: number;
   currentAmount: number;
   timelineMonths: number;
   priority: number; // 1 = highest
-  status: "not-started" | "in-progress" | "complete";
+  status: 'not-started' | 'in-progress' | 'complete';
   /** Monthly allocation determined by plan engine */
   monthlyAllocation: number;
   color: string;
@@ -156,7 +154,7 @@ export interface HealthScore {
 /** Chat message */
 export interface ChatMessage {
   id: string;
-  role: "user" | "penny";
+  role: 'user' | 'penny';
   text: string;
   timestamp: number;
 }
@@ -166,12 +164,12 @@ export interface Milestone {
   id: string;
   goalId: string;
   title: string;
-  category: Goal["category"];
-  completedAt: string;       // ISO
-  amount: number;            // goal target amount
-  sparks: number;            // from computeSparks
-  hash: string;              // 6-char, deterministic from id
-  prevHash: string | null;   // chains to previous block; null for first
+  category: Goal['category'];
+  completedAt: string; // ISO
+  amount: number; // goal target amount
+  sparks: number; // from computeSparks
+  hash: string; // 6-char, deterministic from id
+  prevHash: string | null; // chains to previous block; null for first
 }
 
 /** Complete user financial profile stored in Zustand */

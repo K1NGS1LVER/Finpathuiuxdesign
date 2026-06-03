@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { useFinPathStore } from '@/lib/store';
 import type { InvestmentStrategy, DebtItem } from '@/lib/types';
 import { extractFromDocument } from '@/lib/document-extractor';
@@ -43,7 +43,7 @@ export interface ExpenseBreakdown {
 
 export interface ExtractionPopupState {
   show: boolean;
-  type: "success" | "error";
+  type: 'success' | 'error';
   message: string;
 }
 
@@ -51,47 +51,69 @@ export interface ExtractionPopupState {
 export { weightedAvgGrowth, avgVariabilityPercent };
 
 const EMPTY_EXPENSE_BREAKDOWN: ExpenseBreakdown = {
-  rent: "", food: "", transport: "", utilities: "", entertainment: "", other: "",
+  rent: '',
+  food: '',
+  transport: '',
+  utilities: '',
+  entertainment: '',
+  other: '',
 };
 
 const GOAL_PRESET_AMOUNTS: Record<string, number> = {
-  "Dream Bike": 120000,
-  "Investment": 500000,
-  "Emergency Fund": 300000,
-  "Wedding": 500000,
-  "Vacation": 50000,
-  "Upskill Course": 100000,
+  'Dream Bike': 120000,
+  Investment: 500000,
+  'Emergency Fund': 300000,
+  Wedding: 500000,
+  Vacation: 50000,
+  'Upskill Course': 100000,
 };
 
 const TOTAL_STEPS = 4;
-export const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED", "SGD", "AUD", "CAD"];
-export const EMPTY_POPUP: ExtractionPopupState = { show: false, type: "success", message: "" };
+export const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SGD', 'AUD', 'CAD'];
+export const EMPTY_POPUP: ExtractionPopupState = { show: false, type: 'success', message: '' };
 
 function newIncomeItem(): IncomeItem {
-  return { id: crypto.randomUUID(), name: "", type: "salary", amount: "", growthRate: "", variabilityPercent: "" };
+  return {
+    id: crypto.randomUUID(),
+    name: '',
+    type: 'salary',
+    amount: '',
+    growthRate: '',
+    variabilityPercent: '',
+  };
 }
 
 export function newDebtItem(): OnboardingDebtItem {
-  return { id: crypto.randomUUID(), name: "", category: "personalLoan", monthlyPayment: "", principal: "", interestRate: "" };
+  return {
+    id: crypto.randomUUID(),
+    name: '',
+    category: 'personalLoan',
+    monthlyPayment: '',
+    principal: '',
+    interestRate: '',
+  };
 }
 
 export function useOnboardingForm() {
   const [step, setStep] = useState(0);
 
-  const [incomeCurrency, setIncomeCurrency] = useState("INR");
+  const [incomeCurrency, setIncomeCurrency] = useState('INR');
   const [incomeItems, setIncomeItems] = useState<IncomeItem[]>([newIncomeItem()]);
 
-  const [expensesCurrency, setExpensesCurrency] = useState("INR");
-  const [expenseBreakdown, setExpenseBreakdown] = useState<ExpenseBreakdown>(EMPTY_EXPENSE_BREAKDOWN);
+  const [expensesCurrency, setExpensesCurrency] = useState('INR');
+  const [expenseBreakdown, setExpenseBreakdown] =
+    useState<ExpenseBreakdown>(EMPTY_EXPENSE_BREAKDOWN);
   const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
   const [manualTotalExpenses, setManualTotalExpenses] = useState<string | null>(null);
 
-  const [debtCurrency, setDebtCurrency] = useState("INR");
+  const [debtCurrency, setDebtCurrency] = useState('INR');
   const [debtItems, setDebtItems] = useState<OnboardingDebtItem[]>([]);
 
+  const [netRate, setNetRate] = useState(1.0);
+
   const [selectedGoals, setSelectedGoals] = useState<Record<string, GoalSelection>>({});
-  const [selectedStrategy, setSelectedStrategy] = useState<InvestmentStrategy>("avalanche");
-  const [surplusAmount, setSurplusAmount] = useState("");
+  const [selectedStrategy, setSelectedStrategy] = useState<InvestmentStrategy>('avalanche');
+  const [surplusAmount, setSurplusAmount] = useState('');
   const [stepUpEnabled, setStepUpEnabled] = useState(false);
 
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
@@ -104,24 +126,28 @@ export function useOnboardingForm() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("https://api.exchangerate-api.com/v4/latest/INR")
+    fetch('https://api.exchangerate-api.com/v4/latest/INR')
       .then((res) => res.json())
-      .then((data) => { if (!cancelled) setExchangeRates(data.rates); })
-      .catch((err) => console.error("Failed to fetch exchange rates:", err));
-    return () => { cancelled = true; };
+      .then((data) => {
+        if (!cancelled) setExchangeRates(data.rates);
+      })
+      .catch((err) => console.error('Failed to fetch exchange rates:', err));
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const convertToINR = useCallback(
     (amount: string, currency: string): string => {
-      if (!amount || currency === "INR") {
+      if (!amount || currency === 'INR') {
         const value = parseFloat(amount);
-        if (isNaN(value)) return "";
+        if (isNaN(value)) return '';
         return value.toFixed(2);
       }
       const rate = exchangeRates[currency];
       if (!rate) return amount;
       const value = parseFloat(amount);
-      if (isNaN(value)) return "";
+      if (isNaN(value)) return '';
       return (value / rate).toFixed(2);
     },
     [exchangeRates],
@@ -138,27 +164,33 @@ export function useOnboardingForm() {
   );
 
   const calculatedTotalExpenses = Object.values(expenseBreakdown).reduce(
-    (s, v) => s + (parseFloat(v) || 0), 0
+    (s, v) => s + (parseFloat(v) || 0),
+    0,
   );
   const totalExpenses =
-    manualTotalExpenses !== null ? manualTotalExpenses
-      : calculatedTotalExpenses > 0 ? String(calculatedTotalExpenses)
-      : "";
+    manualTotalExpenses !== null
+      ? manualTotalExpenses
+      : calculatedTotalExpenses > 0
+        ? String(calculatedTotalExpenses)
+        : '';
 
   const selectedGoalCount = Object.keys(selectedGoals).length;
   const sortedSelectedGoals = Object.entries(selectedGoals).sort(
     ([, a], [, b]) => a.priority - b.priority,
   );
   const goalSelectionCaption =
-    selectedGoalCount === 0 ? "Select your 1st priority goal. Brightest glow = highest priority."
-    : selectedGoalCount === 1 ? "Great. Now pick your 2nd priority goal. Glow intensity indicates priority."
-    : selectedGoalCount === 2 ? "Pick your 3rd priority goal to complete your ranked set."
-    : "Priority set complete. Bright glow = P1, medium = P2, soft = P3.";
+    selectedGoalCount === 0
+      ? 'Select your 1st priority goal. Brightest glow = highest priority.'
+      : selectedGoalCount === 1
+        ? 'Great. Now pick your 2nd priority goal. Glow intensity indicates priority.'
+        : selectedGoalCount === 2
+          ? 'Pick your 3rd priority goal to complete your ranked set.'
+          : 'Priority set complete. Bright glow = P1, medium = P2, soft = P3.';
 
   function getPriorityGlow(priority: number) {
-    if (priority === 1) return "0 0 42px var(--accent-glow)";
-    if (priority === 2) return "0 0 28px var(--accent-glow)";
-    return "0 0 16px var(--accent-glow)";
+    if (priority === 1) return '0 0 42px var(--accent-glow)';
+    if (priority === 2) return '0 0 28px var(--accent-glow)';
+    return '0 0 16px var(--accent-glow)';
   }
 
   const canAdvance = (): boolean => {
@@ -172,20 +204,24 @@ export function useOnboardingForm() {
     return true;
   };
 
-  const goBack = useCallback(() => { if (step > 0) setStep(step - 1); }, [step]);
+  const goBack = useCallback(() => {
+    if (step > 0) setStep(step - 1);
+  }, [step]);
 
   const submitOnboarding = useCallback(() => {
     const passiveTypes: IncomeType[] = ['passive', 'rental', 'dividend'];
     const toINR = (amt: string, curr: string) => parseFloat(convertToINR(amt, curr)) || 0;
 
-    const passiveItems = incomeItems.filter(i => passiveTypes.includes(i.type));
-    const activeItems = incomeItems.filter(i => !passiveTypes.includes(i.type));
+    const passiveItems = incomeItems.filter((i) => passiveTypes.includes(i.type));
+    const activeItems = incomeItems.filter((i) => !passiveTypes.includes(i.type));
     const sortedActive = [...activeItems].sort(
-      (a, b) => toINR(b.amount, incomeCurrency) - toINR(a.amount, incomeCurrency)
+      (a, b) => toINR(b.amount, incomeCurrency) - toINR(a.amount, incomeCurrency),
     );
 
     const primaryINR = sortedActive[0] ? toINR(sortedActive[0].amount, incomeCurrency) : 0;
-    const secondaryINR = sortedActive.slice(1).reduce((s, i) => s + toINR(i.amount, incomeCurrency), 0);
+    const secondaryINR = sortedActive
+      .slice(1)
+      .reduce((s, i) => s + toINR(i.amount, incomeCurrency), 0);
     const passiveINR = passiveItems.reduce((s, i) => s + toINR(i.amount, incomeCurrency), 0);
 
     const expenseINR = parseFloat(convertToINR(totalExpenses, expensesCurrency)) || 0;
@@ -195,8 +231,8 @@ export function useOnboardingForm() {
     }
 
     const builtDebtItems: DebtItem[] = debtItems
-      .filter(d => toINR(d.monthlyPayment, debtCurrency) > 0)
-      .map(d => ({
+      .filter((d) => toINR(d.monthlyPayment, debtCurrency) > 0)
+      .map((d) => ({
         id: d.id,
         name: d.name || d.category,
         category: d.category,
@@ -229,6 +265,7 @@ export function useOnboardingForm() {
       primaryIncrement: weightedAvgGrowth(sortedActive.slice(0, 1)),
       secondaryIncrement: weightedAvgGrowth(sortedActive.slice(1)),
       passiveIncrement: weightedAvgGrowth(passiveItems),
+      netRate,
       expenses: expenseINR,
       debts: builtDebtItems.reduce((s, d) => s + d.monthlyPayment, 0),
       goals: formattedGoals,
@@ -239,13 +276,24 @@ export function useOnboardingForm() {
       stepUpEnabled,
     });
 
-    navigate("/loading", { state: { fromOnboarding: true } });
+    navigate('/loading', { state: { fromOnboarding: true } });
   }, [
-    incomeItems, incomeCurrency, totalIncomeINR,
-    expenseBreakdown, expensesCurrency, totalExpenses,
-    debtItems, debtCurrency,
-    sortedSelectedGoals, selectedStrategy, surplusAmount, stepUpEnabled,
-    convertToINR, completeOnboarding, navigate,
+    incomeItems,
+    incomeCurrency,
+    totalIncomeINR,
+    expenseBreakdown,
+    expensesCurrency,
+    totalExpenses,
+    debtItems,
+    debtCurrency,
+    sortedSelectedGoals,
+    selectedStrategy,
+    surplusAmount,
+    stepUpEnabled,
+    netRate,
+    convertToINR,
+    completeOnboarding,
+    navigate,
   ]);
 
   const toggleGoal = useCallback((goalName: string) => {
@@ -260,7 +308,7 @@ export function useOnboardingForm() {
       } else if (Object.keys(next).length < 3) {
         const preset = GOAL_PRESET_AMOUNTS[goalName];
         next[goalName] = {
-          targetAmount: preset ? String(preset) : "",
+          targetAmount: preset ? String(preset) : '',
           priority: Object.keys(next).length + 1,
         };
       }
@@ -273,7 +321,7 @@ export function useOnboardingForm() {
       ...prev,
       [goalName]: {
         ...prev[goalName],
-        targetAmount: amount.replace(/[^0-9]/g, ""),
+        targetAmount: amount.replace(/[^0-9]/g, ''),
         priority: prev[goalName]?.priority || 1,
       },
     }));
@@ -283,7 +331,10 @@ export function useOnboardingForm() {
     setSelectedGoals((prev) => {
       if (Object.keys(prev).length >= 3) return prev;
       const key = `custom-${Date.now()}`;
-      return { ...prev, [key]: { targetAmount: "", priority: Object.keys(prev).length + 1, customName: "" } };
+      return {
+        ...prev,
+        [key]: { targetAmount: '', priority: Object.keys(prev).length + 1, customName: '' },
+      };
     });
   }, []);
 
@@ -311,10 +362,10 @@ export function useOnboardingForm() {
   }, [popupTimer]);
 
   const handleFileUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>, context: "income" | "debt") => {
+    async (e: React.ChangeEvent<HTMLInputElement>, context: 'income' | 'debt') => {
       const file = e.target.files?.[0];
       if (!file) return;
-      e.target.value = "";
+      e.target.value = '';
 
       clearExtractionPopup();
       setIsExtracting(true);
@@ -323,14 +374,14 @@ export function useOnboardingForm() {
         const result = await extractFromDocument(file, context);
 
         if (result.success) {
-          if (result.type === "salary" && result.data.income) {
+          if (result.type === 'salary' && result.data.income) {
             setIncomeItems((prev) => {
               const updated = [...prev];
               updated[0] = { ...updated[0], amount: String(result.data.income) };
               return updated;
             });
-            setIncomeCurrency("INR");
-          } else if (result.type === "debt") {
+            setIncomeCurrency('INR');
+          } else if (result.type === 'debt') {
             const emi =
               result.data.emi ||
               (result.data.loanAmount ? Math.round(result.data.loanAmount / 120) : 0);
@@ -339,14 +390,14 @@ export function useOnboardingForm() {
                 ...prev,
                 {
                   id: crypto.randomUUID(),
-                  name: result.data.loanType || "Loan",
-                  category: "personalLoan" as const,
+                  name: result.data.loanType || 'Loan',
+                  category: 'personalLoan' as const,
                   monthlyPayment: String(emi),
                   principal: String(result.data.loanAmount || 0),
-                  interestRate: String(result.data.interestRate ?? ""),
+                  interestRate: String(result.data.interestRate ?? ''),
                 },
               ]);
-              setDebtCurrency("INR");
+              setDebtCurrency('INR');
             }
           }
         }
@@ -354,15 +405,15 @@ export function useOnboardingForm() {
         setIsExtracting(false);
         setExtractionPopup({
           show: true,
-          type: result.success ? "success" : "error",
+          type: result.success ? 'success' : 'error',
           message: result.summary,
         });
       } catch (error: any) {
         setIsExtracting(false);
         setExtractionPopup({
           show: true,
-          type: "error",
-          message: `Error processing document: ${error.message || "Unknown error"}. Please enter details manually.`,
+          type: 'error',
+          message: `Error processing document: ${error.message || 'Unknown error'}. Please enter details manually.`,
         });
       }
 
@@ -375,7 +426,7 @@ export function useOnboardingForm() {
   );
 
   const customGoals = Object.entries(selectedGoals).filter(([key]) =>
-    key.startsWith("custom-")
+    key.startsWith('custom-'),
   ) as [string, GoalSelection][];
   const expenseINR = parseFloat(totalExpenses) || 0;
   const availableForGoals = Math.max(0, totalIncomeINR - expenseINR - totalDebtINR);
@@ -386,30 +437,62 @@ export function useOnboardingForm() {
   const remainingForGoals = Math.max(0, availableForGoals - surplusNum);
 
   return {
-    step, setStep, TOTAL_STEPS, goBack, canAdvance, submitOnboarding,
-    incomeCurrency, setIncomeCurrency,
-    incomeItems, setIncomeItems,
+    step,
+    setStep,
+    TOTAL_STEPS,
+    goBack,
+    canAdvance,
+    submitOnboarding,
+    incomeCurrency,
+    setIncomeCurrency,
+    incomeItems,
+    setIncomeItems,
     totalIncomeINR,
-    expensesCurrency, setExpensesCurrency,
-    expenseBreakdown, setExpenseBreakdown,
-    manualTotalExpenses, setManualTotalExpenses,
-    showExpenseBreakdown, setShowExpenseBreakdown,
+    netRate,
+    setNetRate,
+    expensesCurrency,
+    setExpensesCurrency,
+    expenseBreakdown,
+    setExpenseBreakdown,
+    manualTotalExpenses,
+    setManualTotalExpenses,
+    showExpenseBreakdown,
+    setShowExpenseBreakdown,
     totalExpenses,
-    debtCurrency, setDebtCurrency,
-    debtItems, setDebtItems,
+    debtCurrency,
+    setDebtCurrency,
+    debtItems,
+    setDebtItems,
     totalDebtINR,
-    selectedGoals, selectedGoalCount, sortedSelectedGoals, customGoals,
-    goalSelectionCaption, getPriorityGlow,
-    toggleGoal, updateGoalAmount, addCustomGoal, removeCustomGoal, updateGoalName,
-    selectedStrategy, setSelectedStrategy,
-    surplusAmount, setSurplusAmount,
-    stepUpEnabled, setStepUpEnabled,
-    isExtracting, extractionPopup, clearExtractionPopup, handleFileUpload,
+    selectedGoals,
+    selectedGoalCount,
+    sortedSelectedGoals,
+    customGoals,
+    goalSelectionCaption,
+    getPriorityGlow,
+    toggleGoal,
+    updateGoalAmount,
+    addCustomGoal,
+    removeCustomGoal,
+    updateGoalName,
+    selectedStrategy,
+    setSelectedStrategy,
+    surplusAmount,
+    setSurplusAmount,
+    stepUpEnabled,
+    setStepUpEnabled,
+    isExtracting,
+    extractionPopup,
+    clearExtractionPopup,
+    handleFileUpload,
     incomeINR: totalIncomeINR,
     expenseINR,
     debtINR: totalDebtINR,
-    availableForGoals, surplusNum,
-    surplusExceedsAvailable, surplusExceeds75, surplusExceedsIncome,
+    availableForGoals,
+    surplusNum,
+    surplusExceedsAvailable,
+    surplusExceeds75,
+    surplusExceedsIncome,
     remainingForGoals,
     convertToINR,
   };
