@@ -181,7 +181,7 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
 
     if (income.primaryIncrement > 0 && targetGoal !== null) {
       const annualRaise = Math.round((income.primary * income.primaryIncrement) / 100);
-      const monthlyBoost = Math.round(annualRaise / 12);
+      const monthlyBoost = Math.round((income.primary * income.primaryIncrement) / 100 / 12);
 
       if (monthlyBoost >= 500) {
         const monthsSaved = computeMonthsSaved(targetGoal, monthlyBoost);
