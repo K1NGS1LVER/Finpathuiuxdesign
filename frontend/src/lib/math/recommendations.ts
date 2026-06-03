@@ -49,6 +49,7 @@ function computeMonthsSaved(targetGoal: Goal, extraMonthly: number): number {
 export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsight[] {
   const insights: CrossGoalInsight[] = [];
   const { goals, debts, income, pendingGoalDecisions } = profile;
+  const topGoal = getTopActiveGoal(goals);
 
   // ── Rule 1: Sell depreciating asset (priority 1) ──────────────────────────
   {
@@ -56,7 +57,7 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
       .filter((g) => g.status === 'complete' && g.category === 'bike')
       .sort((a, b) => b.currentAmount - a.currentAmount);
 
-    const targetGoal = getTopActiveGoal(goals);
+    const targetGoal = topGoal;
 
     if (completedBikeGoals.length > 0 && targetGoal !== null) {
       const completedGoal = completedBikeGoals[0];
@@ -66,7 +67,10 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
         const monthlyAlloc = monthlyAllocFor(targetGoal);
 
         if (monthlyAlloc > 0) {
-          const monthsSaved = Math.round(assetValue / monthlyAlloc);
+          const remaining = Math.max(0, targetGoal.targetAmount - targetGoal.currentAmount);
+          const maxMonths =
+            monthlyAlloc > 0 ? Math.ceil(remaining / monthlyAlloc) : targetGoal.timelineMonths;
+          const monthsSaved = Math.min(Math.round(assetValue / monthlyAlloc), maxMonths);
 
           if (monthsSaved >= 1) {
             insights.push({
@@ -91,7 +95,7 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
       .filter((g) => g.status === 'complete' && g.category === 'savings' && g.currentAmount > 5000)
       .sort((a, b) => b.currentAmount - a.currentAmount);
 
-    const targetGoal = getTopActiveGoal(goals);
+    const targetGoal = topGoal;
 
     if (completedSavingsGoals.length > 0 && targetGoal !== null) {
       const savingsGoal = completedSavingsGoals[0];
@@ -117,7 +121,7 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
 
   // ── Rule 3: Free allocation from pending decision (priority 3) ────────────
   {
-    const targetGoal = getTopActiveGoal(goals);
+    const targetGoal = topGoal;
 
     if (pendingGoalDecisions.length > 0 && targetGoal !== null) {
       const decision = pendingGoalDecisions[0];
@@ -129,7 +133,7 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
         insights.push({
           id: `free-alloc-${decision.goalId}`,
           priority: 3,
-          relatedGoalIds: [targetGoal.id],
+          relatedGoalIds: [decision.goalId, targetGoal.id],
           observation: `${decision.goalName} completed, freeing ${formatInr(freedAmount)}/month.`,
           action: `Redirect the freed ${formatInr(freedAmount)}/month to ${targetGoal.name}.`,
           impact:
@@ -149,7 +153,7 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
       (d) => d.remainingMonths >= 1 && d.remainingMonths <= 6,
     );
 
-    const targetGoal = getTopActiveGoal(goals);
+    const targetGoal = topGoal;
 
     if (nearPayoffDebts.length > 0 && targetGoal !== null) {
       const debt = nearPayoffDebts.sort((a, b) => b.monthlyPayment - a.monthlyPayment)[0];
@@ -177,11 +181,15 @@ export function buildCrossGoalInsights(profile: FinancialProfile): CrossGoalInsi
 
   // ── Rule 5: Step-up income boost (priority 5) ─────────────────────────────
   {
-    const targetGoal = getTopActiveGoal(goals);
+    const targetGoal = topGoal;
 
     if (income.primaryIncrement > 0 && targetGoal !== null) {
-      const annualRaise = Math.round((income.primary * income.primaryIncrement) / 100);
-      const monthlyBoost = Math.round((income.primary * income.primaryIncrement) / 100 / 12);
+      const annualRaise = Math.round(
+        (income.primary * income.netRate * income.primaryIncrement) / 100,
+      );
+      const monthlyBoost = Math.round(
+        (income.primary * income.netRate * income.primaryIncrement) / 100 / 12,
+      );
 
       if (monthlyBoost >= 500) {
         const monthsSaved = computeMonthsSaved(targetGoal, monthlyBoost);
