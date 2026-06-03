@@ -31,6 +31,9 @@ import {
   countUpTransition,
 } from '../components/motion-variants';
 import RecommendationCard from '../components/RecommendationCard';
+import { buildCrossGoalInsights } from '@/lib/math/recommendations';
+import type { CrossGoalInsightTone } from '@/lib/types';
+import type { FinancialProfile } from '@/lib/types';
 
 // ── Quick-pick chips ──────────────────────────────────────────────────────────
 const QUICK_PICKS = [
@@ -204,6 +207,59 @@ function GapBar({ surplus, gap }: { surplus: number; gap: number }) {
   );
 }
 
+// ── Tone mapper ───────────────────────────────────────────────────────────────
+function toCardTone(t: CrossGoalInsightTone): 'positive' | 'warning' | 'blocked' {
+  return t === 'warning' ? 'warning' : 'positive';
+}
+
+// ── Cross-goal insights panel ─────────────────────────────────────────────────
+function CrossGoalInsightsPanel({
+  dreamName,
+  goals,
+  profile,
+}: {
+  dreamName: string;
+  goals: FinancialProfile['goals'];
+  profile: FinancialProfile;
+}) {
+  const relevant = useMemo(() => {
+    const all = buildCrossGoalInsights(profile);
+    if (!dreamName.trim()) return all.slice(0, 2);
+    const lower = dreamName.toLowerCase();
+    const matchedGoal = goals.find(
+      (g) => g.name.toLowerCase().includes(lower) || lower.includes(g.name.toLowerCase()),
+    );
+    if (matchedGoal) {
+      const specific = all.filter((ci) => ci.relatedGoalIds.includes(matchedGoal.id));
+      const global = all.filter((ci) => ci.relatedGoalIds.length === 0);
+      return [...specific, ...global].slice(0, 2);
+    }
+    return all.slice(0, 2);
+  }, [profile, dreamName, goals]);
+
+  if (relevant.length === 0) return null;
+
+  return (
+    <motion.div variants={pageSection}>
+      <p className="text-label" style={{ marginBottom: '0.75rem' }}>
+        Cross-goal opportunities
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {relevant.map((ci) => (
+          <RecommendationCard
+            key={ci.id}
+            observation={ci.observation}
+            action={ci.action}
+            impact={ci.impact}
+            tone={toCardTone(ci.tone)}
+            icon={ci.icon}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function Affordability() {
   const [searchParams] = useSearchParams();
@@ -216,6 +272,17 @@ export default function Affordability() {
   const monthlyReserve = useFinPathStore((s) => s.monthlySurplusReserve);
   const investmentReturnRate = useFinPathStore((s) => s.investmentReturnRate);
   const demoMode = useFinPathStore((s) => s.demoMode ?? false);
+
+  // Full profile objects for CrossGoalInsightsPanel
+  const income = useFinPathStore((s) => s.income);
+  const expenses = useFinPathStore((s) => s.expenses);
+  const debts = useFinPathStore((s) => s.debts);
+  const savings = useFinPathStore((s) => s.savings);
+  const investments = useFinPathStore((s) => s.investments);
+  const goals = useFinPathStore((s) => s.goals);
+  const healthScore = useFinPathStore((s) => s.healthScore);
+  const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
 
   // Pre-fill from URL params, or demo seed when no params present
   const paramName = searchParams.get('name');
@@ -728,6 +795,37 @@ export default function Affordability() {
             </p>
           </div>
         </motion.div>
+      )}
+
+      {/* ── Cross-goal insights ── */}
+      {hasInput && (
+        <CrossGoalInsightsPanel
+          dreamName={dreamName}
+          goals={goals}
+          profile={
+            {
+              onboarded: true,
+              income,
+              expenses,
+              debts,
+              savings,
+              investments,
+              emergencyFund: 0,
+              goals,
+              healthScore,
+              plan: null,
+              chatHistory: [],
+              currency: 'INR',
+              strategy: 'avalanche',
+              monthlySurplusReserve,
+              pendingGoalDecisions,
+              lastUpdated: 0,
+              investmentReturnRate,
+              storageMode: 'local',
+              milestones: [],
+            } as FinancialProfile
+          }
+        />
       )}
     </motion.div>
   );
