@@ -237,4 +237,6 @@ export interface FinancialProfile {
   milestones: Milestone[];
   /** Saved affordability scenarios */
   dreams?: Dream[];
+  /** User's age in years — used to cap EMI tenure at retirement */
+  ageYears?: number;
 }
