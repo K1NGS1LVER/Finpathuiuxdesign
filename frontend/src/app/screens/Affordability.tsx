@@ -265,7 +265,7 @@ function CrossGoalInsightsPanel({
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
-export default function Affordability() {
+export default function Affordability({ onPennyClick }: { onPennyClick?: () => void }) {
   const [searchParams] = useSearchParams();
   const reducedMotion = useReducedMotion() ?? false;
   const [tab, setTab] = useTabParam('tab', 'dream');
@@ -875,7 +875,7 @@ export default function Affordability() {
       )}
       {tab === 'grow' && (
         <Suspense fallback={null}>
-          <Scenarios />
+          <Scenarios onPennyClick={onPennyClick} />
         </Suspense>
       )}
     </motion.div>
