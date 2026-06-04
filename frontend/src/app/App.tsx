@@ -274,7 +274,7 @@ function AppContent() {
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
                         <Suspense fallback={<RouteFallback />}>
-                          <Affordability />
+                          <Affordability onPennyClick={() => setPennyOpen(true)} />
                         </Suspense>
                       </PageTransition>
                     </ErrorBoundary>

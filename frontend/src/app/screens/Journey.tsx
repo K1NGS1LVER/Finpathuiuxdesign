@@ -285,7 +285,11 @@ export default function Journey({ onPennyClick }: { onPennyClick?: () => void })
         active={tab}
         onChange={setTab}
       />
-      <div style={{ display: tab === 'map' ? 'contents' : 'none' }}>
+      <div
+        // @ts-expect-error — React 18 types don't include inert; it's a valid HTML5 attribute
+        inert={tab !== 'map' ? '' : undefined}
+        style={{ display: tab === 'map' ? 'contents' : 'none' }}
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="journey-eyebrow">Financial Roadmap</p>
