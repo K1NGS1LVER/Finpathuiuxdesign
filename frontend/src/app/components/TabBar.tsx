@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import type React from 'react';
 
 export interface TabItem {
   id: string;
@@ -51,7 +50,6 @@ function TabButton({
 
   return (
     <button
-      key={tab.id}
       role="tab"
       type="button"
       aria-selected={isActive}
