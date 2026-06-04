@@ -238,7 +238,7 @@ function AppContent() {
                   element={
                     <ErrorBoundary key={location.pathname} animate={false}>
                       <PageTransition>
-                        <Journey />
+                        <Journey onPennyClick={() => setPennyOpen(true)} />
                       </PageTransition>
                     </ErrorBoundary>
                   }

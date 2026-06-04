@@ -179,7 +179,7 @@ const TravelingDot = memo(function TravelingDot({
   );
 });
 
-export default function Journey() {
+export default function Journey({ onPennyClick }: { onPennyClick?: () => void }) {
   const income = useFinPathStore((s) => s.income);
   const updateGoal = useFinPathStore((s) => s.updateGoal);
 
@@ -285,426 +285,423 @@ export default function Journey() {
         active={tab}
         onChange={setTab}
       />
-      {tab === 'map' && (
-        <>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="journey-eyebrow">Financial Roadmap</p>
-              <h2 className="journey-page-title slashed-zero">Goals</h2>
-            </div>
-            <div className="flex items-center gap-2 pt-1">
-              {goals.completedGoals.length > 0 && (
-                <button
-                  onClick={handleRemoveCompletedClick}
-                  aria-label={
-                    confirmRemove
-                      ? `Confirm remove ${goals.completedGoals.length} completed goals`
-                      : `Remove ${goals.completedGoals.length} completed goals`
-                  }
-                  className="px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-all hover:scale-105"
-                  style={{
-                    background: 'color-mix(in srgb, var(--surface-hover) 70%, transparent)',
-                    border: '1px solid var(--border)',
-                    color: confirmRemove ? 'var(--red)' : 'var(--secondary)',
-                    backdropFilter: 'blur(8px)',
-                  }}
-                >
-                  <Trash2 size={16} className="md:w-[18px] md:h-[18px] icon-wireframe" />
-                  <span className="font-semibold text-xs md:text-sm hidden sm:inline font-body">
-                    {confirmRemove
-                      ? `Confirm? (${goals.completedGoals.length})`
-                      : `Clear (${goals.completedGoals.length})`}
-                  </span>
-                </button>
-              )}
-
+      <div style={{ display: tab === 'map' ? 'contents' : 'none' }}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="journey-eyebrow">Financial Roadmap</p>
+            <h2 className="journey-page-title slashed-zero">Goals</h2>
+          </div>
+          <div className="flex items-center gap-2 pt-1">
+            {goals.completedGoals.length > 0 && (
               <button
-                onClick={() => {
-                  goals.setAddGoalError('');
-                  goals.setShowAddModal(true);
+                onClick={handleRemoveCompletedClick}
+                aria-label={
+                  confirmRemove
+                    ? `Confirm remove ${goals.completedGoals.length} completed goals`
+                    : `Remove ${goals.completedGoals.length} completed goals`
+                }
+                className="px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-all hover:scale-105"
+                style={{
+                  background: 'color-mix(in srgb, var(--surface-hover) 70%, transparent)',
+                  border: '1px solid var(--border)',
+                  color: confirmRemove ? 'var(--red)' : 'var(--secondary)',
+                  backdropFilter: 'blur(8px)',
                 }}
-                aria-label="Add goal"
-                className="px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg bg-accent text-on-accent"
               >
-                <Plus size={18} className="md:w-5 md:h-5" />
-                <span className="font-semibold text-sm md:text-base hidden sm:inline font-body">
-                  Add Goal
+                <Trash2 size={16} className="md:w-[18px] md:h-[18px] icon-wireframe" />
+                <span className="font-semibold text-xs md:text-sm hidden sm:inline font-body">
+                  {confirmRemove
+                    ? `Confirm? (${goals.completedGoals.length})`
+                    : `Clear (${goals.completedGoals.length})`}
                 </span>
               </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <StatPill
-              icon={Target}
-              value={goals.activeGoals.length}
-              label={`active goal${goals.activeGoals.length !== 1 ? 's' : ''}`}
-              color="var(--accent)"
-              subtle="var(--accent-subtle)"
-            />
-            <StatPill
-              icon={Coins}
-              value={`${formatInrCompact(monthlyTotal)}/mo`}
-              label="commitment"
-              color="var(--secondary-accent)"
-              subtle="var(--secondary-accent-subtle)"
-            />
-            {goals.completedGoals.length > 0 && (
-              <StatPill
-                icon={CheckCircle}
-                value={goals.completedGoals.length}
-                label="completed"
-                color="var(--green)"
-                subtle="var(--green-subtle)"
-              />
             )}
-            <div
-              className="ml-auto flex items-center gap-1.5"
-              style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)' }}
+
+            <button
+              onClick={() => {
+                goals.setAddGoalError('');
+                goals.setShowAddModal(true);
+              }}
+              aria-label="Add goal"
+              className="px-3 md:px-4 py-2 h-10 md:h-12 rounded-xl flex items-center gap-2 justify-center transition-transform hover:scale-105 shadow-lg bg-accent text-on-accent"
             >
-              <Info size={11} className="icon-wireframe" style={{ color: 'var(--tertiary)' }} />
-              Click a node to view details
-            </div>
+              <Plus size={18} className="md:w-5 md:h-5" />
+              <span className="font-semibold text-sm md:text-base hidden sm:inline font-body">
+                Add Goal
+              </span>
+            </button>
           </div>
+        </div>
 
-          <div className="h-[calc(100vh-240px)] flex flex-col md:flex-row gap-4">
-            {goals.sortedGoals.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <StatPill
+            icon={Target}
+            value={goals.activeGoals.length}
+            label={`active goal${goals.activeGoals.length !== 1 ? 's' : ''}`}
+            color="var(--accent)"
+            subtle="var(--accent-subtle)"
+          />
+          <StatPill
+            icon={Coins}
+            value={`${formatInrCompact(monthlyTotal)}/mo`}
+            label="commitment"
+            color="var(--secondary-accent)"
+            subtle="var(--secondary-accent-subtle)"
+          />
+          {goals.completedGoals.length > 0 && (
+            <StatPill
+              icon={CheckCircle}
+              value={goals.completedGoals.length}
+              label="completed"
+              color="var(--green)"
+              subtle="var(--green-subtle)"
+            />
+          )}
+          <div
+            className="ml-auto flex items-center gap-1.5"
+            style={{ fontSize: 'var(--text-2xs)', color: 'var(--tertiary)' }}
+          >
+            <Info size={11} className="icon-wireframe" style={{ color: 'var(--tertiary)' }} />
+            Click a node to view details
+          </div>
+        </div>
+
+        <div className="h-[calc(100vh-240px)] flex flex-col md:flex-row gap-4">
+          {goals.sortedGoals.length > 0 && (
+            <div
+              ref={canvas.canvasRef}
+              className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+              style={{
+                borderColor: 'var(--canvas-border)',
+                backgroundColor: 'var(--card)',
+                // Dot grid as CSS radial-gradient — single repaint per zoom change,
+                // no SVG <pattern> recalculation on every pan tick.
+                backgroundImage: 'radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px)',
+                backgroundSize: `${20 * canvas.zoom}px ${20 * canvas.zoom}px`,
+                backgroundPosition: `${canvas.panOffset.x * canvas.zoom}px ${canvas.panOffset.y * canvas.zoom}px`,
+              }}
+              onMouseDown={canvas.handleCanvasPointerDown}
+              onMouseMove={canvas.handlePointerMove}
+              onMouseUp={canvas.handlePointerUp}
+              onMouseLeave={canvas.handlePointerUp}
+              onTouchStart={canvas.handleCanvasPointerDown}
+              onTouchMove={canvas.handlePointerMove}
+              onTouchEnd={canvas.handlePointerUp}
+            >
+              {/* SVG edges (world-transformed). Dot grid moved to the wrapper's background-image. */}
+              <svg className="canvas-bg absolute inset-0 w-full h-full pointer-events-none">
+                <g transform={svgWorldTransform}>
+                  {goals.sortedGoals.map((goal) => {
+                    const goalPos = canvas.getNodePos(goal.id);
+                    const { x1, y1, x2, y2 } = edgeEnd(canvas.incomePos, goalPos);
+                    return (
+                      <line
+                        key={`conn-${goal.id}`}
+                        x1={x1}
+                        y1={y1}
+                        x2={x2}
+                        y2={y2}
+                        className={
+                          goal.status === 'complete' ? 'stroke-accent' : 'stroke-secondary'
+                        }
+                        strokeWidth="3"
+                        strokeDasharray={goal.status === 'complete' ? '0' : '8,4'}
+                        opacity={goal.status === 'complete' ? 0.8 : 0.4}
+                      />
+                    );
+                  })}
+                </g>
+              </svg>
+
+              {/* Single world-transformed wrapper holding dots, rings, and node cards. */}
               <div
-                ref={canvas.canvasRef}
-                className={`flex-1 rounded-2xl relative overflow-hidden bg-card border ${canvas.isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
                 style={{
-                  borderColor: 'var(--canvas-border)',
-                  backgroundColor: 'var(--card)',
-                  // Dot grid as CSS radial-gradient — single repaint per zoom change,
-                  // no SVG <pattern> recalculation on every pan tick.
-                  backgroundImage:
-                    'radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px)',
-                  backgroundSize: `${20 * canvas.zoom}px ${20 * canvas.zoom}px`,
-                  backgroundPosition: `${canvas.panOffset.x * canvas.zoom}px ${canvas.panOffset.y * canvas.zoom}px`,
+                  transform: worldTransform,
+                  transformOrigin: '0 0',
+                  position: 'absolute',
+                  inset: 0,
+                  pointerEvents: 'none',
                 }}
-                onMouseDown={canvas.handleCanvasPointerDown}
-                onMouseMove={canvas.handlePointerMove}
-                onMouseUp={canvas.handlePointerUp}
-                onMouseLeave={canvas.handlePointerUp}
-                onTouchStart={canvas.handleCanvasPointerDown}
-                onTouchMove={canvas.handlePointerMove}
-                onTouchEnd={canvas.handlePointerUp}
               >
-                {/* SVG edges (world-transformed). Dot grid moved to the wrapper's background-image. */}
-                <svg className="canvas-bg absolute inset-0 w-full h-full pointer-events-none">
-                  <g transform={svgWorldTransform}>
-                    {goals.sortedGoals.map((goal) => {
-                      const goalPos = canvas.getNodePos(goal.id);
-                      const { x1, y1, x2, y2 } = edgeEnd(canvas.incomePos, goalPos);
-                      return (
-                        <line
-                          key={`conn-${goal.id}`}
-                          x1={x1}
-                          y1={y1}
-                          x2={x2}
-                          y2={y2}
-                          className={
-                            goal.status === 'complete' ? 'stroke-accent' : 'stroke-secondary'
-                          }
-                          strokeWidth="3"
-                          strokeDasharray={goal.status === 'complete' ? '0' : '8,4'}
-                          opacity={goal.status === 'complete' ? 0.8 : 0.4}
-                        />
-                      );
-                    })}
-                  </g>
-                </svg>
-
-                {/* Single world-transformed wrapper holding dots, rings, and node cards. */}
-                <div
-                  style={{
-                    transform: worldTransform,
-                    transformOrigin: '0 0',
-                    position: 'absolute',
-                    inset: 0,
-                    pointerEvents: 'none',
-                  }}
-                >
-                  {/* Traveling dots */}
-                  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-                    {goals.sortedGoals.map((goal, i) => {
-                      if (goal.status === 'complete') return null;
-                      const goalPos = canvas.getNodePos(goal.id);
-                      const { x1, y1, x2, y2 } = edgeEnd(canvas.incomePos, goalPos);
-                      const { size, dur } = getDotProps(goal.priority);
-                      return (
-                        <TravelingDot
-                          key={`dot-${goal.id}`}
-                          fromX={x1}
-                          fromY={y1}
-                          toX={x2}
-                          toY={y2}
-                          size={size}
-                          duration={dur}
-                          delay={i * 0.5}
-                          color={getStatusColor(goal.status)}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  {/* Completion rings */}
-                  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2 }}>
-                    <AnimatePresence>
-                      {goals.completingIds.map((id) => {
-                        const pos = canvas.getNodePos(id);
-                        return (
-                          <motion.div
-                            key={id}
-                            className="absolute rounded-full"
-                            style={{
-                              left: pos.x + NODE_CENTER_X,
-                              top: pos.y + NODE_CENTER_Y,
-                              translateX: '-50%',
-                              translateY: '-50%',
-                              border: '1.5px solid var(--accent)',
-                              boxShadow: '0 0 16px var(--accent-glow)',
-                              background: 'transparent',
-                            }}
-                            initial={{ width: 0, height: 0, opacity: 0.9 }}
-                            animate={{
-                              width: COMPLETION_RING_SIZE,
-                              height: COMPLETION_RING_SIZE,
-                              opacity: 0,
-                            }}
-                            transition={{
-                              duration: COMPLETION_RING_DURATION,
-                              ease: [0.22, 1, 0.36, 1],
-                            }}
-                          />
-                        );
-                      })}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Node cards */}
-                  <div className="absolute inset-0" style={{ zIndex: 3, pointerEvents: 'none' }}>
-                    <JourneyIncomeNode
-                      x={canvas.incomePos.x}
-                      y={canvas.incomePos.y}
-                      dragging={canvas.dragging === 'income'}
-                      income={income}
-                      formatCurrency={formatInrCompact}
-                      onPointerDown={canvas.handlePointerDown}
-                      onClick={() => {
-                        goals.setSelectedGoalId(null);
-                        setShowIncomePanel(true);
-                      }}
-                    />
-
-                    <AnimatePresence>
-                      {goals.sortedGoals.map((goal, i) => {
-                        const pos = canvas.getNodePos(goal.id);
-                        return (
-                          <JourneyGoalNode
-                            key={goal.id}
-                            goal={goal}
-                            index={i}
-                            x={pos.x}
-                            y={pos.y}
-                            isDragging={canvas.dragging === goal.id}
-                            onPointerDown={canvas.handlePointerDown}
-                            onClick={() => {
-                              setShowIncomePanel(false);
-                              goals.setSelectedGoalId(goal.id);
-                            }}
-                            formatCurrency={formatInrCompact}
-                          />
-                        );
-                      })}
-                    </AnimatePresence>
-                  </div>
+                {/* Traveling dots */}
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+                  {goals.sortedGoals.map((goal, i) => {
+                    if (goal.status === 'complete') return null;
+                    const goalPos = canvas.getNodePos(goal.id);
+                    const { x1, y1, x2, y2 } = edgeEnd(canvas.incomePos, goalPos);
+                    const { size, dur } = getDotProps(goal.priority);
+                    return (
+                      <TravelingDot
+                        key={`dot-${goal.id}`}
+                        fromX={x1}
+                        fromY={y1}
+                        toX={x2}
+                        toY={y2}
+                        size={size}
+                        duration={dur}
+                        delay={i * 0.5}
+                        color={getStatusColor(goal.status)}
+                      />
+                    );
+                  })}
                 </div>
 
-                <div className="journey-canvas-hint">
-                  <Info size={11} className="icon-wireframe" />
-                  Scroll to zoom · Drag to pan · Click node to view
+                {/* Completion rings */}
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2 }}>
+                  <AnimatePresence>
+                    {goals.completingIds.map((id) => {
+                      const pos = canvas.getNodePos(id);
+                      return (
+                        <motion.div
+                          key={id}
+                          className="absolute rounded-full"
+                          style={{
+                            left: pos.x + NODE_CENTER_X,
+                            top: pos.y + NODE_CENTER_Y,
+                            translateX: '-50%',
+                            translateY: '-50%',
+                            border: '1.5px solid var(--accent)',
+                            boxShadow: '0 0 16px var(--accent-glow)',
+                            background: 'transparent',
+                          }}
+                          initial={{ width: 0, height: 0, opacity: 0.9 }}
+                          animate={{
+                            width: COMPLETION_RING_SIZE,
+                            height: COMPLETION_RING_SIZE,
+                            opacity: 0,
+                          }}
+                          transition={{
+                            duration: COMPLETION_RING_DURATION,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                        />
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+
+                {/* Node cards */}
+                <div className="absolute inset-0" style={{ zIndex: 3, pointerEvents: 'none' }}>
+                  <JourneyIncomeNode
+                    x={canvas.incomePos.x}
+                    y={canvas.incomePos.y}
+                    dragging={canvas.dragging === 'income'}
+                    income={income}
+                    formatCurrency={formatInrCompact}
+                    onPointerDown={canvas.handlePointerDown}
+                    onClick={() => {
+                      goals.setSelectedGoalId(null);
+                      setShowIncomePanel(true);
+                    }}
+                  />
+
+                  <AnimatePresence>
+                    {goals.sortedGoals.map((goal, i) => {
+                      const pos = canvas.getNodePos(goal.id);
+                      return (
+                        <JourneyGoalNode
+                          key={goal.id}
+                          goal={goal}
+                          index={i}
+                          x={pos.x}
+                          y={pos.y}
+                          isDragging={canvas.dragging === goal.id}
+                          onPointerDown={canvas.handlePointerDown}
+                          onClick={() => {
+                            setShowIncomePanel(false);
+                            goals.setSelectedGoalId(goal.id);
+                          }}
+                          formatCurrency={formatInrCompact}
+                        />
+                      );
+                    })}
+                  </AnimatePresence>
                 </div>
               </div>
-            )}
-            {goals.sortedGoals.length === 0 && (
-              <motion.div
-                className="flex-1 rounded-2xl flex items-center justify-center p-6 border"
-                style={{ borderColor: 'var(--canvas-border)', backgroundColor: 'var(--card)' }}
-                variants={cardEntry}
-                initial="initial"
-                animate="animate"
-              >
-                <div className="flex flex-col items-center text-center" style={{ maxWidth: 440 }}>
+
+              <div className="journey-canvas-hint">
+                <Info size={11} className="icon-wireframe" />
+                Scroll to zoom · Drag to pan · Click node to view
+              </div>
+            </div>
+          )}
+          {goals.sortedGoals.length === 0 && (
+            <motion.div
+              className="flex-1 rounded-2xl flex items-center justify-center p-6 border"
+              style={{ borderColor: 'var(--canvas-border)', backgroundColor: 'var(--card)' }}
+              variants={cardEntry}
+              initial="initial"
+              animate="animate"
+            >
+              <div className="flex flex-col items-center text-center" style={{ maxWidth: 440 }}>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'relative',
+                    width: 240,
+                    height: 96,
+                    marginBottom: 'var(--space-4)',
+                  }}
+                >
+                  <svg width="240" height="96" style={{ position: 'absolute', inset: 0 }}>
+                    <line
+                      x1="36"
+                      y1="48"
+                      x2="92"
+                      y2="20"
+                      stroke="var(--border)"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 4"
+                    />
+                    <line
+                      x1="36"
+                      y1="48"
+                      x2="120"
+                      y2="48"
+                      stroke="var(--border)"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 4"
+                    />
+                    <line
+                      x1="36"
+                      y1="48"
+                      x2="92"
+                      y2="76"
+                      stroke="var(--border)"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 4"
+                    />
+                  </svg>
                   <div
-                    aria-hidden="true"
+                    className="skeleton"
                     style={{
-                      position: 'relative',
-                      width: 240,
-                      height: 96,
-                      marginBottom: 'var(--space-4)',
+                      position: 'absolute',
+                      left: 4,
+                      top: 28,
+                      width: 64,
+                      height: 40,
+                      borderRadius: 'var(--radius-base)',
                     }}
-                  >
-                    <svg width="240" height="96" style={{ position: 'absolute', inset: 0 }}>
-                      <line
-                        x1="36"
-                        y1="48"
-                        x2="92"
-                        y2="20"
-                        stroke="var(--border)"
-                        strokeWidth="1.5"
-                        strokeDasharray="4 4"
-                      />
-                      <line
-                        x1="36"
-                        y1="48"
-                        x2="120"
-                        y2="48"
-                        stroke="var(--border)"
-                        strokeWidth="1.5"
-                        strokeDasharray="4 4"
-                      />
-                      <line
-                        x1="36"
-                        y1="48"
-                        x2="92"
-                        y2="76"
-                        stroke="var(--border)"
-                        strokeWidth="1.5"
-                        strokeDasharray="4 4"
-                      />
-                    </svg>
-                    <div
+                  />
+                  {[
+                    { left: 80, top: 4, delay: 0 },
+                    { left: 116, top: 32, delay: 0.4 },
+                    { left: 80, top: 60, delay: 0.8 },
+                  ].map((p, i) => (
+                    <motion.div
+                      key={i}
                       className="skeleton"
                       style={{
                         position: 'absolute',
-                        left: 4,
-                        top: 28,
-                        width: 64,
-                        height: 40,
+                        left: p.left,
+                        top: p.top,
+                        width: 56,
+                        height: 32,
                         borderRadius: 'var(--radius-base)',
                       }}
+                      animate={{ opacity: [0.4, 0.65, 0.4] }}
+                      transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: p.delay,
+                      }}
                     />
-                    {[
-                      { left: 80, top: 4, delay: 0 },
-                      { left: 116, top: 32, delay: 0.4 },
-                      { left: 80, top: 60, delay: 0.8 },
-                    ].map((p, i) => (
-                      <motion.div
-                        key={i}
-                        className="skeleton"
-                        style={{
-                          position: 'absolute',
-                          left: p.left,
-                          top: p.top,
-                          width: 56,
-                          height: 32,
-                          borderRadius: 'var(--radius-base)',
-                        }}
-                        animate={{ opacity: [0.4, 0.65, 0.4] }}
-                        transition={{
-                          duration: 2.5,
-                          repeat: Infinity,
-                          ease: 'easeInOut',
-                          delay: p.delay,
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <Target
-                    size={24}
-                    className="icon-wireframe"
-                    style={{
-                      color: 'var(--secondary)',
-                      opacity: 0.5,
-                      marginBottom: 'var(--space-2)',
-                    }}
-                  />
-                  <p
-                    className="text-label"
-                    style={{ color: 'var(--tertiary)', marginBottom: 'var(--space-2)' }}
-                  >
-                    Your map is empty
-                  </p>
-                  <h3
-                    className="text-display"
-                    style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}
-                  >
-                    Plant your first goal
-                  </h3>
-                  <p
-                    className="font-body"
-                    style={{
-                      fontSize: 'var(--text-sm)',
-                      color: 'var(--secondary)',
-                      lineHeight: 1.6,
-                      marginBottom: 'var(--space-5)',
-                    }}
-                  >
-                    Every goal you add becomes a node on your map, fed by the income you already
-                    track. Start with something close &mdash; a phone, a trip, an emergency cushion.
-                  </p>
-                  <motion.button
-                    type="button"
-                    onClick={() => {
-                      goals.setAddGoalError('');
-                      goals.setShowAddModal(true);
-                    }}
-                    aria-label="Add your first goal"
-                    className="px-5 py-3 rounded-xl flex items-center gap-2 justify-center shadow-lg bg-accent text-on-accent"
-                    whileHover={cardHover}
-                  >
-                    <Plus size={18} />
-                    <span className="font-semibold text-sm font-body">Add your first goal</span>
-                  </motion.button>
+                  ))}
                 </div>
-              </motion.div>
-            )}
 
-            <JourneyAddGoalModal
-              show={goals.showAddModal}
-              onClose={goals.closeAddModal}
-              storeGoals={goals.storeGoals}
-              activeGoals={goals.activeGoals}
-              monthlySurplus={goals.monthlySurplus}
-              existingMonthlyNeed={goals.existingMonthlyNeed}
-              budgetRemaining={goals.budgetRemaining}
-              addGoalError={goals.addGoalError}
-              setAddGoalError={goals.setAddGoalError}
-              customName={goals.customName}
-              setCustomName={goals.setCustomName}
-              customTarget={goals.customTarget}
-              setCustomTarget={goals.setCustomTarget}
-              customMonths={goals.customMonths}
-              setCustomMonths={goals.setCustomMonths}
-              onAddPreset={goals.handleAddPreset}
-              onAddCustom={goals.handleAddCustom}
+                <Target
+                  size={24}
+                  className="icon-wireframe"
+                  style={{
+                    color: 'var(--secondary)',
+                    opacity: 0.5,
+                    marginBottom: 'var(--space-2)',
+                  }}
+                />
+                <p
+                  className="text-label"
+                  style={{ color: 'var(--tertiary)', marginBottom: 'var(--space-2)' }}
+                >
+                  Your map is empty
+                </p>
+                <h3
+                  className="text-display"
+                  style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}
+                >
+                  Plant your first goal
+                </h3>
+                <p
+                  className="font-body"
+                  style={{
+                    fontSize: 'var(--text-sm)',
+                    color: 'var(--secondary)',
+                    lineHeight: 1.6,
+                    marginBottom: 'var(--space-5)',
+                  }}
+                >
+                  Every goal you add becomes a node on your map, fed by the income you already
+                  track. Start with something close &mdash; a phone, a trip, an emergency cushion.
+                </p>
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    goals.setAddGoalError('');
+                    goals.setShowAddModal(true);
+                  }}
+                  aria-label="Add your first goal"
+                  className="px-5 py-3 rounded-xl flex items-center gap-2 justify-center shadow-lg bg-accent text-on-accent"
+                  whileHover={cardHover}
+                >
+                  <Plus size={18} />
+                  <span className="font-semibold text-sm font-body">Add your first goal</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          <JourneyAddGoalModal
+            show={goals.showAddModal}
+            onClose={goals.closeAddModal}
+            storeGoals={goals.storeGoals}
+            activeGoals={goals.activeGoals}
+            monthlySurplus={goals.monthlySurplus}
+            existingMonthlyNeed={goals.existingMonthlyNeed}
+            budgetRemaining={goals.budgetRemaining}
+            addGoalError={goals.addGoalError}
+            setAddGoalError={goals.setAddGoalError}
+            customName={goals.customName}
+            setCustomName={goals.setCustomName}
+            customTarget={goals.customTarget}
+            setCustomTarget={goals.setCustomTarget}
+            customMonths={goals.customMonths}
+            setCustomMonths={goals.setCustomMonths}
+            onAddPreset={goals.handleAddPreset}
+            onAddCustom={goals.handleAddCustom}
+          />
+
+          {showIncomePanel && (
+            <JourneyIncomeDetailPanel
+              income={income}
+              onClose={() => setShowIncomePanel(false)}
+              formatCurrency={formatInrCompact}
             />
+          )}
 
-            {showIncomePanel && (
-              <JourneyIncomeDetailPanel
-                income={income}
-                onClose={() => setShowIncomePanel(false)}
-                formatCurrency={formatInrCompact}
-              />
-            )}
-
-            <JourneyGoalDetailPanel
-              goal={goals.selectedGoal}
-              onClose={() => goals.setSelectedGoalId(null)}
-              onComplete={handleCompleteGoal}
-              onCompleteMonth={handleCompleteMonth}
-              onDelete={goals.handleDelete}
-              onPriorityChange={goals.handlePriorityChange}
-              activeGoalsCount={goals.activeGoals.length}
-            />
-          </div>
-        </>
-      )}
+          <JourneyGoalDetailPanel
+            goal={goals.selectedGoal}
+            onClose={() => goals.setSelectedGoalId(null)}
+            onComplete={handleCompleteGoal}
+            onCompleteMonth={handleCompleteMonth}
+            onDelete={goals.handleDelete}
+            onPriorityChange={goals.handlePriorityChange}
+            activeGoalsCount={goals.activeGoals.length}
+          />
+        </div>
+      </div>
       {tab === 'progress' && (
         <Suspense fallback={null}>
-          <Progress />
+          <Progress onPennyClick={onPennyClick} />
         </Suspense>
       )}
     </div>
