@@ -1,8 +1,14 @@
+import { useState } from 'react';
 import type React from 'react';
+
+export interface TabItem {
+  id: string;
+  label: string;
+}
 
 export interface TabBarProps {
   /** Array of tab definitions with id and label */
-  tabs: { id: string; label: string }[];
+  tabs: TabItem[];
   /** ID of the currently active tab */
   active: string;
   /** Callback fired when a tab is clicked */
@@ -32,9 +38,53 @@ export interface TabBarProps {
  *   />
  * );
  */
+function TabButton({
+  tab,
+  isActive,
+  onClick,
+}: {
+  tab: TabItem;
+  isActive: boolean;
+  onClick: (id: string) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <button
+      key={tab.id}
+      role="tab"
+      type="button"
+      aria-selected={isActive}
+      onClick={() => onClick(tab.id)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        flex: 1,
+        padding: 'var(--space-2) var(--space-3)',
+        fontSize: 'var(--text-sm)',
+        fontWeight: isActive ? 'var(--font-weight-semibold)' : 'var(--font-weight-medium)',
+        color: isActive ? 'var(--accent-text)' : 'var(--tertiary)',
+        background: isActive
+          ? 'var(--accent-subtle)'
+          : hovered
+            ? 'var(--surface-hover)'
+            : 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        transitionProperty: 'background-color, color',
+        transitionDuration: '200ms',
+        transitionTimingFunction: 'ease',
+      }}
+    >
+      {tab.label}
+    </button>
+  );
+}
+
 export default function TabBar({ tabs, active, onChange }: TabBarProps) {
   return (
     <div
+      role="tablist"
       style={{
         display: 'flex',
         width: '100%',
@@ -43,39 +93,7 @@ export default function TabBar({ tabs, active, onChange }: TabBarProps) {
     >
       {tabs.map((tab) => {
         const isActive = tab.id === active;
-
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            aria-selected={isActive}
-            style={{
-              flex: 1,
-              padding: 'var(--space-2) var(--space-3)',
-              fontSize: 'var(--text-sm)',
-              fontWeight: isActive ? 'var(--font-weight-semibold)' : 'var(--font-weight-medium)',
-              color: isActive ? 'var(--accent-text)' : 'var(--tertiary)',
-              background: isActive ? 'var(--accent-subtle)' : 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              transition: '200ms ease',
-              transitionProperty: 'background-color, color',
-            }}
-            onMouseEnter={(e) => {
-              if (!isActive) {
-                (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) {
-                (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-              }
-            }}
-          >
-            {tab.label}
-          </button>
-        );
+        return <TabButton key={tab.id} tab={tab} isActive={isActive} onClick={onChange} />;
       })}
     </div>
   );

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useSearchParams } from 'react-router';
 
 /**
@@ -17,15 +18,18 @@ export function useTabParam(key: string, defaultTab: string): [string, (t: strin
 
   const currentTab = searchParams.get(key) ?? defaultTab;
 
-  const setTab = (tabId: string) => {
-    setSearchParams(
-      (prev) => {
-        prev.set(key, tabId);
-        return prev;
-      },
-      { replace: true },
-    );
-  };
+  const setTab = useCallback(
+    (tabId: string) => {
+      setSearchParams(
+        (prev) => {
+          prev.set(key, tabId);
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [key, setSearchParams],
+  );
 
   return [currentTab, setTab];
 }
