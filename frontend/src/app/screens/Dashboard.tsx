@@ -22,7 +22,7 @@ import {
   Gem,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
@@ -30,9 +30,10 @@ import { formatInr, formatInrCompact } from '@/lib/format';
 import { fireConfetti } from '@/lib/confetti';
 import HealthScoreWidget from '@/app/components/HealthScoreWidget';
 import { buildCrossGoalInsights } from '@/lib/math/recommendations';
-import TabBar, { type TabItem } from '@/app/components/TabBar';
+import TabBar from '@/app/components/TabBar';
 import { useTabParam } from '@/app/hooks/useTabParam';
-import Month from './Month';
+
+const Month = lazy(() => import('./Month'));
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Bike,
@@ -672,7 +673,11 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
           </motion.div>
         </>
       )}
-      {tab === 'month' && <Month />}
+      {tab === 'month' && (
+        <Suspense fallback={null}>
+          <Month />
+        </Suspense>
+      )}
     </div>
   );
 }
