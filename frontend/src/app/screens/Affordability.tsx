@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import {
@@ -34,6 +34,10 @@ import RecommendationCard from '../components/RecommendationCard';
 import { buildCrossGoalInsights } from '@/lib/math/recommendations';
 import type { CrossGoalInsightTone } from '@/lib/types';
 import type { FinancialProfile } from '@/lib/types';
+import TabBar from '@/app/components/TabBar';
+import { useTabParam } from '@/app/hooks/useTabParam';
+
+const Scenarios = lazy(() => import('./Scenarios'));
 
 // ── Quick-pick chips ──────────────────────────────────────────────────────────
 const QUICK_PICKS = [
@@ -264,6 +268,7 @@ function CrossGoalInsightsPanel({
 export default function Affordability() {
   const [searchParams] = useSearchParams();
   const reducedMotion = useReducedMotion() ?? false;
+  const [tab, setTab] = useTabParam('tab', 'dream');
 
   // Store reads
   const netMonthlyIncome = useFinPathStore((s) => s.income.netMonthly);
@@ -404,263 +409,312 @@ export default function Affordability() {
       animate="visible"
       style={{ maxWidth: '42rem', margin: '0 auto', paddingBottom: '2rem' }}
     >
-      {/* ── Header ── */}
-      <motion.div variants={pageSection} style={{ marginBottom: '1.5rem' }}>
-        <p className="text-label" style={{ marginBottom: 4 }}>
-          Affordability
-        </p>
-        <h2 className="text-title">Can I afford this?</h2>
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--secondary)', marginTop: 4 }}>
-          Name a dream and see if it fits your plan.
-        </p>
-      </motion.div>
+      <TabBar
+        tabs={[
+          { id: 'dream', label: 'Dream' },
+          { id: 'grow', label: 'Grow' },
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
+      {tab === 'dream' && (
+        <>
+          {/* ── Header ── */}
+          <motion.div variants={pageSection} style={{ marginBottom: '1.5rem' }}>
+            <p className="text-label" style={{ marginBottom: 4 }}>
+              Affordability
+            </p>
+            <h2 className="text-title">Can I afford this?</h2>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--secondary)', marginTop: 4 }}>
+              Name a dream and see if it fits your plan.
+            </p>
+          </motion.div>
 
-      {/* ── Input zone ── */}
-      <motion.div variants={pageSection} className="bento-card" style={{ marginBottom: '1rem' }}>
-        {/* Quick-pick chips */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: '1rem' }}>
-          {QUICK_PICKS.map(({ label, icon: Icon, cost }) => (
-            <button
-              key={label}
-              onClick={() => pickChip(label, cost)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
-                borderRadius: 99,
-                border: `1px solid ${activeChip === label ? 'var(--accent)' : 'var(--border)'}`,
-                background: activeChip === label ? 'var(--accent-subtle)' : 'transparent',
-                color: activeChip === label ? 'var(--accent)' : 'var(--secondary)',
-                fontSize: 'var(--text-sm)',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <Icon size={13} />
-              {label}
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              setActiveChip('Custom');
-              setDreamName('');
-              setCostRaw('');
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              borderRadius: 99,
-              border: `1px solid ${activeChip === 'Custom' ? 'var(--accent)' : 'var(--border)'}`,
-              background: activeChip === 'Custom' ? 'var(--accent-subtle)' : 'transparent',
-              color: activeChip === 'Custom' ? 'var(--accent)' : 'var(--secondary)',
-              fontSize: 'var(--text-sm)',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
+          {/* ── Input zone ── */}
+          <motion.div
+            variants={pageSection}
+            className="bento-card"
+            style={{ marginBottom: '1rem' }}
           >
-            <Pencil size={13} />
-            Custom
-          </button>
-        </div>
-
-        {/* Name + cost inputs */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: '1rem', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 180px' }}>
-            <label
-              style={{
-                fontSize: 'var(--text-xs)',
-                color: 'var(--secondary)',
-                fontWeight: 'var(--font-weight-semibold)',
-                display: 'block',
-                marginBottom: 6,
-              }}
-            >
-              Dream name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. New Car"
-              value={dreamName}
-              onChange={(e) => {
-                setDreamName(e.target.value);
-                setActiveChip('Custom');
-              }}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: 10,
-                border: '1px solid var(--border)',
-                background: 'var(--surface-tint)',
-                color: 'var(--foreground)',
-                fontSize: 'var(--text-sm)',
-                outline: 'none',
-              }}
-            />
-          </div>
-          <div style={{ flex: '1 1 140px' }}>
-            <label
-              style={{
-                fontSize: 'var(--text-xs)',
-                color: 'var(--secondary)',
-                fontWeight: 'var(--font-weight-semibold)',
-                display: 'block',
-                marginBottom: 6,
-              }}
-            >
-              Target cost (₹)
-            </label>
-            <input
-              type="number"
-              placeholder="800000"
-              value={costRaw}
-              onChange={(e) => {
-                setCostRaw(e.target.value);
-                setActiveChip('Custom');
-              }}
-              min={0}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: 10,
-                border: '1px solid var(--border)',
-                background: 'var(--surface-tint)',
-                color: 'var(--foreground)',
-                fontSize: 'var(--text-sm)',
-                outline: 'none',
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Cash ↔ EMI toggle */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: route === 'emi' ? '1rem' : 0 }}>
-          {(['cash', 'emi'] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRoute(r)}
-              style={{
-                padding: '6px 16px',
-                borderRadius: 99,
-                fontSize: 'var(--text-sm)',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                border: `1px solid ${route === r ? 'var(--accent)' : 'var(--border)'}`,
-                background: route === r ? 'var(--accent-subtle)' : 'transparent',
-                color: route === r ? 'var(--accent)' : 'var(--secondary)',
-                fontWeight: route === r ? 'var(--font-weight-semibold)' : undefined,
-              }}
-            >
-              {r === 'cash' ? 'Save up (cash)' : 'Take a loan (EMI)'}
-            </button>
-          ))}
-        </div>
-
-        {/* EMI sliders */}
-        {route === 'emi' && (
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {/* Interest rate */}
-            <div className="knob" style={{ flex: '1 1 160px' }}>
-              <div className="knob-header">
-                <label htmlFor="afford-rate" className="text-label">
-                  Interest rate
-                </label>
-                <span className="knob-value slashed-zero">{rateRaw}%</span>
-              </div>
-              <input
-                id="afford-rate"
-                type="range"
-                min={5}
-                max={18}
-                step={0.5}
-                value={rateRaw}
-                onChange={(e) => setRateRaw(e.target.value)}
-                aria-valuetext={`${rateRaw} percent`}
-              />
+            {/* Quick-pick chips */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: '1rem' }}>
+              {QUICK_PICKS.map(({ label, icon: Icon, cost }) => (
+                <button
+                  key={label}
+                  onClick={() => pickChip(label, cost)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '6px 12px',
+                    borderRadius: 99,
+                    border: `1px solid ${activeChip === label ? 'var(--accent)' : 'var(--border)'}`,
+                    background: activeChip === label ? 'var(--accent-subtle)' : 'transparent',
+                    color: activeChip === label ? 'var(--accent)' : 'var(--secondary)',
+                    fontSize: 'var(--text-sm)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <Icon size={13} />
+                  {label}
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  setActiveChip('Custom');
+                  setDreamName('');
+                  setCostRaw('');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px',
+                  borderRadius: 99,
+                  border: `1px solid ${activeChip === 'Custom' ? 'var(--accent)' : 'var(--border)'}`,
+                  background: activeChip === 'Custom' ? 'var(--accent-subtle)' : 'transparent',
+                  color: activeChip === 'Custom' ? 'var(--accent)' : 'var(--secondary)',
+                  fontSize: 'var(--text-sm)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Pencil size={13} />
+                Custom
+              </button>
             </div>
-            {/* Tenure */}
-            <div className="knob" style={{ flex: '1 1 160px' }}>
-              <div className="knob-header">
-                <label htmlFor="afford-tenure" className="text-label">
-                  Tenure
+
+            {/* Name + cost inputs */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 180px' }}>
+                <label
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--secondary)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    display: 'block',
+                    marginBottom: 6,
+                  }}
+                >
+                  Dream name
                 </label>
-                <span className="knob-value slashed-zero">{tenure} mo</span>
+                <input
+                  type="text"
+                  placeholder="e.g. New Car"
+                  value={dreamName}
+                  onChange={(e) => {
+                    setDreamName(e.target.value);
+                    setActiveChip('Custom');
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 10,
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-tint)',
+                    color: 'var(--foreground)',
+                    fontSize: 'var(--text-sm)',
+                    outline: 'none',
+                  }}
+                />
               </div>
-              <input
-                id="afford-tenure"
-                type="range"
-                min={6}
-                max={360}
-                step={6}
-                value={tenureRaw}
-                onChange={(e) => setTenureRaw(e.target.value)}
-                aria-valuetext={`${tenure} months`}
-              />
+              <div style={{ flex: '1 1 140px' }}>
+                <label
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--secondary)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    display: 'block',
+                    marginBottom: 6,
+                  }}
+                >
+                  Target cost (₹)
+                </label>
+                <input
+                  type="number"
+                  placeholder="800000"
+                  value={costRaw}
+                  onChange={(e) => {
+                    setCostRaw(e.target.value);
+                    setActiveChip('Custom');
+                  }}
+                  min={0}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 10,
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-tint)',
+                    color: 'var(--foreground)',
+                    fontSize: 'var(--text-sm)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </motion.div>
 
-      {/* ── Empty state ── */}
-      {!hasInput && (
-        <motion.div
-          variants={pageSection}
-          className="bento-card"
-          style={{ textAlign: 'center', padding: '3rem 2rem' }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              margin: '0 auto 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
-            }}
-          >
-            <ChevronRight size={24} style={{ color: 'var(--accent)' }} />
-          </div>
-          <p
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-lg)',
-              fontWeight: 'var(--font-weight-bold)',
-              marginBottom: 6,
-            }}
-          >
-            Name a dream to get started
-          </p>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--secondary)' }}>
-            Pick a quick-start or enter a custom dream above.
-          </p>
-        </motion.div>
-      )}
+            {/* Cash ↔ EMI toggle */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: route === 'emi' ? '1rem' : 0 }}>
+              {(['cash', 'emi'] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRoute(r)}
+                  style={{
+                    padding: '6px 16px',
+                    borderRadius: 99,
+                    fontSize: 'var(--text-sm)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    border: `1px solid ${route === r ? 'var(--accent)' : 'var(--border)'}`,
+                    background: route === r ? 'var(--accent-subtle)' : 'transparent',
+                    color: route === r ? 'var(--accent)' : 'var(--secondary)',
+                    fontWeight: route === r ? 'var(--font-weight-semibold)' : undefined,
+                  }}
+                >
+                  {r === 'cash' ? 'Save up (cash)' : 'Take a loan (EMI)'}
+                </button>
+              ))}
+            </div>
 
-      {/* ── Verdict zone ── */}
-      {result && (
-        <motion.div variants={pageSection} className="bento-card" style={{ marginBottom: '1rem' }}>
-          <VerdictBadge verdict={result.verdict} />
+            {/* EMI sliders */}
+            {route === 'emi' && (
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                {/* Interest rate */}
+                <div className="knob" style={{ flex: '1 1 160px' }}>
+                  <div className="knob-header">
+                    <label htmlFor="afford-rate" className="text-label">
+                      Interest rate
+                    </label>
+                    <span className="knob-value slashed-zero">{rateRaw}%</span>
+                  </div>
+                  <input
+                    id="afford-rate"
+                    type="range"
+                    min={5}
+                    max={18}
+                    step={0.5}
+                    value={rateRaw}
+                    onChange={(e) => setRateRaw(e.target.value)}
+                    aria-valuetext={`${rateRaw} percent`}
+                  />
+                </div>
+                {/* Tenure */}
+                <div className="knob" style={{ flex: '1 1 160px' }}>
+                  <div className="knob-header">
+                    <label htmlFor="afford-tenure" className="text-label">
+                      Tenure
+                    </label>
+                    <span className="knob-value slashed-zero">{tenure} mo</span>
+                  </div>
+                  <input
+                    id="afford-tenure"
+                    type="range"
+                    min={6}
+                    max={360}
+                    step={6}
+                    value={tenureRaw}
+                    onChange={(e) => setTenureRaw(e.target.value)}
+                    aria-valuetext={`${tenure} months`}
+                  />
+                </div>
+              </div>
+            )}
+          </motion.div>
 
-          {/* Headline number */}
-          <div style={{ margin: '1rem 0 0.5rem' }}>
-            {route === 'cash' && result.monthsToAfford !== null ? (
-              <p style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
-                {result.verdict === 'affordable_now' ? (
-                  <span
-                    style={{
-                      fontSize: 'var(--text-3xl)',
-                      fontWeight: 'var(--font-weight-bold)',
-                      color: verdictColor,
-                    }}
-                  >
-                    Affordable now
-                  </span>
-                ) : (
-                  <>
+          {/* ── Empty state ── */}
+          {!hasInput && (
+            <motion.div
+              variants={pageSection}
+              className="bento-card"
+              style={{ textAlign: 'center', padding: '3rem 2rem' }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  margin: '0 auto 1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+                }}
+              >
+                <ChevronRight size={24} style={{ color: 'var(--accent)' }} />
+              </div>
+              <p
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-lg)',
+                  fontWeight: 'var(--font-weight-bold)',
+                  marginBottom: 6,
+                }}
+              >
+                Name a dream to get started
+              </p>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--secondary)' }}>
+                Pick a quick-start or enter a custom dream above.
+              </p>
+            </motion.div>
+          )}
+
+          {/* ── Verdict zone ── */}
+          {result && (
+            <motion.div
+              variants={pageSection}
+              className="bento-card"
+              style={{ marginBottom: '1rem' }}
+            >
+              <VerdictBadge verdict={result.verdict} />
+
+              {/* Headline number */}
+              <div style={{ margin: '1rem 0 0.5rem' }}>
+                {route === 'cash' && result.monthsToAfford !== null ? (
+                  <p style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
+                    {result.verdict === 'affordable_now' ? (
+                      <span
+                        style={{
+                          fontSize: 'var(--text-3xl)',
+                          fontWeight: 'var(--font-weight-bold)',
+                          color: verdictColor,
+                        }}
+                      >
+                        Affordable now
+                      </span>
+                    ) : (
+                      <>
+                        <span
+                          style={{
+                            fontSize: 'var(--text-sm)',
+                            color: 'var(--secondary)',
+                            display: 'block',
+                            marginBottom: 2,
+                          }}
+                        >
+                          {dreamName || 'This dream'} is affordable in
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 'var(--text-3xl)',
+                            fontWeight: 'var(--font-weight-bold)',
+                            color: verdictColor,
+                          }}
+                        >
+                          {reducedMotion ? (
+                            formatMonths(result.monthsToAfford)
+                          ) : (
+                            <>
+                              <motion.span>{displayCount}</motion.span>
+                              <span style={{ fontSize: 'var(--text-xl)' }}> months</span>
+                            </>
+                          )}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                ) : route === 'cash' && result.verdict === 'not_affordable' ? (
+                  <p style={{ fontFamily: 'var(--font-display)' }}>
                     <span
                       style={{
                         fontSize: 'var(--text-sm)',
@@ -669,7 +723,31 @@ export default function Affordability() {
                         marginBottom: 2,
                       }}
                     >
-                      {dreamName || 'This dream'} is affordable in
+                      Not yet — monthly surplus is
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 'var(--text-3xl)',
+                        fontWeight: 'var(--font-weight-bold)',
+                        color: 'var(--secondary)',
+                      }}
+                    >
+                      {formatInr(result.monthlySurplus)}
+                    </span>
+                  </p>
+                ) : route === 'emi' && result.emi !== null ? (
+                  <p style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
+                    <span
+                      style={{
+                        fontSize: 'var(--text-sm)',
+                        color: 'var(--secondary)',
+                        display: 'block',
+                        marginBottom: 2,
+                      }}
+                    >
+                      {result.verdict === 'affordable_now'
+                        ? 'EMI fits your plan'
+                        : 'Your EMI would be'}
                     </span>
                     <span
                       style={{
@@ -679,166 +757,126 @@ export default function Affordability() {
                       }}
                     >
                       {reducedMotion ? (
-                        formatMonths(result.monthsToAfford)
+                        `₹${result.emi.toLocaleString('en-IN')}`
                       ) : (
                         <>
-                          <motion.span>{displayCount}</motion.span>
-                          <span style={{ fontSize: 'var(--text-xl)' }}> months</span>
+                          ₹<motion.span>{displayCount}</motion.span>
                         </>
                       )}
+                      <span style={{ fontSize: 'var(--text-xl)' }}>/mo</span>
                     </span>
-                  </>
-                )}
+                  </p>
+                ) : null}
+              </div>
+
+              {/* FOIR status (EMI route) */}
+              {route === 'emi' && result.foirOk !== null && (
+                <p
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    color: result.foirOk ? 'var(--green)' : 'var(--amber)',
+                    marginBottom: '0.75rem',
+                  }}
+                >
+                  {result.foirOk
+                    ? `FOIR OK — total EMIs ${formatInr(existingEmiTotal + (result.emi ?? 0))} ≤ cap ${formatInr(result.foirCapAmount ?? 0)}`
+                    : `FOIR exceeded — ${formatInr(existingEmiTotal + (result.emi ?? 0))} > cap ${formatInr(result.foirCapAmount ?? 0)}`}
+                </p>
+              )}
+
+              {/* Gap bar */}
+              {(result.gap > 0 || result.monthlySurplus > 0) && (
+                <GapBar surplus={Math.max(0, result.monthlySurplus)} gap={result.gap} />
+              )}
+            </motion.div>
+          )}
+
+          {/* ── Levers zone ── */}
+          {result && result.levers.length > 0 && (
+            <motion.div variants={pageSection}>
+              <p className="text-label" style={{ marginBottom: '0.75rem' }}>
+                Ways to close the gap
               </p>
-            ) : route === 'cash' && result.verdict === 'not_affordable' ? (
-              <p style={{ fontFamily: 'var(--font-display)' }}>
-                <span
+              <motion.div
+                variants={{ animate: cappedStagger(result.levers.length) }}
+                initial="initial"
+                animate="animate"
+                style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+              >
+                {result.levers.map((lever, i) => {
+                  const copy = leverCopy(lever, netMonthlyIncome);
+                  return (
+                    <motion.div key={`${lever.type}-${i}`} variants={cardEntry}>
+                      <RecommendationCard
+                        observation={copy.observation}
+                        action={copy.action}
+                        impact={copy.impact}
+                        tone={copy.tone}
+                        icon={copy.icon}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* ── Surplus context (no levers, but result exists) ── */}
+          {result && result.levers.length === 0 && result.verdict !== 'not_affordable' && (
+            <motion.div
+              variants={pageSection}
+              className="bento-card"
+              style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'color-mix(in srgb, var(--green) 15%, transparent)',
+                }}
+              >
+                <TrendingUp size={16} style={{ color: 'var(--green)' }} />
+              </div>
+              <div>
+                <p
                   style={{
                     fontSize: 'var(--text-sm)',
-                    color: 'var(--secondary)',
-                    display: 'block',
+                    fontWeight: 'var(--font-weight-semibold)',
                     marginBottom: 2,
                   }}
                 >
-                  Not yet — monthly surplus is
-                </span>
-                <span
-                  style={{
-                    fontSize: 'var(--text-3xl)',
-                    fontWeight: 'var(--font-weight-bold)',
-                    color: 'var(--secondary)',
-                  }}
-                >
-                  {formatInr(result.monthlySurplus)}
-                </span>
-              </p>
-            ) : route === 'emi' && result.emi !== null ? (
-              <p style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
-                <span
-                  style={{
-                    fontSize: 'var(--text-sm)',
-                    color: 'var(--secondary)',
-                    display: 'block',
-                    marginBottom: 2,
-                  }}
-                >
-                  {result.verdict === 'affordable_now' ? 'EMI fits your plan' : 'Your EMI would be'}
-                </span>
-                <span
-                  style={{
-                    fontSize: 'var(--text-3xl)',
-                    fontWeight: 'var(--font-weight-bold)',
-                    color: verdictColor,
-                  }}
-                >
-                  {reducedMotion ? (
-                    `₹${result.emi.toLocaleString('en-IN')}`
-                  ) : (
-                    <>
-                      ₹<motion.span>{displayCount}</motion.span>
-                    </>
-                  )}
-                  <span style={{ fontSize: 'var(--text-xl)' }}>/mo</span>
-                </span>
-              </p>
-            ) : null}
-          </div>
-
-          {/* FOIR status (EMI route) */}
-          {route === 'emi' && result.foirOk !== null && (
-            <p
-              style={{
-                fontSize: 'var(--text-xs)',
-                color: result.foirOk ? 'var(--green)' : 'var(--amber)',
-                marginBottom: '0.75rem',
-              }}
-            >
-              {result.foirOk
-                ? `FOIR OK — total EMIs ${formatInr(existingEmiTotal + (result.emi ?? 0))} ≤ cap ${formatInr(result.foirCapAmount ?? 0)}`
-                : `FOIR exceeded — ${formatInr(existingEmiTotal + (result.emi ?? 0))} > cap ${formatInr(result.foirCapAmount ?? 0)}`}
-            </p>
+                  Your plan can handle this
+                </p>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--secondary)' }}>
+                  Monthly surplus {formatInr(result.monthlySurplus)} covers{' '}
+                  {route === 'emi'
+                    ? `the ${formatInr(result.emi ?? 0)}/mo EMI`
+                    : 'the savings target'}
+                  . No tradeoffs needed.
+                </p>
+              </div>
+            </motion.div>
           )}
 
-          {/* Gap bar */}
-          {(result.gap > 0 || result.monthlySurplus > 0) && (
-            <GapBar surplus={Math.max(0, result.monthlySurplus)} gap={result.gap} />
+          {/* ── Cross-goal insights ── */}
+          {hasInput && (
+            <CrossGoalInsightsPanel
+              dreamName={dreamName}
+              goals={goals}
+              profile={crossGoalProfile}
+            />
           )}
-        </motion.div>
+        </>
       )}
-
-      {/* ── Levers zone ── */}
-      {result && result.levers.length > 0 && (
-        <motion.div variants={pageSection}>
-          <p className="text-label" style={{ marginBottom: '0.75rem' }}>
-            Ways to close the gap
-          </p>
-          <motion.div
-            variants={{ animate: cappedStagger(result.levers.length) }}
-            initial="initial"
-            animate="animate"
-            style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
-          >
-            {result.levers.map((lever, i) => {
-              const copy = leverCopy(lever, netMonthlyIncome);
-              return (
-                <motion.div key={`${lever.type}-${i}`} variants={cardEntry}>
-                  <RecommendationCard
-                    observation={copy.observation}
-                    action={copy.action}
-                    impact={copy.impact}
-                    tone={copy.tone}
-                    icon={copy.icon}
-                  />
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* ── Surplus context (no levers, but result exists) ── */}
-      {result && result.levers.length === 0 && result.verdict !== 'not_affordable' && (
-        <motion.div
-          variants={pageSection}
-          className="bento-card"
-          style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}
-        >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'color-mix(in srgb, var(--green) 15%, transparent)',
-            }}
-          >
-            <TrendingUp size={16} style={{ color: 'var(--green)' }} />
-          </div>
-          <div>
-            <p
-              style={{
-                fontSize: 'var(--text-sm)',
-                fontWeight: 'var(--font-weight-semibold)',
-                marginBottom: 2,
-              }}
-            >
-              Your plan can handle this
-            </p>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--secondary)' }}>
-              Monthly surplus {formatInr(result.monthlySurplus)} covers{' '}
-              {route === 'emi' ? `the ${formatInr(result.emi ?? 0)}/mo EMI` : 'the savings target'}.
-              No tradeoffs needed.
-            </p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── Cross-goal insights ── */}
-      {hasInput && (
-        <CrossGoalInsightsPanel dreamName={dreamName} goals={goals} profile={crossGoalProfile} />
+      {tab === 'grow' && (
+        <Suspense fallback={null}>
+          <Scenarios />
+        </Suspense>
       )}
     </motion.div>
   );
