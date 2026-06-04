@@ -16,9 +16,6 @@ import Auth from './screens/Auth';
 const DesignSystem = lazy(() => import('./screens/DesignSystem'));
 const Debt = lazy(() => import('./screens/Debt'));
 const Cashflow = lazy(() => import('./screens/Cashflow'));
-const Month = lazy(() => import('./screens/Month'));
-const Scenarios = lazy(() => import('./screens/Scenarios'));
-const Progress = lazy(() => import('./screens/Progress'));
 const Affordability = lazy(() => import('./screens/Affordability'));
 
 import Sidebar from './components/Sidebar';
@@ -244,42 +241,9 @@ function AppContent() {
                   }
                 />
 
-                <Route
-                  path="/month"
-                  element={
-                    <ErrorBoundary key={location.pathname} animate={false}>
-                      <PageTransition>
-                        <Suspense fallback={<RouteFallback />}>
-                          <Month />
-                        </Suspense>
-                      </PageTransition>
-                    </ErrorBoundary>
-                  }
-                />
-                <Route
-                  path="/scenarios"
-                  element={
-                    <ErrorBoundary key={location.pathname} animate={false}>
-                      <PageTransition>
-                        <Suspense fallback={<RouteFallback />}>
-                          <Scenarios onPennyClick={() => setPennyOpen(true)} />
-                        </Suspense>
-                      </PageTransition>
-                    </ErrorBoundary>
-                  }
-                />
-                <Route
-                  path="/progress"
-                  element={
-                    <ErrorBoundary key={location.pathname} animate={false}>
-                      <PageTransition>
-                        <Suspense fallback={<RouteFallback />}>
-                          <Progress onPennyClick={() => setPennyOpen(true)} />
-                        </Suspense>
-                      </PageTransition>
-                    </ErrorBoundary>
-                  }
-                />
+                <Route path="/month" element={<Navigate to="/dashboard?tab=month" replace />} />
+                <Route path="/scenarios" element={<Navigate to="/afford?tab=grow" replace />} />
+                <Route path="/progress" element={<Navigate to="/journey?tab=progress" replace />} />
                 <Route
                   path="/debt"
                   element={
