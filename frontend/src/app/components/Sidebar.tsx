@@ -1,14 +1,11 @@
 import { useNavigate, useLocation } from 'react-router';
 import {
   LayoutDashboard,
-  Map,
-  Calendar,
   GitBranch,
   Sparkles,
   ChevronLeft,
   ChevronRight,
   X,
-  BarChart3,
   CreditCard,
   ArrowLeftRight,
   FileDown,
@@ -63,7 +60,6 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
       items: [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
         { icon: GitBranch, label: 'Goals', path: '/journey' },
-        { icon: Calendar, label: 'Month', path: '/month' },
       ],
     },
     {
@@ -71,13 +67,8 @@ export default function Sidebar({ onPennyClick, mobileMenuOpen, setMobileMenuOpe
       items: [
         { icon: ArrowLeftRight, label: 'Cashflow', path: '/cashflow' },
         { icon: CreditCard, label: 'Debt', path: '/debt' },
-        { icon: Map, label: 'Scenarios', path: '/scenarios' },
         { icon: BadgeCheck, label: 'Affordability', path: '/afford' },
       ],
-    },
-    {
-      title: 'Wins',
-      items: [{ icon: BarChart3, label: 'Progress', path: '/progress' }],
     },
   ];
 
