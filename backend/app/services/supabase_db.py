@@ -47,6 +47,8 @@ async def close_client() -> None:
 
 
 def _rest_base() -> str | None:
+    if settings.auth_mock:
+        return None
     url = (settings.supabase_url or "").rstrip("/")
     if not url or not settings.supabase_anon_key:
         return None

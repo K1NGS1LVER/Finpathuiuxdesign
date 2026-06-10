@@ -42,6 +42,7 @@ class CurrentUser:
     email: str | None
     role: str | None
     access_token: str | None = None  # raw JWT, for PostgREST proxying
+    is_demo: bool = False
 
 
 @lru_cache(maxsize=1)
@@ -91,6 +92,15 @@ async def get_current_user(
     if settings.auth_mock:
         request.state.user_id = MOCK_USER_ID
         return CurrentUser(user_id=MOCK_USER_ID, email="dev@finpath.local", role="authenticated")
+
+    if (
+        settings.penny_demo_enabled
+        and creds is not None
+        and creds.scheme.lower() == "bearer"
+        and creds.credentials == "finpath-demo"
+    ):
+        request.state.user_id = MOCK_USER_ID
+        return CurrentUser(user_id=MOCK_USER_ID, email=None, role="authenticated", is_demo=True)
 
     if creds is None or creds.scheme.lower() != "bearer" or not creds.credentials:
         raise HTTPException(
