@@ -5,6 +5,7 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     plan: free
+    port: 8000
     envVars:
       - key: GROQ_API_KEY
         sync: false
