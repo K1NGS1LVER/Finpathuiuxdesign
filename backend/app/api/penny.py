@@ -139,31 +139,30 @@ async def chat_stream(
             "status": "pending",
         }
         loop.call_soon_threadsafe(proposal_queue.put_nowait, row)
-        # Fire-and-forget DB persistence with the same id (no await).
-        asyncio.run_coroutine_threadsafe(
-            insert_proposal(
-                user_jwt=user.access_token,
-                user_id=user.user_id,
-                action=action,
-                payload=payload,
-                rationale=rationale,
-                proposal_id=proposal_id,
-            ),
-            loop,
-        )
+        if not user.is_demo:
+            asyncio.run_coroutine_threadsafe(
+                insert_proposal(
+                    user_jwt=user.access_token,
+                    user_id=user.user_id,
+                    action=action,
+                    payload=payload,
+                    rationale=rationale,
+                    proposal_id=proposal_id,
+                ),
+                loop,
+            )
         return row
 
     async def event_source() -> AsyncIterator[bytes]:
-        # Persist the incoming user message in the background so TTFT isn't
-        # gated on Supabase RTT. Errors are logged inside the helper.
-        asyncio.create_task(
-            insert_chat_message(
-                user_jwt=user.access_token,
-                user_id=user.user_id,
-                role="user",
-                content=req.message,
+        if not user.is_demo:
+            asyncio.create_task(
+                insert_chat_message(
+                    user_jwt=user.access_token,
+                    user_id=user.user_id,
+                    role="user",
+                    content=req.message,
+                )
             )
-        )
 
         assistant_reply = ""
         tool_calls_log: list[dict[str, Any]] = []
@@ -199,7 +198,7 @@ async def chat_stream(
             yield _sse_format("error", msg).encode("utf-8")
             return
         finally:
-            if assistant_reply:
+            if assistant_reply and not user.is_demo:
                 await insert_chat_message(
                     user_jwt=user.access_token,
                     user_id=user.user_id,

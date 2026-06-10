@@ -52,7 +52,7 @@ async def _proposal_expiry_loop() -> None:
 async def lifespan(_app: FastAPI):
     # Background expiry runs only when a service role key is configured.
     task: asyncio.Task | None = None
-    if settings.supabase_service_role_key and settings.supabase_url:
+    if settings.supabase_service_role_key and settings.supabase_url and not settings.auth_mock:
         task = asyncio.create_task(_proposal_expiry_loop())
         log.info("Proposal expiry job started.")
     yield

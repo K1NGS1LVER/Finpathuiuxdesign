@@ -26,6 +26,7 @@ from typing import Any
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field, field_validator
 
+from app.engines.affordability import run_affordability
 from app.engines.debt_strategies import compare_strategies
 from app.engines.health_score import calculate_health_score
 from app.engines.plan_engine import generate_plan, generate_scenario_plan
@@ -111,6 +112,26 @@ class _GoalPriorityItem(BaseModel):
 class _ReorderArgs(BaseModel):
     new_priorities: list[_GoalPriorityItem] = Field(
         description="New priority assignment for each goal to reorder. Include only the goals you want to change."
+    )
+
+
+class _AffordabilityArgs(BaseModel):
+    target_cost: float = Field(description="Purchase price or loan principal in INR.")
+    route: str = Field(
+        default="cash",
+        description="'cash' (save up) or 'emi' (monthly loan payments).",
+    )
+    annual_interest_rate: float = Field(
+        default=9.0,
+        description="Annual loan interest rate % (EMI route only). Default 9.",
+    )
+    tenure_months: int = Field(
+        default=60,
+        description="Loan tenure in months (EMI route only). Default 60.",
+    )
+    loan_type: str = Field(
+        default="other",
+        description="'home', 'personal', 'vehicle', or 'other'. Affects FOIR cap.",
     )
 
 
@@ -206,6 +227,40 @@ def make_tools(
                 "emergencyFund": profile.get("emergencyFund", 0),
             }
         )
+
+    def _check_affordability(
+        target_cost: float,
+        route: str = "cash",
+        annual_interest_rate: float = 9.0,
+        tenure_months: int = 60,
+        loan_type: str = "other",
+    ) -> dict[str, Any]:
+        income = profile.get("income") or {}
+        expenses = profile.get("expenses") or {}
+        debts = profile.get("debts") or {}
+        net_monthly = float(income.get("total") or 0)
+        monthly_expenses = float(expenses.get("total") or 0)
+        existing_emi = float(debts.get("totalMonthly") or 0)
+        reserve = float(profile.get("monthlySurplusReserve") or 0)
+        return_rate = float(profile.get("investmentReturnRate") or 8)
+
+        result = run_affordability(
+            {
+                "targetCost": target_cost,
+                "route": route,
+                "netMonthlyIncome": net_monthly,
+                "monthlyExpenses": monthly_expenses,
+                "monthlyReserve": reserve,
+                "existingEmiTotal": existing_emi,
+                "investmentReturnRate": return_rate,
+                "annualInterestRate": annual_interest_rate,
+                "tenureMonths": tenure_months,
+                "loanType": loan_type,
+                "ageYears": profile.get("ageYears"),
+                "employmentType": profile.get("employmentType") or "salaried",
+            }
+        )
+        return result
 
     def _simulate_goal(goal_id: str, extra_monthly: float = 0) -> dict[str, Any]:
         goals_list = profile.get("goals") or []
@@ -533,6 +588,16 @@ def make_tools(
                 "monthly allocation changes per goal. Use when the user wants to know 'what if I prioritise X over Y'."
             ),
             args_schema=_ReorderArgs,
+        ),
+        StructuredTool.from_function(
+            func=_check_affordability,
+            name="check_affordability",
+            description=(
+                "Check whether the user can afford a purchase. Returns verdict (affordable_now / affordable_later / "
+                "not_affordable), months to save, EMI amount, FOIR check, monthly surplus, and actionable levers. "
+                "Use when the user asks 'can I afford X', 'how long to save for Y', or 'what EMI for Z'."
+            ),
+            args_schema=_AffordabilityArgs,
         ),
     ]
 

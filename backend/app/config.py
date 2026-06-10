@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # frontend's VITE_AUTH_MOCK toggle. Never enable in production.
     auth_mock: bool = False
 
+    # Allow unauthenticated Penny requests carrying `Authorization: Bearer finpath-demo`.
+    # Safe to enable in production for demo deployments; demo sessions never touch the DB.
+    penny_demo_enabled: bool = False
+
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
