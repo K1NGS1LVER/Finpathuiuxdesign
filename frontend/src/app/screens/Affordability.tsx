@@ -407,7 +407,11 @@ export default function Affordability({ onPennyClick }: { onPennyClick?: () => v
       variants={pageContainer}
       initial="hidden"
       animate="visible"
-      style={{ maxWidth: '42rem', margin: '0 auto', paddingBottom: '2rem' }}
+      style={{
+        padding: 'var(--space-1) var(--space-2) var(--space-3)',
+        maxWidth: 1400,
+        margin: '0 auto',
+      }}
     >
       <TabBar
         tabs={[

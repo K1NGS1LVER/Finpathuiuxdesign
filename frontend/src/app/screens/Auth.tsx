@@ -1,7 +1,19 @@
 import { useId, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sun, Moon, Loader2, ArrowLeft } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Sun,
+  Moon,
+  Loader2,
+  ArrowLeft,
+} from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
+import { useFinPathStore } from '@/lib/store';
 import FinPathLogo from '@/app/components/FinPathLogo';
 
 interface AuthScreenProps {
@@ -43,7 +55,8 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
     } else {
       const result = await signIn(email, password);
       if (result.success) {
-        navigate('/');
+        const onboarded = useFinPathStore.getState().onboarded;
+        navigate(onboarded ? '/dashboard' : '/onboarding', { replace: true });
       }
     }
   };
@@ -85,7 +98,11 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
         className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 z-40 bg-card shadow-sm border border-border text-card-foreground"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
-        {isDark ? <Sun size={18} className="icon-wireframe md:w-5 md:h-5" /> : <Moon size={18} className="icon-wireframe md:w-5 md:h-5" />}
+        {isDark ? (
+          <Sun size={18} className="icon-wireframe md:w-5 md:h-5" />
+        ) : (
+          <Moon size={18} className="icon-wireframe md:w-5 md:h-5" />
+        )}
       </button>
 
       {/* Scrollable form container — matches Onboarding pattern */}
@@ -97,7 +114,11 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                 <FinPathLogo size={40} showWordmark wordmarkSize="24px" wordmarkGap={12} />
               </div>
               <h2 className="text-2xl md:text-3xl font-bold slashed-zero leading-tight text-card-foreground font-display">
-                {confirmSent ? 'Check your email!' : isSignUp ? 'Create your account' : 'Welcome back'}
+                {confirmSent
+                  ? 'Check your email!'
+                  : isSignUp
+                    ? 'Create your account'
+                    : 'Welcome back'}
               </h2>
               <p className="text-sm md:text-base mt-2 md:mt-3 text-secondary font-body">
                 {confirmSent
@@ -122,7 +143,10 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                 </p>
                 <button
                   type="button"
-                  onClick={() => { setConfirmSent(false); setIsSignUp(false); }}
+                  onClick={() => {
+                    setConfirmSent(false);
+                    setIsSignUp(false);
+                  }}
                   className="text-sm font-semibold transition-colors font-body"
                   style={{ color: 'var(--accent-text)' }}
                 >
@@ -130,11 +154,18 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="bento-card !p-5 md:!p-7 space-y-4 md:space-y-5">
+              <form
+                onSubmit={handleSubmit}
+                className="bento-card !p-5 md:!p-7 space-y-4 md:space-y-5"
+              >
                 {error && (
                   <div
                     className="px-4 py-3 rounded-xl text-sm font-medium font-body"
-                    style={{ background: 'var(--red-subtle)', color: 'var(--red-text)', border: '1px solid var(--red-subtle)' }}
+                    style={{
+                      background: 'var(--red-subtle)',
+                      color: 'var(--red-text)',
+                      border: '1px solid var(--red-subtle)',
+                    }}
                     role="alert"
                   >
                     {error}
@@ -143,7 +174,10 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
 
                 {isSignUp && (
                   <div className="space-y-1.5">
-                    <label htmlFor={nameId} className="block text-xs md:text-sm font-medium text-secondary font-body">
+                    <label
+                      htmlFor={nameId}
+                      className="block text-xs md:text-sm font-medium text-secondary font-body"
+                    >
                       Full Name
                     </label>
                     <div className="relative">
@@ -160,14 +194,20 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                         placeholder="John Doe"
                         autoComplete="name"
                         className="auth-input w-full pl-11 pr-4 py-3.5 md:py-4 rounded-xl md:rounded-2xl outline-none text-card-foreground transition-all font-body"
-                        style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)' }}
+                        style={{
+                          background: 'var(--surface-tint)',
+                          border: '1px solid var(--border)',
+                        }}
                       />
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-1.5">
-                  <label htmlFor={emailId} className="block text-xs md:text-sm font-medium text-secondary font-body">
+                  <label
+                    htmlFor={emailId}
+                    className="block text-xs md:text-sm font-medium text-secondary font-body"
+                  >
                     Email
                   </label>
                   <div className="relative">
@@ -185,13 +225,19 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                       autoComplete="email"
                       required
                       className="auth-input w-full pl-11 pr-4 py-3.5 md:py-4 rounded-xl md:rounded-2xl outline-none text-card-foreground transition-all font-body"
-                      style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)' }}
+                      style={{
+                        background: 'var(--surface-tint)',
+                        border: '1px solid var(--border)',
+                      }}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor={passwordId} className="block text-xs md:text-sm font-medium text-secondary font-body">
+                  <label
+                    htmlFor={passwordId}
+                    className="block text-xs md:text-sm font-medium text-secondary font-body"
+                  >
                     Password
                   </label>
                   <div className="relative">
@@ -210,7 +256,10 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                       required
                       minLength={6}
                       className="auth-input w-full pl-11 pr-12 py-3.5 md:py-4 rounded-xl md:rounded-2xl outline-none text-card-foreground transition-all font-body"
-                      style={{ background: 'var(--surface-tint)', border: '1px solid var(--border)' }}
+                      style={{
+                        background: 'var(--surface-tint)',
+                        border: '1px solid var(--border)',
+                      }}
                     />
                     <button
                       type="button"
@@ -218,7 +267,11 @@ export default function Auth({ isDark, setIsDark }: AuthScreenProps) {
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-foreground transition-colors"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                      {showPassword ? (
+                        <EyeOff size={18} aria-hidden="true" />
+                      ) : (
+                        <Eye size={18} aria-hidden="true" />
+                      )}
                     </button>
                   </div>
                 </div>

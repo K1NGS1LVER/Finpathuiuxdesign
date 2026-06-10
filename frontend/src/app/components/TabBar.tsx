@@ -58,7 +58,9 @@ function TabButton({
       onMouseLeave={() => setHovered(false)}
       style={{
         flex: 1,
-        padding: 'var(--space-2) var(--space-3)',
+        minWidth: 120,
+        whiteSpace: 'nowrap',
+        padding: 'var(--space-1) var(--space-3)',
         fontSize: 'var(--text-sm)',
         fontWeight: isActive ? 'var(--font-weight-semibold)' : 'var(--font-weight-medium)',
         color: isActive ? 'var(--accent-text)' : 'var(--tertiary)',
@@ -84,9 +86,12 @@ export default function TabBar({ tabs, active, onChange }: TabBarProps) {
     <div
       role="tablist"
       style={{
-        display: 'flex',
-        width: '100%',
-        borderBottom: '1px solid var(--border)',
+        display: 'inline-flex',
+        width: 'fit-content',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        overflow: 'hidden',
+        marginBottom: 'var(--space-3)',
       }}
     >
       {tabs.map((tab) => {
