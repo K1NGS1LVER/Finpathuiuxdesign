@@ -38,8 +38,7 @@ const LOADING_PHRASES = [
 const WELCOME: Message = {
   id: 'welcome',
   role: 'penny',
-  text:
-    "Hi! I'm Penny, your AI finance companion. I can run scenarios on your real numbers and propose changes you approve before anything moves. Ask me anything!",
+  text: "Hi! I'm Penny, your AI finance companion. I can run scenarios on your real numbers and propose changes you approve before anything moves. Ask me anything!",
 };
 
 /**
@@ -74,21 +73,22 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const userId = useAuthStore(s => s.user?.id ?? null);
+  const userId = useAuthStore((s) => s.user?.id ?? null);
   const location = useLocation();
   const route = (location.pathname.replace(/^\//, '').split('/')[0] || 'landing').toLowerCase();
 
-  const onboarded = useFinPathStore(s => s.onboarded);
-  const income = useFinPathStore(s => s.income);
-  const expenses = useFinPathStore(s => s.expenses);
-  const debts = useFinPathStore(s => s.debts);
-  const savings = useFinPathStore(s => s.savings);
-  const investments = useFinPathStore(s => s.investments);
-  const emergencyFund = useFinPathStore(s => s.emergencyFund);
-  const goals = useFinPathStore(s => s.goals);
-  const healthScore = useFinPathStore(s => s.healthScore);
-  const strategy = useFinPathStore(s => s.strategy);
-  const monthlySurplusReserve = useFinPathStore(s => s.monthlySurplusReserve);
+  const demoMode = useFinPathStore((s) => s.demoMode ?? false);
+  const onboarded = useFinPathStore((s) => s.onboarded);
+  const income = useFinPathStore((s) => s.income);
+  const expenses = useFinPathStore((s) => s.expenses);
+  const debts = useFinPathStore((s) => s.debts);
+  const savings = useFinPathStore((s) => s.savings);
+  const investments = useFinPathStore((s) => s.investments);
+  const emergencyFund = useFinPathStore((s) => s.emergencyFund);
+  const goals = useFinPathStore((s) => s.goals);
+  const healthScore = useFinPathStore((s) => s.healthScore);
+  const strategy = useFinPathStore((s) => s.strategy);
+  const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -118,7 +118,7 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
         if (!r.ok) return;
         const rows: { id: string; role: string; content: string }[] = await r.json();
         if (!Array.isArray(rows) || rows.length === 0) return;
-        const restored: Message[] = rows.map(row => ({
+        const restored: Message[] = rows.map((row) => ({
           id: row.id,
           role: row.role === 'user' ? 'user' : 'penny',
           text: row.content,
@@ -138,25 +138,34 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       const noDataMsg: Message = {
         id: `penny-${Date.now()}`,
         role: 'penny',
-        text:
-          "It looks like you haven't set up your financial profile yet. Complete onboarding first so I can give you personalized advice based on your real numbers!",
+        text: "It looks like you haven't set up your financial profile yet. Complete onboarding first so I can give you personalized advice based on your real numbers!",
       };
-      setMessages(prev => [...prev, { id: `user-${Date.now()}`, role: 'user', text: trimmed }, noDataMsg]);
+      setMessages((prev) => [
+        ...prev,
+        { id: `user-${Date.now()}`, role: 'user', text: trimmed },
+        noDataMsg,
+      ]);
       setInput('');
       return;
     }
 
     const userMsgId = `user-${Date.now()}`;
     const assistantId = `penny-${Date.now()}`;
-    setMessages(prev => [...prev, { id: userMsgId, role: 'user', text: trimmed }]);
+    setMessages((prev) => [...prev, { id: userMsgId, role: 'user', text: trimmed }]);
     setInput('');
     setIsLoading(true);
 
     const addOrUpdate = (text: string, toolCalls?: { name: string; input: unknown }[]) =>
-      setMessages(prev => {
-        const exists = prev.some(m => m.id === assistantId);
-        if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text, toolCalls: toolCalls ?? [] }];
-        return prev.map(m => m.id === assistantId ? { ...m, text, ...(toolCalls ? { toolCalls } : {}) } : m);
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === assistantId);
+        if (!exists)
+          return [
+            ...prev,
+            { id: assistantId, role: 'penny' as const, text, toolCalls: toolCalls ?? [] },
+          ];
+        return prev.map((m) =>
+          m.id === assistantId ? { ...m, text, ...(toolCalls ? { toolCalls } : {}) } : m,
+        );
       });
 
     const controller = new AbortController();
@@ -167,16 +176,25 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
       const response = await apiFetch('/api/penny/stream', {
         method: 'POST',
         signal: controller.signal,
+        ...(demoMode && { headers: { Authorization: 'Bearer finpath-demo' } }),
         body: JSON.stringify({
           message: trimmed,
           profile: {
-            onboarded, income, expenses, debts, savings,
-            investments, emergencyFund, goals, healthScore,
-            strategy, monthlySurplusReserve,
+            onboarded,
+            income,
+            expenses,
+            debts,
+            savings,
+            investments,
+            emergencyFund,
+            goals,
+            healthScore,
+            strategy,
+            monthlySurplusReserve,
           },
           history: messages
-            .filter(m => m.id !== 'welcome' && !m.proposal && m.text.trim().length > 0)
-            .map(m => ({ role: m.role === 'penny' ? 'assistant' : 'user', content: m.text })),
+            .filter((m) => m.id !== 'welcome' && !m.proposal && m.text.trim().length > 0)
+            .map((m) => ({ role: m.role === 'penny' ? 'assistant' : 'user', content: m.text })),
           context: route,
         }),
       });
@@ -193,39 +211,66 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
 
       for await (const ev of parseSse(response)) {
         let data: any;
-        try { data = JSON.parse(ev.data); } catch { continue; }
+        try {
+          data = JSON.parse(ev.data);
+        } catch {
+          continue;
+        }
         if (ev.event === 'token') {
           const chunk = stripFunctionTags(String(data));
           if (!chunk) continue;
-          setMessages(prev => {
-            const exists = prev.some(m => m.id === assistantId);
-            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: chunk, toolCalls: [] }];
-            return prev.map(m => m.id === assistantId ? { ...m, text: m.text + chunk } : m);
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === assistantId);
+            if (!exists)
+              return [
+                ...prev,
+                { id: assistantId, role: 'penny' as const, text: chunk, toolCalls: [] },
+              ];
+            return prev.map((m) => (m.id === assistantId ? { ...m, text: m.text + chunk } : m));
           });
         } else if (ev.event === 'tool_call') {
-          setMessages(prev => {
-            const exists = prev.some(m => m.id === assistantId);
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === assistantId);
             const tc = { name: data.name, input: data.input };
-            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: '', toolCalls: [tc] }];
-            return prev.map(m => m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls || []), tc] } : m);
+            if (!exists)
+              return [
+                ...prev,
+                { id: assistantId, role: 'penny' as const, text: '', toolCalls: [tc] },
+              ];
+            return prev.map((m) =>
+              m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls || []), tc] } : m,
+            );
           });
         } else if (ev.event === 'proposal') {
           const prop = data as Proposal;
-          setMessages(prev => [...prev, { id: `proposal-${prop.id}`, role: 'penny', text: '', proposal: prop }]);
+          setMessages((prev) => [
+            ...prev,
+            { id: `proposal-${prop.id}`, role: 'penny', text: '', proposal: prop },
+          ]);
         } else if (ev.event === 'error') {
           const err = String(data);
-          setMessages(prev => {
-            const exists = prev.some(m => m.id === assistantId);
-            if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: err, toolCalls: [] }];
-            return prev.map(m => m.id === assistantId ? { ...m, text: (m.text ? m.text + '\n\n' : '') + err } : m);
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === assistantId);
+            if (!exists)
+              return [
+                ...prev,
+                { id: assistantId, role: 'penny' as const, text: err, toolCalls: [] },
+              ];
+            return prev.map((m) =>
+              m.id === assistantId ? { ...m, text: (m.text ? m.text + '\n\n' : '') + err } : m,
+            );
           });
         } else if (ev.event === 'done') {
           if (data?.reply) {
             const cleaned = stripFunctionTags(String(data.reply));
-            setMessages(prev => {
-              const exists = prev.some(m => m.id === assistantId);
-              if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text: cleaned, toolCalls: [] }];
-              return prev.map(m => m.id === assistantId ? { ...m, text: cleaned } : m);
+            setMessages((prev) => {
+              const exists = prev.some((m) => m.id === assistantId);
+              if (!exists)
+                return [
+                  ...prev,
+                  { id: assistantId, role: 'penny' as const, text: cleaned, toolCalls: [] },
+                ];
+              return prev.map((m) => (m.id === assistantId ? { ...m, text: cleaned } : m));
             });
           }
         }
@@ -233,19 +278,36 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
     } catch (err: any) {
       const isTimeout = err?.name === 'AbortError';
       const text = isTimeout
-        ? "That took too long — my thinking timed out. Try a simpler question, or try again in a moment!"
+        ? 'That took too long — my thinking timed out. Try a simpler question, or try again in a moment!'
         : "Oops, I couldn't connect right now. Please check your connection and try again!";
-      setMessages(prev => {
-        const exists = prev.some(m => m.id === assistantId);
-        if (!exists) return [...prev, { id: assistantId, role: 'penny' as const, text, toolCalls: [] }];
-        return prev.map(m => m.id === assistantId ? { ...m, text } : m);
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === assistantId);
+        if (!exists)
+          return [...prev, { id: assistantId, role: 'penny' as const, text, toolCalls: [] }];
+        return prev.map((m) => (m.id === assistantId ? { ...m, text } : m));
       });
     } finally {
       clearTimeout(timeout);
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [input, isLoading, onboarded, income, expenses, debts, savings, investments, emergencyFund, goals, healthScore, strategy, monthlySurplusReserve, messages, route]);
+  }, [
+    input,
+    isLoading,
+    onboarded,
+    income,
+    expenses,
+    debts,
+    savings,
+    investments,
+    emergencyFund,
+    goals,
+    healthScore,
+    strategy,
+    monthlySurplusReserve,
+    messages,
+    route,
+  ]);
 
   const handleClearHistory = useCallback(async () => {
     if (isClearing) return;
@@ -261,18 +323,19 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
     }
   }, [isClearing]);
 
-  const quickSuggestions = onboarded || income.total > 0
-    ? ['How am I doing financially?', 'What if I get a 10% raise?', 'Compare avalanche vs snowball', 'Help me save more']
-    : ['What is FinPath?', 'How do I get started?'];
+  const quickSuggestions =
+    onboarded || income.total > 0
+      ? [
+          'How am I doing financially?',
+          'What if I get a 10% raise?',
+          'Compare avalanche vs snowball',
+          'Help me save more',
+        ]
+      : ['What is FinPath?', 'How do I get started?'];
 
   return (
     <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={onClose}
-        />
-      )}
+      {open && <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={onClose} />}
 
       <div
         className={`fixed top-0 right-0 h-full w-full md:w-[380px] flex flex-col z-50 text-[var(--card-foreground)] transition-all duration-300 penny-panel ${open ? 'translate-x-0' : 'translate-x-full'}`}
@@ -284,7 +347,9 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
               P
             </div>
             <span className="font-bold font-display-family">Penny</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] font-semibold">AI</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] font-semibold">
+              AI
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -296,7 +361,11 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             >
               <Trash2 className="icon-wireframe" size={18} />
             </button>
-            <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]" aria-label="Close Penny">
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]"
+              aria-label="Close Penny"
+            >
               <X size={18} />
             </button>
           </div>
@@ -315,7 +384,9 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
               aria-modal="true"
               aria-labelledby="clear-chat-title"
             >
-              <h3 id="clear-chat-title" className="text-heading mb-2">Clear chat history?</h3>
+              <h3 id="clear-chat-title" className="text-heading mb-2">
+                Clear chat history?
+              </h3>
               <p className="text-sm text-[var(--secondary)] mb-4">
                 This permanently deletes every message between you and Penny. Can't be undone.
               </p>
@@ -342,7 +413,10 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
               {msg.proposal ? (
                 <div className="max-w-[92%] w-full">
                   <ProposalCard proposal={msg.proposal} />
@@ -357,7 +431,10 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
                         <span
                           key={i}
                           className="inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded-full"
-                          style={{ background: 'var(--surface-2, var(--neutral-50))', color: 'var(--secondary)' }}
+                          style={{
+                            background: 'var(--surface-2, var(--neutral-50))',
+                            color: 'var(--secondary)',
+                          }}
                         >
                           <Wrench size={10} /> {tc.name}
                         </span>
@@ -387,7 +464,9 @@ export default function PennyPanel({ open, onClose }: PennyPanelProps) {
             {quickSuggestions.map((q) => (
               <button
                 key={q}
-                onClick={() => { setInput(q); }}
+                onClick={() => {
+                  setInput(q);
+                }}
                 className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)] transition-colors suggestion-chip"
               >
                 {q}

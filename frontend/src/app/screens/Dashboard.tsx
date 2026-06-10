@@ -151,7 +151,7 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
 
   const [tab, setTab] = useTabParam('tab', 'overview');
 
-  const [period, setPeriod] = useState<'This month' | 'Quarter' | 'YTD'>('This month');
+  const [period] = useState<'This month' | 'Quarter' | 'YTD'>('This month');
 
   const totalDebt = debts.totalMonthly || 0;
   const surplus = income.total - expenses.total - totalDebt;
@@ -292,19 +292,6 @@ export default function Dashboard({ onPennyClick }: { onPennyClick: () => void }
             <div>
               <p className="text-label">Financial Overview</p>
               <h2 className="slashed-zero dashboard-title">Dashboard</h2>
-            </div>
-            <div className="dashboard-period-pills">
-              {(['This month', 'Quarter', 'YTD'] as const).map((p) => (
-                <button
-                  key={p}
-                  className={`pill${period === p ? ' active' : ''}`}
-                  onClick={() => setPeriod(p)}
-                  aria-pressed={period === p}
-                  aria-label={`Show ${p} period`}
-                >
-                  {p}
-                </button>
-              ))}
             </div>
           </div>
 

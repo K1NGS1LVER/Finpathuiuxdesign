@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Sun, Moon, ArrowLeft, Check } from 'lucide-react';
+import FinPathLogo from '@/app/components/FinPathLogo';
 import { useNavigate } from 'react-router';
 import { useOnboardingForm } from './onboarding/useOnboardingForm';
 import OnboardingNavigation from './onboarding/OnboardingNavigation';
@@ -90,17 +91,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
         {/* Logo + Back */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'var(--accent)' }}
-            >
-              <span className="font-bold" style={{ color: '#fff', fontSize: 'var(--text-xs)' }}>
-                F
-              </span>
-            </div>
-            <span className="font-bold" style={{ fontSize: 'var(--text-base)' }}>
-              FinPath
-            </span>
+            <FinPathLogo size={28} showWordmark wordmarkSize="16px" wordmarkGap={8} />
           </div>
           <button
             type="button"
@@ -289,17 +280,7 @@ export default function Onboarding({ isDark, setIsDark }: OnboardingProps) {
             <ArrowLeft size={14} className="icon-wireframe" /> Back
           </button>
           <div className="flex items-center gap-1.5">
-            <div
-              className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ background: 'var(--accent)' }}
-            >
-              <span className="font-bold" style={{ color: '#fff', fontSize: 'var(--text-xs)' }}>
-                F
-              </span>
-            </div>
-            <span className="font-bold" style={{ fontSize: 'var(--text-sm)' }}>
-              FinPath
-            </span>
+            <FinPathLogo size={22} showWordmark wordmarkSize="14px" wordmarkGap={6} />
           </div>
           <button
             type="button"

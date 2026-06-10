@@ -1,5 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Sparkles, ArrowRight, TrendingUp, PiggyBank, AlertTriangle, CreditCard, Plus, Target } from 'lucide-react';
+import {
+  Sparkles,
+  ArrowRight,
+  TrendingUp,
+  PiggyBank,
+  AlertTriangle,
+  CreditCard,
+  Plus,
+  Target,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
 import { pageContainer, pageSection } from '@/app/components/motion-variants';
@@ -21,18 +30,21 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 type ChartEntry = Record<string, string | number>;
 
 const PENNY_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  TrendingUp, PiggyBank, AlertTriangle, Sparkles,
+  TrendingUp,
+  PiggyBank,
+  AlertTriangle,
+  Sparkles,
 };
 
 export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
-  const debts = useFinPathStore(s => s.debts);
-  const goals = useFinPathStore(s => s.goals);
-  const income = useFinPathStore(s => s.income);
-  const expenses = useFinPathStore(s => s.expenses);
-  const onboarded = useFinPathStore(s => s.onboarded);
-  const plan = useFinPathStore(s => s.plan);
-  const strategy = useFinPathStore(s => s.strategy);
-  const setStrategy = useFinPathStore(s => s.setStrategy);
+  const debts = useFinPathStore((s) => s.debts);
+  const goals = useFinPathStore((s) => s.goals);
+  const income = useFinPathStore((s) => s.income);
+  const expenses = useFinPathStore((s) => s.expenses);
+  const onboarded = useFinPathStore((s) => s.onboarded);
+  const plan = useFinPathStore((s) => s.plan);
+  const strategy = useFinPathStore((s) => s.strategy);
+  const setStrategy = useFinPathStore((s) => s.setStrategy);
   const pal = usePalette();
 
   const [extraPayment, setExtraPayment] = useState(0);
@@ -40,7 +52,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
   // so the slider stays responsive while the user drags.
   const debouncedExtraPayment = useDebouncedValue(extraPayment, 80);
 
-  const debtGoal = goals.find(g => g.category === 'debt' && g.status !== 'complete');
+  const debtGoal = goals.find((g) => g.category === 'debt' && g.status !== 'complete');
 
   const activeGoals = useMemo(
     () =>
@@ -51,33 +63,40 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
     [goals],
   );
 
-  const surplus         = income.total - expenses.total - debts.totalMonthly;
+  const surplus = income.total - expenses.total - debts.totalMonthly;
   const reservedSurplus = plan?.months?.[0]?.reservedSurplus || 0;
-  const pendingSurplus  = plan?.months?.[0]?.pendingSurplus  || 0;
+  const pendingSurplus = plan?.months?.[0]?.pendingSurplus || 0;
 
   const debtItems = useMemo(() => {
-    if (debts.items.length > 0) return debts.items;
+    if ((debts.items ?? []).length > 0) return debts.items;
     if (!debtGoal) return [];
     const monthlyPayment = debtGoal.monthlyAllocation || debts.totalMonthly || 0;
     const principal = debtGoal.targetAmount || debts.totalPrincipal || monthlyPayment * 12;
     if (monthlyPayment <= 0 && principal <= 0) return [];
-    return [{
-      id: 'debt-from-goal',
-      name: debtGoal.name,
-      category: 'other' as const,
-      principal,
-      interestRate: 10,
-      monthlyPayment,
-      remainingMonths: monthlyPayment > 0 ? Math.max(1, Math.ceil(principal / monthlyPayment)) : 12,
-    }];
+    return [
+      {
+        id: 'debt-from-goal',
+        name: debtGoal.name,
+        category: 'other' as const,
+        principal,
+        interestRate: 10,
+        monthlyPayment,
+        remainingMonths:
+          monthlyPayment > 0 ? Math.max(1, Math.ceil(principal / monthlyPayment)) : 12,
+      },
+    ];
   }, [debts.items, debts.totalMonthly, debts.totalPrincipal, debtGoal]);
 
-  const setDebts = useFinPathStore(s => s.setDebts);
+  const setDebts = useFinPathStore((s) => s.setDebts);
   useEffect(() => {
-    if (debts.items.length === 0 && debtGoal && debtGoal.monthlyAllocation > 0) {
+    if ((debts.items ?? []).length === 0 && debtGoal && debtGoal.monthlyAllocation > 0) {
       const restored = debtItems.length > 0 ? debtItems : [];
       if (restored.length > 0) {
-        setDebts({ items: restored, totalMonthly: debtGoal.monthlyAllocation, totalPrincipal: debtGoal.targetAmount });
+        setDebts({
+          items: restored,
+          totalMonthly: debtGoal.monthlyAllocation,
+          totalPrincipal: debtGoal.targetAmount,
+        });
       }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -110,7 +129,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
     if (!timelineResult) return [];
     const maxMonths = timelineResult.totalMonths;
     const months: ChartEntry[] = [];
-    const debtIds = debtItems.map(d => d.id);
+    const debtIds = debtItems.map((d) => d.id);
 
     const initialBalances: Record<string, number> = {};
     for (const d of debtItems) initialBalances[d.id] = d.principal;
@@ -152,24 +171,34 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
       for (let m = 1; m <= maxMonths; m++) {
         const steps = byMonth.get(m);
         if (steps) for (const s of steps) otherBal[s.debtId] = s.remainingBalance;
-        months[m]['_otherTotal'] = Math.max(0, Object.values(otherBal).reduce((s, v) => s + v, 0));
+        months[m]['_otherTotal'] = Math.max(
+          0,
+          Object.values(otherBal).reduce((s, v) => s + v, 0),
+        );
       }
     }
 
     return months;
   }, [timelineResult, otherTimelineResult, debtItems]);
 
-  const DEBT_COLORS = useMemo(() => [pal.blue, pal.lime, pal.red, pal.amber, pal.green, pal.purple], [pal]);
+  const DEBT_COLORS = useMemo(
+    () => [pal.blue, pal.lime, pal.red, pal.amber, pal.green, pal.purple],
+    [pal],
+  );
 
   const totalPrincipal = useMemo(() => debtItems.reduce((s, d) => s + d.principal, 0), [debtItems]);
-  const totalMonthlyEMI = useMemo(() => debtItems.reduce((s, d) => s + d.monthlyPayment, 0), [debtItems]);
+  const totalMonthlyEMI = useMemo(
+    () => debtItems.reduce((s, d) => s + d.monthlyPayment, 0),
+    [debtItems],
+  );
   const avgInterestRate = useMemo(() => {
     if (totalPrincipal === 0) return 0;
     return debtItems.reduce((s, d) => s + d.interestRate * d.principal, 0) / totalPrincipal;
   }, [debtItems, totalPrincipal]);
 
   const sortedDebts = useMemo(() => {
-    if (strategy === 'avalanche') return [...debtItems].sort((a, b) => b.interestRate - a.interestRate);
+    if (strategy === 'avalanche')
+      return [...debtItems].sort((a, b) => b.interestRate - a.interestRate);
     return [...debtItems].sort((a, b) => a.principal - b.principal);
   }, [debtItems, strategy]);
 
@@ -189,9 +218,10 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
           text: 'With a single debt, both strategies produce the same result. Focus on paying more each month to save on interest.',
         });
       } else {
-        const suffix = monthsDiff > 0
-          ? `, clearing debt ${monthsDiff} month${monthsDiff !== 1 ? 's' : ''} faster`
-          : '';
+        const suffix =
+          monthsDiff > 0
+            ? `, clearing debt ${monthsDiff} month${monthsDiff !== 1 ? 's' : ''} faster`
+            : '';
         tips.push({
           icon: 'TrendingUp',
           text: `The ${better} method saves ${formatInr(saving)} in interest vs minimum payments${suffix}.`,
@@ -217,7 +247,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
 
     const topDebt = [...debtItems].sort((a, b) => b.interestRate - a.interestRate)[0];
     if (topDebt) {
-      const monthlyInterest = Math.round(topDebt.principal * (topDebt.interestRate / 100) / 12);
+      const monthlyInterest = Math.round((topDebt.principal * (topDebt.interestRate / 100)) / 12);
       tips.push({
         icon: 'AlertTriangle',
         text: `Your highest-rate debt (${topDebt.name} at ${topDebt.interestRate}%) is costing ${formatInr(monthlyInterest)}/mo in interest alone. Prioritizing it saves the most.`,
@@ -237,11 +267,25 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
       {debtItems.length > 0 ? (
         <>
           <motion.div className="debt-kpi-grid" variants={pageSection}>
-            {([
-              { label: 'Total Outstanding', value: formatInrCompact(totalPrincipal), color: 'var(--red-text)' },
-              { label: 'Monthly EMI', value: formatInr(totalMonthlyEMI), color: 'var(--card-foreground)' },
-              { label: 'Avg Interest Rate', value: `${avgInterestRate.toFixed(1)}%`, color: 'var(--amber-text)' },
-            ] as const).map(({ label, value, color }) => (
+            {(
+              [
+                {
+                  label: 'Total Outstanding',
+                  value: formatInrCompact(totalPrincipal),
+                  color: 'var(--red-text)',
+                },
+                {
+                  label: 'Monthly EMI',
+                  value: formatInr(totalMonthlyEMI),
+                  color: 'var(--card-foreground)',
+                },
+                {
+                  label: 'Avg Interest Rate',
+                  value: `${avgInterestRate.toFixed(1)}%`,
+                  color: 'var(--amber-text)',
+                },
+              ] as const
+            ).map(({ label, value, color }) => (
               <div key={label} className="bento-card bento-card-sm">
                 <p className="text-label">{label}</p>
                 <p className="debt-kpi-value slashed-zero" style={{ color }}>
@@ -251,12 +295,29 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
             ))}
           </motion.div>
 
-          <motion.div className="bento-card" style={{ marginBottom: 'var(--space-4)' }} variants={pageSection}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+          <motion.div
+            className="bento-card"
+            style={{ marginBottom: 'var(--space-4)' }}
+            variants={pageSection}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 'var(--space-3)',
+              }}
+            >
               <div>
                 <p className="text-label">Payoff Strategy</p>
                 {debtItems.length === 1 && (
-                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--tertiary)', marginTop: 'var(--space-0_5)' }}>
+                  <p
+                    style={{
+                      fontSize: 'var(--text-xs)',
+                      color: 'var(--tertiary)',
+                      marginTop: 'var(--space-0_5)',
+                    }}
+                  >
                     Both strategies identical with one debt
                   </p>
                 )}
@@ -268,11 +329,17 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                 aria-label={`Strategy: ${strategy}`}
                 aria-pressed={strategy === 'avalanche'}
               >
-                <span className={`strategy-toggle-pill ${strategy === 'avalanche' ? 'left' : 'right'}`} />
-                <span className={`strategy-toggle-label ${strategy === 'avalanche' ? 'active' : 'inactive'}`}>
+                <span
+                  className={`strategy-toggle-pill ${strategy === 'avalanche' ? 'left' : 'right'}`}
+                />
+                <span
+                  className={`strategy-toggle-label ${strategy === 'avalanche' ? 'active' : 'inactive'}`}
+                >
                   Avalanche
                 </span>
-                <span className={`strategy-toggle-label ${strategy === 'snowball' ? 'active' : 'inactive'}`}>
+                <span
+                  className={`strategy-toggle-label ${strategy === 'snowball' ? 'active' : 'inactive'}`}
+                >
                   Snowball
                 </span>
               </button>
@@ -287,7 +354,8 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                     const p1 = activeGoals.find((g) => g.priority === 1);
                     return p1 ? (
                       <span>
-                        Your <strong className="text-card-foreground">P1: {p1.name}</strong> receives{' '}
+                        Your <strong className="text-card-foreground">P1: {p1.name}</strong>{' '}
+                        receives{' '}
                         <strong className="text-card-foreground">
                           {formatInr(p1.monthlyAllocation || 0)}/mo
                         </strong>
@@ -321,7 +389,7 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
             </div>
 
             {(() => {
-              const nonDebtGoals      = activeGoals.filter((g) => g.category !== 'debt');
+              const nonDebtGoals = activeGoals.filter((g) => g.category !== 'debt');
               const availableForGoals = Math.max(0, surplus - reservedSurplus - pendingSurplus);
 
               if (nonDebtGoals.length > 0 && availableForGoals <= 0) {
@@ -352,9 +420,24 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
             })()}
 
             <div style={{ marginBottom: 'var(--space-4)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 'var(--space-2)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  marginBottom: 'var(--space-2)',
+                }}
+              >
                 <p className="text-label">Extra Monthly Payment</p>
-                <span className="slashed-zero" style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--card-foreground)' }}>
+                <span
+                  className="slashed-zero"
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'var(--text-xl)',
+                    fontWeight: 'var(--font-weight-bold)',
+                    color: 'var(--card-foreground)',
+                  }}
+                >
                   {formatInr(extraPayment)}
                 </span>
               </div>
@@ -364,31 +447,65 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                 max={50000}
                 step={500}
                 value={extraPayment}
-                onChange={e => setExtraPayment(Number(e.target.value))}
+                onChange={(e) => setExtraPayment(Number(e.target.value))}
                 className="range"
                 aria-label="Extra monthly payment"
                 aria-valuetext={formatInr(extraPayment)}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'var(--tertiary)', marginTop: 'var(--space-1)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--tertiary)',
+                  marginTop: 'var(--space-1)',
+                }}
+              >
                 <span>&#8377;0</span>
                 <span>&#8377;50,000</span>
               </div>
             </div>
 
             {timelineChartData.length > 0 && (
-              <div style={{ marginBottom: 'var(--space-5)' }} role="img" aria-label="Debt payoff timeline chart">
+              <div
+                style={{ marginBottom: 'var(--space-5)' }}
+                role="img"
+                aria-label="Debt payoff timeline chart"
+              >
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={timelineChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--secondary)' }} interval={Math.max(1, Math.floor(timelineChartData.length / 8))} />
-                    <YAxis tick={{ fontSize: 10, fill: 'var(--secondary)' }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10, fill: 'var(--secondary)' }}
+                      interval={Math.max(1, Math.floor(timelineChartData.length / 8))}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: 'var(--secondary)' }}
+                      tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`}
+                    />
                     <RechartsTooltip
-                      contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-base)', fontFamily: 'var(--font-body)', color: 'var(--card-foreground)' }}
+                      contentStyle={{
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-base)',
+                        fontFamily: 'var(--font-body)',
+                        color: 'var(--card-foreground)',
+                      }}
                       formatter={(value: number) => [formatInr(value), '']}
                     />
                     {debtItems.map((d, i) => (
-                      <Area key={d.id} type="monotone" dataKey={d.id} name={d.name} stackId="1"
-                        stroke={DEBT_COLORS[i % DEBT_COLORS.length]} fill={DEBT_COLORS[i % DEBT_COLORS.length]} fillOpacity={0.3} strokeWidth={2} />
+                      <Area
+                        key={d.id}
+                        type="monotone"
+                        dataKey={d.id}
+                        name={d.name}
+                        stackId="1"
+                        stroke={DEBT_COLORS[i % DEBT_COLORS.length]}
+                        fill={DEBT_COLORS[i % DEBT_COLORS.length]}
+                        fillOpacity={0.3}
+                        strokeWidth={2}
+                      />
                     ))}
                     {debtItems.length > 1 && (
                       <Line
@@ -407,13 +524,26 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
               </div>
             )}
 
-            <ul role="list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', listStyle: 'none', padding: 0, margin: 0 }}>
+            <ul
+              role="list"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-2)',
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+              }}
+            >
               {sortedDebts.map((d, i) => {
-                const relatedGoal = goals.find(g => g.category === 'debt' && (g.name === d.name || g.name.includes(d.name)));
+                const relatedGoal = goals.find(
+                  (g) => g.category === 'debt' && (g.name === d.name || g.name.includes(d.name)),
+                );
                 const originalAmount = relatedGoal?.targetAmount;
-                const paidPct = originalAmount && originalAmount > 0 && d.principal <= originalAmount
-                  ? Math.min(100, ((originalAmount - d.principal) / originalAmount) * 100)
-                  : null;
+                const paidPct =
+                  originalAmount && originalAmount > 0 && d.principal <= originalAmount
+                    ? Math.min(100, ((originalAmount - d.principal) / originalAmount) * 100)
+                    : null;
                 const payoffMonth = timelineResult?.payoffDates?.[d.id];
                 const payoffDate = payoffMonth
                   ? (() => {
@@ -425,14 +555,21 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
 
                 return (
                   <li key={d.id} className="debt-row">
-                    <div className={`debt-rank-badge ${i === 0 ? 'debt-rank-badge--top' : 'debt-rank-badge--default'}`}>
+                    <div
+                      className={`debt-rank-badge ${i === 0 ? 'debt-rank-badge--top' : 'debt-rank-badge--default'}`}
+                    >
                       {i + 1}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p className="debt-row-name">{d.name}</p>
                       <p className="debt-row-detail">
                         {d.interestRate}% APR · {formatInr(d.monthlyPayment)}/mo
-                        {payoffDate && <> · <span style={{ color: 'var(--accent-text)' }}>free {payoffDate}</span></>}
+                        {payoffDate && (
+                          <>
+                            {' '}
+                            · <span style={{ color: 'var(--accent-text)' }}>free {payoffDate}</span>
+                          </>
+                        )}
                       </p>
                     </div>
                     {paidPct !== null && (
@@ -466,7 +603,11 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                   <h3 className="penny-insights-title">Penny's Insights</h3>
                   <p className="penny-insights-sub">Personalized for your current plan</p>
                 </div>
-                <button className="pill ml-auto" aria-label="Ask Penny a follow-up question" onClick={onPennyClick}>
+                <button
+                  className="pill ml-auto"
+                  aria-label="Ask Penny a follow-up question"
+                  onClick={onPennyClick}
+                >
                   Ask follow-up <ArrowRight size={14} className="icon-wireframe" />
                 </button>
               </div>
@@ -489,7 +630,12 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
       ) : onboarded && (debts.totalMonthly || 0) === 0 && !debtGoal ? (
         <motion.div
           className="bento-card"
-          style={{ padding: 'var(--space-8) var(--space-6)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}
+          style={{
+            padding: 'var(--space-8) var(--space-6)',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
           variants={pageSection}
         >
           <div
@@ -502,11 +648,19 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
               width: 340,
               height: 340,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, color-mix(in srgb, var(--green) 22%, transparent), transparent 70%)',
+              background:
+                'radial-gradient(circle, color-mix(in srgb, var(--green) 22%, transparent), transparent 70%)',
               pointerEvents: 'none',
             }}
           />
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
             <div
               style={{
                 width: 56,
@@ -522,8 +676,13 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
             >
               <Sparkles size={24} className="icon-wireframe" />
             </div>
-            <p className="text-label" style={{ marginBottom: 'var(--space-2)' }}>Liability-free</p>
-            <h3 className="text-display" style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}>
+            <p className="text-label" style={{ marginBottom: 'var(--space-2)' }}>
+              Liability-free
+            </p>
+            <h3
+              className="text-display"
+              style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}
+            >
               You&rsquo;re debt-free
             </h3>
             <p
@@ -536,9 +695,10 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                 marginBottom: 'var(--space-4)',
               }}
             >
-              Nothing to pay down means every rupee of surplus goes straight to goals or net worth. That&rsquo;s the strongest base you can have.
+              Nothing to pay down means every rupee of surplus goes straight to goals or net worth.
+              That&rsquo;s the strongest base you can have.
             </p>
-            {(income.total - expenses.total) > 0 && (
+            {income.total - expenses.total > 0 && (
               <div
                 style={{
                   display: 'inline-flex',
@@ -551,7 +711,9 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                   marginBottom: 'var(--space-4)',
                 }}
               >
-                <span className="text-label" style={{ color: 'var(--green-text)' }}>Available surplus</span>
+                <span className="text-label" style={{ color: 'var(--green-text)' }}>
+                  Available surplus
+                </span>
                 <span
                   className="slashed-zero"
                   style={{
@@ -607,8 +769,13 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
             >
               <CreditCard size={24} className="icon-wireframe" />
             </div>
-            <p className="text-label" style={{ marginBottom: 'var(--space-2)' }}>Liabilities</p>
-            <h3 className="text-title" style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}>
+            <p className="text-label" style={{ marginBottom: 'var(--space-2)' }}>
+              Liabilities
+            </p>
+            <h3
+              className="text-title"
+              style={{ color: 'var(--card-foreground)', marginBottom: 'var(--space-3)' }}
+            >
               Track a loan to unlock strategy views
             </h3>
             <p
@@ -621,7 +788,8 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                 marginBottom: 'var(--space-5)',
               }}
             >
-              Add your EMIs and we&rsquo;ll show you avalanche vs snowball, payoff dates, and how much interest a small extra payment can save.
+              Add your EMIs and we&rsquo;ll show you avalanche vs snowball, payoff dates, and how
+              much interest a small extra payment can save.
             </p>
             <div
               style={{
@@ -665,14 +833,39 @@ export default function Debt({ onPennyClick }: { onPennyClick?: () => void }) {
                 opacity: 0.4,
               }}
             >
-              {[0, 1, 2].map(i => (
+              {[0, 1, 2].map((i) => (
                 <li key={i} className="debt-row" style={{ pointerEvents: 'none' }}>
-                  <div className="skeleton" style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div className="skeleton" style={{ width: '42%', height: 12, borderRadius: 4 }} />
-                    <div className="skeleton" style={{ width: '64%', height: 10, borderRadius: 4 }} />
+                  <div
+                    className="skeleton"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 'var(--radius-sm)',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                    }}
+                  >
+                    <div
+                      className="skeleton"
+                      style={{ width: '42%', height: 12, borderRadius: 4 }}
+                    />
+                    <div
+                      className="skeleton"
+                      style={{ width: '64%', height: 10, borderRadius: 4 }}
+                    />
                   </div>
-                  <div className="skeleton" style={{ width: 64, height: 14, borderRadius: 4, flexShrink: 0 }} />
+                  <div
+                    className="skeleton"
+                    style={{ width: 64, height: 14, borderRadius: 4, flexShrink: 0 }}
+                  />
                 </li>
               ))}
             </ul>
