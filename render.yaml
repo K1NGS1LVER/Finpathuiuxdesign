@@ -18,5 +18,9 @@ services:
         sync: false
       - key: AUTH_MOCK
         value: "false"
+      - key: SUPABASE_JWT_AUD
+        value: "authenticated"
+      - key: SUPABASE_JWT_ALGORITHM
+        value: "HS256"
       - key: ALLOWED_ORIGINS
         sync: false
