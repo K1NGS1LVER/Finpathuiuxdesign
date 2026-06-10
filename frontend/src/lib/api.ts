@@ -23,6 +23,7 @@ export interface ApiFetchInit extends RequestInit {
  */
 export async function apiFetch(input: string, init: ApiFetchInit = {}): Promise<Response> {
   const { noAuth, noJsonContentType, timeoutMs, headers, signal, ...rest } = init;
+  const url = `${import.meta.env.VITE_BACKEND_URL ?? ''}${input}`;
   const merged = new Headers(headers ?? {});
 
   if (!noAuth && isSupabaseConfigured) {
@@ -46,7 +47,7 @@ export async function apiFetch(input: string, init: ApiFetchInit = {}): Promise<
 
   const effectiveTimeout = timeoutMs ?? DEFAULT_TIMEOUT_MS;
   if (effectiveTimeout <= 0) {
-    return fetch(input, { ...rest, headers: merged, signal });
+    return fetch(url, { ...rest, headers: merged, signal });
   }
 
   const controller = new AbortController();
@@ -59,7 +60,7 @@ export async function apiFetch(input: string, init: ApiFetchInit = {}): Promise<
     }
   }
   try {
-    return await fetch(input, { ...rest, headers: merged, signal: controller.signal });
+    return await fetch(url, { ...rest, headers: merged, signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }
