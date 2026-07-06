@@ -1,11 +1,15 @@
 import type { Options } from "canvas-confetti";
 
-let modulePromise: Promise<typeof import("canvas-confetti")> | null = null;
+function loadConfetti() {
+  return import("canvas-confetti");
+}
+
+let modulePromise: ReturnType<typeof loadConfetti> | null = null;
 
 /** Warms the canvas-confetti chunk so timed beats land on schedule. */
 export function prefetchConfetti(): void {
   if (modulePromise) return;
-  modulePromise = import("canvas-confetti");
+  modulePromise = loadConfetti();
 }
 
 function prefersReducedMotion(): boolean {

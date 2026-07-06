@@ -9,6 +9,7 @@ import {
   Plus,
   Target,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
 import { pageContainer, pageSection } from '@/app/components/motion-variants';
@@ -29,7 +30,7 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 
 type ChartEntry = Record<string, string | number>;
 
-const PENNY_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const PENNY_ICONS: Record<string, LucideIcon> = {
   TrendingUp,
   PiggyBank,
   AlertTriangle,

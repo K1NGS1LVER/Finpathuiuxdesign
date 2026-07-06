@@ -107,47 +107,51 @@ export default function ConsultationCard({ data }: ConsultationCardProps) {
         {formatDatetime(data.datetime, data.timezone)}
       </p>
 
-      <a
-        href={MEET_LINK}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "var(--space-0_5)",
-          fontFamily: "var(--font-body)",
-          fontSize: "var(--text-sm)",
-          color: "var(--accent-text)",
-          textDecoration: "underline",
-          textUnderlineOffset: 2,
-          wordBreak: "break-all",
-        }}
-      >
-        {MEET_LINK}
-        <ExternalLink size={12} className="icon-wireframe" style={{ flexShrink: 0 }} />
-      </a>
+      {MEET_LINK && (
+        <a
+          href={MEET_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "var(--space-0_5)",
+            fontFamily: "var(--font-body)",
+            fontSize: "var(--text-sm)",
+            color: "var(--accent-text)",
+            textDecoration: "underline",
+            textUnderlineOffset: 2,
+            wordBreak: "break-all",
+          }}
+        >
+          {MEET_LINK}
+          <ExternalLink size={12} className="icon-wireframe" style={{ flexShrink: 0 }} />
+        </a>
+      )}
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          padding: "var(--space-1)",
-          background: "var(--card)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius-sm)",
-          width: "fit-content",
-          alignSelf: "center",
-          marginTop: "var(--space-0_5)",
-        }}
-      >
-        <QRCodeSVG
-          value={MEET_LINK}
-          size={120}
-          bgColor="transparent"
-          fgColor="currentColor"
-          style={{ color: "var(--card-foreground)" }}
-        />
-      </div>
+      {MEET_LINK && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "var(--space-1)",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)",
+            width: "fit-content",
+            alignSelf: "center",
+            marginTop: "var(--space-0_5)",
+          }}
+        >
+          <QRCodeSVG
+            value={MEET_LINK}
+            size={120}
+            bgColor="transparent"
+            fgColor="currentColor"
+            style={{ color: "var(--card-foreground)" }}
+          />
+        </div>
+      )}
 
       <p
         style={{

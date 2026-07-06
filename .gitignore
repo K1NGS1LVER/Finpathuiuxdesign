@@ -32,7 +32,6 @@ FINPATH-PENNY-GUIDE.md
 .playwright-mcp/
 .superpowers/
 finpath-claude/
-docs/superpowers/
 finPath_claude_extracted/
 qa-*.png
 landing-*.png

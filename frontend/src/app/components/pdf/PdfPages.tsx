@@ -34,6 +34,32 @@ const MONTH_NAMES = [
   "December",
 ];
 
+// Zero-value fallbacks for half-hydrated profiles. Kept as standalone consts
+// (spread below) so TypeScript doesn't flag the keys as always-overwritten.
+const INCOME_DEFAULTS = {
+  primary: 0,
+  secondary: 0,
+  passive: 0,
+  variablePercent: 0,
+  variable: 0,
+  total: 0,
+  primaryIncrement: 0,
+  secondaryIncrement: 0,
+  passiveIncrement: 0,
+  netRate: 0.88,
+  netMonthly: 0,
+};
+
+const EXPENSE_DEFAULTS = {
+  rent: 0,
+  food: 0,
+  transport: 0,
+  utilities: 0,
+  entertainment: 0,
+  other: 0,
+  total: 0,
+};
+
 const PdfPages = forwardRef<HTMLDivElement, PdfPagesProps>(function PdfPages(
   { profile: rawProfile },
   ref,
@@ -49,28 +75,8 @@ const PdfPages = forwardRef<HTMLDivElement, PdfPagesProps>(function PdfPages(
         totalMonthly: rawProfile.debts?.totalMonthly ?? 0,
         totalPrincipal: rawProfile.debts?.totalPrincipal,
       },
-      income: {
-        primary: 0,
-        secondary: 0,
-        passive: 0,
-        variablePercent: 0,
-        variable: 0,
-        total: 0,
-        primaryIncrement: 0,
-        secondaryIncrement: 0,
-        passiveIncrement: 0,
-        ...rawProfile.income,
-      },
-      expenses: {
-        rent: 0,
-        food: 0,
-        transport: 0,
-        utilities: 0,
-        entertainment: 0,
-        other: 0,
-        total: 0,
-        ...rawProfile.expenses,
-      },
+      income: { ...INCOME_DEFAULTS, ...rawProfile.income },
+      expenses: { ...EXPENSE_DEFAULTS, ...rawProfile.expenses },
       savings: rawProfile.savings ?? 0,
       investments: rawProfile.investments ?? 0,
       monthlySurplusReserve: rawProfile.monthlySurplusReserve ?? 0,

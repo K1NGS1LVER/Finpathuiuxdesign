@@ -25,6 +25,7 @@ import {
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
+import type { Variants } from 'motion/react';
 import { useFinPathStore } from '@/lib/store';
 import { formatInr, formatInrCompact } from '@/lib/format';
 import { fireConfetti } from '@/lib/confetti';
@@ -35,7 +36,7 @@ import { useTabParam } from '@/app/hooks/useTabParam';
 
 const Month = lazy(() => import('./Month'));
 
-const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const ICONS: Record<string, LucideIcon> = {
   Bike,
   Home,
   Plane,
@@ -118,11 +119,11 @@ const CATEGORY_STYLE: Record<
   },
 };
 
-const gridVariants = {
+const gridVariants: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
 };
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] } },
 };
