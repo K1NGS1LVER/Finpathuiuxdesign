@@ -1,8 +1,8 @@
 name: CI
 
 on:
+  # No branch filter on pull_request so stacked PRs (base != main) get CI too.
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
@@ -22,7 +22,8 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          # Version comes from frontend/package.json "packageManager" (no repo-root package.json).
+          package_json_file: frontend/package.json
 
       - uses: actions/setup-node@v4
         with:
