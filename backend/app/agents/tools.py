@@ -69,11 +69,35 @@ class _ProposeArgs(BaseModel):
         description=f"Zustand setter name. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}."
     )
     payload: dict[str, Any] = Field(
-        description="JSON payload the frontend will pass to the setter."
+        description=(
+            "JSON payload the frontend passes to the setter. Field names MUST be "
+            "camelCase. Shapes by action:\n"
+            '- updateGoal: {"id": "<goal id>", "updates": {"targetAmount": <INR>, '
+            '"timelineMonths": <months>, "name": "..."}} — include only fields being '
+            "changed; use targetAmount (not target), currentAmount (not current), "
+            "timelineMonths (not timeline_months).\n"
+            '- addGoal: {"goal": {"id": "goal-<timestamp>", "name": "...", '
+            '"targetAmount": <INR>, "timelineMonths": <months>, "category": "custom", '
+            '"icon": "Target", "priority": <n>, "currentAmount": 0, '
+            '"status": "not-started", "monthlyAllocation": 0, "color": "var(--accent)"}}\n'
+            '- removeGoal: {"id": "<goal id>"}\n'
+            '- addLumpsum: {"goalId": "<goal id>", "amount": <positive INR>} — never '
+            "negative; never use addLumpsum to model a new debt (use addDebt).\n"
+            '- addDebt: {"debt": {"name": "...", "principal": <positive INR owed>, '
+            '"interestRate": <annual %>, "monthlyPayment": <INR>, "category": '
+            '"personalLoan|creditCard|homeLoan|carLoan|educationLoan|other"}} — if the '
+            'user says "I owe 10000", principal = 10000.\n'
+            '- setStrategy: {"strategy": "avalanche" | "snowball"}\n'
+            "- setEmergencyFund / setSavings / setInvestments: "
+            '{"amount": <INR>}'
+        )
     )
     rationale: str = Field(
         default="",
-        description="Short user-facing explanation (1-2 sentences). Optional but strongly recommended.",
+        description=(
+            "One user-facing sentence explaining why (e.g. 'User requested adding a "
+            "personal debt of ₹10,000.'). Always include it."
+        ),
     )
 
     @field_validator("payload", mode="before")
@@ -528,6 +552,32 @@ def make_tools(
                         "target instead."
                     ),
                 }
+
+        # removeGoal / addLumpsum previously passed through unvalidated: the
+        # store setters silently no-op on unknown ids, so the proposal card
+        # showed "approved" while nothing changed. Reject bad ids here so the
+        # model corrects itself before the user ever sees a card.
+        if action in ("removeGoal", "addLumpsum"):
+            goal_id = payload.get("id") or payload.get("goalId") or payload.get("goal_id")
+            goals_list = profile.get("goals") or []
+            if not any(g.get("id") == goal_id for g in goals_list):
+                return {
+                    "ok": False,
+                    "error": (
+                        f"Goal id '{goal_id}' not found. Call read_profile to get valid ids."
+                    ),
+                }
+            if action == "addLumpsum":
+                try:
+                    amount = float(payload.get("amount") or 0)
+                except (TypeError, ValueError):
+                    amount = 0.0
+                if amount <= 0:
+                    return {
+                        "ok": False,
+                        "error": "addLumpsum requires a positive `amount`.",
+                    }
+                payload = {"goalId": goal_id, "amount": amount}
 
         result = propose(action, payload, rationale)
         return {

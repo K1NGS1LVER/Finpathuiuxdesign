@@ -152,8 +152,10 @@ def build_system_prompt(profile: dict[str, Any], context: str | None = None) -> 
         target = g["targetAmount"] or 0
         current = g["currentAmount"] or 0
         pct = round((current / target) * 100) if target > 0 else 0
+        name = g.get("name") or g["id"]
         goal_lines.append(
-            f"- {g['id']} ({g.get('category', 'custom')}): Target ₹{_inr(target)}, Saved ₹{_inr(current)} ({pct}%), "
+            f"- {name} (id: {g['id']}, {g.get('category', 'custom')}): "
+            f"Target ₹{_inr(target)}, Saved ₹{_inr(current)} ({pct}%), "
             f"{g['timelineMonths']}mo timeline, Priority {g['priority']}"
         )
     goals_text = "\n".join(goal_lines) if goal_lines else "No goals set yet."

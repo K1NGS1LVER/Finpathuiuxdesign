@@ -1,4 +1,9 @@
-"""Penny API — Phase 0 chat proxy + Phase 3 LangGraph SSE stream + chat/proposal CRUD."""
+"""Penny API — LangGraph SSE stream + chat/proposal CRUD.
+
+The old non-streaming `POST /api/penny` proxy was removed: the frontend only
+ever calls `/api/penny/stream`, and the proxy ran a blocking Groq call on the
+event loop.
+"""
 
 from __future__ import annotations
 
@@ -15,10 +20,6 @@ from pydantic import BaseModel, Field
 
 from app.agents.penny import stream_agent
 from app.auth import CurrentUser, get_current_user
-from app.config import settings
-from app.services.cache import cache_key, response_cache
-from app.services.groq_client import get_groq_client
-from app.services.prompt import build_system_prompt
 from app.services.rate_limit import rate_limiter
 from app.services.supabase_db import (
     delete_chat_history,
@@ -36,65 +37,7 @@ router = APIRouter()
 MAX_MESSAGE_CHARS = 4000
 
 
-class PennyChatRequest(BaseModel):
-    message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
-    profile: dict[str, Any]
-    context: str | None = Field(default=None, max_length=200)
-
-
-class PennyChatResponse(BaseModel):
-    reply: str
-
-
-@router.post("/api/penny", response_model=PennyChatResponse)
-async def chat(
-    req: PennyChatRequest,
-    request: Request,
-    user: CurrentUser = Depends(get_current_user),
-) -> PennyChatResponse:
-    # Rate-limit per authenticated user (falls back to IP only if uid unknown).
-    rl_key = user.user_id or (request.client.host if request.client else "unknown")
-    if not rate_limiter.check(rl_key):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many requests. Please wait a moment before asking again.",
-        )
-
-    key = cache_key(req.message, req.profile, user.user_id)
-    cached = response_cache.get(key)
-    if cached is not None:
-        return PennyChatResponse(reply=cached)
-
-    messages: list[dict[str, str]] = [
-        {"role": "system", "content": build_system_prompt(req.profile, req.context)},
-        {"role": "user", "content": req.message},
-    ]
-
-    try:
-        completion = get_groq_client().chat.completions.create(
-            model=settings.groq_primary_model,
-            messages=messages,
-            temperature=0.3,
-            max_tokens=800,
-            stream=False,
-        )
-    except Exception as exc:
-        log.exception("Groq API error")
-        raise HTTPException(
-            status_code=502, detail="Penny is temporarily unavailable. Try again shortly."
-        ) from exc
-
-    reply = ""
-    if completion.choices and completion.choices[0].message:
-        reply = completion.choices[0].message.content or ""
-    if not reply:
-        reply = "I'm having trouble thinking right now. Try again?"
-
-    response_cache.set(key, reply)
-    return PennyChatResponse(reply=reply)
-
-
-# ── Phase 3: SSE streaming agent ─────────────────────────────────
+# ── SSE streaming agent ──────────────────────────────────────────
 class PennyStreamRequest(BaseModel):
     message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     profile: dict[str, Any]
