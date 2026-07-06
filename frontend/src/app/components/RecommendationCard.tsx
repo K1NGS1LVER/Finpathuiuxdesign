@@ -6,6 +6,7 @@
 // ============================================================
 
 import * as LucideIcons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type React from 'react';
 
 export interface RecommendationCardProps {
@@ -41,9 +42,7 @@ export default function RecommendationCard({
 
   // Resolve Lucide icon dynamically from string name
   const IconComponent =
-    (LucideIcons as Record<string, React.ComponentType<{ size?: number; className?: string }>>)[
-      icon
-    ] ?? LucideIcons.Lightbulb;
+    (LucideIcons as unknown as Record<string, LucideIcon>)[icon] ?? LucideIcons.Lightbulb;
 
   const interactive = onClick !== undefined;
 

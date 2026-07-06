@@ -47,13 +47,8 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # Typecheck currently reports 37 pre-existing latent errors
-      # (motion variants + onboarding breakdown types). Tracked in
-      # plans/onboarding-loading-screen-needs-merry-wozniak.md.
-      # Run for visibility; do not block CI until backlog cleared.
-      - name: Typecheck (non-blocking)
+      - name: Typecheck
         run: pnpm typecheck
-        continue-on-error: true
 
   backend:
     name: Backend (ruff + pytest)

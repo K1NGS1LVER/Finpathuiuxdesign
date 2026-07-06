@@ -591,14 +591,14 @@ export default function Cashflow() {
 
                         const allParsed = fields.map(f => ({
                           key: f.key,
-                          val: parseField(String(f.key), (expenses as Record<string, number>)[String(f.key)] ?? 0),
+                          val: parseField(String(f.key), (expenses as unknown as Record<string, number>)[String(f.key)] ?? 0),
                         }));
                         const allValid = allParsed.every(({ val }) => !isNaN(val) && val >= 0);
 
                         return (
                           <>
                             {fields.map((f, fi) => {
-                              const currentVal = (expenses as Record<string, number>)[String(f.key)] ?? 0;
+                              const currentVal = (expenses as unknown as Record<string, number>)[String(f.key)] ?? 0;
                               const fieldKey = String(f.key);
                               const fieldInput = editValues[fieldKey] ?? String(currentVal);
                               const fieldParsed = Number(fieldInput.replace(/,/g, ''));

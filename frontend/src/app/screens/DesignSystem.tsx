@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Palette, Type, Ruler, Layers, Square, Award } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { pageContainer, pageSection, cardEntry } from '@/app/components/motion-variants';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 
@@ -94,7 +95,7 @@ const RADIUS_ENTRIES = [
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
-function SectionHeader({ icon: Icon, title, subtitle }: { icon: React.ComponentType<{ size: number; className?: string }>; title: string; subtitle: string }) {
+function SectionHeader({ icon: Icon, title, subtitle }: { icon: LucideIcon; title: string; subtitle: string }) {
   return (
     <div style={{ marginBottom: 'var(--space-3)' }}>
       <div className="flex items-center gap-2" style={{ marginBottom: 'var(--space-1)' }}>
