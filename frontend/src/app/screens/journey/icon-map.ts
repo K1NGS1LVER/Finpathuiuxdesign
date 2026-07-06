@@ -10,14 +10,9 @@ import {
   GraduationCap,
   Wallet,
 } from "lucide-react";
-import type { ComponentType, CSSProperties } from "react";
+import type { LucideIcon } from "lucide-react";
 
-export type GoalIconComponent = ComponentType<{
-  size?: number;
-  className?: string;
-  strokeWidth?: number;
-  style?: CSSProperties;
-}>;
+export type GoalIconComponent = LucideIcon;
 
 export const GOAL_ICON_MAP: Record<string, GoalIconComponent> = {
   Bike,

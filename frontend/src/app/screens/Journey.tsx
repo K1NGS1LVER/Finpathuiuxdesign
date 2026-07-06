@@ -1,6 +1,6 @@
 import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import type { ComponentType, CSSProperties } from 'react';
 import { Target, Plus, Trash2, Coins, CheckCircle, Info } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { fireConfetti, prefetchConfetti } from '@/lib/confetti';
 import { useFinPathStore } from '@/lib/store';
@@ -35,12 +35,7 @@ function StatPill({
   color,
   subtle,
 }: {
-  icon: ComponentType<{
-    size?: number;
-    strokeWidth?: number;
-    style?: CSSProperties;
-    className?: string;
-  }>;
+  icon: LucideIcon;
   label: string;
   value: string | number;
   color: string;

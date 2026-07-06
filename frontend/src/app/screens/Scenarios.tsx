@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { GitCompare, Wallet, TrendingUp, Sparkles, PiggyBank, ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useFinPathStore } from "@/lib/store";
 import { formatInr, formatInrCompact } from "@/lib/format";
@@ -8,7 +9,7 @@ import { pageContainer, pageSection } from "../components/motion-variants";
 
 type RiskKey = "conservative" | "balanced" | "aggressive";
 
-const PENNY_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const PENNY_ICONS: Record<string, LucideIcon> = {
   TrendingUp, PiggyBank, Sparkles,
 };
 

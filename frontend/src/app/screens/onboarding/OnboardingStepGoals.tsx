@@ -1,4 +1,5 @@
 import { Target, TrendingUp, Shield, Sparkles, Calendar, Lightbulb, Plus, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { GoalSelection } from "./useOnboardingForm";
 
 interface OnboardingStepGoalsProps {
@@ -16,7 +17,7 @@ interface OnboardingStepGoalsProps {
 
 interface GoalOptionDef {
   name: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   color: string;
   colorText: string;
   colorSubtle: string;

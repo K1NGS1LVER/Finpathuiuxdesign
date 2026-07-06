@@ -13,6 +13,10 @@ function makeIncome(overrides: Partial<IncomeProfile> = {}): IncomeProfile {
     primaryIncrement: 0,
     secondaryIncrement: 0,
     passiveIncrement: 0,
+    netRate: 1,
+    // 0 = unset: the engines fall back to `total` (netMonthly || total),
+    // which keeps these fixtures driven by the `total` overrides.
+    netMonthly: 0,
     ...overrides,
   };
 }
