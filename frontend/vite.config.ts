@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig(() => {
   const backendTarget = process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
@@ -11,6 +12,10 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
+      // Dev-only bundle inspection: ANALYZE=1 pnpm build → dist/stats.html
+      ...(process.env.ANALYZE
+        ? [visualizer({ filename: 'dist/stats.html', gzipSize: true })]
+        : []),
     ],
     resolve: {
       alias: {
@@ -31,6 +36,9 @@ export default defineConfig(() => {
     assetsInclude: ['**/*.svg', '**/*.csv'],
 
     build: {
+      // recharts alone is ~552 kB pre-gzip (157 kB gzipped) in its own
+      // route-gated, long-cacheable chunk; warn only above that baseline.
+      chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
           manualChunks: {

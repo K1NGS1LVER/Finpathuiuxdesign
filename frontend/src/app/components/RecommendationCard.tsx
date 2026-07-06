@@ -5,9 +5,37 @@
 // Animation (stagger, entry) is applied by the parent, not here.
 // ============================================================
 
-import * as LucideIcons from 'lucide-react';
+import {
+  ArrowUpRight,
+  Bike,
+  CalendarClock,
+  Car,
+  House,
+  Lightbulb,
+  PiggyBank,
+  Scissors,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type React from 'react';
+
+// Explicit registry of every icon name recommendation/insight data can emit.
+// A namespace import (`import * as LucideIcons`) here previously defeated
+// tree-shaking and pulled all ~1,500 lucide icons into the Affordability
+// chunk. Add new entries when a data source starts emitting a new name.
+const ICON_REGISTRY: Record<string, LucideIcon> = {
+  ArrowUpRight,
+  Bike,
+  CalendarClock,
+  Car,
+  House,
+  Lightbulb,
+  PiggyBank,
+  Scissors,
+  TrendingUp,
+  Zap,
+};
 
 export interface RecommendationCardProps {
   observation: string;
@@ -40,9 +68,8 @@ export default function RecommendationCard({
 }: RecommendationCardProps) {
   const iconColor = TONE_COLOR[tone];
 
-  // Resolve Lucide icon dynamically from string name
-  const IconComponent =
-    (LucideIcons as unknown as Record<string, LucideIcon>)[icon] ?? LucideIcons.Lightbulb;
+  // Resolve Lucide icon from string name via the explicit registry.
+  const IconComponent = ICON_REGISTRY[icon] ?? Lightbulb;
 
   const interactive = onClick !== undefined;
 

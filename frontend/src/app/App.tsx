@@ -17,11 +17,13 @@ const DesignSystem = lazy(() => import('./screens/DesignSystem'));
 const Debt = lazy(() => import('./screens/Debt'));
 const Cashflow = lazy(() => import('./screens/Cashflow'));
 const Affordability = lazy(() => import('./screens/Affordability'));
+// PDF export pulls pdf-lib + html-to-image (~heavy); only load once an
+// export actually starts.
+const PdfExportOverlay = lazy(() => import('./components/PdfExportOverlay'));
 
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import PennyPanel from './components/PennyPanel';
-import PdfExportOverlay from './components/PdfExportOverlay';
 import DemoControlPanel from './components/DemoControlPanel';
 import RouteFallback from './components/RouteFallback';
 import { useFinPathStore } from '@/lib/store';
@@ -52,6 +54,7 @@ function AppContent() {
   const navigate = useNavigate();
   const onboarded = useFinPathStore((s) => s.onboarded);
   const demoMode = useFinPathStore((s) => s.demoMode ?? false);
+  const pdfExporting = useFinPathStore((s) => s.pdfExporting);
   const goals = useFinPathStore((s) => s.goals);
   const pendingGoalDecisions = useFinPathStore((s) => s.pendingGoalDecisions);
   const monthlySurplusReserve = useFinPathStore((s) => s.monthlySurplusReserve);
@@ -316,7 +319,11 @@ function AppContent() {
             </main>
           </div>
           <PennyPanel open={pennyOpen} onClose={() => setPennyOpen(false)} />
-          <PdfExportOverlay />
+          {pdfExporting && (
+            <Suspense fallback={null}>
+              <PdfExportOverlay />
+            </Suspense>
+          )}
           <DemoControlPanel />
 
           {activeDecision && (
