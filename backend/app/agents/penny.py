@@ -19,21 +19,21 @@ from __future__ import annotations
 
 import asyncio
 import json
-from functools import lru_cache
 import logging
 import re
-import httpx
-import groq as _groq_sdk
 from collections.abc import AsyncIterator, Callable
+from functools import lru_cache
 from typing import Any
 
+import groq as _groq_sdk
+import httpx
 from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
-from langgraph.prebuilt import create_react_agent, ToolNode
+from langgraph.prebuilt import ToolNode, create_react_agent
 
 from app.agents.tools import make_tools
 from app.config import settings
-from app.services.prompt import build_system_prompt, build_fallback_response
+from app.services.prompt import build_fallback_response, build_system_prompt
 
 log = logging.getLogger(__name__)
 
@@ -340,7 +340,11 @@ async def stream_agent(
         graph, tools = build_graph(profile, propose, current_model)
         tools_by_name = {t.name: t for t in tools}
 
-        suffix = FALLBACK_SYSTEM_SUFFIX if current_model == settings.groq_fallback_model else SYSTEM_SUFFIX
+        suffix = (
+            FALLBACK_SYSTEM_SUFFIX
+            if current_model == settings.groq_fallback_model
+            else SYSTEM_SUFFIX
+        )
         sys_prompt = build_system_prompt(profile, context) + suffix
         messages: list[Any] = [SystemMessage(content=sys_prompt)]
         for m in (history or [])[-20:]:
@@ -350,6 +354,7 @@ async def stream_agent(
                 messages.append(HumanMessage(content=content))
             elif role == "assistant":
                 from langchain_core.messages import AIMessage
+
                 messages.append(AIMessage(content=content))
         messages.append(HumanMessage(content=user_message))
 
@@ -436,7 +441,10 @@ async def stream_agent(
                 sleep_s = min(delay * (attempt + 1), _MAX_BACKOFF_SLEEP_S)
                 log.warning(
                     "penny: rate-limited (attempt %d/%d model=%s); retrying in %.1fs",
-                    attempt + 1, _MAX_RATE_LIMIT_RETRIES, current_model, sleep_s,
+                    attempt + 1,
+                    _MAX_RATE_LIMIT_RETRIES,
+                    current_model,
+                    sleep_s,
                 )
                 await asyncio.sleep(sleep_s)
                 attempt += 1
@@ -453,7 +461,9 @@ async def stream_agent(
             if not used_fallback and not any_tokens_emitted:
                 log.warning(
                     "penny: switching to fallback model %s (daily=%s attempt=%d)",
-                    settings.groq_fallback_model, is_daily, attempt,
+                    settings.groq_fallback_model,
+                    is_daily,
+                    attempt,
                 )
                 current_model = settings.groq_fallback_model
                 used_fallback = True
@@ -469,13 +479,21 @@ async def stream_agent(
 
             log.warning(
                 "penny: rate-limit unrecoverable (model=%s daily=%s attempt=%d tokens_emitted=%s): %s",
-                current_model, is_daily, attempt, any_tokens_emitted, exc,
+                current_model,
+                is_daily,
+                attempt,
+                any_tokens_emitted,
+                exc,
             )
             err = _rate_limit_msg(is_daily)
             yield {"event": "error", "data": err}
             yield {
                 "event": "done",
-                "data": {"reply": err, "tool_calls": tool_calls_log, "tool_results": tool_results_log},
+                "data": {
+                    "reply": err,
+                    "tool_calls": tool_calls_log,
+                    "tool_results": tool_results_log,
+                },
             }
             return
 
@@ -533,8 +551,7 @@ async def stream_agent(
             )
         else:
             correction = (
-                "\n\n⚠️ Something went wrong — the proposal card wasn't created. "
-                "Please try again."
+                "\n\n⚠️ Something went wrong — the proposal card wasn't created. Please try again."
             )
         final_text_parts.append(correction)
         final_text = "".join(final_text_parts).strip()
@@ -544,7 +561,11 @@ async def stream_agent(
     if tool_calls_log:
         log.info(
             "penny turn complete",
-            extra={"tool_calls": tool_calls_log, "tool_results": tool_results_log, "model": current_model},
+            extra={
+                "tool_calls": tool_calls_log,
+                "tool_results": tool_results_log,
+                "model": current_model,
+            },
         )
     yield {
         "event": "done",

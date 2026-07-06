@@ -115,10 +115,7 @@ def _build_cash_levers(
             }
         )
         target_income = (
-            required36
-            + inp["monthlyExpenses"]
-            + inp["monthlyReserve"]
-            + inp["existingEmiTotal"]
+            required36 + inp["monthlyExpenses"] + inp["monthlyReserve"] + inp["existingEmiTotal"]
         )
         if target_income > inp["netMonthlyIncome"]:
             lever: dict[str, Any] = {
@@ -174,9 +171,7 @@ def _build_emi_levers(
         emp_foir_cap = _FOIR_CAPS.get(employment_type, _FOIR_CAPS["salaried"]).get(
             loan_type, _FOIR_CAPS["salaried"]["other"]
         )
-        income_needed = math.ceil(
-            (inp["existingEmiTotal"] + emi) / emp_foir_cap
-        )
+        income_needed = math.ceil((inp["existingEmiTotal"] + emi) / emp_foir_cap)
         if income_needed > inp["netMonthlyIncome"]:
             levers.append(
                 {
