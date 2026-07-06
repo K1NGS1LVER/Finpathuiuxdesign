@@ -9,8 +9,11 @@ class Settings(BaseSettings):
     )
 
     groq_api_key: str = ""
-    groq_primary_model: str = "llama-3.3-70b-versatile"
-    groq_fallback_model: str = "llama-3.1-8b-instant"
+    # Groq retires llama-3.3-70b-versatile and llama-3.1-8b-instant on
+    # 2026-08-16. gpt-oss models are Groq's recommended replacements and do
+    # native tool calling (no leaked <function=...> text).
+    groq_primary_model: str = "openai/gpt-oss-120b"
+    groq_fallback_model: str = "openai/gpt-oss-20b"
     host: str = "127.0.0.1"
     port: int = 8000
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"

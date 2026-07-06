@@ -141,3 +141,78 @@ def test_check_affordability_does_not_double_count_emis():
     profile = make_profile(debts={"items": [_debt(1, 500_000, 10, 15_000)], "totalMonthly": 15_000})
     result = get_tool(profile, "check_affordability").invoke({"target_cost": 500_000})
     assert result["monthlySurplus"] == 40_000
+
+
+# ── propose_change validation ─────────────────────────────────────────────────
+
+
+def _propose_tool(profile):
+    return get_tool(profile, "propose_change")
+
+
+def test_propose_change_rejects_updategoal_on_completed_goal():
+    profile = make_profile(
+        goals=[
+            {
+                "id": "goal-done",
+                "name": "Upskill Course",
+                "targetAmount": 100_000,
+                "currentAmount": 100_000,
+                "timelineMonths": 12,
+                "priority": 1,
+                "status": "complete",
+                "category": "education",
+            }
+        ]
+    )
+    result = _propose_tool(profile).invoke(
+        {
+            "action": "updateGoal",
+            "payload": {"id": "goal-done", "updates": {"target": 150_000}},
+            "rationale": "bump",
+        }
+    )
+    assert result["ok"] is False
+    assert "already complete" in result["error"]
+    assert "Upskill Course" in result["error"]
+
+
+def test_propose_change_rejects_removegoal_on_unknown_id():
+    # The store's removeGoal silently no-ops on unknown ids, so the backend
+    # must reject them before a proposal card ever reaches the user.
+    result = _propose_tool(make_profile()).invoke(
+        {"action": "removeGoal", "payload": {"id": "goal-1"}, "rationale": "cleanup"}
+    )
+    assert result["ok"] is False
+    assert "not found" in result["error"]
+
+
+def test_propose_change_rejects_lumpsum_on_unknown_goal():
+    result = _propose_tool(make_profile()).invoke(
+        {"action": "addLumpsum", "payload": {"goalId": "nope", "amount": 5000}, "rationale": "x"}
+    )
+    assert result["ok"] is False
+    assert "not found" in result["error"]
+
+
+def test_propose_change_accepts_valid_lumpsum_with_real_id():
+    result = _propose_tool(make_profile()).invoke(
+        {
+            "action": "addLumpsum",
+            "payload": {"goalId": "goal-1700000000000-0", "amount": 5000},
+            "rationale": "windfall",
+        }
+    )
+    assert result["status"] == "pending_user_approval"
+    assert result["proposal_id"] == "prop-test"
+
+
+def test_propose_change_normalizes_updategoal_with_real_id():
+    result = _propose_tool(make_profile()).invoke(
+        {
+            "action": "updateGoal",
+            "payload": {"id": "goal-1700000000000-0", "updates": {"target": "350000"}},
+            "rationale": "bump",
+        }
+    )
+    assert result["status"] == "pending_user_approval"

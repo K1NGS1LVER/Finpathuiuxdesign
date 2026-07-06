@@ -9,6 +9,12 @@ services:
     envVars:
       - key: GROQ_API_KEY
         sync: false
+      # Explicit so the production model choice is flippable without a code
+      # deploy. Groq retires the llama-3.x models on 2026-08-16.
+      - key: GROQ_PRIMARY_MODEL
+        value: "openai/gpt-oss-120b"
+      - key: GROQ_FALLBACK_MODEL
+        value: "openai/gpt-oss-20b"
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
