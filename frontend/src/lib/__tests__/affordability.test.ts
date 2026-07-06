@@ -61,12 +61,12 @@ describe('runAffordability — cash route', () => {
   });
 
   it('affordable_later when surplus is positive but needs time', () => {
-    // surplus = 100k - 60k - 10k - 5k = 25k/mo, target = 800k → ~29 months
+    // surplus = 100k - 60k - 5k = 35k/mo (expenses include EMIs), target = 800k → ~22 months
     const result = runAffordability(makeInput());
     expect(result.verdict).toBe('affordable_later');
     expect(result.monthsToAfford).not.toBeNull();
     expect(result.monthsToAfford!).toBeGreaterThan(1);
-    expect(result.monthlySurplus).toBe(25_000);
+    expect(result.monthlySurplus).toBe(35_000);
   });
 
   it('not_affordable when surplus is zero or negative', () => {
@@ -90,7 +90,7 @@ describe('runAffordability — cash route', () => {
   });
 
   it('emits no levers when monthsToAfford ≤ 36', () => {
-    // 800k at 25k/mo ≈ 29 months — within benchmark
+    // 800k at 35k/mo ≈ 23 months — within benchmark
     const result = runAffordability(makeInput());
     expect(result.levers).toHaveLength(0);
   });
@@ -113,8 +113,8 @@ describe('runAffordability — cash route', () => {
 
   it('uses zero-rate formula when investmentReturnRate is 0', () => {
     const result = runAffordability(makeInput({ investmentReturnRate: 0 }));
-    // 800k / 25k = 32 months
-    expect(result.monthsToAfford).toBe(32);
+    // 800k / 35k = 23 months (ceil)
+    expect(result.monthsToAfford).toBe(23);
   });
 });
 
@@ -122,7 +122,7 @@ describe('runAffordability — cash route', () => {
 
 describe('runAffordability — EMI route', () => {
   it('affordable_now when EMI fits FOIR and surplus', () => {
-    // 800k at 9%/60mo ≈ ₹16,607 EMI; surplus=25k; FOIR cap=40k → fits both
+    // 800k at 9%/60mo ≈ ₹16,607 EMI; surplus=35k; FOIR cap=40k → fits both
     const result = runAffordability(makeInput({ route: 'emi' }));
     expect(result.verdict).toBe('affordable_now');
     expect(result.emi).not.toBeNull();

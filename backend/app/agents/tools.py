@@ -214,7 +214,27 @@ def make_tools(
         debts = (profile.get("debts") or {}).get("items") or []
         if not debts:
             return {"note": "No debts found. Nothing to compare."}
-        return compare_strategies(deepcopy(debts), 0)
+        result = compare_strategies(deepcopy(debts), 0)
+
+        # The engine's per-strategy `steps` array holds one entry per debt per
+        # month (up to 360 months x 2 strategies) — far too large to hand to
+        # the model. Return only the decision-relevant aggregates.
+        def _slim(strategy: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "strategy": strategy["strategy"],
+                "totalMonths": strategy["totalMonths"],
+                "totalInterestPaid": strategy["totalInterestPaid"],
+                "totalPaid": strategy["totalPaid"],
+                "payoffDates": strategy["payoffDates"],
+            }
+
+        return {
+            "avalanche": _slim(result["avalanche"]),
+            "snowball": _slim(result["snowball"]),
+            "interestSaved": result["interestSaved"],
+            "monthsDifference": result["monthsDifference"],
+            "recommendation": result["recommendation"],
+        }
 
     def _check_health() -> dict[str, Any]:
         return calculate_health_score(
@@ -238,11 +258,14 @@ def make_tools(
         income = profile.get("income") or {}
         expenses = profile.get("expenses") or {}
         debts = profile.get("debts") or {}
-        net_monthly = float(income.get("total") or 0)
+        # Affordability math runs on take-home income (frontend contract:
+        # IncomeProfile.netMonthly), not gross. Fall back to gross only for
+        # legacy profiles that never computed netMonthly.
+        net_monthly = float(income.get("netMonthly") or income.get("total") or 0)
         monthly_expenses = float(expenses.get("total") or 0)
         existing_emi = float(debts.get("totalMonthly") or 0)
         reserve = float(profile.get("monthlySurplusReserve") or 0)
-        return_rate = float(profile.get("investmentReturnRate") or 8)
+        return_rate = float(profile.get("investmentReturnRate") or 12)
 
         result = run_affordability(
             {
@@ -626,7 +649,7 @@ def _summarize_plan(plan: dict[str, Any]) -> dict[str, Any]:
     return {
         "horizon_months": len(months),
         "snapshots": snapshots,
-        "goal_completion_months": plan.get("goalCompletionMonths"),
-        "total_debt_payoff_month": plan.get("totalDebtPayoffMonth"),
+        # goal id -> "Mon YYYY" completion date, straight from the engine output
+        "goal_completion_dates": plan.get("goalCompletionDates") or {},
         "recommended_allocations": plan.get("recommendedAllocations"),
     }
