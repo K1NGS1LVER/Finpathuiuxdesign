@@ -45,9 +45,11 @@ async function extractTextFromPDF(file: File): Promise<string> {
   const pdfjsLib = await import('pdfjs-dist');
 
   // Configure the worker once on first use — re-assigning on every call
-  // would churn the worker pool.
+  // would churn the worker pool. The worker is bundled (version-locked to the
+  // installed pdfjs-dist, CSP/offline safe) instead of fetched from a CDN.
   if (!pdfjsWorkerConfigured) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    const { default: workerUrl } = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
     pdfjsWorkerConfigured = true;
   }
 

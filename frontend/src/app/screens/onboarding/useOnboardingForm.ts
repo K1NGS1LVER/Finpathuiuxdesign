@@ -126,7 +126,10 @@ export function useOnboardingForm() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('https://api.exchangerate-api.com/v4/latest/INR')
+    const fxUrl =
+      (import.meta.env.VITE_FX_API_URL as string | undefined) ??
+      'https://api.exchangerate-api.com/v4/latest/INR';
+    fetch(fxUrl)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setExchangeRates(data.rates);

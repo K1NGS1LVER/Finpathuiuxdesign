@@ -31,7 +31,9 @@ export function getTzAbbr(timezone: string): string {
   return match ? match.label.split(" — ")[0] : timezone;
 }
 
-export const MEET_LINK = "https://meet.google.com/abc-defg-hij";
+// Meeting link comes from the environment; an empty value means consultation
+// joining is not configured for this deployment (the UI hides the link/QR).
+export const MEET_LINK = (import.meta.env.VITE_MEET_LINK as string | undefined) ?? "";
 
 export interface ConsultationData {
   expert: ExpertDomain;
