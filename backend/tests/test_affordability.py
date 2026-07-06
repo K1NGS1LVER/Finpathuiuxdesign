@@ -6,8 +6,6 @@ Numeric assertions use the same inputs/expectations as the TS suite.
 
 from __future__ import annotations
 
-import pytest
-
 from app.engines.affordability import foir_band_for, run_affordability
 
 
@@ -57,9 +55,7 @@ def test_foir_cap_amount_integer():
 
 def test_cash_affordable_now():
     # surplus = 100k - 60k - 0 - 0 = 40k; targetCost 30k → n=ceil(0.75)=1
-    result = run_affordability(
-        make_input(targetCost=30_000, existingEmiTotal=0, monthlyReserve=0)
-    )
+    result = run_affordability(make_input(targetCost=30_000, existingEmiTotal=0, monthlyReserve=0))
     assert result["verdict"] == "affordable_now"
     assert result["monthsToAfford"] is not None
     assert result["monthsToAfford"] <= 1
@@ -91,7 +87,7 @@ def test_cash_not_affordable():
 def test_cash_emits_levers_when_months_gt_36():
     result = run_affordability(make_input(targetCost=5_000_000, investmentReturnRate=0))
     assert result["verdict"] == "affordable_later"
-    types = [l["type"] for l in result["levers"]]
+    types = [lever["type"] for lever in result["levers"]]
     assert "increaseSurplus" in types
     assert "cutExpenses" in types
     assert "raiseIncome" in types
@@ -105,7 +101,7 @@ def test_cash_no_levers_within_36_months():
 
 def test_cash_lever_monthly_savings_positive_integer():
     result = run_affordability(make_input(targetCost=5_000_000, investmentReturnRate=0))
-    lever = next((l for l in result["levers"] if l["type"] == "increaseSurplus"), None)
+    lever = next((lv for lv in result["levers"] if lv["type"] == "increaseSurplus"), None)
     assert lever is not None
     assert lever["monthlySavingsNeeded"] > 0
     assert isinstance(lever["monthlySavingsNeeded"], int)
@@ -114,7 +110,7 @@ def test_cash_lever_monthly_savings_positive_integer():
 def test_cash_raise_income_lever_exceeds_current():
     inp = make_input(targetCost=5_000_000, investmentReturnRate=0)
     result = run_affordability(inp)
-    lever = next((l for l in result["levers"] if l["type"] == "raiseIncome"), None)
+    lever = next((lv for lv in result["levers"] if lv["type"] == "raiseIncome"), None)
     assert lever is not None
     assert lever["targetIncome"] > inp["netMonthlyIncome"]
 
@@ -169,7 +165,7 @@ def test_emi_extend_tenure_lever():
         )
     )
     if not result["foirOk"]:
-        ext = next((l for l in result["levers"] if l["type"] == "extendTenure"), None)
+        ext = next((lv for lv in result["levers"] if lv["type"] == "extendTenure"), None)
         if ext:
             assert ext["newTenureMonths"] > 60
 
@@ -201,5 +197,5 @@ def test_emi_affordable_later_when_foir_ok_but_emi_exceeds_surplus():
     )
     if result["foirOk"] and result["emi"] is not None and result["emi"] > result["monthlySurplus"]:
         assert result["verdict"] == "affordable_later"
-        types = [l["type"] for l in result["levers"]]
+        types = [lever["type"] for lever in result["levers"]]
         assert "cutExpenses" in types

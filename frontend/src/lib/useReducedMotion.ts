@@ -11,7 +11,7 @@ export const INSTANT = 0;
  * reduced motion. This is a hook (calls `useReducedMotion()` internally) so
  * it reacts to OS-level preference changes at runtime.
  */
-export function motionDuration(base: number): number {
+export function useMotionDuration(base: number): number {
   const prefersReducedMotion = useReducedMotion();
   return prefersReducedMotion ? INSTANT : base;
 }

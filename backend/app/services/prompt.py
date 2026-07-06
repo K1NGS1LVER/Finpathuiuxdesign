@@ -80,7 +80,11 @@ def build_cross_signals(profile: dict[str, Any]) -> str:
                 )
 
     # Rule 2 — redeploy savings
-    sv = [g for g in completed if g.get("category") in _SAVINGS_CAT and (g.get("currentAmount") or 0) > 5000]
+    sv = [
+        g
+        for g in completed
+        if g.get("category") in _SAVINGS_CAT and (g.get("currentAmount") or 0) > 5000
+    ]
     if sv and active:
         sg = sv[0]
         tg = active[0]
@@ -89,8 +93,7 @@ def build_cross_signals(profile: dict[str, Any]) -> str:
         mo = round(cash / alloc) if alloc > 0 else 0
         signals.append(
             f"- REDEPLOY SAVINGS: ₹{_inr(cash)} idle in completed savings goal"
-            f" → lumpsum into '{tg.get('name')}'"
-            + (f" → saves ~{mo} months." if mo > 0 else ".")
+            f" → lumpsum into '{tg.get('name')}'" + (f" → saves ~{mo} months." if mo > 0 else ".")
         )
 
     # Rule 3 — pending decision
@@ -143,7 +146,6 @@ def build_system_prompt(profile: dict[str, Any], context: str | None = None) -> 
     income = a["income"]
     expenses = a["expenses"]
     debts = a["debts"]
-    surplus = income["total"] - expenses["total"] - debts["totalMonthly"]
 
     goal_lines = []
     for g in a["goals"]:
@@ -250,7 +252,7 @@ def build_fallback_response(profile: dict[str, Any]) -> str:
     expenses_total = (a.get("expenses") or {}).get("total") or 0
     debts_monthly = (a.get("debts") or {}).get("totalMonthly") or 0
     surplus = income_total - expenses_total - debts_monthly
-    health_overall = ((a.get("healthScore") or {}).get("overall") or 0)
+    health_overall = (a.get("healthScore") or {}).get("overall") or 0
 
     goals = a.get("goals") or []
     top_goal = goals[0] if goals else None
