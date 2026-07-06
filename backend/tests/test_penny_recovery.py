@@ -18,7 +18,6 @@ from app.agents.penny import (
 )
 from app.agents.tools import make_tools
 
-
 # ── unit: parser ──────────────────────────────────────────────────
 
 
@@ -39,7 +38,7 @@ def test_extract_leaked_calls_attribute_form() -> None:
 
 def test_extract_leaked_calls_body_form() -> None:
     text = (
-        '<function=propose_change>'
+        "<function=propose_change>"
         '{"action":"updateGoal","payload":'
         '{"id":"goal-1","updates":{"target":150000}},"rationale":"bump"}'
         "</function>"

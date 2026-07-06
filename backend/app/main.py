@@ -7,10 +7,9 @@ import logging
 import uuid
 from contextlib import asynccontextmanager
 
-from starlette.middleware.base import BaseHTTPMiddleware
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.penny import router as penny_router
 from app.api.profile import router as profile_router

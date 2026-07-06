@@ -1,0 +1,10 @@
+# Single-package "workspace" file: this is where pnpm 10+ reads overrides and
+# build-script approvals from (package.json `pnpm` config is no longer honored
+# by pnpm 11, which local dev machines may run; CI pins pnpm via packageManager).
+overrides:
+  vite: 6.3.5
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - esbuild
+  - tesseract.js
