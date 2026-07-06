@@ -1,8 +1,8 @@
 name: CI
 
 on:
+  # No branch filter on pull_request so stacked PRs (base != main) get CI too.
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
