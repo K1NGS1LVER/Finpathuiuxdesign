@@ -114,9 +114,7 @@ def _build_cash_levers(
                 "newMonthsToAfford": BENCHMARK_MONTHS,
             }
         )
-        target_income = (
-            required36 + inp["monthlyExpenses"] + inp["monthlyReserve"] + inp["existingEmiTotal"]
-        )
+        target_income = required36 + inp["monthlyExpenses"] + inp["monthlyReserve"]
         if target_income > inp["netMonthlyIncome"]:
             lever: dict[str, Any] = {
                 "type": "raiseIncome",
@@ -213,14 +211,17 @@ def run_affordability(inp: dict[str, Any]) -> dict[str, Any]:
     monthly_expenses: float = float(inp["monthlyExpenses"])
     monthly_reserve: float = float(inp.get("monthlyReserve", 0))
     existing_emi_total: float = float(inp.get("existingEmiTotal", 0))
-    investment_return_rate: float = float(inp.get("investmentReturnRate", 8))
+    investment_return_rate: float = float(inp.get("investmentReturnRate", 12))
     annual_interest_rate: float = float(inp.get("annualInterestRate", 9))
     tenure_months: int = int(inp.get("tenureMonths", 60))
     age_years: int | None = inp.get("ageYears")
     employment_type: str = inp.get("employmentType") or "salaried"
     loan_type: str = inp.get("loanType") or "other"
 
-    monthly_surplus = net_monthly_income - monthly_expenses - existing_emi_total - monthly_reserve
+    # monthlyExpenses already includes debt EMIs (same convention as plan_engine /
+    # health_score), so existing_emi_total must NOT be subtracted again here.
+    # It is still used below for FOIR headroom checks.
+    monthly_surplus = net_monthly_income - monthly_expenses - monthly_reserve
     monthly_rate = investment_return_rate / 12 / 100
 
     if route == "cash":

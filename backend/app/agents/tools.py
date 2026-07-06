@@ -69,11 +69,35 @@ class _ProposeArgs(BaseModel):
         description=f"Zustand setter name. Allowed: {sorted(ALLOWED_PROPOSAL_ACTIONS)}."
     )
     payload: dict[str, Any] = Field(
-        description="JSON payload the frontend will pass to the setter."
+        description=(
+            "JSON payload the frontend passes to the setter. Field names MUST be "
+            "camelCase. Shapes by action:\n"
+            '- updateGoal: {"id": "<goal id>", "updates": {"targetAmount": <INR>, '
+            '"timelineMonths": <months>, "name": "..."}} — include only fields being '
+            "changed; use targetAmount (not target), currentAmount (not current), "
+            "timelineMonths (not timeline_months).\n"
+            '- addGoal: {"goal": {"id": "goal-<timestamp>", "name": "...", '
+            '"targetAmount": <INR>, "timelineMonths": <months>, "category": "custom", '
+            '"icon": "Target", "priority": <n>, "currentAmount": 0, '
+            '"status": "not-started", "monthlyAllocation": 0, "color": "var(--accent)"}}\n'
+            '- removeGoal: {"id": "<goal id>"}\n'
+            '- addLumpsum: {"goalId": "<goal id>", "amount": <positive INR>} — never '
+            "negative; never use addLumpsum to model a new debt (use addDebt).\n"
+            '- addDebt: {"debt": {"name": "...", "principal": <positive INR owed>, '
+            '"interestRate": <annual %>, "monthlyPayment": <INR>, "category": '
+            '"personalLoan|creditCard|homeLoan|carLoan|educationLoan|other"}} — if the '
+            'user says "I owe 10000", principal = 10000.\n'
+            '- setStrategy: {"strategy": "avalanche" | "snowball"}\n'
+            "- setEmergencyFund / setSavings / setInvestments: "
+            '{"amount": <INR>}'
+        )
     )
     rationale: str = Field(
         default="",
-        description="Short user-facing explanation (1-2 sentences). Optional but strongly recommended.",
+        description=(
+            "One user-facing sentence explaining why (e.g. 'User requested adding a "
+            "personal debt of ₹10,000.'). Always include it."
+        ),
     )
 
     @field_validator("payload", mode="before")
@@ -214,7 +238,27 @@ def make_tools(
         debts = (profile.get("debts") or {}).get("items") or []
         if not debts:
             return {"note": "No debts found. Nothing to compare."}
-        return compare_strategies(deepcopy(debts), 0)
+        result = compare_strategies(deepcopy(debts), 0)
+
+        # The engine's per-strategy `steps` array holds one entry per debt per
+        # month (up to 360 months x 2 strategies) — far too large to hand to
+        # the model. Return only the decision-relevant aggregates.
+        def _slim(strategy: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "strategy": strategy["strategy"],
+                "totalMonths": strategy["totalMonths"],
+                "totalInterestPaid": strategy["totalInterestPaid"],
+                "totalPaid": strategy["totalPaid"],
+                "payoffDates": strategy["payoffDates"],
+            }
+
+        return {
+            "avalanche": _slim(result["avalanche"]),
+            "snowball": _slim(result["snowball"]),
+            "interestSaved": result["interestSaved"],
+            "monthsDifference": result["monthsDifference"],
+            "recommendation": result["recommendation"],
+        }
 
     def _check_health() -> dict[str, Any]:
         return calculate_health_score(
@@ -238,11 +282,14 @@ def make_tools(
         income = profile.get("income") or {}
         expenses = profile.get("expenses") or {}
         debts = profile.get("debts") or {}
-        net_monthly = float(income.get("total") or 0)
+        # Affordability math runs on take-home income (frontend contract:
+        # IncomeProfile.netMonthly), not gross. Fall back to gross only for
+        # legacy profiles that never computed netMonthly.
+        net_monthly = float(income.get("netMonthly") or income.get("total") or 0)
         monthly_expenses = float(expenses.get("total") or 0)
         existing_emi = float(debts.get("totalMonthly") or 0)
         reserve = float(profile.get("monthlySurplusReserve") or 0)
-        return_rate = float(profile.get("investmentReturnRate") or 8)
+        return_rate = float(profile.get("investmentReturnRate") or 12)
 
         result = run_affordability(
             {
@@ -506,6 +553,32 @@ def make_tools(
                     ),
                 }
 
+        # removeGoal / addLumpsum previously passed through unvalidated: the
+        # store setters silently no-op on unknown ids, so the proposal card
+        # showed "approved" while nothing changed. Reject bad ids here so the
+        # model corrects itself before the user ever sees a card.
+        if action in ("removeGoal", "addLumpsum"):
+            goal_id = payload.get("id") or payload.get("goalId") or payload.get("goal_id")
+            goals_list = profile.get("goals") or []
+            if not any(g.get("id") == goal_id for g in goals_list):
+                return {
+                    "ok": False,
+                    "error": (
+                        f"Goal id '{goal_id}' not found. Call read_profile to get valid ids."
+                    ),
+                }
+            if action == "addLumpsum":
+                try:
+                    amount = float(payload.get("amount") or 0)
+                except (TypeError, ValueError):
+                    amount = 0.0
+                if amount <= 0:
+                    return {
+                        "ok": False,
+                        "error": "addLumpsum requires a positive `amount`.",
+                    }
+                payload = {"goalId": goal_id, "amount": amount}
+
         result = propose(action, payload, rationale)
         return {
             "status": "pending_user_approval",
@@ -626,7 +699,7 @@ def _summarize_plan(plan: dict[str, Any]) -> dict[str, Any]:
     return {
         "horizon_months": len(months),
         "snapshots": snapshots,
-        "goal_completion_months": plan.get("goalCompletionMonths"),
-        "total_debt_payoff_month": plan.get("totalDebtPayoffMonth"),
+        # goal id -> "Mon YYYY" completion date, straight from the engine output
+        "goal_completion_dates": plan.get("goalCompletionDates") or {},
         "recommended_allocations": plan.get("recommendedAllocations"),
     }

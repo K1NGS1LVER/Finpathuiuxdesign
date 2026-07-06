@@ -41,11 +41,15 @@ def anonymize_profile(profile: dict[str, Any]) -> dict[str, Any]:
         "savings": profile.get("savings", 0),
         "investments": profile.get("investments", 0),
         "emergencyFund": profile.get("emergencyFund", 0),
-        # Goal name is dropped — it may contain PII ("Rahul's wedding").
-        # Penny gets category + priority + index as identifier instead.
+        # Goal ids and names pass through unchanged: read_profile already
+        # returns both to the model, so aliasing them here only created a
+        # split-brain where the model quoted prompt ids ("goal-1") that no
+        # tool or store setter could resolve. Anonymization still applies to
+        # everything else (aggregates only; no account numbers or line items).
         "goals": [
             {
-                "id": f"goal-{i + 1}",
+                "id": g.get("id"),
+                "name": g.get("name"),
                 "targetAmount": g.get("targetAmount", 0),
                 "currentAmount": g.get("currentAmount", 0),
                 "timelineMonths": g.get("timelineMonths", 0),
@@ -53,7 +57,7 @@ def anonymize_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 "status": g.get("status"),
                 "category": g.get("category"),
             }
-            for i, g in enumerate(goals)
+            for g in goals
         ],
         "healthScore": (
             {

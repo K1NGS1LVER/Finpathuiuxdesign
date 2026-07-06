@@ -66,12 +66,12 @@ def test_cash_affordable_now():
 
 
 def test_cash_affordable_later():
-    # surplus = 100k - 60k - 10k - 5k = 25k/mo; target=800k → ~29 months
+    # surplus = 100k - 60k - 5k = 35k/mo (expenses include EMIs); target=800k → ~22 months
     result = run_affordability(make_input())
     assert result["verdict"] == "affordable_later"
     assert result["monthsToAfford"] is not None
     assert result["monthsToAfford"] > 1
-    assert result["monthlySurplus"] == 25_000
+    assert result["monthlySurplus"] == 35_000
 
 
 def test_cash_not_affordable():
@@ -94,7 +94,7 @@ def test_cash_emits_levers_when_months_gt_36():
 
 
 def test_cash_no_levers_within_36_months():
-    # 800k at 25k/mo ≈ 29 months — within benchmark
+    # 800k at 35k/mo ≈ 23 months — within benchmark
     result = run_affordability(make_input())
     assert result["levers"] == []
 
@@ -116,16 +116,16 @@ def test_cash_raise_income_lever_exceeds_current():
 
 
 def test_cash_zero_rate_formula():
-    # 800k / 25k = 32 months
+    # 800k / 35k = 23 months (ceil)
     result = run_affordability(make_input(investmentReturnRate=0))
-    assert result["monthsToAfford"] == 32
+    assert result["monthsToAfford"] == 23
 
 
 # ── EMI route ─────────────────────────────────────────────────────────────────
 
 
 def test_emi_affordable_now():
-    # 800k at 9%/60mo → EMI ~₹16,607; surplus=25k; FOIR cap=40k → fits both
+    # 800k at 9%/60mo → EMI ~₹16,607; surplus=35k; FOIR cap=40k → fits both
     result = run_affordability(make_input(route="emi"))
     assert result["verdict"] == "affordable_now"
     assert result["emi"] is not None
