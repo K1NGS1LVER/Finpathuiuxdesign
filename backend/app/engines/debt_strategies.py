@@ -50,13 +50,16 @@ def _simulate(
 
     active = [
         {
-            "id": d["id"],
-            "name": d["name"],
-            "balance": d["principal"],
-            "interestRate": d["interestRate"],
-            "minPayment": d["monthlyPayment"],
+            "id": d.get("id") or f"debt-{i}",
+            "name": d.get("name") or f"Debt {i + 1}",
+            "balance": float(d.get("principal") or 0),
+            "interestRate": float(d.get("interestRate") or 0),
+            "minPayment": float(d.get("monthlyPayment") or 0),
         }
-        for d in debts
+        for i, d in enumerate(debts)
+        # A debt with no balance is already paid off; one with no payment
+        # can never amortize and would spin the loop to _MAX_MONTHS.
+        if (d.get("principal") or 0) > 0 and (d.get("monthlyPayment") or 0) > 0
     ]
 
     steps: list[dict[str, Any]] = []

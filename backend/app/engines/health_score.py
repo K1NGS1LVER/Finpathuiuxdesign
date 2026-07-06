@@ -68,8 +68,6 @@ def _score_income_stability(income: dict[str, Any]) -> int:
         )
         if v and v > 0
     )
-    if sources >= 4:
-        return 25
     if sources >= 3:
         return 25
     if sources >= 2:

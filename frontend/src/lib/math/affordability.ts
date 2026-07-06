@@ -48,11 +48,12 @@ export interface AffordabilityInput {
   targetCost: number;
   route: 'cash' | 'emi';
   netMonthlyIncome: number;
-  /** ExpenseProfile.total — should NOT include debt EMIs */
+  /** ExpenseProfile.total — includes debt EMIs (same convention as the plan engine) */
   monthlyExpenses: number;
   /** monthlySurplusReserve — intentional monthly park */
   monthlyReserve: number;
-  /** DebtProfile.totalMonthly — existing EMI obligations */
+  /** DebtProfile.totalMonthly — existing EMI obligations. Used only for FOIR
+   * headroom; already part of monthlyExpenses, so never subtracted from surplus. */
   existingEmiTotal: number;
   /** Annual % return on savings (e.g. 12). Used for cash-route FV. */
   investmentReturnRate: number;
@@ -144,8 +145,8 @@ function buildCashLevers(
     });
 
     // raiseIncome — what income level achieves the benchmark-month surplus
-    const targetIncome =
-      required36 + input.monthlyExpenses + input.monthlyReserve + input.existingEmiTotal;
+    // (monthlyExpenses already covers existing EMIs)
+    const targetIncome = required36 + input.monthlyExpenses + input.monthlyReserve;
     if (targetIncome > input.netMonthlyIncome) {
       levers.push({
         type: 'raiseIncome',
@@ -243,8 +244,8 @@ export function runAffordability(input: AffordabilityInput): AffordabilityResult
     loanType = 'other',
   } = input;
 
-  // monthlySurplus: what's left after expenses, existing EMIs, and reserve
-  const monthlySurplus = netMonthlyIncome - monthlyExpenses - existingEmiTotal - monthlyReserve;
+  // monthlySurplus: what's left after expenses (which include existing EMIs) and reserve
+  const monthlySurplus = netMonthlyIncome - monthlyExpenses - monthlyReserve;
   const monthlyRate = investmentReturnRate / 12 / 100;
 
   if (route === 'cash') {
