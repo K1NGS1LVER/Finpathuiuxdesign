@@ -126,10 +126,7 @@ def generate_plan(input_: dict[str, Any]) -> dict[str, Any]:
     for m in range(_MAX_MONTHS):
         milestones: list[str] = []
         if m == 0 and is_debt_over_income:
-            # Match TS: number formatted with en-IN locale digit grouping
-            formatted = f"{debts_total_monthly:,}".replace(",", ",")
             # JS toLocaleString('en-IN') uses Indian grouping (lakh/crore style).
-            # Reproduce: format with Indian grouping.
             formatted = _format_indian(debts_total_monthly)
             milestones.append(
                 f"Warning: Your debt payments (₹{formatted}/mo) exceed your available income. Consider restructuring."
